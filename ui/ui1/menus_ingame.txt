@@ -1,0 +1,15 @@
+{
+	loadMenu {"ui/ui1/menu/ingame.menu"}
+	loadMenu {"ui/ui1/menu/ingame_about.menu"}
+	loadMenu {"ui/ui1/menu/ingame_addbot.menu"}
+	loadMenu {"ui/ui1/menu/ingame_callvote.menu"}
+	loadMenu {"ui/ui1/menu/ingame_controls.menu"}
+	loadMenu {"ui/ui1/menu/ingame_createserver.menu"}
+	loadMenu {"ui/ui1/menu/ingame_join.menu"}
+	loadMenu {"ui/ui1/menu/ingame_leave.menu"}
+	loadMenu {"ui/ui1/menu/ingame_options.menu"}
+	loadMenu {"ui/ui1/menu/ingame_orders.menu"}
+	loadMenu {"ui/ui1/menu/ingame_player.menu"}
+	loadMenu {"ui/ui1/menu/ingame_system.menu"}
+	loadMenu {"ui/ui1/menu/ingame_vote.menu"}
+}

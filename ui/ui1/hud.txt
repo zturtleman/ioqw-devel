@@ -1,0 +1,5 @@
+{
+	loadMenu {"ui/ui1/menu/hud.menu"}
+	loadMenu {"ui/ui1/menu/score.menu"}
+	loadMenu {"ui/ui1/menu/teamscore.menu"}
+}
