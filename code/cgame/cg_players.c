@@ -2218,6 +2218,7 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 	ci = &cgs.clientinfo[clientNum];
 // Tobias END
 	VectorCopy(parent->origin, origin);
+
 	origin[2] += 42;
 
 	if (cent->currentState.number == cg.snap->ps.clientNum) {
