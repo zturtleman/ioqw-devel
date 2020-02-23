@@ -1048,10 +1048,10 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 	if (!handle) {
 		Com_Printf(S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile);
-		handle = trap_PC_LoadSource("ui/ui1/menus.txt");
+		handle = trap_PC_LoadSource("ui/menus.txt");
 
 		if (!handle) {
-			trap_Error(S_COLOR_RED "default menu file not found: ui/ui1/menus.txt, unable to continue!");
+			trap_Error(S_COLOR_RED "default menu file not found: ui/menus.txt, unable to continue!");
 		}
 	}
 
@@ -1105,7 +1105,7 @@ void UI_Load(void) {
 	}
 
 	if (menuSet == NULL || menuSet[0] == '\0') {
-		menuSet = "ui/ui1/menus.txt";
+		menuSet = "ui/menus.txt";
 	}
 
 	String_Init();
@@ -6322,17 +6322,17 @@ void _UI_Init(qboolean inGameLoad) {
 	menuSet = UI_Cvar_VariableString("ui_menuFiles");
 
 	if (menuSet == NULL || menuSet[0] == '\0') {
-		menuSet = "ui/ui1/menus.txt";
+		menuSet = "ui/menus.txt";
 	}
 #if 0
 	if (uiInfo.inGameLoad) {
-		UI_LoadMenus("ui/ui1/menus_ingame.txt", qtrue);
+		UI_LoadMenus("ui/menus_ingame.txt", qtrue);
 	} else {
 
 	}
 #else
 	UI_LoadMenus(menuSet, qtrue);
-	UI_LoadMenus("ui/ui1/menus_ingame.txt", qfalse);
+	UI_LoadMenus("ui/menus_ingame.txt", qfalse);
 #endif
 	Menus_CloseAll();
 	trap_LAN_LoadCachedServers();
@@ -6433,7 +6433,7 @@ void UI_LoadNonIngame(void) {
 	const char *menuSet = UI_Cvar_VariableString("ui_menuFiles");
 
 	if (menuSet == NULL || menuSet[0] == '\0') {
-		menuSet = "ui/ui1/menus.txt";
+		menuSet = "ui/menus.txt";
 	}
 
 	UI_LoadMenus(menuSet, qfalse);
@@ -6981,7 +6981,7 @@ static cvarTable_t cvarTable[] = {
 	{&ui_notteam13, "ui_notteam13", "0", CVAR_ARCHIVE},
 	{&ui_notteam14, "ui_notteam14", "0", CVAR_ARCHIVE},
 	{&ui_netSource, "ui_netSource", "0", CVAR_ARCHIVE},
-	{&ui_menuFiles, "ui_menuFiles", "ui/ui1/menus.txt", CVAR_ARCHIVE},
+	{&ui_menuFiles, "ui_menuFiles", "ui/menus.txt", CVAR_ARCHIVE},
 	{&ui_currentTier, "ui_currentTier", "0", CVAR_ARCHIVE},
 	{&ui_currentMap, "ui_currentMap", "0", CVAR_ARCHIVE},
 	{&ui_currentNetMap, "ui_currentNetMap", "0", CVAR_ARCHIVE},
@@ -7018,7 +7018,7 @@ static cvarTable_t cvarTable[] = {
 	{&ui_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE},
 	{&ui_findPlayer, "ui_findPlayer", DEFAULT_MODEL, CVAR_ARCHIVE},
 	{&ui_Q3Model, "ui_q3model", "0", CVAR_ARCHIVE},
-	{&ui_hudFiles, "cg_hudFiles", "ui/ui1/hud.txt", CVAR_ARCHIVE},
+	{&ui_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
 	{&ui_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{&ui_teamArenaFirstRun, "ui_teamArenaFirstRun", "0", CVAR_ARCHIVE},
 	{&ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},

@@ -307,7 +307,7 @@ static cvarTable_t cvarTable[] = {
 	{&cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{&cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE},
 	{&cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO|CVAR_ROM},
-	{&cg_hudFiles, "cg_hudFiles", "ui/ui1/hud.txt", CVAR_ARCHIVE},
+	{&cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
 	{&cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
 	{&cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0},
 	{&cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
@@ -1006,14 +1006,14 @@ static void CG_RegisterGraphics(void) {
 	}
 
 	cgs.media.cursor = trap_R_RegisterShaderNoMip("menu/art/3_cursor2");
-	cgs.media.sizeCursor = trap_R_RegisterShaderNoMip("ui/ui1/assets/sizecursor.tga");
-	cgs.media.selectCursor = trap_R_RegisterShaderNoMip("ui/ui1/assets/selectcursor.tga");
+	cgs.media.sizeCursor = trap_R_RegisterShaderNoMip("ui/assets/sizecursor.tga");
+	cgs.media.selectCursor = trap_R_RegisterShaderNoMip("ui/assets/selectcursor.tga");
 	cgs.media.botSkillShaders[0] = trap_R_RegisterShader("menu/art/skill1.tga");
 	cgs.media.botSkillShaders[1] = trap_R_RegisterShader("menu/art/skill2.tga");
 	cgs.media.botSkillShaders[2] = trap_R_RegisterShader("menu/art/skill3.tga");
 	cgs.media.botSkillShaders[3] = trap_R_RegisterShader("menu/art/skill4.tga");
 	cgs.media.botSkillShaders[4] = trap_R_RegisterShader("menu/art/skill5.tga");
-	cgs.media.heartShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/selectedhealth.tga");
+	cgs.media.heartShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/selectedhealth.tga");
 	cgs.media.viewBloodShader = trap_R_RegisterShader("viewBloodBlend");
 	cgs.media.deferShader = trap_R_RegisterShaderNoMip("gfx/2d/defer.tga");
 	cgs.media.scoreboardName = trap_R_RegisterShaderNoMip("menu/tab/name.tga");
@@ -1199,19 +1199,19 @@ static void CG_RegisterGraphics(void) {
 		cgs.gameModels[i] = trap_R_RegisterModel(modelName);
 	}
 
-	cgs.media.flagShaders[0] = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/flag_in_base.tga");
-	cgs.media.flagShaders[1] = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/flag_capture.tga");
-	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/flag_missing.tga");
+	cgs.media.flagShaders[0] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_in_base.tga");
+	cgs.media.flagShaders[1] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_capture.tga");
+	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_missing.tga");
 	// task shaders
 	cgs.media.roamShader = trap_R_RegisterShaderNoMip("gfx/2d/defer.tga"); // Tobias DEBUG
-	cgs.media.patrolShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/patrol.tga");
-	cgs.media.assaultShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/assault.tga");
-	cgs.media.campShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/camp.tga");
-	cgs.media.followShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/follow.tga");
-	cgs.media.defendShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/defend.tga");
-	cgs.media.teamLeaderShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/team_leader.tga");
-	cgs.media.retrieveShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/retrieve.tga");
-	cgs.media.escortShader = trap_R_RegisterShaderNoMip("ui/ui1/assets/statusbar/escort.tga");
+	cgs.media.patrolShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/patrol.tga");
+	cgs.media.assaultShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/assault.tga");
+	cgs.media.campShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/camp.tga");
+	cgs.media.followShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/follow.tga");
+	cgs.media.defendShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/defend.tga");
+	cgs.media.teamLeaderShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/team_leader.tga");
+	cgs.media.retrieveShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/retrieve.tga");
+	cgs.media.escortShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/escort.tga");
 
 	if (cgs.gametype > GT_TOURNAMENT || cg_buildScript.integer) {
 		CG_CachePlayerModels(DEFAULT_TEAM_MODEL_MALE, DEFAULT_TEAM_HEAD_MALE);
@@ -1620,10 +1620,10 @@ void CG_LoadMenus(const char *menuFile) {
 
 	if (!f) {
 		Com_Printf(S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile);
-		len = trap_FS_FOpenFile("ui/ui1/hud.txt", &f, FS_READ);
+		len = trap_FS_FOpenFile("ui/hud.txt", &f, FS_READ);
 
 		if (!f) {
-			CG_Error(S_COLOR_RED "default menu file not found: ui/ui1/hud.txt, unable to continue!");
+			CG_Error(S_COLOR_RED "default menu file not found: ui/hud.txt, unable to continue!");
 		}
 	}
 
@@ -2073,7 +2073,7 @@ void CG_LoadHudMenu(void) {
 	hudSet = buff;
 
 	if (hudSet[0] == '\0') {
-		hudSet = "ui/ui1/hud.txt";
+		hudSet = "ui/hud.txt";
 	}
 
 	CG_LoadMenus(hudSet);

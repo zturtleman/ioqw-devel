@@ -1,5 +1,0 @@
-{
-	loadMenu {"ui/ui1/menu/hud_min.menu"}
-	loadMenu {"ui/ui1/menu/score.menu"}
-	loadMenu {"ui/ui1/menu/teamscore.menu"}
-}
