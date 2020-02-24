@@ -76,7 +76,7 @@
 			textalignx 320
 			textaligny 10
 			textscale .333
-			text "PROGRAMMING: John Carmack, Robert Duffy, Jim Dosé"
+			text "PROGRAMMING: John Carmack, Robert Duffy, Jim Dose'"
 			forecolor 1 1 1 1
 			decoration
 			visible 0

@@ -793,7 +793,7 @@ void SCR_DrawFPS(void) {
 		posyy = 0;
 	}
 
-	SCR_DrawStringExt(posxx, posyy , fontsize, string1, g_color_table[7], qtrue, qtrue);
+	SCR_DrawStringExt(posxx, posyy, fontsize, string1, g_color_table[7], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 1, fontsize, string2, g_color_table[1], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 2, fontsize, string3, g_color_table[7], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 3, fontsize, string4, g_color_table[7], qtrue, qtrue);
@@ -1024,7 +1024,7 @@ void SCR_DrawSnaps(void) {
 		posyy = 0;
 	}
 
-	SCR_DrawStringExt(posxx, posyy , fontsize, string1, g_color_table[7], qtrue, qtrue);
+	SCR_DrawStringExt(posxx, posyy, fontsize, string1, g_color_table[7], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 1, fontsize, string2, g_color_table[3], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 2, fontsize, string3, g_color_table[7], qtrue, qtrue);
 	SCR_DrawStringExt(posxx, posyy + (fontsize + 2) * 3, fontsize, string4, g_color_table[7], qtrue, qtrue);
