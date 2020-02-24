@@ -425,7 +425,8 @@
 			cvar "cg_hudfiles"
 
 			cvarStrList {
-				Normal "ui/hud.txt" Small "ui/hud2.txt"
+				Normal "ui/hud.txt",
+				Small "ui/hud2.txt"
 			}
 
 			rect 0 309 200 20
