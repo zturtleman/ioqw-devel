@@ -54,8 +54,8 @@ static const char *MonthAbbrev[] = {
 static const char *skillLevels[] = {
 	"I Can Win",
 	"Bring It On",
-	"Hurt Me Plenty",
 	"Hardcore",
+	"Suicide",
 	"Nightmare"
 };
 
@@ -3748,7 +3748,7 @@ static void UI_StartSkirmish(qboolean next) {
 	}
 
 	if (g > GT_TOURNAMENT) {
-		// send team command for vanilla q3 game qvm
+		// send team command for game qvm
 		trap_Cmd_ExecuteText(EXEC_APPEND, "wait 5; team Blue\n");
 		// set g_localTeamPref for ioq3 game qvm
 		trap_Cvar_Set("g_localTeamPref", "Blue");

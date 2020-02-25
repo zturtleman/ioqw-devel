@@ -503,14 +503,8 @@ Weapon_Railgun_Fire
 void Weapon_Railgun_Fire(gentity_t *ent) {
 	vec3_t end;
 	trace_t trace;
-	gentity_t *tent;
-	gentity_t *traceEnt;
-	int damage;
-	int i;
-	int hits;
-	int unlinked;
-	int passent;
-	gentity_t *unlinkedEntities[MAX_RAIL_HITS];
+	gentity_t *traceEnt, *tent, *unlinkedEntities[MAX_RAIL_HITS];
+	int damage, i, hits, unlinked, passent;
 
 	damage = 100 * s_quadFactor;
 

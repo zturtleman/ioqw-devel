@@ -630,7 +630,7 @@ SV_TraceEntities
 SV_Trace that doesn't clip to world.
 =======================================================================================================================================
 */
-void SV_TraceEntities(trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule) {
+void SV_TraceEntities(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule) {
 	moveclip_t clip;
 	int i;
 
