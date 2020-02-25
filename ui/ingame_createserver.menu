@@ -309,7 +309,7 @@
 			group grpsettings
 			type ITEM_TYPE_YESNO
 			text "Friendly Fire:"
-			cvar "g_friendlyfire"
+			cvar "g_friendlyFire"
 			rect 260 94 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -344,7 +344,9 @@
 			cvar "ui_dedicated"
 
 			cvarFloatList {
-				"No" 0 "LAN" 1 "Internet" 2
+				"No" 0
+				"LAN" 1
+				"Internet" 2
 			}
 
 			rect 260 128 128 12
@@ -380,7 +382,7 @@
 			group grpsettings
 			type ITEM_TYPE_YESNO
 			text "Auto Download:"
-			cvar "sv_allowdownload"
+			cvar "sv_allowDownload"
 			rect 260 175 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -426,7 +428,7 @@
 			group grpsettings
 			type ITEM_TYPE_NUMERICFIELD
 			text "Minimum Ping:"
-			cvar "sv_minping"
+			cvar "sv_minPing"
 			rect 260 220 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -442,7 +444,7 @@
 			group grpsettings
 			type ITEM_TYPE_NUMERICFIELD
 			text "Maximum Ping:"
-			cvar "sv_maxping"
+			cvar "sv_maxPing"
 			rect 260 235 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -488,7 +490,7 @@
 			group grpsettings
 			type ITEM_TYPE_YESNO
 			text "Do Warmup:"
-			cvar "g_dowarmup"
+			cvar "g_doWarmup"
 			rect 260 280 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -519,7 +521,7 @@
 			group grpsettings
 			type ITEM_TYPE_YESNO
 			text "Synchronous Client:"
-			cvar "g_synchronousclients"
+			cvar "g_synchronousClients"
 			rect 260 310 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -534,7 +536,7 @@
 			group grpsettings
 			type ITEM_TYPE_NUMERICFIELD
 			text "Max Rate:"
-			cvar "sv_maxrate"
+			cvar "sv_maxRate"
 			rect 260 325 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -582,7 +584,7 @@
 			group grpsettings
 			type ITEM_TYPE_YESNO
 			text "Require Password:"
-			cvar "g_needpassword"
+			cvar "g_needpass"
 			rect 260 370 128 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 65
@@ -1692,14 +1694,6 @@
 				close fight;
 				uiScript StartServerIngame
 			}
-/*			
-			// demo_only
-			cvarTest "ui_actualNetGameType"
-
-			hideCvar {
-				"0"; "1"
-			}
-*/
 		}
 
 		itemDef {
@@ -1724,13 +1718,6 @@
 				fadeout message_accept;
 				playlooped "music/fla_mp03.wav"
 			}
-/*			
-			// demo_only
-			cvarTest "ui_actualNetGameType"
-			hideCvar {
-				"0"; "1"
-			}
-*/
 		}
 
 		itemDef {

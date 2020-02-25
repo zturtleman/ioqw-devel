@@ -10,7 +10,9 @@
 		border 1
 		popup
 
-		onClose {}
+		onClose {
+
+		}
 
 		onOpen {
 			uiScript FindPlayer;
@@ -333,7 +335,7 @@
 		}
 
 		itemDef {
-			name serverInfowindow 
+			name serverInfowindow
 			rect 20 175 264 110
 			style 1
 			backcolor 0 0 0 0

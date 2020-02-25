@@ -95,7 +95,11 @@
 			style WINDOW_STYLE_SHADER
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			background "ui/assets/playerpatriot.tga"
 			rect 60 24 128 256
 			forecolor .25 .25 .25 1
@@ -106,7 +110,11 @@
 			name quakeimage
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/playerpi.tga"
 			rect 100 24 128 256
@@ -118,7 +126,11 @@
 			name quakeimage
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/playerklesk.tga"
 			rect 440 24 128 256
@@ -131,7 +143,11 @@
 			name quakeimage
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/playerbiker.tga"
 			rect 384 24 128 256
@@ -144,7 +160,11 @@
 			style WINDOW_STYLE_SHADER
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			background "ui/assets/pagans.tga"
 			rect 0 150 128 128
 			forecolor .5 .5 .5 .25
@@ -156,7 +176,11 @@
 			name clanlogo1
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/crusaders.tga"
 			rect 128 150 128 128
@@ -169,7 +193,11 @@
 			name clanlogo1
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/stroggs.tga"
 			rect 384 150 128 128
@@ -182,7 +210,11 @@
 			name clanlogo1
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			style WINDOW_STYLE_SHADER
 			background "ui/assets/intruders.tga"
 			rect 512 150 128 128
@@ -342,7 +374,11 @@
 			textscale .333
 			forecolor 1 1 1 1
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			visible 1
 
 			action {
@@ -363,7 +399,11 @@
 			rect 10 330 620 80
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			type ITEM_TYPE_LISTBOX
 			style WINDOW_STYLE_FILLED
 			elementwidth 61.75
@@ -394,7 +434,11 @@
 			rect 10 330 620 80
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			type ITEM_TYPE_LISTBOX
 			style WINDOW_STYLE_FILLED
 			elementwidth 61.75
@@ -609,7 +653,11 @@
 			rect 238 157 170 133
 			group grparenatype
 			cvarTest "ui_Q3Model"
-			showCVar {"0"}
+
+			showCVar {
+				"0"
+			}
+
 			ownerdraw UI_CLANCINEMATIC
 			visible 1
 			decoration
@@ -619,7 +667,11 @@
 			name clancinematic
 			group grpquaketype
 			cvarTest "ui_Q3Model"
-			showCVar {"1"}
+
+			showCVar {
+				"1"
+			}
+
 			style 3
 			background "ui/assets/q3imagepage.tga"
 			rect 238 157 170 133

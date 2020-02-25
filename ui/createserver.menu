@@ -344,7 +344,9 @@
 			cvar "ui_dedicated"
 
 			cvarFloatList {
-				"No" 0 "LAN" 1 "Internet" 2
+				"No" 0
+				"LAN" 1
+				"Internet" 2
 			}
 
 			rect 260 128 128 12
@@ -1692,14 +1694,6 @@
 				close fight;
 				uiScript StartServer
 			}
-/*			
-			// demo_only
-			cvarTest "ui_actualNetGameType"
-
-			hideCvar {
-				"0"; "1"
-			}
-*/
 		}
 
 		itemDef {
@@ -1724,13 +1718,6 @@
 				fadeout message_accept;
 				playlooped "music/fla_mp03.wav"
 			}
-/*			
-			// demo_only
-			cvarTest "ui_actualNetGameType"
-			hideCvar {
-				"0"; "1"
-			}
-*/
 		}
 
 		itemDef {

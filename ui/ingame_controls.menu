@@ -177,7 +177,7 @@
 
 		itemDef {
 			name keyBindStatus
-			rect 0 55 300 15 
+			rect 0 55 300 15
 			ownerdraw UI_KEYBINDSTATUS
 			text " "
 			forecolor 1 .75 0 1
@@ -925,7 +925,7 @@
 			type ITEM_TYPE_BIND
 			text "Railgun:"
 			cvar "Weapon 7"
-			rect 0 225 320 15 
+			rect 0 225 320 15
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 187
 			maxPaintChars 20
@@ -1766,7 +1766,7 @@
 
 		itemDef {
 			name yesno_message
-			rect 0 55 300 15 
+			rect 0 55 300 15
 			text "Select the Item to Toggle to Yes or No"
 			forecolor 1 .75 0 1
 			textscale .20
@@ -1779,7 +1779,7 @@
 
 		itemDef {
 			name slider_message
-			rect 0 55 300 15 
+			rect 0 55 300 15
 			text "Drag the Slider to Increase and Decrease"
 			forecolor 1 .75 0 1
 			textscale .20

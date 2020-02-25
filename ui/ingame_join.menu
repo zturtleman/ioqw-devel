@@ -159,7 +159,7 @@
 				exec "cmd team s";
 				uiScript closeingame
 			}
-		}	
+		}
 
 		itemDef {
 			name team

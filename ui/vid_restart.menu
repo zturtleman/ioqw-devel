@@ -4,7 +4,6 @@
 		name "vid_restart_popmenu"
 		visible 0
 		fullscreen 0
-		//rect 217 200 210 85
 		rect 204 122 235 235
 		//outOfBoundsClick // this closes the window if it gets a click out of the rectangle
 		focusColor 1 .75 0 1

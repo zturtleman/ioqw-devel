@@ -310,7 +310,7 @@
 			cvar "name"
 			textscale .35
 			style 0
-			rect 0 363 128 30 
+			rect 0 363 128 30
 			textalign 1// center
 			textalignx 64 // x alignment point for text
 			// use it to offset left/right text from the edge or to center the text on a different point
@@ -566,7 +566,6 @@
 			backcolor 0 0 0 0
 			bordercolor .5 .5 .5 1
 			visible 1
-			
 		}
 
 		itemDef {

@@ -210,7 +210,9 @@
 			cvar "cg_brassTime"
 
 			cvarFloatList {
-				"High" 2500 "Med" 1250 "Off" 0
+				"High" 2500
+				"Med" 1250
+				"Off" 0
 			}
 
 			rect 0 71 200 20
@@ -425,7 +427,7 @@
 			cvar "cg_hudfiles"
 
 			cvarStrList {
-				Normal "ui/hud.txt",
+				Normal "ui/hud.txt";
 				Small "ui/hud2.txt"
 			}
 

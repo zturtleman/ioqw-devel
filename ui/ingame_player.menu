@@ -213,7 +213,10 @@
 			forecolor 1 1 1 1
 			visible 1
 			cvarTest "g_gametype"
-			showCvar {"3"; "4"; "5"; "6"; "7"; "8"}
+
+			showCvar {
+				"3"; "4"; "5"; "6"; "7"
+			}
 
 			mouseenter {
 				setitemcolor headlist bordercolor 1 0 0 1
@@ -240,7 +243,10 @@
 			forecolor 1 1 1 1
 			visible 1
 			cvarTest "g_gametype"
-			showCvar {"0"; "1"; "2"}
+
+			showCvar {
+				"0"; "1"; "2"
+			}
 
 			mouseenter {
 				setitemcolor headlist bordercolor 1 0 0 1

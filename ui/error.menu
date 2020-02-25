@@ -14,7 +14,9 @@
 			uiScript clearError
 		}
 
-		onOpen {}
+		onOpen {
+
+		}
 
 		onESC {
 			close error_popmenu;

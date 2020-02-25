@@ -318,7 +318,7 @@
 			cvar "cg_hudFiles"
 
 			cvarStrList {
-				Normal "ui/hud.txt",
+				Normal "ui/hud.txt";
 				Small "ui/hud2.txt"
 			}
 

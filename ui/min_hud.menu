@@ -7,11 +7,9 @@
 		fadeClamp 1.0								// sets the fadeup alpha
 		fadeCycle 1									// how often fade happens in milliseconds
 		fadeAmount 0.1								// amount to adjust alpha per cycle
-
 		shadowX 5									// x amount for shadow offset
 		shadowY 5									// y amount for shadow offset
 		shadowColor 0.1 0.1 0.1 0.25				// shadow color
-
 		font "fonts/impact.ttf" 16					// font
 		smallFont "fonts/impact.ttf" 12				// font
 		bigFont "fonts/impact.ttf" 20				// font
@@ -23,7 +21,7 @@
 			name "SelectedPlayer"
 			fullScreen MENU_FALSE
 			visible 1
-			rect 0 390 222 64 
+			rect 0 390 222 64
 			ownerdrawflag CG_SHOW_ANYTEAMGAME
 
 			itemDef {
@@ -148,7 +146,7 @@
 
 			itemDef {
 				name "flag"
-				rect 45 4 16 16 
+				rect 45 4 16 16
 				visible 1
 				decoration
 				ownerdraw CG_PLAYER_HASFLAG2D
@@ -164,7 +162,7 @@
 				textscale .25
 				decoration
 				textstyle 3
-				ownerdraw CG_HARVESTER_SKULLS2D 
+				ownerdraw CG_HARVESTER_SKULLS2D
 			}
 		}
 

@@ -234,7 +234,7 @@
 			rect 0 440 640 40
 			textalign 1
 			textaligny 32
-			textalignx 320 
+			textalignx 320
 			forecolor .75 0 0 .75
 			visible 1
 			decoration

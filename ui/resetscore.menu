@@ -204,7 +204,7 @@
 		}
 
 		itemDef {
-			name finish_message 
+			name finish_message
 			group grpfinish
 			style 0
 			text "Your values are now set to zero."

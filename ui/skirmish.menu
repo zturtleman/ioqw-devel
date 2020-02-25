@@ -91,7 +91,7 @@
 
 		itemDef {
 			name opposingteamfield
-			text "Opponent: "
+			text "Opponent:"
 			ownerdraw UI_OPPONENT_NAME
 			textstyle 6
 			rect 213 10 213 31
@@ -102,7 +102,10 @@
 			forecolor 1 1 1 1
 			visible 1
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
 
 			action {
 				play "sound/misc/kcaction.wav"
@@ -123,7 +126,7 @@
 			ownerdraw UI_SKILL
 			textstyle 6
 			text "Skill:"
-			rect 426 10 213 31 
+			rect 426 10 213 31
 			textalign ITEM_ALIGN_LEFT
 			textalignx 20
 			textaligny 26
@@ -228,7 +231,11 @@
 			ownerdraw UI_OPPONENTLOGO_METAL
 			rect 264 200 120 120
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			visible 1
 			forecolor .7 .7 1 .25
 			decoration
@@ -257,7 +264,11 @@
 			name opposinglogo
 			ownerdraw UI_OPPONENTLOGO_METAL
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			rect 264 200 120 120
 			visible 1
 			forecolor .7 .7 1 .25
@@ -317,7 +328,11 @@
 			name playerlogo
 			ownerdraw UI_PLAYERLOGO_METAL
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			rect 264 200 120 120
 			ownerdrawflag UI_SHOW_NEWHIGHSCORE
 			visible 1
@@ -341,7 +356,7 @@
 			textstyle ITEM_TEXTSTYLE_BLINK
 			textscale .35
 			text "New High Score"
-			rect 258 248 128 20 
+			rect 258 248 128 20
 			ownerdrawflag UI_SHOW_NEWHIGHSCORE
 			textalign 1
 			textalignx 64 // x alignment point for text
@@ -371,7 +386,7 @@
 			text ""
 			type ITEM_TYPE_EDITFIELD
 			cvar "ui_scoreScore"
-			rect 258 265 128 20 
+			rect 258 265 128 20
 			textalign 1
 			textalignx 64 // x alignment point for text
 			// use it to offset left/right text from the edge or to center the text on a different point
@@ -1316,39 +1331,19 @@
 				setitemcolor maplist bordercolor .5 .5 .5 .5;
 				hide message_arena
 			}
-/*			
-			// demo_only
-			cvarTest "ui_gameType"
-			hideCvar {"1"}
-*/
 		}
-/*
-// DEMO ONLY OPTION
 
-		itemDef {
-			name demo_only
-			text "Opponent: "
-			text "Tournament Maps are Not Available in Demo."
-			textstyle 3
-			rect 119 60 403 91
-			textalign ITEM_ALIGN_CENTER
-			textalignx 200
-			textaligny 26
-			textscale .35
-			forecolor 1 1 1 1
-			visible 1
-			decoration
-			cvarTest "ui_gameType"
-			showCvar {"1"}
-		}
-*/
 // TEAM LOGOS
 
 		itemDef {
 			name playerlogo
 			ownerdraw UI_PLAYERLOGO_METAL
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			rect 30 60 80 80
 			visible 1
 			forecolor 1 .7 .7 1
@@ -1359,7 +1354,11 @@
 			name modelselection
 			ownerdraw UI_PLAYERMODEL
 			cvarTest "ui_gameType"
-			showCvar {"1"}
+
+			showCvar {
+				"1"
+			}
+
 			rect 10 40 140 140
 			style 1
 			decoration
@@ -1370,7 +1369,11 @@
 			name opposinglogo
 			ownerdraw UI_OPPONENTLOGO_METAL
 			cvarTest "ui_gameType"
-			hideCvar {"1"}
+
+			hideCvar {
+				"1"
+			}
+
 			rect 530 60 80 80
 			visible 1
 			forecolor .7 .7 1 1
@@ -1381,7 +1384,11 @@
 			name modelselection
 			ownerdraw UI_OPPONENTMODEL
 			cvarTest "ui_gameType"
-			showCvar {"1"}
+
+			showCvar {
+				"1"
+			}
+
 			rect 510 40 140 140
 			style 1
 			decoration
@@ -1560,11 +1567,6 @@
 			action {
 				uiScript SkirmishStart
 			}
-/*			
-			// demo_only
-			cvarTest "ui_gameType"
-			hideCvar {"1"}
-*/
 		}
 
 		itemDef {
@@ -1588,11 +1590,6 @@
 				fadeout message_accept;
 				playlooped "music/fla_mp03.wav"
 			}
-/*			
-			// demo_only
-			cvarTest "ui_gameType"
-			hideCvar {"1"}
-*/
 		}
 
 		itemDef {

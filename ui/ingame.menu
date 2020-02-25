@@ -7,15 +7,11 @@
 		cursor "ui/assets/3_cursor3"				// cursor
 		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
 		itemFocusSound "sound/misc/menu2.wav"		// sound for item getting focus (via keyboard or mouse)
-
 		fadeClamp 1.0								// sets the fadeup alpha
 		fadeCycle 1									// how often fade happens in milliseconds
 		fadeAmount 0.1								// amount to adjust alpha per cycle
-
 		shadowColor 0.1 0.1 0.1 0.25				// shadow color
 	}
-
-\\ INGAME MENU \\
 
 	menuDef {
 		name "ingame"
@@ -83,7 +79,11 @@
 			style WINDOW_STYLE_FILLED
 			background "ui/assets/button_back.tga"
 			cvarTest "ui_singlePlayerActive"
-			disableCvar {"1"}
+
+			disableCvar {
+				"1"
+			}
+
 			rect 58 0 58 30
 			textalign 1
 			textalignx 29
@@ -127,7 +127,11 @@
 			textaligny 22
 			textscale .25
 			cvarTest "g_gametype"
-			disableCvar {"0"; "1"; "2"; "3"; "8"}
+
+			disableCvar {
+				"0"; "1"; "2"; "3"
+			}
+
 			visible 1
 			forecolor 1 1 1 1
 			backcolor 0 .17 0 1
@@ -166,7 +170,11 @@
 			textaligny 22
 			textscale .25
 			cvarTest "ui_singlePlayerActive"
-			disableCvar {"1"}
+
+			disableCvar {
+				"1"
+			}
+
 			forecolor 1 1 1 1
 			backcolor 0 .17 0 1
 			visible 1
@@ -352,7 +360,11 @@
 			style WINDOW_STYLE_FILLED
 			background "ui/assets/button_back.tga"
 			cvarTest "ui_singlePlayerActive"
-			disableCvar {"1"}
+
+			disableCvar {
+				"1"
+			}
+
 			rect 464 0 58 30
 			textalign 1
 			textalignx 29
@@ -392,7 +404,11 @@
 			style WINDOW_STYLE_FILLED
 			background "ui/assets/button_back.tga"
 			cvarTest "ui_singlePlayerActive"
-			disableCvar {"1"}
+
+			disableCvar {
+				"1"
+			}
+
 			rect 522 0 58 30
 			textalign 1
 			textalignx 29

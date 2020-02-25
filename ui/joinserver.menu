@@ -33,7 +33,7 @@
 		itemDef {
 			name sourcebar
 			style 2
-			rect 0 20 640 40 
+			rect 0 20 640 40
 			style 2
 			border 4
 			bordercolor 0.5 0.5 0.5 0.5
@@ -193,7 +193,7 @@
 		itemDef {
 			name mappreview
 			style WINDOW_STYLE_FILLED
-			rect 505 5 128 96 
+			rect 505 5 128 96
 			border 1
 			bordercolor .5 .5 .5 .5
 			visible 1

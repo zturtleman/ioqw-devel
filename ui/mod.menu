@@ -70,24 +70,7 @@
 			decoration
 			visible 1
 		}
-/*
-// DEMO ONLY
 
-		itemDef {
-			name demo_only
-			style 0
-			rect 240 250 360 20
-			textstyle 1
-			textalign 1
-			textalignx 180
-			textaligny 25
-			textscale .333
-			text "This Option is Not Available in Demo."
-			forecolor 1 1 1 1
-			decoration
-			visible 1
-		}
-*/
 		itemDef {
 			name modlist
 			rect 240 100 360 300

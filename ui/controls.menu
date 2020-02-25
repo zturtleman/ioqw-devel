@@ -52,7 +52,7 @@
 
 		itemDef {
 			name keyBindStatus
-			rect 0 15 640 30 
+			rect 0 15 640 30
 			ownerdraw UI_KEYBINDSTATUS
 			text " "
 			forecolor 1 .75 0 1
@@ -589,7 +589,7 @@
 			textalignx 22
 			textaligny 20
 			forecolor 1 1 1 1
-			backcolor .37 .1 .1 1 
+			backcolor .37 .1 .1 1
 			visible 1
 
 			action {
@@ -1020,7 +1020,7 @@
 			textalignx 22
 			textaligny 20
 			forecolor 1 1 1 1
-			backcolor .37 .1 .1 1 
+			backcolor .37 .1 .1 1
 			visible 1
 
 			action {
@@ -1248,7 +1248,7 @@
 			textalignx 23
 			textaligny 20
 			forecolor 1 1 1 1
-			backcolor .37 .1 .1 1 
+			backcolor .37 .1 .1 1
 			visible 1
 
 			action {
@@ -1602,7 +1602,7 @@
 			textalignx 23
 			textaligny 20
 			forecolor 1 1 1 1
-			backcolor .37 .1 .1 1 
+			backcolor .37 .1 .1 1
 			visible 1
 
 			action {
@@ -1786,7 +1786,7 @@
 
 		itemDef {
 			name yesno_message
-			rect 0 15 640 30 
+			rect 0 15 640 30
 			text "Select the Item to Toggle to Yes or No"
 			forecolor 1 .75 0 1
 			textscale .25
@@ -1799,7 +1799,7 @@
 
 		itemDef {
 			name slider_message
-			rect 0 15 640 30 
+			rect 0 15 640 30
 			text "Drag the Slider to Increase and Decrease"
 			forecolor 1 .75 0 1
 			textscale .25

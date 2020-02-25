@@ -40,7 +40,7 @@
 
 		itemDef {
 			name teamNameWindow
-			rect 14 74 612 24 
+			rect 14 74 612 24
 			style WINDOW_STYLE_FILLED
 			border 1
 			bordercolor .5 .5 .5 1

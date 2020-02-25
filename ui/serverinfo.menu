@@ -10,7 +10,9 @@
 		border 1
 		popup
 
-		onClose {}
+		onClose {
+
+		}
 
 		onOpen {
 			uiScript ServerStatus
