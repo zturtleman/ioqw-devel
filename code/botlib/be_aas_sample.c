@@ -452,7 +452,7 @@ qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end, int pres
 			continue;
 		}
 
-		if (AAS_EntityCollision(link->entnum, start, boxmins, boxmaxs, end, CONTENTS_SOLID|CONTENTS_PLAYERCLIP, &bsptrace)) {
+		if (AAS_EntityCollision(link->entnum, start, boxmins, boxmaxs, end, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP, &bsptrace)) {
 			collision = qtrue;
 		}
 	}

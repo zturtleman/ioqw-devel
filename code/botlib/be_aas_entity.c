@@ -40,7 +40,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "be_interface.h"
 #include "be_aas_def.h"
 
-#define MASK_SOLID CONTENTS_PLAYERCLIP
 /*
 =======================================================================================================================================
 AAS_UpdateEntity
