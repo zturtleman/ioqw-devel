@@ -1382,7 +1382,10 @@ BotCheckBlocked
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
-
+/*
+	// Tobias NOTE: this (old) version doesn't check the bottom for blocking obstacles, whereas the new (active) one does. This means we have an
+	//              additional trace check, trace checks are expensive, so in theory we need more CPU with the newer version (though I can't notice any
+	//              performance issues even with 64 bots). If we ever will notice any issues, please reverte to the old behaviour...
 	// test for entities obstructing the bot's path
 	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 	// if the bot can step on
@@ -1390,15 +1393,15 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		mins[2] += sv_maxstep->value;
 		maxs[2] -= 10; // a little lower to avoid low ceiling
 	}
-
+	// check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
 	VectorMA(ms->origin, 4, dir, end);
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and NOT hitting the world entity
 	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 #ifdef DEBUG
-		//botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
+		botimport.Print(PRT_MESSAGE, S_COLOR_RED "%d: BotCheckBlocked: Nearby obstacle!\n", ms->client);
 #endif // DEBUG
 	// if the bot is standing on something and not in an area with reachability
 	} else if (checkbottom && !AAS_AreaReachability(ms->areanum)) {
@@ -1410,8 +1413,70 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			result->blockentity = trace.entityNum;
 			result->flags |= MOVERESULT_ONTOPOF_OBSTACLE;
 #ifdef DEBUG
-			//botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
+			botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "%d: BotCheckBlocked: I'm on top of an obstacle!\n", ms->client);
 #endif // DEBUG
+		}
+	// if no blocking obstacle is found, do a full trace to check for distant obstacles to avoid, depending on current speed
+	} else {
+		VectorMA(ms->origin, 400, dir, end);
+		trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		// if not started in solid and NOT hitting the world entity
+		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+			result->blocked = qtrue;
+			result->blockentity = trace.entityNum;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon!\n", ms->client);
+#endif // DEBUG
+		}
+	}
+	// Tobias NOTE: this new version permanently checks the bottom for blocking obstacles. This way we are able to let bots deal with blocking obstacles under
+	//              there feet (like destroyable crates, blocking bodies or corpses, etc.). Eventually add 'checktop' for crates above ladders?
+	//              THINKABOUTME: Is it really worth to waste CPU power for this permanent check?
+*/
+	// test for entities obstructing the bot's path
+	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
+	// if the bot can step on
+	if (fabs(DotProduct(dir, up)) < 0.7) {
+		mins[2] += sv_maxstep->value; // Tobias CHECK: doesn't this contradict 'checkbottom'
+		maxs[2] -= 10; // a little lower to avoid low ceiling // Tobias CHECK: shrinking the bbox to avoid low ceiling? I think we have to make the bbox higher instead?
+	}
+	// check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
+	VectorMA(ms->origin, 4, dir, end);
+	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	// if not started in solid and NOT hitting the world entity
+	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+		result->blocked = qtrue;
+		result->blockentity = trace.entityNum;
+#ifdef DEBUG
+		botimport.Print(PRT_MESSAGE, S_COLOR_RED "%d: BotCheckBlocked: Nearby obstacle!\n", ms->client);
+#endif // DEBUG
+	// if the bot is standing on something and not in an area with reachability
+	} else if (checkbottom) {
+		VectorMA(ms->origin, -4, up, end);
+		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		// if not started in solid and NOT hitting the world entity
+		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+			result->blocked = qtrue;
+			result->blockentity = trace.entityNum;
+
+			if (!AAS_AreaReachability(ms->areanum)) {
+				result->flags |= MOVERESULT_ONTOPOF_OBSTACLE;
+#ifdef DEBUG
+				botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "%d: BotCheckBlocked: I'm on top of an obstacle without any reachability area!\n", ms->client);
+#endif // DEBUG
+			}
+		// if no blocking obstacle is found, do a full trace to check for distant obstacles to avoid, depending on current speed
+		} else {
+			VectorMA(ms->origin, 400, dir, end);
+			trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			// if not started in solid and NOT hitting the world entity
+			if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+				result->blocked = qtrue;
+				result->blockentity = trace.entityNum;
+#ifdef DEBUG
+				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon!\n", ms->client);
+#endif // DEBUG
+			}
 		}
 	}
 }
