@@ -1382,6 +1382,7 @@ BotCheckBlocked
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
+	int currentspeed;
 /*
 	// Tobias NOTE: this (old) version doesn't check the bottom for blocking obstacles, whereas the new (active) one does. This means we have an
 	//              additional trace check, trace checks are expensive, so in theory we need more CPU with the newer version (though I can't notice any
@@ -1467,14 +1468,17 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			}
 		// if no blocking obstacle is found, do a full trace to check for distant obstacles to avoid, depending on current speed
 		} else {
-			VectorMA(ms->origin, 400, dir, end);
+			// get the current speed
+			currentspeed = DotProduct(ms->velocity, dir)/* + mindist(4)*/; // Tobias CHECK: keep some minimum speed for calculations? Even worse, we have negative speeds! Do something like 'if currentspeed < 100 ...' etc.?
+
+			VectorMA(ms->origin, currentspeed * 1.25, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
 			trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if not started in solid and NOT hitting the world entity
 			if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
 				result->blocked = qtrue;
 				result->blockentity = trace.entityNum;
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon!\n", ms->client);
+				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %i.\n", ms->client, currentspeed);
 #endif // DEBUG
 			}
 		}
