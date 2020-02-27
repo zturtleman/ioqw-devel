@@ -615,8 +615,8 @@ int BotOnTopOfEntity(bot_movestate_t *ms) {
 	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 	VectorMA(ms->origin, -4, up, end);
 	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-	// if not started in solid and NOT hitting the world entity
-	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+	// if not started in solid and hitting an entity
+	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 		return trace.entityNum;
 	}
 
@@ -1431,8 +1431,8 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
 	VectorMA(ms->origin, 4, dir, end);
 	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-	// if not started in solid and NOT hitting the world entity
-	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+	// if not started in solid and hitting an entity
+	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 #ifdef DEBUG
@@ -1442,8 +1442,8 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	} else if (checkbottom && !AAS_AreaReachability(ms->areanum)) {
 		VectorMA(ms->origin, -4, up, end);
 		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-		// if not started in solid and NOT hitting the world entity
-		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+		// if not started in solid and hitting an entity
+		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 			result->blocked = qtrue;
 			result->blockentity = trace.entityNum;
 			result->flags |= MOVERESULT_ONTOPOF_OBSTACLE;
@@ -1478,8 +1478,8 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
 	VectorMA(ms->origin, 4, dir, end);
 	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-	// if not started in solid and NOT hitting the world entity
-	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+	// if not started in solid and hitting an entity
+	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 #ifdef DEBUG
@@ -1489,8 +1489,8 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	} else if (checkbottom) {
 		VectorMA(ms->origin, -4, up, end);
 		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-		// if not started in solid and NOT hitting the world entity
-		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
+		// if not started in solid and hitting an entity
+		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 			result->blocked = qtrue;
 			result->blockentity = trace.entityNum;
 
@@ -2488,7 +2488,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 	bot_moveresult_t_cleared(result);
 
 	modelnum = reach->facenum & 0x0000FFFF;
-
+	// get some bsp model info
 	if (!BotBSPModelMinsMaxsOrigin(modelnum, NULL, NULL, NULL, NULL)) {
 		// stop using this reachability
 		ms->reachability_time = 0;
@@ -2695,7 +2695,7 @@ qboolean BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end,
 	int num0, num1;
 
 	modelnum = reach->facenum & 0x0000FFFF;
-
+	// get some bsp model info
 	if (!BotBSPModelMinsMaxsOrigin(modelnum, angles, mins, maxs, origin)) {
 		botimport.Print(PRT_MESSAGE, "BotFuncBobStartEnd: no entity with model %d\n", modelnum);
 		return qfalse;
