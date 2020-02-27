@@ -1391,22 +1391,20 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		maxs[2] -= 10; // a little lower to avoid low ceiling
 	}
 
-	VectorMA(ms->origin, 3, dir, end);
+	VectorMA(ms->origin, 4, dir, end);
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-	// if not started in solid and not hitting the world entity
+	// if not started in solid and NOT hitting the world entity
 	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 #ifdef DEBUG
 		//botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
 #endif // DEBUG
-	// if not in an area with reachability
+	// if the bot is standing on something and not in an area with reachability
 	} else if (checkbottom && !AAS_AreaReachability(ms->areanum)) {
-		// check if the bot is standing on something
-		AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 		VectorMA(ms->origin, -4, up, end);
 		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-
+		// if not started in solid and NOT hitting the world entity
 		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE)) {
 			result->blocked = qtrue;
 			result->blockentity = trace.entityNum;
