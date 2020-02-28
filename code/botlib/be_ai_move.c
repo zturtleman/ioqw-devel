@@ -1116,7 +1116,7 @@ qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter) {
 BotGapDistance
 =======================================================================================================================================
 */
-float BotGapDistance(vec3_t origin, vec3_t hordir, int checkdist, int entnum) {
+int BotGapDistance(vec3_t origin, vec3_t hordir, int checkdist, int entnum) {
 	int gapdist;
 	vec3_t start, end;
 	aas_trace_t trace;
@@ -1241,9 +1241,8 @@ BotWalkInDirection
 */
 int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 	vec3_t hordir, cmdmove, velocity, tmpdir, origin;
-	int presencetype, maxframes, cmdframes, stopevent;
+	int presencetype, maxframes, cmdframes, stopevent, gapdist;
 	aas_clientmove_t move;
-	float dist;
 
 	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) {
 		ms->moveflags |= MFL_ONGROUND;
@@ -1316,15 +1315,15 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			// check for nearby gap
 			VectorNormalize2(move.velocity, tmpdir);
 
-			dist = BotGapDistance(move.endpos, tmpdir, 400, ms->entitynum);
+			gapdist = BotGapDistance(move.endpos, tmpdir, 400, ms->entitynum);
 
-			if (dist > 0) {
+			if (gapdist > 0) {
 				return qfalse;
 			}
 
-			dist = BotGapDistance(move.endpos, hordir, 400, ms->entitynum);
+			gapdist = BotGapDistance(move.endpos, hordir, 400, ms->entitynum);
 
-			if (dist > 0) {
+			if (gapdist > 0) {
 				return qfalse;
 			}
 		}
@@ -1526,6 +1525,7 @@ BotTravel_Walk
 */
 bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) {
 	float dist, speed, currentspeed;
+	int gapdist;
 	vec3_t hordir, sideward, up = {0, 0, 1};
 	bot_moveresult_t_cleared(result);
 
@@ -1555,29 +1555,29 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 	}
 // Tobias NOTE: These code changes are very map dependant (q3dm6, q3dm7, q3dm12), maybe delete all this gap checking code at all (at least for QW maps, or keep it only for obstacles?)
 /*
-	dist = BotGapDistance(ms->origin, hordir, 100, ms->entitynum);
+	gapdist = BotGapDistance(ms->origin, hordir, 100, ms->entitynum);
 
 	if (ms->moveflags & MFL_WALK) {
-		if (dist > 0) {
-			speed = 200 - (180 - dist);
+		if (gapdist > 0) {
+			speed = 200 - (180 - gapdist);
 		} else {
 			speed = 200;
 		}
 	} else {
-		if (dist > 0) {
-			speed = 400 - (360 - 2 * dist);
+		if (gapdist > 0) {
+			speed = 400 - (360 - 2 * gapdist);
 		} else {
 			speed = 400;
 		}
 	}
 */
 /*
-	dist = BotGapDistance(ms->origin, hordir, 200, ms->entitynum);
+	gapdist = BotGapDistance(ms->origin, hordir, 200, ms->entitynum);
 
 	if (ms->moveflags & MFL_WALK) {
 		speed = 200;
 	} else {
-		if (dist > 0) {
+		if (gapdist > 0) {
 			VectorNormalize(hordir);
 			// get the sideward vector
 			CrossProduct(hordir, up, sideward);
@@ -1588,14 +1588,14 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 				speed = 400;
 				EA_Move(ms->client, sideward, speed);
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %f: Moving to the right side (Speed: %f)\n", dist, currentspeed);
+				botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
 			} else {
 				VectorNegate(sideward, sideward);
 				speed = 400;
 				EA_Move(ms->client, sideward, speed);
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %f: Moving to the left side (Speed: %f)\n", dist, currentspeed);
+				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
 			}
 		} else {
@@ -1603,19 +1603,19 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 		}
 	}
 */
-	dist = BotGapDistance(ms->origin, hordir, 200, ms->entitynum);
+	gapdist = BotGapDistance(ms->origin, hordir, 200, ms->entitynum);
 
 	if (ms->moveflags & MFL_WALK) {
 		speed = 200;
 	} else {
-		if (dist > 0) {
-			speed = 400 - (200 - dist);
+		if (gapdist > 0) { // Tobias NOTE: avoid gap checking twice, move this down!
+			speed = 400 - (200 - gapdist);
 		} else {
 			speed = 400;
 		}
 	}
 
-	if (dist > 0) {
+	if (gapdist > 0) {
 		VectorNormalize(hordir);
 		// get the sideward vector
 		CrossProduct(hordir, up, sideward);
@@ -1623,7 +1623,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 		if (!BotGapDistance(ms->origin, sideward, 100, ms->entitynum)) {
 			EA_Move(ms->client, sideward, 400);
 #ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %f: Moving to the right side (Speed: %f)\n", dist, currentspeed);
+			botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
 		} else {
 			VectorNegate(sideward, sideward);
@@ -1631,7 +1631,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 			if (!BotGapDistance(ms->origin, sideward, 100, ms->entitynum)) {
 				EA_Move(ms->client, sideward, 400);
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %f: Moving to the left side (Speed: %f)\n", dist, currentspeed);
+				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
 			}
 		}
@@ -1915,7 +1915,8 @@ Tobias TODO: add crouchig over ledges
 */
 bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach) {
 	vec3_t hordir, dir, cmdmove, velocity;
-	float dist, gapdist, speed, reachhordist;
+	float dist, speed, reachhordist;
+	int gapdist;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
 
@@ -2094,7 +2095,8 @@ BotTravel_Jump
 /*
 bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) {
 	vec3_t hordir;
-	float dist, gapdist, speed, horspeed, sv_jumpvel;
+	float dist, speed, horspeed, sv_jumpvel;
+	int gapdist;
 	bot_moveresult_t_cleared(result);
 
 	sv_jumpvel = botlibglobals.sv_jumpvel->value;
