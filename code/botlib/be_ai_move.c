@@ -1911,6 +1911,62 @@ BotTravel_WalkOffLedge
 Tobias TODO: add crouchig over ledges
              usual wall check
              Scout Powerups
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+1A:
+				//  O     S   								(origin) O -> (reach start) S < 64
+				//--------|
+				//        |
+				//        |
+				//        |
+				//        |E  								(reach start) S -> (reach end) E < 20
+				//        --------XXXXXX---------------------------------------------------------
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+1B:
+				//  O     S   								(origin) O -> (reach start) S < 64
+				//--------|
+				//        |
+				//        |
+				//        |
+				//        |E  								(reach start) S -> (reach end) E < 20
+				//        -------------|	GAP!
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+1C:
+				//  O     S   								(origin) O -> (reach start) S < 64
+				//--------|
+				//        |
+				//        |
+				//        |
+				//        |E  								(reach start) S -> (reach end) E < 20
+				//        -----------------------------------------------------------------------
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+2A:
+				//  O     S   								(origin) O -> (reach start) S < 64
+				//--------|
+				//        |
+				//        |
+				//        |
+				//        |  	E							(reach start) S -> (reach end) E > 20
+				//        |     |-------|	GAP!
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+2B:
+				//  O     S   								(origin) O -> (reach start) S < 64
+				//--------|
+				//        |
+				//        |
+				//        |
+				//        |  	E							(reach start) S -> (reach end) E > 20
+				//        |     |----------------------------------------------------------------
+
 =======================================================================================================================================
 */
 bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach) {
@@ -1950,11 +2006,8 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		gapdist = BotGapDistance(reach->end, hordir, 400, ms->entitynum);
 		// if there is no gap under the current ledge
 		if (reachhordist < 20) {
-			// if there is a gap or a ledge behind the current ledge (like a cascade)
-			if (gapdist > 0) {
-				speed = 200 - (100 - gapdist * 0.25);
 			// if there is a jumpad, lava or slime under the current ledge or if the bot is walking
-			} else if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP) || ms->moveflags & MFL_WALK) {
+			if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP) || ms->moveflags & MFL_WALK) {
 				speed = 200;
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "|_x_  1A: < 20 Predict! rhdist = %1.0f, dist = %1.0f, Gap ? (%i), speed = %1.0f\n", reachhordist, dist, gapdist, DotProduct(ms->velocity, hordir));
@@ -1962,6 +2015,17 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 				if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "slime\n");
 				if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "lava\n");
 				if (move.stopevent & SE_TOUCHJUMPPAD) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "jumppad\n");
+				if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "gap\n");
+#endif
+			// if there is a gap or a ledge behind the current ledge (like a cascade)
+			} else if (gapdist > 0) {
+				if (gapdist < 48) {
+					speed = 400 - (300 - gapdist * 0.75); // was 100
+				} else {
+					speed = 400 - (200 - gapdist * 0.5); // was 100
+				}
+#ifdef DEBUG
+				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "|_  1B: END GAP FOUND! rhdist = %1.0f, dist = %1.0f, Gap at %i, speed = %1.0f\n", reachhordist, dist, gapdist, DotProduct(ms->velocity, hordir));
 #endif
 			} else { // Tobias NOTE: this is the default case (no gaps anywhere, no jumppads or lava etc.)
 				speed = 400; // NEW
@@ -1982,9 +2046,6 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_RED "| _  2A: LAND + END GAP! rhdist = %1.0f, dist = %1.0f, Gap at %i, speed = %1.0f\n", reachhordist, dist, gapdist, DotProduct(ms->velocity, hordir));
 #endif
-			// if the bot wants to walk or if the bot will fall into slime, lava or onto a jumppad when running at full speed
-			} else if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERSLIME|SE_ENTERLAVA|SE_GAP) || ms->moveflags & MFL_WALK) { // Tobias NOTE: the q3dm9 side jp case, if 400 then this is useless!
-				speed = 400;
 			} else {
 				speed = 400;
 #ifdef DEBUG
@@ -1993,19 +2054,15 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 			}
 		}
 	} else {
-		if (reachhordist < 20) {
-			if (dist > 64) {
-				dist = 64;
-			}
-
-			speed = 400 - (256 - 4 * dist);
+		if (ms->moveflags & MFL_WALK) {
+			speed = 200;
 #ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, "---| ___ > 64 > 20: WALKING! dist = %1.0f, speed = %1.0f\n", dist, DotProduct(ms->velocity, hordir));
+			botimport.Print(PRT_MESSAGE, "---| > 64: WALKING! dist = %1.0f, speed = %1.0f\n", dist, DotProduct(ms->velocity, hordir));
 #endif
 		} else {
 			speed = 400;
 #ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, "---| ___ > 64 > 20: RUNNING! dist = %1.0f, speed = %1.0f\n", dist, DotProduct(ms->velocity, hordir));
+			botimport.Print(PRT_MESSAGE, "---| > 64: RUNNING! dist = %1.0f, speed = %1.0f\n", dist, DotProduct(ms->velocity, hordir));
 #endif
 		}
 	}
