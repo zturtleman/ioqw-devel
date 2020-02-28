@@ -1908,9 +1908,10 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 =======================================================================================================================================
 BotTravel_WalkOffLedge
 
-Tobias TODO: add crouchig over ledges
-             usual wall check
-             Scout Powerups
+Tobias TODO: * Add crouchig over ledges (height dependancy)
+             * Move prediction into reachhordist < 20 (not needed if reachhordist > 20)?
+             * Usual wall check
+             * Scout Powerup
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2553,6 +2554,11 @@ bot_moveresult_t BotTravel_Teleport(bot_movestate_t *ms, aas_reachability_t *rea
 /*
 =======================================================================================================================================
 BotTravel_Elevator
+
+Tobias TODO: * Add crouchig over ledges (height dependancy)
+             * Move prediction into reachhordist < 20 (not needed if reachhordist > 20)?
+             * Usual wall check
+             * Scout Powerup
 =======================================================================================================================================
 */
 bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *reach) {
@@ -3334,6 +3340,8 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 /*
 =======================================================================================================================================
 BotMoveInGoalArea
+
+Tobias TODO: * Usual wall check?
 =======================================================================================================================================
 */
 bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
