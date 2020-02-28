@@ -2767,8 +2767,6 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		VectorCopy(bs->lastenemyorigin, goal.origin);
 		VectorSet(goal.mins, -8, -8, -8);
 		VectorSet(goal.maxs, 8, 8, 8);
-		// initialize the movement state
-		BotSetupForMovement(bs);
 		// move towards the goal
 		trap_BotMoveToGoal(&moveresult, bs->ms, &goal, tfl);
 		return moveresult;
@@ -2783,8 +2781,6 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	if (attack_skill < 0.2) {
 		return moveresult;
 	}
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// direction towards the enemy
@@ -5728,10 +5724,16 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	bs->flags &= ~BFL_IDEALVIEWSET;
 
 	if (!BotIntermission(bs)) {
+		// initialize the movement state
+		BotSetupForMovement(bs);
 		// check out the snapshot
 		BotCheckSnapshot(bs);
 		// update some inventory values
 		BotUpdateInventory(bs);
+		// choose the best weapon to fight with
+		BotChooseWeapon(bs);
+		// use holdable items
+		BotBattleUseItems(bs);
 		// set the teleport time
 		BotSetTeleportTime(bs);
 		// check for air

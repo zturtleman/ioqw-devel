@@ -289,7 +289,6 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 		bs->ltg_time = 0;
 	// if the bot touches the current goal
 	} else if (BotReachedGoal(bs, goal)) {
-		BotChooseWeapon(bs);
 		bs->ltg_time = 0;
 	}
 	// if it is time to find a new long term goal
@@ -441,7 +440,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 
 								if (DotProduct(dir, dir2) > 0.7) {
 									// back up
-									BotSetupForMovement(bs);
 									trap_BotMoveInDirection(bs->ms, dir2, 400, MOVE_WALK);
 								}
 							}
@@ -1665,8 +1663,6 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		if (BotAIPredictObstacles(bs, goal)) {
 			return qfalse;
 		}
-		// initialize the movement state
-		BotSetupForMovement(bs);
 		// move towards the goal
 		trap_BotMoveToGoal(&moveresult, bs->ms, goal, bs->tfl);
 		// if the movement failed
@@ -1808,7 +1804,6 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	// if the bot touches the current goal
 	} else if (BotReachedGoal(bs, &goal)) {
-		BotChooseWeapon(bs);
 		bs->nbg_time = 0;
 	}
 
@@ -1826,8 +1821,6 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	if (BotAIPredictObstacles(bs, &goal)) {
 		return qfalse;
 	}
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2023,8 +2016,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	if (BotAIPredictObstacles(bs, &goal)) {
 		return qfalse;
 	}
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2219,8 +2210,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-	// use holdable items
-	BotBattleUseItems(bs);
 
 	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
@@ -2231,8 +2220,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
-	// choose the best weapon to fight with
-	BotChooseWeapon(bs);
 	// do attack movements
 	moveresult = BotAttackMove(bs, bs->tfl);
 	// if the movement failed
@@ -2359,8 +2346,6 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 
 	BotUpdateBattleInventory(bs, bs->enemy);
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2513,8 +2498,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 
 	BotTeamGoals(bs, qtrue);
-	// use holdable items
-	BotBattleUseItems(bs);
 	// get the current long term goal while retreating
 	if (!BotLongTermGoal(bs, bs->tfl, qtrue, &goal)) {
 		AIEnter_Battle_SuicidalFight(bs, "battle retreat: no way out");
@@ -2548,8 +2531,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2561,8 +2542,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, qfalse);
-	// choose the best weapon to fight with
-	BotChooseWeapon(bs);
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2692,8 +2671,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 
 		return qfalse;
 	}
-	// initialize the movement state
-	BotSetupForMovement(bs);
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2707,8 +2684,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	BotAIBlocked(bs, &moveresult, qfalse);
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
-	// choose the best weapon to fight with
-	BotChooseWeapon(bs);
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
