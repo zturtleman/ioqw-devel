@@ -1716,7 +1716,7 @@ BotTravel_BarrierJump
 =======================================================================================================================================
 */
 bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	float hordist, dist, jumpdist, speed, currentspeed;
+	float reachhordist, dist, jumpdist, speed, currentspeed;
 	vec3_t hordir, cmdmove, end, velocity;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
@@ -1725,16 +1725,14 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	hordir[0] = reach->start[0] - ms->origin[0];
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
-	hordist = VectorNormalize(hordir);
-	dist = hordist;
+	reachhordist = VectorNormalize(hordir);
+	dist = reachhordist;
 
 	if (dist > 100) {
 		dist = 100;
 	}
 
 	BotCheckBlocked(ms, hordir, qtrue, &result);
-	// get the current speed
-	currentspeed = DotProduct(ms->velocity, hordir);
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	VectorCopy(ms->velocity, velocity);
@@ -1765,8 +1763,10 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 
 		jumpdist = 0.25f;
 	}
+	// get the current speed
+	currentspeed = DotProduct(ms->velocity, hordir);
 	// if pretty close to the barrier
-	if (hordist < (sv_maxbarrier->value + (currentspeed * 1.1)) * jumpdist) {
+	if (reachhordist < (sv_maxbarrier->value + (currentspeed * 1.1)) * jumpdist) {
 		EA_Jump(ms->client);
 	}
 	// elementary action move in direction
@@ -1945,7 +1945,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		VectorScale(hordir, 400, cmdmove);
 		VectorCopy(ms->velocity, velocity);
 
-		AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERSLIME|SE_ENTERLAVA|SE_GAP, 0, qfalse); //qtrue
+		AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
 		// check for nearby gap behind the current ledge
 		gapdist = BotGapDistance(reach->end, hordir, 400, ms->entitynum);
 		// if there is no gap under the current ledge
@@ -1954,7 +1954,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 			if (gapdist > 0) {
 				speed = 200 - (100 - gapdist * 0.25);
 			// if there is a jumpad, lava or slime under the current ledge or if the bot is walking
-			} else if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERSLIME|SE_ENTERLAVA|SE_GAP) || ms->moveflags & MFL_WALK) {
+			} else if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP) || ms->moveflags & MFL_WALK) {
 				speed = 200;
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "|_x_  1A: < 20 Predict! rhdist = %1.0f, dist = %1.0f, Gap ? (%i), speed = %1.0f\n", reachhordist, dist, gapdist, DotProduct(ms->velocity, hordir));
