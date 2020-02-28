@@ -2230,10 +2230,10 @@ BotTravel_Jump
 =======================================================================================================================================
 */
 bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	vec3_t hordir, dir1, dir2, start, end, runstart;
+	vec3_t hordir, dir1, dir2, dir3, /*start, end, */runstart;
 	//vec3_t runstart, dir1, dir2, hordir;
-	int gapdist;
-	float dist1, dist2, speed;
+//	int gapdist;
+	float dist1, dist2, dist3, speed;
 #ifdef DEBUG
 	float currentspeed;
 #endif // DEBUG
@@ -2275,8 +2275,13 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 
 	dir2[2] = 0;
 	dist2 = VectorNormalize(dir2);
+
+	VectorSubtract(runstart, reach->start, dir3);
+
+	dir3[2] = 0;
+	dist3 = VectorNormalize(dir3);
 	// if just before the reachability start
-	if (DotProduct(dir1, dir2) < -0.8 || dist2 < 5) {
+	if (dist1 < dist3 + 10 || dist1 + 10 >= dist2 + dist3 || DotProduct(dir1, dir2) < -0.8 || dist2 < 5) { // Tobias NOTE: why did I do: dist3 + 10? Still needed because otherwise we have a -dist2?
 		//botimport.Print(PRT_MESSAGE, "between jump start and run start point\n");
 		hordir[0] = reach->end[0] - ms->origin[0];
 		hordir[1] = reach->end[1] - ms->origin[1];
@@ -2293,7 +2298,7 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 		}
 #endif // DEBUG
 		// elementary action jump
-		if (dist1 < 24) { // 20 (for Railgun)
+		if (dist1 < 22) { // 20 (for Railgun)
 			EA_Jump(ms->client);
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, S_COLOR_RED "Jumped! dist1 = %f (%f)\n", dist1, currentspeed);
@@ -2305,7 +2310,13 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 #endif // DEBUG
 		}
 
-		EA_Move(ms->client, hordir, 600);
+		if (ms->moveflags & MFL_WALK && dist2 > dist3) {
+			speed = 200;
+		} else {
+			speed = 600;
+		}
+
+		EA_Move(ms->client, hordir, speed);
 
 		ms->jumpreach = ms->lastreachnum;
 	} else {
@@ -2315,11 +2326,15 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 
 		VectorNormalize(hordir);
 
-		if (dist2 > 80) {
-			dist2 = 80;
-		}
+		if (ms->moveflags & MFL_WALK && dist2 > dist3) {
+			speed = 200;
+		} else {
+			if (dist2 > 100) {
+				dist2 = 100;
+			}
 
-		speed = 400 - (400 - 5 * dist2);
+			speed = 400 - (300 - 3 * dist2);
+		}
 #ifdef DEBUG
 		currentspeed = DotProduct(ms->velocity, hordir);
 
