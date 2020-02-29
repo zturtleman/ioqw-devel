@@ -374,22 +374,26 @@ int BotVisibleEnemies(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
 		if (!entinfo.valid) {
 			continue;
 		}
-		// if the enemy isn't dead and the enemy isn't the bot self
-		if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) {
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// if the entity isn't dead
+		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
 		// if the enemy is invisible
 		if (EntityIsInvisible(&entinfo)) {
-			continue;
-		}
-		// if on the same team
-		if (BotSameTeam(bs, i)) {
 			continue;
 		}
 		// check if the enemy is visible

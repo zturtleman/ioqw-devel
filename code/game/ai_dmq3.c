@@ -3164,8 +3164,12 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (!entinfo.valid) {
 			continue;
 		}
-		// if the enemy isn't dead and the enemy isn't the bot self
-		if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) {
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// if the entity isn't dead
+		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
 		// if the enemy is invisible
@@ -3258,6 +3262,10 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if the flag carrier is not on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
@@ -3266,10 +3274,6 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 		}
 		// if this player is carrying a flag
 		if (!EntityCarriesFlag(&entinfo)) {
-			continue;
-		}
-		// if the flag carrier is not on the same team
-		if (!BotSameTeam(bs, i)) {
 			continue;
 		}
 		// if the flag carrier is not visible
@@ -3298,6 +3302,10 @@ int BotTeamFlagCarrier(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if the flag carrier is not on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
@@ -3306,10 +3314,6 @@ int BotTeamFlagCarrier(bot_state_t *bs) {
 		}
 		// if this player is carrying a flag
 		if (!EntityCarriesFlag(&entinfo)) {
-			continue;
-		}
-		// if the flag carrier is not on the same team
-		if (!BotSameTeam(bs, i)) {
 			continue;
 		}
 
@@ -3333,6 +3337,10 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if the flag carrier is on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
@@ -3341,10 +3349,6 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 		}
 		// if this player is carrying a flag
 		if (!EntityCarriesFlag(&entinfo)) {
-			continue;
-		}
-		// if the flag carrier is on the same team
-		if (BotSameTeam(bs, i)) {
 			continue;
 		}
 		// if the flag carrier is not visible
@@ -3432,6 +3436,10 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if the cube carrier is not on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
@@ -3440,10 +3448,6 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 		}
 		// if this player is carrying cubes
 		if (!EntityCarriesCubes(&entinfo)) {
-			continue;
-		}
-		// if the cube carrier is not on the same team
-		if (!BotSameTeam(bs, i)) {
 			continue;
 		}
 		// if the cube carrier is not visible
@@ -3473,6 +3477,10 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
+		// if the cube carrier is on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
 		// if this player is active
@@ -3481,10 +3489,6 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 		}
 		// if this player is carrying cubes
 		if (!EntityCarriesCubes(&entinfo)) {
-			continue;
-		}
-		// if the cube carrier is on the same team
-		if (BotSameTeam(bs, i)) {
 			continue;
 		}
 		// if the cube carrier is not visible
@@ -3559,12 +3563,10 @@ qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 	maleScores = 0;
 
 	for (i = 0; i < level.maxclients; i++) {
-		trap_GetConfigstring(CS_PLAYERS + i, buf, sizeof(buf));
-
 		if (i == bs->client) {
 			continue;
 		}
-
+		// if on the same team
 		if (BotSameTeam(bs, i)) {
 			continue;
 		}
@@ -3578,6 +3580,8 @@ qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
+
+		trap_GetConfigstring(CS_PLAYERS + i, buf, sizeof(buf));
 		// if no config string or no name
 		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) {
 			continue;
@@ -4141,8 +4145,12 @@ void BotMapScripts(bot_state_t *bs) {
 			if (!entinfo.valid) {
 				continue;
 			}
-			// if the enemy isn't dead and the enemy isn't the bot self
-			if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) {
+			// if the entity isn't the bot self
+			if (entinfo.number == bs->entitynum) {
+				continue;
+			}
+			// if the entity isn't dead
+			if (EntityIsDead(&entinfo)) {
 				continue;
 			}
 
