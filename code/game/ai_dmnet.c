@@ -2029,8 +2029,10 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	}
 
 	if (bs->killedenemy_time > FloatTime() - 2) {
-		if (random() < bs->thinktime) {
-			trap_EA_Gesture(bs->client);
+		if (random() < bs->thinktime * 10) { // Tobias NOTE: tweak the randomness (with more anims)
+			if (BotValidChatPosition(bs)) { // Tobias NOTE: it still looks silly if a bot is doing a gesture while jumping into a pool for example (use our new SURF_ANIM?)
+				trap_EA_Gesture(bs->client);
+			}
 		}
 	}
 
