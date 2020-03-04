@@ -1919,12 +1919,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	BotMapScripts(bs);
 	// no enemy
 	bs->enemy = -1;
-
-	if (bs->killedenemy_time > FloatTime() - 2) {
-		if (random() < bs->thinktime) {
-			trap_EA_Gesture(bs->client);
-		}
-	}
 	// if there is an enemy
 	if (BotFindEnemy(bs, -1)) {
 		if (BotWantsToRetreat(bs)) {
@@ -2032,6 +2026,12 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	// if the weapon is used for the bot movement
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
 		bs->weaponnum = moveresult.weapon;
+	}
+
+	if (bs->killedenemy_time > FloatTime() - 2) {
+		if (random() < bs->thinktime) {
+			trap_EA_Gesture(bs->client);
+		}
 	}
 
 	BotChat_Random(bs);
