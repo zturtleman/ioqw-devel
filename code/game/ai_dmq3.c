@@ -5730,8 +5730,8 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	}
 	// no ideal view set
 	bs->flags &= ~BFL_IDEALVIEWSET;
-
-	if (!BotIntermission(bs)) {
+	// if not in the intermission and not in observer mode
+	if (!BotIntermission(bs) && !BotIsObserver(bs)) {
 		bs->tfl = TFL_DEFAULT;
 		// initialize the movement state
 		BotSetupForMovement(bs);
@@ -5743,6 +5743,8 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		BotChooseWeapon(bs);
 		// use holdable items
 		BotBattleUseItems(bs);
+		// do team AI
+		BotTeamAI(bs);
 		// set the teleport time
 		BotSetTeleportTime(bs);
 		// check for air
@@ -5750,11 +5752,6 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	}
 	// check the console messages
 	BotCheckConsoleMessages(bs);
-	// if not in the intermission and not in observer mode
-	if (!BotIntermission(bs) && !BotIsObserver(bs)) {
-		// do team AI
-		BotTeamAI(bs);
-	}
 	// if the bot has no ai node
 	if (!bs->ainode) {
 		AIEnter_Seek_LTG(bs, "BotDeathmatchAI: no ai node");
