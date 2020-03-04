@@ -2320,6 +2320,8 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, qfalse);
+	// check if the bot has to deactivate obstacles
+	BotClearPath(bs, &moveresult);
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2456,6 +2458,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			AIEnter_Battle_Fight(bs, "battle retreat: another enemy");
 			return qfalse;
 		}
+		// check if the bot has to deactivate obstacles
+		BotClearPath(bs, &moveresult);
 	}
 
 	BotTeamGoals(bs, qtrue);
