@@ -1571,8 +1571,6 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "activate entity: bot dead");
 		return qfalse;
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -1785,8 +1783,6 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "seek nbg: bot dead");
 		return qfalse;
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -1932,8 +1928,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		AIEnter_Stand(bs, "seek ltg: random chat");
 		return qfalse;
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2210,8 +2204,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2303,8 +2295,6 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Seek_LTG(bs, "battle chase: no enemy area");
 		return qfalse;
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2447,8 +2437,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, "found new better enemy\n");
 #endif
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2621,8 +2609,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		AIEnter_Seek_NBG(bs, "battle nbg: enemy dead");
 		return qfalse;
 	}
-
-	bs->tfl = TFL_DEFAULT;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;

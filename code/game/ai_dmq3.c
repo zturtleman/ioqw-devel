@@ -5732,6 +5732,7 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	bs->flags &= ~BFL_IDEALVIEWSET;
 
 	if (!BotIntermission(bs)) {
+		bs->tfl = TFL_DEFAULT;
 		// initialize the movement state
 		BotSetupForMovement(bs);
 		// check out the snapshot
