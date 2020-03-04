@@ -2305,6 +2305,10 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
+	// predict obstacles
+	if (BotAIPredictObstacles(bs, &goal)) {
+		return qfalse;
+	}
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2488,6 +2492,10 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
+	// predict obstacles
+	if (BotAIPredictObstacles(bs, &goal)) {
+		return qfalse;
+	}
 	// move towards the goal
 	trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
 	// if the movement failed
@@ -2624,6 +2632,10 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			AIEnter_Battle_Fight(bs, "battle nbg: time out");
 		}
 
+		return qfalse;
+	}
+	// predict obstacles
+	if (BotAIPredictObstacles(bs, &goal)) {
 		return qfalse;
 	}
 	// move towards the goal
