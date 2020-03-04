@@ -3521,7 +3521,6 @@ qboolean BotEqualizeTeamScore(bot_state_t *bs) {
 	}
 #if 0 // DEBUG
 	if (bs->enemyteamscore + bot_equalizer_teambon.value < bs->ownteamscore) { // DEBUG: bot_equalizer_teambon
-
 		if (BotTeam(bs) == TEAM_RED) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "EQUALIZE for B! (%s) Blue scores: %s, Red scores: %i\n", enemyteamscore, ownteamscore);
 		} else {
@@ -5210,9 +5209,6 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 						if (trap_BotReplyChat(bs->cs, message, context, CONTEXT_REPLY, NULL, NULL, NULL, NULL, NULL, NULL, botname, netname)) {
 							// remove the console message
 							trap_BotRemoveConsoleMessage(bs->cs, handle);
-							bs->stand_time = FloatTime() + BotChatTime(bs);
-							AIEnter_Stand(bs, "BotCheckConsoleMessages: reply chat");
-							//EA_Say(bs->client, bs->cs.chatmessage);
 							break;
 						}
 					}
@@ -5756,15 +5752,6 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	if (!bs->ainode) {
 		AIEnter_Seek_LTG(bs, "BotDeathmatchAI: no ai node");
 	}
-	// if the bot entered the game less than 8 seconds ago
-	if (!bs->entergamechat && bs->entergame_time > FloatTime() - 8) {
-		if (BotChat_EnterGame(bs)) {
-			bs->stand_time = FloatTime() + BotChatTime(bs);
-			AIEnter_Stand(bs, "BotDeathmatchAI: chat enter game");
-		}
-
-		bs->entergamechat = qtrue;
-	}
 	// reset the node switches from the previous frame
 	BotResetNodeSwitches();
 	// execute AI nodes
@@ -5788,6 +5775,11 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 
 	bs->lastframe_health = bs->inventory[INVENTORY_HEALTH];
 	bs->lasthitcount = bs->cur_ps.persistant[PERS_HITS];
+	// if the bot entered the game less than 8 seconds ago
+	if (!bs->entergamechat && bs->entergame_time > FloatTime() - 8) {
+		BotChat_EnterGame(bs);
+		bs->entergamechat = qtrue;
+	}
 }
 
 /*

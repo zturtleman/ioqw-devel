@@ -893,73 +893,6 @@ int BotChat_EnemySuicide(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
-BotChat_HitTalking
-=======================================================================================================================================
-*/
-int BotChat_HitTalking(bot_state_t *bs) {
-	char name[32], *weap;
-	int lasthurt_client;
-	float rnd;
-
-	if (bot_nochat.integer) {
-		return qfalse;
-	}
-
-	if (bs->lastchat_time > FloatTime() - TIME_BETWEENCHATTING) {
-		return qfalse;
-	}
-
-	if (BotNumActivePlayers() <= 1) {
-		return qfalse;
-	}
-
-	lasthurt_client = g_entities[bs->client].client->lasthurt_client;
-
-	if (!lasthurt_client) {
-		return qfalse;
-	}
-
-	if (lasthurt_client == bs->client) {
-		return qfalse;
-	}
-
-	if (lasthurt_client < 0 || lasthurt_client >= MAX_CLIENTS) {
-		return qfalse;
-	}
-
-	rnd = 0;
-	// don't chat in teamplay
-	if (TeamPlayIsOn()) {
-		return qfalse;
-	}
-	// don't chat in tournament mode
-	if (gametype == GT_TOURNAMENT) {
-		return qfalse;
-	}
-	// if fast chat is off
-	if (!bot_fastchat.integer) {
-		if (random() > rnd * 0.5) {
-			return qfalse;
-		}
-	}
-
-	if (!BotValidChatPosition(bs)) {
-		return qfalse;
-	}
-
-	ClientName(g_entities[bs->client].client->lasthurt_client, name, sizeof(name));
-
-	weap = BotWeaponNameForMeansOfDeath(g_entities[bs->client].client->lasthurt_mod);
-
-	BotAI_BotInitialChat(bs, "hit_talking", name, weap, NULL);
-
-	bs->lastchat_time = FloatTime();
-	bs->chatto = CHAT_ALL;
-	return qtrue;
-}
-
-/*
-=======================================================================================================================================
 BotChat_HitNoDeath
 =======================================================================================================================================
 */
@@ -1180,18 +1113,6 @@ int BotChat_Random(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
-BotChatTime
-=======================================================================================================================================
-*/
-float BotChatTime(bot_state_t *bs) {
-	//int cpm;
-
-	//cpm = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_CHAT_CPM, 1, 4000);
-	return 2.0; //(float)trap_BotChatLength(bs->cs) * 30 / cpm;
-}
-
-/*
-=======================================================================================================================================
 BotChatTest
 =======================================================================================================================================
 */
@@ -1367,14 +1288,7 @@ void BotChatTest(bot_state_t *bs) {
 
 	ClientName(g_entities[bs->client].client->lasthurt_client, name, sizeof(name));
 
-	weap = BotWeaponNameForMeansOfDeath(g_entities[bs->client].client->lasthurt_client);
-	num = trap_BotNumInitialChats(bs->cs, "hit_talking");
-
-	for (i = 0; i < num; i++) {
-		BotAI_BotInitialChat(bs, "hit_talking", name, weap, NULL);
-		trap_BotEnterChat(bs->cs, 0, CHAT_ALL);
-	}
-
+	weap = BotWeaponNameForMeansOfDeath(g_entities[bs->client].client->lasthurt_mod);
 	num = trap_BotNumInitialChats(bs->cs, "hit_nodeath");
 
 	for (i = 0; i < num; i++) {

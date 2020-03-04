@@ -1237,9 +1237,7 @@ int AINode_Intermission(bot_state_t *bs) {
 	// if the intermission ended
 	if (!BotIntermission(bs)) {
 		if (BotChat_StartLevel(bs)) {
-			bs->stand_time = FloatTime() + BotChatTime(bs);
-		} else {
-			bs->stand_time = FloatTime() + 2;
+			bs->stand_time = FloatTime() + 0.5;
 		}
 
 		AIEnter_Stand(bs, "intermission: chat");
@@ -1286,7 +1284,7 @@ void AIEnter_Stand(bot_state_t *bs, char *s) {
 
 	BotRecordNodeSwitch(bs, "stand", "", s);
 
-	bs->standfindenemy_time = FloatTime() + 1;
+	bs->standfindenemy_time = FloatTime() + 0.5;
 	bs->ainode = AINode_Stand;
 }
 
@@ -1297,24 +1295,14 @@ AINode_Stand
 */
 int AINode_Stand(bot_state_t *bs) {
 
-	// if the bot's health decreased
-	if (bs->lastframe_health > bs->inventory[INVENTORY_HEALTH]) {
-		if (BotChat_HitTalking(bs)) {
-			bs->standfindenemy_time = FloatTime() + BotChatTime(bs) + 0.1;
-			bs->stand_time = FloatTime() + BotChatTime(bs) + 0.1;
-		}
-	}
-
 	if (bs->standfindenemy_time < FloatTime()) {
 		if (BotFindEnemy(bs, -1)) {
 			AIEnter_Battle_Fight(bs, "stand: found enemy");
 			return qfalse;
 		}
 
-		bs->standfindenemy_time = FloatTime() + 1;
+		bs->standfindenemy_time = FloatTime() + 0.5;
 	}
-	// put up chat icon
-	trap_EA_Talk(bs->client);
 	// when done standing
 	if (bs->stand_time < FloatTime()) {
 		trap_BotEnterChat(bs->cs, 0, bs->chatto);
@@ -1340,12 +1328,12 @@ void AIEnter_Respawn(bot_state_t *bs, char *s) {
 	trap_BotResetAvoidReach(bs->ms);
 	// if the bot wants to chat
 	if (BotChat_Death(bs)) {
-		bs->respawn_time = FloatTime() + BotChatTime(bs);
 		bs->respawnchat_time = FloatTime();
 	} else {
-		bs->respawn_time = FloatTime() + 2;
 		bs->respawnchat_time = 0;
 	}
+
+	bs->respawn_time = FloatTime() + 2;
 	// set respawn state
 	bs->respawn_wait = qfalse;
 	bs->ainode = AINode_Respawn;
@@ -1375,10 +1363,6 @@ int AINode_Respawn(bot_state_t *bs) {
 			trap_BotEnterChat(bs->cs, 0, bs->chatto);
 			bs->enemy = -1;
 		}
-	}
-
-	if (bs->respawnchat_time && bs->respawnchat_time < FloatTime() - 0.5) {
-		trap_EA_Talk(bs->client);
 	}
 
 	return qtrue;
@@ -1923,12 +1907,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "seek ltg: bot dead");
 		return qfalse;
 	}
-
-	if (BotChat_Random(bs)) {
-		bs->stand_time = FloatTime() + BotChatTime(bs);
-		AIEnter_Stand(bs, "seek ltg: random chat");
-		return qfalse;
-	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2055,6 +2033,8 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
 		bs->weaponnum = moveresult.weapon;
 	}
+	
+	BotChat_Random(bs);
 
 	return qtrue;
 }
@@ -2134,14 +2114,13 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 				BotChat_EnemySuicide(bs);
 			}
 
-			if (bs->lastkilledplayer == bs->enemy && BotChat_Kill(bs)) {
-				bs->stand_time = FloatTime() + BotChatTime(bs);
-				AIEnter_Stand(bs, "battle fight: enemy dead");
-			} else {
-				bs->ltg_time = 0;
-				AIEnter_Seek_LTG(bs, "battle fight: enemy dead");
+			if (bs->lastkilledplayer == bs->enemy) {
+				BotChat_Kill(bs);
 			}
 
+			bs->ltg_time = 0;
+
+			AIEnter_Seek_LTG(bs, "battle fight: enemy dead");
 			return qfalse;
 		}
 	} else {
@@ -2179,22 +2158,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
-	// if the bot's health decreased
-	if (bs->lastframe_health > bs->inventory[INVENTORY_HEALTH]) {
-		if (BotChat_HitNoDeath(bs)) {
-			bs->stand_time = FloatTime() + BotChatTime(bs);
-			AIEnter_Stand(bs, "battle fight: chat health decreased");
-			return qfalse;
-		}
-	}
-	// if the bot hit someone
-	if (bs->cur_ps.persistant[PERS_HITS] > bs->lasthitcount) {
-		if (BotChat_HitNoKill(bs)) {
-			bs->stand_time = FloatTime() + BotChatTime(bs);
-			AIEnter_Stand(bs, "battle fight: chat hit someone");
-			return qfalse;
-		}
-	}
 	// if the enemy is not visible
 	if (!BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)) {
 		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
@@ -2231,6 +2194,14 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			AIEnter_Battle_Retreat(bs, "battle fight: wants to retreat");
 			return qtrue;
 		}
+	}
+	// if the bot's health decreased
+	if (bs->lastframe_health > bs->inventory[INVENTORY_HEALTH]) {
+		BotChat_HitNoDeath(bs);
+	}
+	// if the bot hit someone
+	if (bs->cur_ps.persistant[PERS_HITS] > bs->lasthitcount) {
+		BotChat_HitNoKill(bs);
 	}
 
 	return qtrue;
