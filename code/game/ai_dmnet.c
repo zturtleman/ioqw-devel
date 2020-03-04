@@ -2033,7 +2033,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
 		bs->weaponnum = moveresult.weapon;
 	}
-	
+
 	BotChat_Random(bs);
 
 	return qtrue;
