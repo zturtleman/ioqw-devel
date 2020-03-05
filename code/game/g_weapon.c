@@ -945,7 +945,7 @@ static void KamikazeDamage(gentity_t *self) {
 	newangles[1] = crandom() * 2;
 	newangles[2] = 0;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		ent = &g_entities[i];
 
 		if (!ent->inuse) {

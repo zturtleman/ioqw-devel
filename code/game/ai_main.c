@@ -706,7 +706,7 @@ void BotInterbreedBots(void) {
 	int i;
 
 	// get rankings for all the bots
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			ranks[i] = botstates[i]->num_kills * 2 - botstates[i]->num_deaths;
 		} else {
@@ -719,7 +719,7 @@ void BotInterbreedBots(void) {
 		trap_BotMutateGoalFuzzyLogic(botstates[child]->gs, 1);
 	}
 	// reset the kills and deaths
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			botstates[i]->num_kills = 0;
 			botstates[i]->num_deaths = 0;
@@ -739,7 +739,7 @@ void BotWriteInterbreeded(char *filename) {
 	bestrank = 0;
 	bestbot = -1;
 	// get the best bot
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			rank = botstates[i]->num_kills * 2 - botstates[i]->num_deaths;
 		} else {
@@ -1336,7 +1336,7 @@ void BotScheduleBotThink(void) {
 
 	botnum = 0;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (!botstates[i] || !botstates[i]->inuse) {
 			continue;
 		}

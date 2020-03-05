@@ -370,7 +370,7 @@ int BotVisibleEnemies(bot_state_t *bs) {
 	int i;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client) {
 			continue;
 		}

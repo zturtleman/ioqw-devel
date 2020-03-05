@@ -286,7 +286,7 @@ void Team_ForceGesture(int team) {
 	int i;
 	gentity_t *ent;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		ent = &g_entities[i];
 
 		if (!ent->inuse) {

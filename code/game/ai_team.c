@@ -4091,7 +4091,7 @@ FindHumanTeamLeader
 int FindHumanTeamLeader(bot_state_t *bs) {
 	int i;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (g_entities[i].inuse) {
 			// if this player is not a bot
 			if (!(g_entities[i].r.svFlags & SVF_BOT)) {
