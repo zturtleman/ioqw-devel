@@ -418,7 +418,7 @@ void BotTeamplayReport(void) {
 
 		trap_GetConfigstring(CS_PLAYERS + i, buf, sizeof(buf));
 		// if no config string or no name
-		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) {
+		if (!buf[0] || !*Info_ValueForKey(buf, "n")) {
 			continue;
 		}
 		// skip spectators
@@ -436,7 +436,7 @@ void BotTeamplayReport(void) {
 
 		trap_GetConfigstring(CS_PLAYERS + i, buf, sizeof(buf));
 		// if no config string or no name
-		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) {
+		if (!buf[0] || !*Info_ValueForKey(buf, "n")) {
 			continue;
 		}
 		// skip spectators
@@ -683,7 +683,7 @@ void BotUpdateInfoConfigStrings(void) {
 
 		trap_GetConfigstring(CS_PLAYERS + i, buf, sizeof(buf));
 		// if no config string or no name
-		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) {
+		if (!buf[0] || !*Info_ValueForKey(buf, "n")) {
 			continue;
 		}
 
