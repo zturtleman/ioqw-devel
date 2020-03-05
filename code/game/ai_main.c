@@ -807,7 +807,7 @@ void BotInterbreeding(void) {
 		return;
 	}
 	// shutdown all the bots
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			BotAIShutdownClient(botstates[i]->client, qfalse);
 		}
@@ -1630,7 +1630,7 @@ int BotAILoadMap(int restart) {
 		trap_BotLibLoadMap(mapname.string);
 	}
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			BotResetState(botstates[i]);
 			botstates[i]->setupcount = 4;
@@ -1684,7 +1684,7 @@ int BotAIStartFrame(int time) {
 
 	if (bot_pause.integer) {
 		// execute bot user commands every frame
-		for (i = 0; i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			if (!botstates[i] || !botstates[i]->inuse) {
 				continue;
 			}
@@ -1820,7 +1820,7 @@ int BotAIStartFrame(int time) {
 
 	floattime = trap_AAS_Time();
 	// execute scheduled bot AI
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (!botstates[i] || !botstates[i]->inuse) {
 			continue;
 		}
@@ -1840,7 +1840,7 @@ int BotAIStartFrame(int time) {
 		}
 	}
 	// execute bot user commands every frame
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (!botstates[i] || !botstates[i]->inuse) {
 			continue;
 		}
@@ -2016,7 +2016,7 @@ int BotAIShutdown(int restart) {
 	// if the game is restarted for a tournament
 	if (restart) {
 		// shutdown all the bots in the botlib
-		for (i = 0; i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			if (botstates[i] && botstates[i]->inuse) {
 				BotAIShutdownClient(botstates[i]->client, restart);
 			}
