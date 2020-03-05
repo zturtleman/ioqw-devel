@@ -90,43 +90,55 @@ TeleportPlayer
 void TeleportPlayer(gentity_t *player, vec3_t origin, vec3_t angles) {
 	gentity_t *tent;
 	qboolean noAngles;
+	playerState_t *ps;
+	int clientNum;
+
+	ps = G_GetEntityPlayerState(player);
+
+	if (!ps) {
+		return;
+	}
 
 	noAngles = (angles[0] > 999999.0);
 	// use temp events at source and destination to prevent the effect from getting dropped by a second player event
-	if (player->client->sess.sessionTeam != TEAM_SPECTATOR) {
-		tent = G_TempEntity(player->client->ps.origin, EV_PLAYER_TELEPORT_OUT);
+	if (ps->pm_type != PM_SPECTATOR) {
+		tent = G_TempEntity(ps->origin, EV_PLAYER_TELEPORT_OUT);
 		tent->s.clientNum = player->s.clientNum;
 		tent = G_TempEntity(origin, EV_PLAYER_TELEPORT_IN);
 		tent->s.clientNum = player->s.clientNum;
 	}
 	// unlink to make sure it can't possibly interfere with G_KillBox
 	trap_UnlinkEntity(player);
-	VectorCopy(origin, player->client->ps.origin);
+	VectorCopy(origin, ps->origin);
 
-	player->client->ps.origin[2] += 1;
+	ps->origin[2] += 1;
 
 	if (!noAngles) {
 		// spit the player out
-		AngleVectorsForward(angles, player->client->ps.velocity);
-		VectorScale(player->client->ps.velocity, 400, player->client->ps.velocity);
+		AngleVectorsForward(angles, ps->velocity);
+		VectorScale(ps->velocity, 400, ps->velocity);
 
-		player->client->ps.pm_time = 160; // hold time
-		player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+		ps->pm_time = 160; // hold time
+		ps->pm_flags |= PMF_TIME_KNOCKBACK;
 		// set angles
 		SetClientViewAngle(player, angles);
 	}
 	// toggle the teleport bit so the client knows to not lerp
-	player->client->ps.eFlags ^= EF_TELEPORT_BIT;
+	ps->eFlags ^= EF_TELEPORT_BIT;
 	// kill anything at the destination
-	if (player->client->sess.sessionTeam != TEAM_SPECTATOR) {
+	if (ps->pm_type != PM_SPECTATOR) {
 		G_KillBox(player);
 	}
 	// save results of pmove
-	BG_PlayerStateToEntityState(&player->client->ps, &player->s, qtrue);
-	// use the precise origin for linking
-	VectorCopy(player->client->ps.origin, player->r.currentOrigin);
+	clientNum = player->s.clientNum;
 
-	if (player->client->sess.sessionTeam != TEAM_SPECTATOR) {
+	BG_PlayerStateToEntityState(ps, &player->s, qtrue);
+
+	player->s.clientNum = clientNum;
+	// use the precise origin for linking
+	VectorCopy(ps->origin, player->r.currentOrigin);
+
+	if (ps->pm_type != PM_SPECTATOR) {
 		trap_LinkEntity(player);
 	}
 }

@@ -1081,6 +1081,7 @@ void ClientSpawn(gentity_t *ent) {
 	} else {
 		// move players to intermission
 		MoveClientToIntermission(ent);
+		trap_LinkEntity(ent);
 	}
 	// run a client frame to drop exactly to the floor, initialize animations and other things
 	client->ps.commandTime = level.time - 100;

@@ -201,20 +201,48 @@ EntityIsDead
 =======================================================================================================================================
 */
 qboolean EntityIsDead(aas_entityinfo_t *entinfo) {
-	playerState_t ps;
+	gentity_t *ent;
+	playerState_t *ps;
 
-	if (entinfo->number >= 0 && entinfo->number < MAX_CLIENTS) {
-		// retrieve the current client state
-		if (!BotAI_GetClientState(entinfo->number, &ps)) {
-			return qfalse;
-		}
-
-		if (ps.pm_type != PM_NORMAL) {
+	// if attacking an obelisk
+	if (entinfo->number >= MAX_CLIENTS && (entinfo->number == redobelisk.entitynum || entinfo->number == blueobelisk.entitynum)) {
+		// if obelisk is respawning return
+		if (g_entities[entinfo->number].activator && g_entities[entinfo->number].activator->s.frame == 2) {
 			return qtrue;
 		}
+
+		return qfalse;
 	}
 
-	return qfalse;
+	if (entinfo->number >= 0 && entinfo->number < level.num_entities) {
+		ent = &g_entities[entinfo->number];
+
+		if (!ent->inuse) {
+			return qtrue;
+		}
+
+		if (!ent->r.linked) {
+			return qtrue;
+		}
+
+		ps = G_GetEntityPlayerState(ent);
+
+		if (!ps) {
+			return qtrue;
+		}
+
+		if (ps->pm_type != PM_NORMAL) {
+			return qtrue;
+		}
+
+		if (ps->stats[STAT_HEALTH] <= 0) {
+			return qtrue;
+		}
+
+		return qfalse;
+	}
+
+	return qtrue;
 }
 
 /*
@@ -2759,6 +2787,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 
 	attackentity = bs->enemy;
 
+	if (attackentity < 0) {
+		memset(&moveresult, 0, sizeof(moveresult));
+		return moveresult;
+	}
+
 	if (bs->attackchase_time > FloatTime()) {
 		// create the chase goal
 		goal.entitynum = attackentity;
@@ -3959,8 +3992,16 @@ void BotCheckAttack(bot_state_t *bs) {
 	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
 
 	attackentity = bs->enemy;
+
+	if (attackentity < 0) {
+		return;
+	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
+	// if the entity isn't dead
+	if (EntityIsDead(&entinfo)) {
+		return;
+	}
 	// if not attacking a player
 	if (attackentity >= MAX_CLIENTS) {
 		// if attacking an obelisk

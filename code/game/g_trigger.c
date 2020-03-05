@@ -181,12 +181,13 @@ Touch_PushTrigger
 =======================================================================================================================================
 */
 void Touch_PushTrigger(gentity_t *self, gentity_t *other, trace_t *trace) {
+	playerState_t *ps;
 
-	if (!other->client) {
-		return;
+	ps = G_GetEntityPlayerState(other);
+
+	if (ps) {
+		BG_TouchJumpPad(ps, &self->s);
 	}
-
-	BG_TouchJumpPad(&other->client->ps, &self->s);
 }
 
 /*
@@ -319,13 +320,16 @@ Touch_TeleporterTrigger
 =======================================================================================================================================
 */
 void Touch_TeleporterTrigger(gentity_t *self, gentity_t *other, trace_t *trace) {
+	playerState_t *ps;
 	gentity_t *dest;
 
-	if (!other->client) {
+	ps = G_GetEntityPlayerState(other);
+
+	if (!ps) {
 		return;
 	}
 
-	if (other->client->ps.pm_type == PM_DEAD) {
+	if (ps->pm_type == PM_DEAD) {
 		return;
 	}
 	// spectators only?

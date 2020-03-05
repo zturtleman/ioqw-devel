@@ -143,6 +143,11 @@ BotAI_GetClientState
 */
 int BotAI_GetClientState(int clientNum, playerState_t *state) {
 	gentity_t *ent;
+	playerState_t *ps;
+
+	if (clientNum < 0 || clientNum >= level.num_entities) {
+		return qfalse;
+	}
 
 	ent = &g_entities[clientNum];
 
@@ -150,11 +155,21 @@ int BotAI_GetClientState(int clientNum, playerState_t *state) {
 		return qfalse;
 	}
 
-	if (!ent->client) {
+	if (!ent->r.linked) {
 		return qfalse;
 	}
 
-	memcpy(state, &ent->client->ps, sizeof(playerState_t));
+	if (ent->client->pers.connected != CON_CONNECTED) {
+		return qfalse;
+	}
+
+	ps = G_GetEntityPlayerState(ent);
+
+	if (!ps) {
+		return qfalse;
+	}
+
+	memcpy(state, ps, sizeof(playerState_t));
 	return qtrue;
 }
 

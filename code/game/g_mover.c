@@ -47,6 +47,7 @@ G_TestEntityPosition
 =======================================================================================================================================
 */
 gentity_t *G_TestEntityPosition(gentity_t *ent) {
+	playerState_t *ps;
 	trace_t tr;
 	int mask;
 
@@ -56,8 +57,10 @@ gentity_t *G_TestEntityPosition(gentity_t *ent) {
 		mask = MASK_SOLID;
 	}
 
-	if (ent->client) {
-		trap_Trace(&tr, ent->client->ps.origin, ent->r.mins, ent->r.maxs, ent->client->ps.origin, ent->s.number, mask);
+	ps = G_GetEntityPlayerState(ent);
+
+	if (ps) {
+		trap_Trace(&tr, ps->origin, ent->r.mins, ent->r.maxs, ps->origin, ent->s.number, mask);
 	} else {
 		trap_Trace(&tr, ent->s.pos.trBase, ent->r.mins, ent->r.maxs, ent->s.pos.trBase, ent->s.number, mask);
 	}

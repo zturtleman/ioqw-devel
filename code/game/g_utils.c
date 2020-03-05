@@ -636,6 +636,24 @@ void G_SetOrigin(gentity_t *ent, vec3_t origin) {
 
 /*
 =======================================================================================================================================
+G_GetEntityPlayerState
+=======================================================================================================================================
+*/
+playerState_t *G_GetEntityPlayerState(const gentity_t *ent) {
+
+	if (ent->client) {
+		return &ent->client->ps;
+	}
+/* // Tobias NOTE: enable this!
+	if (ent->monster) {
+		return &ent->monster->ps;
+	}
+*/
+	return NULL;
+}
+
+/*
+=======================================================================================================================================
 DebugLine
 
 Debug polygons only work when running a local game with r_debugSurface set to 2.
