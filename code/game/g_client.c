@@ -785,6 +785,10 @@ char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot) {
 	char userinfo[MAX_INFO_STRING];
 	gentity_t *ent;
 
+	if (clientNum >= level.maxclients) {
+		return "Bad connection slot.";
+	}
+
 	ent = &g_entities[clientNum];
 
 	trap_GetUserinfo(clientNum, userinfo, sizeof(userinfo));

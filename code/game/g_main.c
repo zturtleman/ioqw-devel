@@ -1047,7 +1047,7 @@ void ExitLevel(void) {
 	level.teamScores[TEAM_RED] = 0;
 	level.teamScores[TEAM_BLUE] = 0;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected != CON_CONNECTED) {
@@ -1059,7 +1059,7 @@ void ExitLevel(void) {
 	// we need to do this here before changing to CON_CONNECTING
 	G_WriteSessionData();
 	// change all client states to connecting, so the early players into the next level will know the others aren't done reconnecting
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (level.clients[i].pers.connected == CON_CONNECTED) {
 			level.clients[i].pers.connected = CON_CONNECTING;
 		}
@@ -1194,7 +1194,7 @@ void CheckIntermissionExit(void) {
 	readyMask = 0;
 	playerCount = 0;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected != CON_CONNECTED) {
@@ -1218,7 +1218,7 @@ void CheckIntermissionExit(void) {
 		}
 	}
 	// copy the readyMask to each player's stats so it can be displayed on the scoreboard
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected != CON_CONNECTED) {
@@ -1356,7 +1356,7 @@ void CheckExitRules(void) {
 			return;
 		}
 
-		for (i = 0; i < g_maxclients.integer; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			cl = level.clients + i;
 
 			if (cl->pers.connected != CON_CONNECTED) {

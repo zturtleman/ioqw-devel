@@ -243,7 +243,7 @@ int G_CountBotPlayersByName(const char *name, int team) {
 
 	num = 0;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected == CON_DISCONNECTED) {
@@ -360,7 +360,7 @@ int G_RemoveRandomBot(int team) {
 	int i;
 	gclient_t *cl;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected != CON_CONNECTED) {
@@ -393,7 +393,7 @@ int G_CountHumanPlayers(int team) {
 
 	num = 0;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected != CON_CONNECTED) {
@@ -427,7 +427,7 @@ int G_CountBotPlayers(int team) {
 
 	num = 0;
 
-	for (i = 0; i < g_maxclients.integer; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		cl = level.clients + i;
 
 		if (cl->pers.connected == CON_DISCONNECTED) {
@@ -477,8 +477,8 @@ void G_CheckMinimumPlayers(void) {
 	}
 
 	if (g_gametype.integer == GT_FFA) {
-		if (minplayers >= g_maxclients.integer) {
-			minplayers = g_maxclients.integer - 1;
+		if (minplayers >= level.maxclients) {
+			minplayers = level.maxclients - 1;
 		}
 
 		humanplayers = G_CountHumanPlayers(TEAM_FREE);
@@ -490,8 +490,8 @@ void G_CheckMinimumPlayers(void) {
 			G_RemoveRandomBot(TEAM_FREE);
 		}
 	} else if (g_gametype.integer == GT_TOURNAMENT) {
-		if (minplayers >= g_maxclients.integer) {
-			minplayers = g_maxclients.integer - 1;
+		if (minplayers >= level.maxclients) {
+			minplayers = level.maxclients - 1;
 		}
 
 		humanplayers = G_CountHumanPlayers(-1);
@@ -507,8 +507,8 @@ void G_CheckMinimumPlayers(void) {
 			}
 		}
 	} else if (g_gametype.integer > GT_TOURNAMENT) {
-		if (minplayers >= g_maxclients.integer / 2) {
-			minplayers = (g_maxclients.integer / 2) - 1;
+		if (minplayers >= level.maxclients / 2) {
+			minplayers = (level.maxclients / 2) - 1;
 		}
 
 		humanplayers = G_CountHumanPlayers(TEAM_RED);
