@@ -776,10 +776,6 @@ int BotChat_Kill(bot_state_t *bs) {
 		return qfalse;
 	}
 
-	if (bs->enemy >= MAX_CLIENTS) {
-		return qfalse;
-	}
-
 	EasyClientName(bs->lastkilledplayer, name, 32);
 
 	bs->chatto = CHAT_ALL;
@@ -857,10 +853,6 @@ int BotChat_EnemySuicide(bot_state_t *bs) {
 	}
 
 	if (BotVisibleEnemies(bs)) {
-		return qfalse;
-	}
-
-	if (bs->enemy >= MAX_CLIENTS) {
 		return qfalse;
 	}
 
@@ -1090,10 +1082,6 @@ int BotChat_Random(bot_state_t *bs) {
 	}
 
 	if (BotVisibleEnemies(bs)) {
-		return qfalse;
-	}
-
-	if (bs->enemy >= MAX_CLIENTS) {
 		return qfalse;
 	}
 

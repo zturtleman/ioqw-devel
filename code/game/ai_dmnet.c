@@ -314,7 +314,6 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			char netname[128];
 
 			ClientName(bs->client, netname, sizeof(netname));
-
 			BotAI_Print(PRT_MESSAGE, "%s: no valid ltg (probably stuck)\n", ClientName(bs->client, netname, sizeof(netname)));
 #endif
 			//trap_BotDumpAvoidGoals(bs->gs);
