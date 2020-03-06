@@ -221,6 +221,12 @@ BotReachedGoal
 int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 
 	if (goal->flags & GFL_ITEM) {
+		// if the item is a dropped item it may no longer exist
+		if (goal->flags & GFL_DROPPED) {
+			if (!g_entities[goal->entitynum].inuse) {
+				return qtrue;
+			}
+		}
 		// if touching the goal
 		if (trap_BotTouchingGoal(bs->origin, goal)) {
 			if (!(goal->flags & GFL_DROPPED)) {
