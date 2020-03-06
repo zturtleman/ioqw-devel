@@ -3028,7 +3028,7 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 		// if the point is not in potential visible sight
 		//if (!AAS_inPVS(eye, middle)) continue;
 
-		contents_mask = CONTENTS_SOLID|CONTENTS_PLAYERCLIP;
+		contents_mask = CONTENTS_SOLID;
 		passent = viewer;
 		hitent = ent;
 
@@ -4074,7 +4074,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		return;
 	}
 
-	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, CONTENTS_SOLID);
 
 	if (bsptrace.fraction < 1 && bsptrace.entityNum != attackentity) {
 		return;
