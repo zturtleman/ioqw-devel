@@ -5010,7 +5010,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 #endif
 	int movetype, bspent;
 	vec3_t hordir, sideward, angles, up = {0, 0, 1};
-	//vec3_t start, end, mins, maxs;
+	gentity_t *ent;
 	aas_entityinfo_t entinfo;
 	bot_activategoal_t activategoal;
 
@@ -5019,38 +5019,51 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		bs->notblocked_time = FloatTime();
 		return;
 	}
+#ifdef OBSTACLEDEBUG
+	ClientName(bs->client, netname, sizeof(netname));
+#endif // OBSTACLEDEBUG
 	// if stuck in a solid area
 	if (moveresult->type == RESULTTYPE_INSOLIDAREA) {
 		// move in a random direction in the hope to get out
 		BotRandomMove(bs, moveresult);
+#ifdef OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: IN SOLID AREA!\n", netname);
+#endif
 		return;
 	}
 	// get info for the entity that is blocking the bot
 	BotEntityInfo(moveresult->blockentity, &entinfo);
-#ifdef OBSTACLEDEBUG
-	ClientName(bs->client, netname, sizeof(netname));
-	BotAI_Print(PRT_MESSAGE, "%s: I'm blocked by model %d\n", netname, entinfo.modelindex);
-#endif // OBSTACLEDEBUG
-	// if blocked by a bsp model and the bot wants to activate it
-	if (activate && entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
-		// find the bsp entity which should be activated in order to get the blocking entity out of the way
-		bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
-		if (bspent) {
-			if (bs->activatestack && !bs->activatestack->inuse) {
-				bs->activatestack = NULL;
+	ent = &g_entities[moveresult->blockentity];
+	// if blocked by a bsp model
+	if (!ent->client) {
+		// if blocked by a bsp model and the bot wants to activate it
+		if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: I'm blocked by model %d\n", netname, entinfo.modelindex);
+#endif // OBSTACLEDEBUG
+			// if the bot wants to activate the bsp entity
+			if (activate) {
+				// find the bsp entity which should be activated in order to get the blocking entity out of the way
+				bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
+
+				if (bspent) {
+					if (bs->activatestack && !bs->activatestack->inuse) {
+						bs->activatestack = NULL;
+					}
+					// if not already trying to activate this entity
+					if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
+						BotGoForActivateGoal(bs, &activategoal);
+					}
+					// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance, otherwise return
+					if (!(moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
+						return;
+					}
+				} else {
+					// enable any routing areas that were disabled
+					BotEnableActivateGoalAreas(&activategoal, qtrue);
+				}
 			}
-			// if not already trying to activate this entity
-			if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
-				BotGoForActivateGoal(bs, &activategoal);
-			}
-			// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance, otherwise return
-			if (!(moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
-				return;
-			}
-		} else {
-			// enable any routing areas that were disabled
-			BotEnableActivateGoalAreas(&activategoal, qtrue);
 		}
 	}
 	// just some basic dynamic obstacle avoidance code
