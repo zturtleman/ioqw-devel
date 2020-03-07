@@ -1542,6 +1542,8 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	int targetvisible;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
+	bot_aienter_t aienter;
+	qboolean activated;
 
 	if (BotIsObserver(bs)) {
 		BotClearActivateGoalStack(bs);
@@ -1571,11 +1573,14 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	// if the bot has no activate goal
 	if (!bs->activatestack) {
 		BotClearActivateGoalStack(bs);
-		AIEnter_Seek_NBG(bs, "activate entity: no goal");
+		AIEnter_Seek_LTG(bs, "activate entity: no goal");
 		return qfalse;
 	}
 
 	goal = &bs->activatestack->goal;
+	aienter = bs->activatestack->aienter;
+	// initialize entity being activated to false
+	activated = qfalse;
 	// initialize target being visible to false
 	targetvisible = qfalse;
 	// if the bot has to shoot at a target to activate something
@@ -1605,6 +1610,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, "hit shootable button or trigger\n");
 #endif // DEBUG
 			bs->activatestack->time = 0;
+			activated = qtrue;
 		}
 		// if the activate goal has been activated or the bot takes too long
 		if (bs->activatestack->time < FloatTime()) {
@@ -1614,8 +1620,18 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				bs->activatestack->time = FloatTime() + 10;
 				return qfalse;
 			}
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
 
-			AIEnter_Seek_NBG(bs, "activate entity: time out");
+				aienter(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				aienter(bs, "activate entity: time out");
+			}
+
 			return qfalse;
 		}
 
@@ -1632,22 +1648,28 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				BotAI_Print(PRT_MESSAGE, "touched button or trigger\n");
 #endif // DEBUG
 				bs->activatestack->time = 0;
+				activated = qtrue;
 			}
 		}
 		// if the activate goal has been activated or the bot takes too long
 		if (bs->activatestack->time < FloatTime()) {
 			BotPopFromActivateGoalStack(bs);
-			// if there are more activate goals on the stack
-			if (bs->activatestack) {
-				bs->activatestack->time = FloatTime() + 10;
-				return qfalse;
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
+
+				aienter(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				aienter(bs, "activate entity: time out");
 			}
 
-			AIEnter_Seek_NBG(bs, "activate entity: activated");
 			return qfalse;
 		}
 		// predict obstacles
-		if (BotAIPredictObstacles(bs, goal)) {
+		if (BotAIPredictObstacles(bs, goal, AIEnter_Seek_ActivateEntity)) {
 			return qfalse;
 		}
 		// move towards the goal
@@ -1660,7 +1682,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			bs->activatestack->time = 0;
 		}
 		// check if the bot is blocked
-		BotAIBlocked(bs, &moveresult, qtrue);
+		BotAIBlocked(bs, &moveresult, AIEnter_Seek_ActivateEntity);
 	}
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
@@ -1803,7 +1825,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		return qfalse;
 	}
 	// predict obstacles
-	if (BotAIPredictObstacles(bs, &goal)) {
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Seek_NBG)) {
 		return qfalse;
 	}
 	// move towards the goal
@@ -1816,7 +1838,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qtrue);
+	BotAIBlocked(bs, &moveresult, AIEnter_Seek_NBG);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
 	// if the view angles are used for the movement
@@ -1985,7 +2007,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		}
 	}
 	// predict obstacles
-	if (BotAIPredictObstacles(bs, &goal)) {
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Seek_LTG)) {
 		return qfalse;
 	}
 	// move towards the goal
@@ -1998,7 +2020,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qtrue);
+	BotAIBlocked(bs, &moveresult, AIEnter_Seek_LTG);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
 	// if the view angles are used for the movement
@@ -2190,7 +2212,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, NULL);
 	// aim at the enemy
 	BotAimAtEnemy(bs);
 	// attack the enemy if possible
@@ -2313,7 +2335,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	// predict obstacles
-	if (BotAIPredictObstacles(bs, &goal)) {
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Chase)) {
 		return qfalse;
 	}
 	// move towards the goal
@@ -2326,7 +2348,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Chase);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
 	// if the view angles are used for the movement
@@ -2504,7 +2526,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		}
 	}
 	// predict obstacles
-	if (BotAIPredictObstacles(bs, &goal)) {
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Retreat)) {
 		return qfalse;
 	}
 	// move towards the goal
@@ -2517,7 +2539,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Retreat);
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2646,7 +2668,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		return qfalse;
 	}
 	// predict obstacles
-	if (BotAIPredictObstacles(bs, &goal)) {
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_NBG)) {
 		return qfalse;
 	}
 	// move towards the goal
@@ -2659,7 +2681,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_NBG);
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the view is fixed for the movement
