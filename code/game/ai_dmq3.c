@@ -5044,11 +5044,24 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	ent = &g_entities[moveresult->blockentity];
 	// if blocked by a bsp model
 	if (!ent->client) {
-		// if blocked by a bsp model
 		if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
+			// a closed door without a targetname will operate automatically
+			if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
+				// if no targetname and not a shootable door
+				if (!ent->targetname && !ent->health) {
 #ifdef OBSTACLEDEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: I'm blocked by model %d\n", netname, entinfo.modelindex);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA, "%s: Blocked by model %d (Door), ignoring!\n", netname, entinfo.modelindex);
 #endif // OBSTACLEDEBUG
+					return;
+				}
+			}
+			// buttons will operate on contact
+			if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA, "%s: Blocked by model %d (Button), ignoring!\n", netname, entinfo.modelindex);
+#endif // OBSTACLEDEBUG
+				return;
+			}
 			// if the bot wants to activate the bsp entity
 			if (activatedonefunc != NULL) {
 				// find the bsp entity which should be activated in order to get the blocking entity out of the way
