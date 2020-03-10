@@ -3019,6 +3019,10 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 		return 0;
 	}
 
+	if (EntityIsInvisible(&entinfo) && VectorLength(dir) > 300) {
+		return qfalse;
+	}
+
 	pc = trap_AAS_PointContents(eye);
 	infog = (pc & CONTENTS_FOG);
 	inwater = (pc & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER));
@@ -3119,7 +3123,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	int i, healthdecrease;
 	float f, alertness, easyfragger, vis;
 	float squaredist, cursquaredist;
-	aas_entityinfo_t entinfo, curenemyinfo;
+	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 
 	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
@@ -3205,8 +3209,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
-		// if the enemy is invisible
-		if (EntityIsInvisible(&entinfo)) {
+		// ignore invisible and burning enemies if already fighting
+		if (bs->enemy >= 0 && EntityIsInvisible(&entinfo)) {
 			continue;
 		}
 		// if not an easy fragger don't shoot at chatting players
@@ -3248,8 +3252,14 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (vis <= 0) {
 			continue;
 		}
-		// if the enemy is quite far away, not shooting and the bot is not damaged
-		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityIsShooting(&entinfo)) {
+		// if the enemy is quite far away and doesn't have a flag or cubes and the bot is not damaged try to ignore this enemy
+		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
+			// get the entity information
+			BotEntityInfo(bs->client, &curbotinfo);
+			// if the bot is invisible and want to get the flag, ignore enemies
+			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
+				continue;
+			}
 			// if trying to activate an entity, ignore enemies
 			if (bs->ainode == AINode_Seek_ActivateEntity) {
 				continue;
@@ -3757,16 +3767,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		}
 	}
 
-	if (aim_accuracy <= 0) {
-		aim_accuracy = 0.0001f;
-	}
-	// if the enemy is invisible then shoot crappy most of the time
-	if (EntityIsInvisible(&entinfo)) {
-		if (random() > 0.1) {
-			aim_accuracy *= 0.4f;
-		}
-	}
-
 	VectorSubtract(entinfo.origin, entinfo.lastvisorigin, enemyvelocity);
 	VectorScale(enemyvelocity, 1 / entinfo.update_time, enemyvelocity);
 	// enemy origin and velocity is remembered every 0.5 seconds
@@ -3786,6 +3786,16 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				aim_accuracy *= 0.7f;
 			}
 		}
+	}
+	// if the enemy is invisible then shoot crappy most of the time
+	if (EntityIsInvisible(&entinfo)) {
+		if (random() > 0.1) {
+			aim_accuracy *= 0.4f;
+		}
+	}
+	// keep a minimum accuracy
+	if (aim_accuracy <= 0) {
+		aim_accuracy = 0.0001f;
 	}
 // Tobias HACK
 	if (BotEqualizeWeakestHumanTeamScore(bs) || BotEqualizeTeamScore(bs)) {
@@ -4018,6 +4028,14 @@ void BotCheckAttack(bot_state_t *bs) {
 	}
 
 	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+	// if the enemy is invisible
+	if (EntityIsInvisible(&entinfo)) {
+		reactiontime += 1.5f;
+		// limit the reactiontime
+		if (reactiontime > 2.5f) {
+			reactiontime = 2.5f;
+		}
+	}
 // Tobias HACK
 	if (BotEqualizeWeakestHumanTeamScore(bs) || BotEqualizeTeamScore(bs)) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react

@@ -2158,13 +2158,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			bs->enemydeath_time = FloatTime();
 		}
 	}
-	// if the enemy is invisible and not shooting the bot looses track easily
-	if (EntityIsInvisible(&entinfo)) {
-		if (random() < 0.2) {
-			AIEnter_Seek_LTG(bs, "battle fight: invisible");
-			return qfalse;
-		}
-	}
 
 	VectorCopy(entinfo.origin, target);
 	// if not a player enemy
