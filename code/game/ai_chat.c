@@ -366,7 +366,6 @@ BotVisibleEnemies
 =======================================================================================================================================
 */
 int BotVisibleEnemies(bot_state_t *bs) {
-	float vis;
 	int i;
 	aas_entityinfo_t entinfo;
 
@@ -397,9 +396,7 @@ int BotVisibleEnemies(bot_state_t *bs) {
 			continue;
 		}
 		// check if the enemy is visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis > 0) {
+		if (BotEntityVisible(&bs->cur_ps, 360, i)) {
 			return qtrue;
 		}
 	}

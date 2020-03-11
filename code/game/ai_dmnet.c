@@ -370,7 +370,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the team mate is visible
-		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
+		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// if close just stand still there
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 
@@ -419,7 +419,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the companion is visible
-		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
+		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// update visible time
 			bs->teammatevisible_time = FloatTime();
 			VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -1168,7 +1168,7 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 			}
 		}
 		// if the team mate is visible
-		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->lead_teammate)) {
+		if (BotEntityVisible(&bs->cur_ps, 360, bs->lead_teammate)) {
 			bs->leadvisible_time = FloatTime();
 		}
 		// if the team mate is not visible for 1 seconds
@@ -2181,7 +2181,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the enemy is not visible
-	if (!BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)) {
+	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
 			AIEnter_Battle_Chase(bs, "battle fight: obelisk out of sight");
 			return qfalse;
@@ -2272,7 +2272,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		return qfalse;
 	}
 	// if the enemy is visible
-	if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)) {
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		AIEnter_Battle_Fight(bs, "battle chase");
 		return qfalse;
 	}
@@ -2451,8 +2451,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		return qfalse;
 	}
 	// update the last time the enemy was visible
-	if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)) {
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		bs->enemyvisible_time = FloatTime();
+
 		VectorCopy(entinfo.origin, target);
 		// if not a player enemy
 		if (bs->enemy >= MAX_CLIENTS) {
@@ -2623,7 +2624,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// map specific code
 	BotMapScripts(bs);
 	// update the last time the enemy was visible
-	if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)) {
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		bs->enemyvisible_time = FloatTime();
 		VectorCopy(entinfo.origin, target);
 		// if not a player enemy
@@ -2684,7 +2685,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
-			//&& BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)
+			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
 			BotAimAtEnemy(bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {

@@ -111,6 +111,8 @@ typedef struct bot_activategoal_s {
 	struct bot_activategoal_s *next;	// next activate goal on stack
 } bot_activategoal_t;
 // bot state
+#define MAX_SUBTEAM_SIZE 32
+
 typedef struct bot_state_s {
 	int inuse;								// true if this state is used by a bot client
 	int botthink_residual;					// residual for the bot thinks
@@ -246,6 +248,9 @@ typedef struct bot_state_s {
 	int forceorders;						// true if forced to give orders
 	int flagcarrier;						// team mate carrying the enemy flag
 	int ctfstrategy;						// ctf strategy
+	float visteammates_time;				// next time the visible teammates are to be determined
+	int numvisteammates;					// number of the visible teammates
+	int visteammates[MAX_SUBTEAM_SIZE];		// the visible teammates
 	char subteam[32];						// sub team name
 	float formation_dist;					// formation team mate intervening space
 	bot_activategoal_t *activatestack;		// first activate goal on the stack

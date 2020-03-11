@@ -23,6 +23,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 */
 
 void BotTeamAI(bot_state_t *bs);
+int BotGetNextPlayer(bot_state_t *bs, int lastPlayer, playerState_t *ps);
+int BotGetNextPlayerOrMonster(bot_state_t *bs, int lastPlayer, playerState_t *ps);
+int BotGetNextTeamMate(bot_state_t *bs, int lastTeamMate, playerState_t *ps);
+void BotDetermineVisibleTeammates(bot_state_t *bs);
 int BotGetTeamMateTaskPreference(bot_state_t *bs, int teammate);
 void BotSetTeamMateTaskPreference(bot_state_t *bs, int teammate, int preference);
 void BotVoiceChat(bot_state_t *bs, int toclient, char *voicechat);

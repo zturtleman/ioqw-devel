@@ -64,6 +64,7 @@ vmCvar_t bot_fastchat;
 vmCvar_t bot_nochat;
 vmCvar_t bot_testrchat;
 vmCvar_t bot_challenge;
+vmCvar_t bot_visualrange;
 vmCvar_t bot_predictobstacles;
 // Tobias DEBUG: new bot test cvars for debugging
 vmCvar_t bot_noshoot;
@@ -1930,6 +1931,73 @@ void BotUpdateBattleInventory(bot_state_t *bs, int enemy) {
 	// FIXME: add num visible enemies and num visible team mates to the inventory
 }
 
+/*
+=======================================================================================================================================
+BotWantsToUseKamikaze
+=======================================================================================================================================
+*/
+qboolean BotWantsToUseKamikaze(bot_state_t *bs) {
+
+	if (gametype == GT_OBELISK) {
+		// if the bot has the ammoregen powerup
+		if (bs->inventory[INVENTORY_AMMOREGEN] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the machine gun
+		if (bs->inventory[INVENTORY_MACHINEGUN] > 0 && bs->inventory[INVENTORY_BULLETS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the chain gun
+		if (bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the shot gun
+		if (bs->inventory[INVENTORY_SHOTGUN] > 0 && bs->inventory[INVENTORY_SHELLS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the nail gun
+		if (bs->inventory[INVENTORY_NAILGUN] > 0 && bs->inventory[INVENTORY_NAILS] > 0) {
+			return qfalse;
+		}
+		// if the bot can place a mine
+		if (bs->inventory[INVENTORY_PROXLAUNCHER] > 0 && bs->inventory[INVENTORY_MINES] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the grenade launcher
+		if (bs->inventory[INVENTORY_GRENADELAUNCHER] > 0 && bs->inventory[INVENTORY_GRENADES] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the napalm launcher
+		if (bs->inventory[INVENTORY_NAPALMLAUNCHER] > 0 && bs->inventory[INVENTORY_CANISTERS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the rocket launcher
+		if (bs->inventory[INVENTORY_ROCKETLAUNCHER] > 0 && bs->inventory[INVENTORY_ROCKETS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the beam gun
+		if (bs->inventory[INVENTORY_BEAMGUN] > 0 && bs->inventory[INVENTORY_BEAMGUN_AMMO] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the rail gun
+		if (bs->inventory[INVENTORY_RAILGUN] > 0 && bs->inventory[INVENTORY_SLUGS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the plasma gun
+		if (bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 0) {
+			return qfalse;
+		}
+		// if the bot can use the bfg
+		if (bs->inventory[INVENTORY_BFG10K] > 0 && bs->inventory[INVENTORY_BFG_AMMO] > 0) {
+			return qfalse;
+		}
+	} else {
+		// if the bot is low on health and recently hurt
+	}
+
+	return qfalse;
+}
+
 #define KAMIKAZE_DIST 1024
 /*
 =======================================================================================================================================
@@ -1954,126 +2022,170 @@ void BotUseKamikaze(bot_state_t *bs) {
 
 	bs->kamikaze_time = FloatTime() + 0.2;
 
-	if (gametype == GT_CTF) {
-		// never use kamikaze if the team flag carrier is visible
-		if (BotCTFCarryingFlag(bs)) {
-			return;
-		}
+	switch (gametype) {
+		case GT_FFA:
+			BotCountVisibleEnemies(bs, &enemies, KAMIKAZE_DIST);
 
-		c = BotTeamFlagCarrierVisible(bs);
-
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
-
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				return;
-			}
-		}
-
-		c = BotEnemyFlagCarrierVisible(bs);
-
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
-
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+			if (enemies > 0 && BotWantsToUseKamikaze(bs)) {
 				trap_EA_Use(bs->client);
 				return;
 			}
-		}
-	} else if (gametype == GT_1FCTF) {
-		// never use kamikaze if the team flag carrier is visible
-		if (Bot1FCTFCarryingFlag(bs)) {
-			return;
-		}
 
-		c = BotTeamFlagCarrierVisible(bs);
+			break;
+		case GT_TEAM:
+			BotCountVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
 
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
-
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
-				return;
-			}
-		}
-
-		c = BotEnemyFlagCarrierVisible(bs);
-
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
-
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+			if (enemies > 2 && enemies > teammates + 1 && BotWantsToUseKamikaze(bs)) {
 				trap_EA_Use(bs->client);
 				return;
 			}
-		}
-	} else if (gametype == GT_OBELISK) {
-		switch (BotTeam(bs)) {
-			case TEAM_RED:
-				goal = &blueobelisk;
-				break;
-			default:
-				goal = &redobelisk;
-				break;
-		}
-		// if the obelisk is visible
-		VectorCopy(goal->origin, target);
 
-		target[2] += 1;
+			break;
+		case GT_CTF:
+			// never use the kamikaze if carrying a flag
+			if (BotCTFCarryingFlag(bs)) {
+				return;
+			}
+			// never use the kamikaze if the team flag carrier is visible
+			c = BotTeamFlagCarrierVisible(bs);
 
-		VectorSubtract(bs->origin, target, dir);
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
 
-		if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.9)) {
-			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					return;
+				}
+			}
+			// always use the kamikaze if the enemy flag carrier is visible
+			c = BotEnemyFlagCarrierVisible(bs);
 
-			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
+
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					trap_EA_Use(bs->client);
+					return;
+				}
+			}
+
+			BotCountVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
+
+			if (enemies > 2 && enemies > teammates + 1 && BotWantsToUseKamikaze(bs)) {
 				trap_EA_Use(bs->client);
 				return;
 			}
-		}
-	} else if (gametype == GT_HARVESTER) {
-		if (BotHarvesterCarryingCubes(bs)) {
-			return;
-		}
-		// never use kamikaze if a team mate carrying cubes is visible
-		c = BotTeamCubeCarrierVisible(bs);
 
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
-
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+			break;
+		case GT_1FCTF:
+			// never use the kamikaze if carrying the flag
+			if (Bot1FCTFCarryingFlag(bs)) {
 				return;
 			}
-		}
+			// never use the kamikaze if the team flag carrier is visible
+			c = BotTeamFlagCarrierVisible(bs);
 
-		c = BotEnemyCubeCarrierVisible(bs);
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
 
-		if (c >= 0) {
-			// get the entity information
-			BotEntityInfo(c, &entinfo);
-			VectorSubtract(entinfo.origin, bs->origin, dir);
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					return;
+				}
+			}
+			// always use the kamikaze if the enemy flag carrier is visible
+			c = BotEnemyFlagCarrierVisible(bs);
 
-			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
+
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					trap_EA_Use(bs->client);
+					return;
+				}
+			}
+
+			BotCountVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
+
+			if (enemies > 2 && enemies > teammates + 1 && BotWantsToUseKamikaze(bs)) {
 				trap_EA_Use(bs->client);
 				return;
 			}
-		}
-	}
 
-	BotVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
+			break;
+		case GT_OBELISK:
+			switch (BotTeam(bs)) {
+				case TEAM_RED:
+					goal = &blueobelisk;
+					break;
+				default:
+					goal = &redobelisk;
+					break;
+			}
+			// if the obelisk is visible
+			VectorCopy(goal->origin, target);
 
-	if (enemies > 2 && enemies > teammates + 1) {
-		trap_EA_Use(bs->client);
-		return;
+			target[2] += 1;
+
+			VectorSubtract(bs->origin, target, dir);
+			// don't use the kamikaze as long as it isn't really needed
+			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.7) && BotWantsToUseKamikaze(bs)) {
+				BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
+
+				if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
+					trap_EA_Use(bs->client);
+					return;
+				}
+			}
+
+			break;
+		case GT_HARVESTER:
+			// never use the kamikaze if carrying cubes
+			if (BotHarvesterCarryingCubes(bs)) {
+				return;
+			}
+			// never use the kamikaze if a team mate carrying cubes is visible
+			c = BotTeamCubeCarrierVisible(bs);
+
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
+
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					return;
+				}
+			}
+			// always use the kamikaze if an enemy carrying cubes is visible
+			c = BotEnemyCubeCarrierVisible(bs);
+
+			if (c >= 0) {
+				// get the entity information
+				BotEntityInfo(c, &entinfo);
+				VectorSubtract(entinfo.origin, bs->origin, dir);
+
+				if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST)) {
+					trap_EA_Use(bs->client);
+					return;
+				}
+			}
+
+			BotCountVisibleTeamMatesAndEnemies(bs, &teammates, &enemies, KAMIKAZE_DIST);
+
+			if (enemies > 2 && enemies > teammates + 1 && BotWantsToUseKamikaze(bs)) {
+				trap_EA_Use(bs->client);
+				return;
+			}
+
+			break;
+		default:
+			break;
 	}
 }
 
@@ -2954,7 +3066,7 @@ int BotSameTeam(bot_state_t *bs, int entnum) {
 InFieldOfVision
 =======================================================================================================================================
 */
-qboolean InFieldOfVision(vec3_t viewangles, float fov, vec3_t angles) {
+qboolean InFieldOfVision(vec3_t viewangles, int fov, vec3_t angles) {
 	int i;
 	float diff, angle;
 
@@ -2994,85 +3106,86 @@ BotEntityVisible
 Returns visibility in the range [0, 1] taking fog and water surfaces into account.
 =======================================================================================================================================
 */
-float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int ent) {
-	int i, contents_mask, passent, hitent, infog, inwater, otherinfog, pc;
+qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
+	int viewer, visdist, i, contents_mask, passent, hitent, infog, inlava, inwater, otherinfog, otherinlava, otherinwater;
 	float squaredfogdist, waterfactor, vis, bestvis;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
-	vec3_t dir, entangles, start, end, middle;
+	vec3_t viewangles, eye, dir, vec, right, entangles, start, end, middle;
 
+	if (ent < 0) {
+		return qfalse;
+	}
 	// get the entity information
 	BotEntityInfo(ent, &entinfo);
 	// if this player is active
 	if (!entinfo.valid) {
-		return 0;
+		return qfalse;
 	}
 	// calculate middle of bounding box
 	VectorAdd(entinfo.mins, entinfo.maxs, middle);
 	VectorScale(middle, 0.5, middle);
 	VectorAdd(entinfo.origin, middle, middle);
-	// check if entity is within field of vision
+	// calculate eye position
+	VectorCopy(ps->origin, eye);
+
+	eye[2] += ps->viewheight;
+
 	VectorSubtract(middle, eye, dir);
+
+	visdist = bot_visualrange.value;
+
+	if (VectorLength(dir) > visdist) {
+		return qfalse;
+	}
+	// check if entity is within field of vision
+	VectorCopy(ps->viewangles, viewangles);
 	VectorToAngles(dir, entangles);
 
 	if (!InFieldOfVision(viewangles, fov, entangles)) {
-		return 0;
+		return qfalse;
 	}
 
 	if (EntityIsInvisible(&entinfo) && VectorLength(dir) > 300) {
 		return qfalse;
 	}
+	// set the right vector
+	VectorCopy(dir, vec);
+	VectorNormalize(vec);
 
-	pc = trap_AAS_PointContents(eye);
-	infog = (pc & CONTENTS_FOG);
-	inwater = (pc & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER));
+	right[0] = vec[1];
+	right[1] = vec[0];
+	right[2] = 0;
+
+	viewer = ps->clientNum;
+	passent = viewer;
+	hitent = ent;
+	contents_mask = CONTENTS_SOLID;
+	infog = (trap_AAS_PointContents(eye) & CONTENTS_FOG);
+	inlava = (trap_AAS_PointContents(eye) & CONTENTS_LAVA);
+	inwater = (trap_AAS_PointContents(eye) & (CONTENTS_SLIME|CONTENTS_WATER));
+	otherinfog = (trap_AAS_PointContents(middle) & CONTENTS_FOG);
+	otherinlava = (trap_AAS_PointContents(middle) & CONTENTS_LAVA);
+	otherinwater = (trap_AAS_PointContents(middle) & (CONTENTS_SLIME|CONTENTS_WATER));
+	waterfactor = 1.0;
 	bestvis = 0;
+	// if the bot or the entity is in lava
+	if (inlava || otherinlava) {
+		return qfalse;
+	}
+	// if the bot or the entity is in water
+	if (inwater || otherinwater) {
+		waterfactor = 0.5;
+	}
 
-	for (i = 0; i < 3; i++) {
-		// if the point is not in potential visible sight
-		//if (!AAS_inPVS(eye, middle)) continue;
-
-		contents_mask = CONTENTS_SOLID;
-		passent = viewer;
-		hitent = ent;
-
+	for (i = 0; i < 5; i++) {
 		VectorCopy(eye, start);
 		VectorCopy(middle, end);
-		// if the entity is in water, lava or slime
-		if (trap_AAS_PointContents(middle) & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER)) {
-			contents_mask |= (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER);
-		}
-		// if eye is in water, lava or slime
-		if (inwater) {
-			if (!(contents_mask & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER))) {
-				passent = ent;
-				hitent = viewer;
-
-				VectorCopy(middle, start);
-				VectorCopy(eye, end);
-			}
-
-			contents_mask ^= (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER);
-		}
 		// trace from start to end
 		BotAI_Trace(&trace, start, NULL, NULL, end, passent, contents_mask);
-		// if water was hit
-		waterfactor = 1.0;
-		// note: trace.contents is always 0, see BotAI_Trace
-		if (trace.contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER)) {
-			// if the water surface is translucent
-			if (1) {
-				// trace through the water
-				contents_mask &= ~(CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER);
-				BotAI_Trace(&trace, trace.endpos, NULL, NULL, end, passent, contents_mask);
-				waterfactor = 0.5;
-			}
-		}
 		// if a full trace or the hitent was hit
 		if (trace.fraction >= 1 || trace.entityNum == hitent) {
 			// check for fog, assuming there's only one fog brush where either the viewer or the entity is in or both are in
-			otherinfog = (trap_AAS_PointContents(middle) & CONTENTS_FOG);
-
 			if (infog && otherinfog) {
 				VectorSubtract(trace.endpos, eye, dir);
 				squaredfogdist = VectorLengthSquared(dir);
@@ -3098,20 +3211,114 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 			if (vis > bestvis) {
 				bestvis = vis;
 			}
-			// if pretty much no fog
-			if (bestvis >= 0.95) {
-				return bestvis;
+			// if pretty much no fog (fogparms > 350)
+			if (bestvis >= 0.01) {
+				//BotAI_Print(PRT_MESSAGE, "Visibility = %f. Distance = %f.\n", bestvis, VectorLength(dir));
+				return qtrue;
 			}
 		}
 		// check bottom and top of bounding box as well
 		if (i == 0) {
-			middle[2] += entinfo.mins[2];
+			middle[2] -= (entinfo.maxs[2] - entinfo.mins[2]) * 0.5;
 		} else if (i == 1) {
 			middle[2] += entinfo.maxs[2] - entinfo.mins[2];
+		} else if (i == 2) { // right side
+			middle[2] -= (entinfo.maxs[2] - entinfo.mins[2]) / 2.0;
+			VectorMA(eye, entinfo.maxs[0] - 0.5, right, eye);
+		} else if (i == 3) { // left side
+			VectorMA(eye, -2.0 * (entinfo.maxs[0] - 0.5), right, eye);
 		}
 	}
 
-	return bestvis;
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
+BotEntityIndirectlyVisible
+=======================================================================================================================================
+*/
+static qboolean BotEntityIndirectlyVisible(bot_state_t *bs, int ent) {
+	static char entityVisStatus[MAX_CLIENTS][MAX_GENTITIES];
+	static int entityVisStatusNextCheck[MAX_CLIENTS][MAX_GENTITIES];
+	int i, teammate;
+	gentity_t *tent;
+	qboolean checkStatus, vis;
+
+	// if not in teamplay mode
+	if (gametype < GT_TEAM) {
+		return qfalse;
+	}
+
+	if (ent < 0 || ent >= ENTITYNUM_MAX_NORMAL) {
+		return qfalse;
+	}
+	// there is no need to have obelisks indirectly visible
+	if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
+		return qfalse;
+	}
+
+	BotDetermineVisibleTeammates(bs);
+
+	checkStatus = qfalse;
+
+	for (i = 0; i < bs->numvisteammates; i++) {
+		teammate = bs->visteammates[i];
+
+		if (teammate < 0 || teammate >= MAX_CLIENTS) {
+			continue; // should not happen
+		}
+
+		if (entityVisStatusNextCheck[teammate][ent] <= level.time) {
+			checkStatus = qtrue;
+			continue;
+		}
+
+		if (entityVisStatus[teammate][ent]) {
+			return qtrue;
+		}
+	}
+
+	if (!checkStatus) {
+		return qfalse;
+	}
+
+	for (i = 0; i < bs->numvisteammates; i++) {
+		teammate = bs->visteammates[i];
+
+		if (teammate < 0 || teammate >= MAX_CLIENTS) {
+			continue; // should not happen
+		}
+
+		if (entityVisStatusNextCheck[teammate][ent] > level.time) {
+			continue;
+		}
+
+		tent = &g_entities[teammate];
+
+		if (!tent->inuse) {
+			continue;
+		}
+
+		if (!tent->client) {
+			continue;
+		}
+
+		if (tent->health <= 0) {
+			continue;
+		}
+
+		vis = (BotEntityVisible(&tent->client->ps, 180, ent) > 0);
+		entityVisStatus[teammate][ent] = vis;
+		entityVisStatusNextCheck[teammate][ent] = level.time + 1000 + rand() % 2000;
+
+		if (vis) {
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "Entity is indirect visible!\n");
+			return qtrue;
+		}
+	}
+
+	return qfalse;
 }
 
 /*
@@ -3120,33 +3327,20 @@ BotFindEnemy
 =======================================================================================================================================
 */
 int BotFindEnemy(bot_state_t *bs, int curenemy) {
-	int i, healthdecrease;
-	float f, alertness, easyfragger, vis;
-	float squaredist, cursquaredist;
+	int i, f, healthdecrease, enemyArea;
+	float easyfragger, squaredist, cursquaredist;
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
+	qboolean foundEnemy;
+	//char botname[32];
 
-	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+	//ClientName(bs->client, botname, sizeof(botname));
+	//alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
 	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
 	// check if the health decreased
 	healthdecrease = bs->lasthealth > bs->inventory[INVENTORY_HEALTH];
 	// remember the current health value
 	bs->lasthealth = bs->inventory[INVENTORY_HEALTH];
-
-	if (curenemy >= 0) {
-		// get the entity information
-		BotEntityInfo(curenemy, &curenemyinfo);
-
-		if (EntityCarriesFlag(&curenemyinfo)) {
-			return qfalse;
-		}
-
-		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
-
-		cursquaredist = VectorLengthSquared(dir);
-	} else {
-		cursquaredist = 0;
-	}
 
 	if (gametype == GT_OBELISK) {
 		vec3_t target;
@@ -3178,6 +3372,27 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			return qtrue;
 		}
 	}
+
+	if (curenemy >= 0) {
+		// get the entity information
+		BotEntityInfo(curenemy, &curenemyinfo);
+		// only concentrate on flag carrier if not carrying a flag
+		if (EntityCarriesFlag(&curenemyinfo) && !BotCTFCarryingFlag(bs)) {
+			return qfalse;
+		}
+		// only concentrate on cube carrier if not carrying cubes
+		if (EntityCarriesCubes(&curenemyinfo) && !BotHarvesterCarryingCubes(bs)) {
+			return qfalse;
+		}
+		// calculate the distance towards the enemy
+		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
+
+		cursquaredist = VectorLengthSquared(dir);
+	} else {
+		cursquaredist = 0;
+	}
+
+	foundEnemy = qfalse;
 
 	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client) {
@@ -3225,6 +3440,36 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				continue;
 			}
 		}
+		// if the bot's health decreased or the enemy is shooting
+		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo))) {
+			f = 360;
+		} else {
+			f = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_FOV, 0, 360);
+		}
+		// check if the enemy is visible
+		if (!BotEntityVisible(&bs->cur_ps, f, i)) {
+			if (bs->enemy >= 0) {
+				continue;
+			}
+
+			if (curenemy >= 0) {
+				continue;
+			}
+
+			if (!BotEntityIndirectlyVisible(bs, i)) {
+				continue;
+			}
+
+			enemyArea = BotPointAreaNum(entinfo.origin);
+
+			if (enemyArea <= 0) {
+				continue;
+			}
+
+			if (!trap_AAS_AreaReachability(enemyArea)) {
+				continue;
+			}
+		}
 		// calculate the distance towards the enemy
 		VectorSubtract(entinfo.origin, bs->origin, dir);
 
@@ -3236,22 +3481,12 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				continue;
 			}
 		}
+/*
 		// if the bot has no
 		if (squaredist > Square(900.0 + alertness * 4000.0)) {
 			continue;
 		}
-		// if the bot's health decreased or the enemy is shooting
-		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo))) {
-			f = 360;
-		} else {
-			f = 90 + 90 - (90 - (squaredist > Square(810) ? Square(810) : squaredist) / (810 * 9));
-		}
-		// check if the enemy is visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, f, i);
-
-		if (vis <= 0) {
-			continue;
-		}
+*/
 		// if the enemy is quite far away and doesn't have a flag or cubes and the bot is not damaged try to ignore this enemy
 		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
 			// get the entity information
@@ -3278,21 +3513,28 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			}
 		}
 		// found an enemy
-		bs->enemy = entinfo.number;
+		foundEnemy = qtrue;
+		curenemy = entinfo.number;
+		cursquaredist = squaredist;
+		curenemyinfo = entinfo;
+	}
 
-		if (curenemy >= 0) {
-			bs->enemysight_time = FloatTime() - 2;
-		} else {
+	if (foundEnemy) {
+		if (bs->enemy < 0) {
 			bs->enemysight_time = FloatTime();
 		}
 
 		bs->enemysuicide = qfalse;
 		bs->enemydeath_time = 0;
+		bs->enemy = curenemy;
 		bs->enemyvisible_time = FloatTime();
-		return qtrue;
+
+		VectorCopy(entinfo.origin, bs->lastenemyorigin);
+
+		bs->lastenemyareanum = BotPointAreaNum(entinfo.origin);
 	}
 
-	return qfalse;
+	return foundEnemy;
 }
 
 /*
@@ -3302,7 +3544,6 @@ BotTeamFlagCarrierVisible
 */
 int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 	int i;
-	float vis;
 	aas_entityinfo_t entinfo;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -3324,9 +3565,7 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the flag carrier is not visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis <= 0) {
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
 			continue;
 		}
 
@@ -3377,7 +3616,6 @@ BotEnemyFlagCarrierVisible
 */
 int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 	int i;
-	float vis;
 	aas_entityinfo_t entinfo;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -3399,9 +3637,7 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the flag carrier is not visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis <= 0) {
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
 			continue;
 		}
 
@@ -3413,12 +3649,52 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
-BotVisibleTeamMatesAndEnemies
+BotCountVisibleEnemies
 =======================================================================================================================================
 */
-void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies, float range) {
+void BotCountVisibleEnemies(bot_state_t *bs, int *enemies, float range) {
 	int i;
-	float vis;
+	aas_entityinfo_t entinfo;
+	vec3_t dir;
+
+	if (enemies) {
+		*enemies = 0;
+	}
+
+	for (i = 0; i < level.maxclients; i++) {
+		if (i == bs->client) {
+			continue;
+		}
+		// get the entity information
+		BotEntityInfo(i, &entinfo);
+		// if this player is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if not within range
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+
+		if (VectorLengthSquared(dir) > Square(range)) {
+			continue;
+		}
+		// if the enemy is not visible
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
+			continue;
+		}
+
+		if (enemies) {
+			(*enemies)++;
+		}
+	}
+}
+
+/*
+=======================================================================================================================================
+BotCountVisibleTeamMatesAndEnemies
+=======================================================================================================================================
+*/
+void BotCountVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies, float range) {
+	int i;
 	aas_entityinfo_t entinfo;
 	vec3_t dir;
 
@@ -3440,9 +3716,12 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 		if (!entinfo.valid) {
 			continue;
 		}
-		// if this player is carrying a flag
-		if (!EntityCarriesFlag(&entinfo)) {
-			continue;
+
+		if (gametype == GT_CTF || gametype == GT_1FCTF) {
+			// if this player is carrying a flag
+			if (!EntityCarriesFlag(&entinfo)) {
+				continue;
+			}
 		}
 		// if not within range
 		VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -3451,9 +3730,7 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 			continue;
 		}
 		// if the enemy is not visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis <= 0) {
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
 			continue;
 		}
 		// if on the same team
@@ -3471,12 +3748,55 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 
 /*
 =======================================================================================================================================
+BotCountAllTeamMates
+
+Counts all teammates inside a specific range, regardless if they are visible or not.
+=======================================================================================================================================
+*/
+int BotCountAllTeamMates(bot_state_t *bs, float range) {
+	int teammates, i;
+	aas_entityinfo_t entinfo;
+	vec3_t dir;
+
+	// if not in teamplay mode
+	if (gametype < GT_TEAM) {
+		return 0;
+	}
+
+	teammates = 0;
+
+	for (i = 0; i < level.maxclients; i++) {
+		if (i == bs->client) {
+			continue;
+		}
+		// get the entity information
+		BotEntityInfo(i, &entinfo);
+		// if this player is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if not within range
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+
+		if (VectorLengthSquared(dir) > Square(range)) {
+			continue;
+		}
+		// if on the same team
+		if (BotSameTeam(bs, i)) {
+			teammates++;
+		}
+	}
+
+	return teammates;
+}
+
+/*
+=======================================================================================================================================
 BotTeamCubeCarrierVisible
 =======================================================================================================================================
 */
 int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 	int i;
-	float vis;
 	aas_entityinfo_t entinfo;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -3498,9 +3818,7 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the cube carrier is not visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis <= 0) {
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
 			continue;
 		}
 
@@ -3517,7 +3835,6 @@ BotEnemyCubeCarrierVisible
 */
 int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 	int i;
-	float vis;
 	aas_entityinfo_t entinfo;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -3539,9 +3856,7 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the cube carrier is not visible
-		vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
-
-		if (vis <= 0) {
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
 			continue;
 		}
 
@@ -3580,6 +3895,7 @@ qboolean BotEqualizeTeamScore(bot_state_t *bs) {
 	return qfalse;
 
 }
+
 /*
 =======================================================================================================================================
 BotEqualizeWeakestHumanTeamScore
@@ -3693,7 +4009,7 @@ BotAimAtEnemy
 =======================================================================================================================================
 */
 void BotAimAtEnemy(bot_state_t *bs) {
-	int i, enemyvisible;
+	int i;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity;
 	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
@@ -3802,10 +4118,8 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		aim_accuracy *= bot_equalizer_aim.value; // DEBUG: bot_equalizer_aim
 	}
 // Tobias END
-	// check visibility of enemy
-	enemyvisible = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy);
 	// if the enemy is visible
-	if (enemyvisible) {
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(entinfo.origin, bestorigin);
 
 		bestorigin[2] += 8;
@@ -3939,7 +4253,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		}
 	}
 
-	if (enemyvisible) {
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		BotAI_Trace(&trace, bs->eye, NULL, NULL, bestorigin, bs->entitynum, MASK_SHOT);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	} else {
@@ -4020,7 +4334,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	if (attackentity >= MAX_CLIENTS) {
 		// if attacking an obelisk
 		if (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum) {
-			// if obelisk is respawning return
+			// if the obelisk is respawning
 			if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
 				return;
 			}
@@ -6051,6 +6365,7 @@ void BotSetupDeathmatchAI(void) {
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
 	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
+	trap_Cvar_Register(&bot_visualrange, "bot_visualrange", "100000", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
 // Tobias DEBUG
 	trap_Cvar_Register(&bot_noshoot, "bot_noshoot", "0", 0);

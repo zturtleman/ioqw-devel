@@ -103,6 +103,142 @@ int BotNumTeamMates(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotGetNextPlayer
+
+Returns -1 if there are no more players. Does not return the bot itself (if bs != NULL). Use lastPlayer = -1 for first call.
+=======================================================================================================================================
+*/
+int BotGetNextPlayer(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
+	int currentClient;
+
+	for (currentClient = lastPlayer + 1; currentClient < level.maxclients; currentClient++) {
+		if (bs && bs->entitynum == currentClient) {
+			continue;
+		}
+
+		if (!g_entities[currentClient].inuse) {
+			continue;
+		}
+
+		if (!g_entities[currentClient].client) {
+			continue;
+		}
+
+		if (g_entities[currentClient].client->pers.connected != CON_CONNECTED) {
+			continue;
+		}
+
+		if (g_entities[currentClient].client->sess.sessionTeam == TEAM_SPECTATOR) {
+			continue;
+		}
+
+		if (!BotAI_GetClientState(currentClient, ps)) {
+			continue;
+		}
+
+		return currentClient;
+	}
+
+	return -1;
+}
+
+/*
+=======================================================================================================================================
+BotGetNextPlayerOrMonster
+
+Returns -1 if there are no more players. Does not return the bot itself (if bs != NULL). Use lastPlayer = -1 for first call.
+=======================================================================================================================================
+*/
+/*
+int BotGetNextPlayerOrMonster(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
+	int currentClient;
+
+	if (lastPlayer < MAX_CLIENTS) {
+		lastPlayer = BotGetNextPlayer(bs, lastPlayer, ps);
+
+		if (lastPlayer >= 0) {
+			return lastPlayer;
+		}
+
+		lastPlayer = MAX_CLIENTS - 1;
+	}
+
+	for (currentClient = lastPlayer + 1; currentClient < level.num_entities; currentClient++) {
+		if (bs && bs->entitynum == currentClient) {
+			continue;
+		}
+
+		if (!BotAI_GetClientState(currentClient, ps)) {
+			continue;
+		}
+
+		return currentClient;
+	}
+
+	return -1;
+}
+*/
+/*
+=======================================================================================================================================
+BotGetNextTeamMate
+
+Returns -1 if there are no more team mates. Does not return the bot itself. Use lastTeamMate = -1 for first call.
+=======================================================================================================================================
+*/
+int BotGetNextTeamMate(bot_state_t *bs, int lastTeamMate, playerState_t *ps) {
+	int player;
+
+	if (gametype < GT_TEAM) {
+		return -1;
+	}
+
+	for (player = lastTeamMate; (player = BotGetNextPlayer(bs, player, ps)) >= 0;) {
+		if (bs->cur_ps.persistant[PERS_TEAM] == ps->persistant[PERS_TEAM]) {
+			return player;
+		}
+	}
+
+	return -1;
+}
+
+/*
+=======================================================================================================================================
+BotDetermineVisibleTeammates
+=======================================================================================================================================
+*/
+void BotDetermineVisibleTeammates(bot_state_t *bs) {
+	int teammate;
+	playerState_t ps;
+
+	if (gametype < GT_TEAM) {
+		bs->numvisteammates = 0;
+		return;
+	}
+
+	if (FloatTime() < bs->visteammates_time) {
+		return;
+	}
+
+	bs->visteammates_time = FloatTime() + 1 + random();
+	bs->numvisteammates = 0;
+
+	for (teammate = -1; (teammate = BotGetNextTeamMate(bs, teammate, &ps)) >= 0;) {
+		if (ps.stats[STAT_HEALTH] <= 0) {
+			continue;
+		}
+
+		if (DistanceSquared(bs->origin, ps.origin) > 4096.0 * 4096.0) {
+			continue;
+		}
+
+		if (BotEntityVisible(&bs->cur_ps, 360, teammate)) {
+			bs->visteammates[bs->numvisteammates++] = teammate;
+		}
+	}
+}
+
+/*
+=======================================================================================================================================
 BotClientTravelTimeToGoal
 =======================================================================================================================================
 */
