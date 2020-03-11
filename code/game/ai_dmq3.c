@@ -284,6 +284,20 @@ qboolean EntityIsShooting(aas_entityinfo_t *entinfo) {
 
 /*
 =======================================================================================================================================
+EntityIsAlreadyMined
+=======================================================================================================================================
+*/
+int EntityIsAlreadyMined(aas_entityinfo_t *entinfo) {
+
+	if (entinfo->flags & EF_TICKING) {
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
 EntityIsChatting
 =======================================================================================================================================
 */
@@ -1954,6 +1968,7 @@ void BotUpdateBattleInventory(bot_state_t *bs, int enemy) {
 	bs->inventory[ENEMY_HEIGHT] = (int)dir[2];
 	dir[2] = 0;
 	bs->inventory[ENEMY_HORIZONTAL_DIST] = (int)VectorLength(dir);
+	bs->inventory[ENTITY_IS_AN_OBELISK] = (int)(bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) ? 1 : 0;
 	// FIXME: add num visible enemies and num visible team mates to the inventory
 }
 
@@ -2400,6 +2415,56 @@ int TeamPlayIsOn(void) {
 
 /*
 =======================================================================================================================================
+BotCanCamp
+=======================================================================================================================================
+*/
+qboolean BotCanCamp(bot_state_t *bs) {
+
+	// if the bot's team does not lead
+	if (gametype > GT_TOURNAMENT && bs->ownteamscore < bs->enemyteamscore) {
+		return qfalse;
+	}
+	// if the enemy is located way higher than the bot
+	if (bs->inventory[ENEMY_HEIGHT] > 200) {
+		return qfalse;
+	}
+	// if the bot is very low on health
+	if (bs->inventory[INVENTORY_HEALTH] < 60) {
+		return qfalse;
+	}
+	// if the bot is low on health
+	if (bs->inventory[INVENTORY_HEALTH] < 80) {
+		// if the bot has insufficient armor
+		if (bs->inventory[INVENTORY_ARMOR] < 40) {
+			return qfalse;
+		}
+	}
+	// if the bot has the quad powerup
+	if (bs->inventory[INVENTORY_QUAD]) {
+		return qfalse;
+	}
+	// if the bot has the invisibility powerup
+	if (bs->inventory[INVENTORY_INVISIBILITY]) {
+		return qfalse;
+	}
+	// if the bot has the regen powerup
+	if (bs->inventory[INVENTORY_REGEN]) {
+		return qfalse;
+	}
+	// the bot should have at least have a good weapon with some ammo
+	if (!(bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 80)
+		&& !(bs->inventory[INVENTORY_ROCKETLAUNCHER] > 0 && bs->inventory[INVENTORY_ROCKETS] > 10)
+		&& !(bs->inventory[INVENTORY_RAILGUN] > 0 && bs->inventory[INVENTORY_SLUGS] > 10)
+		&& !(bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 80)
+		&& !(bs->inventory[INVENTORY_BFG10K] > 0 && bs->inventory[INVENTORY_BFG_AMMO] > 10)) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 BotAggression
 =======================================================================================================================================
 */
@@ -2639,18 +2704,19 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 	}
 	// never rocket jump with the quad damage powerup
 	if (bs->inventory[INVENTORY_QUAD]) {
-		return qfalse;
-	}
-	// if low on health
-	if (bs->inventory[INVENTORY_HEALTH] < 60) {
-		return qfalse;
-	}
-	// if not full health
-	if (bs->inventory[INVENTORY_HEALTH] < 90) {
-		// if the bot has insufficient armor
-		if (bs->inventory[INVENTORY_ARMOR] < 40) {
+		if (bs->inventory[INVENTORY_HEALTH] < 200 && bs->inventory[INVENTORY_ARMOR] < 120) {
 			return qfalse;
 		}
+	}
+	// never rocket jump with the doubler powerup
+	if (bs->inventory[INVENTORY_DOUBLER]) {
+		if (bs->inventory[INVENTORY_HEALTH] < 100 && bs->inventory[INVENTORY_ARMOR] < 120) {
+			return qfalse;
+		}
+	}
+	// if low on health
+	if (bs->inventory[INVENTORY_HEALTH] < 100 && bs->inventory[INVENTORY_ARMOR] < 10) {
+		return qfalse;
 	}
 
 	rocketjumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WEAPONJUMPING, 0, 1);
@@ -2780,11 +2846,7 @@ int BotWantsToCamp(bot_state_t *bs) {
 		return qfalse;
 	}
 	// if the bot isn't healthy enough
-	if (BotAggression(bs) < 50) {
-		return qfalse;
-	}
-	// the bot should have at least have the rocket launcher, the railgun or the bfg10k with some ammo
-	if ((bs->inventory[INVENTORY_ROCKETLAUNCHER] <= 0 || bs->inventory[INVENTORY_ROCKETS] < 10) && (bs->inventory[INVENTORY_RAILGUN] <= 0 || bs->inventory[INVENTORY_SLUGS] < 10) && (bs->inventory[INVENTORY_BFG10K] <= 0 || bs->inventory[INVENTORY_BFG_AMMO] < 10)) {
+	if (!BotCanCamp(bs)) {
 		return qfalse;
 	}
 	// find the closest camp spot
@@ -3457,8 +3519,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
-		// ignore invisible and burning enemies if already fighting
-		if (bs->enemy >= 0 && EntityIsInvisible(&entinfo)) {
+		// ignore invisible, mined and burning enemies if already fighting
+		if (bs->enemy >= 0 && (EntityIsInvisible(&entinfo) || EntityIsAlreadyMined(&entinfo))) {
 			continue;
 		}
 		// if not an easy fragger don't shoot at chatting players
@@ -6059,6 +6121,27 @@ void BotCheckSnapshot(bot_state_t *bs) {
 	state.eventParm = bs->cur_ps.externalEventParm;
 
 	BotCheckEvents(bs, &state);
+}
+
+/*
+=======================================================================================================================================
+BotCheckTeamScores
+=======================================================================================================================================
+*/
+void BotCheckTeamScores(bot_state_t *bs) {
+
+	switch (bs->cur_ps.persistant[PERS_TEAM]) {
+		case TEAM_RED:
+			bs->enemyteamscore = level.teamScores[TEAM_BLUE];
+			bs->ownteamscore = level.teamScores[TEAM_RED];
+			break;
+		case TEAM_BLUE:
+			bs->enemyteamscore = level.teamScores[TEAM_RED];
+			bs->ownteamscore = level.teamScores[TEAM_BLUE];
+			break;
+		default:
+			return;
+	}
 }
 
 /*
