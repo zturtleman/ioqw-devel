@@ -220,6 +220,7 @@ struct gclient_s {
 	int accuracy_hits;		// total number of hits
 	int lastkilled_client;	// last client that this client killed
 	int lasthurt_client;	// last client that damaged this client
+	int lasthurt_time;		// time of the last damage
 	int lasthurt_mod;		// type of damage the client did
 	// timers
 	int respawnTime;		// can respawn when time > this, force after g_forcerespwan

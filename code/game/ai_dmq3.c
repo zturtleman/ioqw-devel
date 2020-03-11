@@ -1710,6 +1710,32 @@ void BotChooseWeapon(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotWantsToWalk
+=======================================================================================================================================
+*/
+qboolean BotWantsToWalk(bot_state_t *bs) {
+
+	if (bs->walker <= 0.5f) {
+		return qfalse;
+	}
+	// never walk if carrying a flag
+	if (BotCTFCarryingFlag(bs)) {
+		return qfalse;
+	}
+
+	if (Bot1FCTFCarryingFlag(bs)) {
+		return qfalse;
+	}
+	// never walk if carrying cubes
+	if (BotHarvesterCarryingCubes(bs)) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 BotSetupForMovement
 =======================================================================================================================================
 */
@@ -1740,7 +1766,7 @@ void BotSetupForMovement(bot_state_t *bs) {
 		initmove.or_moveflags |= MFL_WATERJUMP;
 	}
 	// set the walk flag
-	if (bs->walker > 0.5) {
+	if (BotWantsToWalk(bs)) {
 		initmove.or_moveflags |= MFL_WALK;
 	}
 	// set the teleported flag
@@ -1939,6 +1965,10 @@ BotWantsToUseKamikaze
 qboolean BotWantsToUseKamikaze(bot_state_t *bs) {
 
 	if (gametype == GT_OBELISK) {
+		// if the bot is low on health and recently hurt
+		if (bs->inventory[INVENTORY_HEALTH] < 60 && g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
+			return qtrue;
+		}
 		// if the bot has the ammoregen powerup
 		if (bs->inventory[INVENTORY_AMMOREGEN] > 0) {
 			return qfalse;
@@ -1993,6 +2023,9 @@ qboolean BotWantsToUseKamikaze(bot_state_t *bs) {
 		}
 	} else {
 		// if the bot is low on health and recently hurt
+		if (bs->inventory[INVENTORY_HEALTH] < 80 && g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
+			return qtrue;
+		}
 	}
 
 	return qfalse;
@@ -2652,15 +2685,11 @@ int BotHasPersistantPowerupAndWeapon(bot_state_t *bs) {
 		}
 	}
 	// if the bot can use the chain gun
-	if (bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 40) {
+	if (bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 60) {
 		return qtrue;
 	}
 	// if the bot can use the nail gun
 	if (bs->inventory[INVENTORY_NAILGUN] > 0 && bs->inventory[INVENTORY_NAILS] > 5) {
-		return qtrue;
-	}
-	// if the bot can use the proxy launcher
-	if (bs->inventory[INVENTORY_PROXLAUNCHER] > 0 && bs->inventory[INVENTORY_MINES] > 5) {
 		return qtrue;
 	}
 	// if the bot can use the napalm launcher
@@ -3337,8 +3366,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	//ClientName(bs->client, botname, sizeof(botname));
 	//alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
 	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
-	// check if the health decreased
-	healthdecrease = bs->lasthealth > bs->inventory[INVENTORY_HEALTH];
+	// check if the health decreased by a reliable method (consider automatic decrease if health > max. health!)
+	healthdecrease = g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000;
 	// remember the current health value
 	bs->lasthealth = bs->inventory[INVENTORY_HEALTH];
 
@@ -3382,6 +3411,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		}
 		// only concentrate on cube carrier if not carrying cubes
 		if (EntityCarriesCubes(&curenemyinfo) && !BotHarvesterCarryingCubes(bs)) {
+			return qfalse;
+		}
+		// looking for revenge
+		if (curenemy == bs->revenge_enemy && bs->revenge_kills > 0) {
 			return qfalse;
 		}
 		// calculate the distance towards the enemy
@@ -5347,7 +5380,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 #endif
-	int movetype, bspent;
+	int movetype, bspent, speed;
 	vec3_t dir1, dir2, mins, maxs, end, hordir, sideward, angles, up = {0, 0, 1};
 	gentity_t *ent;
 	aas_entityinfo_t entinfo;
@@ -5362,6 +5395,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 #ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
 #endif // OBSTACLEDEBUG
+
+	if (!BotWantsToWalk(bs)) {
+		speed = 400;
+	} else {
+		speed = 200;
+	}
 	// if stuck in a solid area
 	if (moveresult->type == RESULTTYPE_INSOLIDAREA) {
 		// move in a random direction in the hope to get out
@@ -5467,16 +5506,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		VectorNegate(sideward, sideward);
 	}
 	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !trap_BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	if (movetype != MOVE_CROUCH || !trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
 		// perform the movement
-		if (!trap_BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 			// flip the avoid direction flag
 			bs->flags ^= BFL_AVOIDRIGHT;
 			// flip the direction
 			//VectorNegate(sideward, sideward);
 			VectorMA(sideward, -1, hordir, sideward);
 			// move in the other direction
-			trap_BotMoveInDirection(bs->ms, sideward, 400, movetype);
+			trap_BotMoveInDirection(bs->ms, sideward, speed, movetype);
 		}
 	}
 
@@ -5766,7 +5805,17 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 			}
 
 			trap_GetConfigstring(CS_SOUNDS + state->eventParm, buf, sizeof(buf));
-
+			/*
+			if (!strcmp(buf, "snd/m/flagret_red.wav")) {
+				// red flag is returned
+				bs->redflagstatus = 0;
+				bs->flagstatuschanged = qtrue;
+			} else if (!strcmp(buf, "snd/m/flagret_blu.wav")) {
+				// blue flag is returned
+				bs->blueflagstatus = 0;
+				bs->flagstatuschanged = qtrue;
+			} else
+			*/
 			if (!strcmp(buf, "snd/i/kam_sp.wav")) {
 				// the kamikaze respawned so don't avoid it
 				BotDontAvoid(bs, "Kamikaze");
@@ -5849,11 +5898,20 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 		case EV_OBITUARY:
 		{
 			int target, attacker, mod;
+			float vengefulness;
+			qboolean getRevenge;
 
 			target = state->otherEntityNum;
 			attacker = state->otherEntityNum2;
 			mod = state->eventParm;
-
+			// does the bot want revenge?
+			if (level.numPlayingClients < 3) {
+				getRevenge = qfalse;
+			} else {
+				vengefulness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
+				getRevenge = (random() < vengefulness);
+			}
+			// the bot was killed
 			if (target == bs->client) {
 				bs->botdeathtype = mod;
 				bs->lastkilledby = attacker;
@@ -5865,12 +5923,38 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				}
 
 				bs->num_deaths++;
-			// else if this client was killed by the bot
+
+				if (!bs->botsuicide) {
+					if (getRevenge) {
+						if (attacker != bs->revenge_enemy) {
+							bs->revenge_enemy = attacker;
+							bs->revenge_kills = 0;
+						}
+
+						bs->revenge_kills++;
+					} else {
+						bs->revenge_enemy = -1;
+						bs->revenge_kills = 0;
+					}
+				}
+			// if this player was killed by the bot
 			} else if (attacker == bs->client) {
 				bs->enemydeathtype = mod;
 				bs->lastkilledplayer = target;
 				bs->killedenemy_time = FloatTime();
 				bs->num_kills++;
+				// revenge!
+				if (target == bs->revenge_enemy) {
+					if (getRevenge) {
+						bs->revenge_kills--;
+					} else {
+						bs->revenge_kills = 0;
+					}
+
+					if (bs->revenge_kills <= 0) {
+						bs->revenge_enemy = -1;
+					}
+				}
 			} else if (attacker == bs->enemy && target == attacker) {
 				bs->enemysuicide = qtrue;
 			}
