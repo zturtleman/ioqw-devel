@@ -1683,6 +1683,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_report);
 // Tobias DEBUG
 	trap_Cvar_Update(&bot_noshoot);
+	trap_Cvar_Update(&bot_ext_aggressive);
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_teambluestrategy);
 	trap_Cvar_Update(&bot_teamredstrategy);
@@ -1926,6 +1927,12 @@ int BotInitLibrary(void) {
 
 	if (strlen(buf)) {
 		trap_BotLibVarSet("bot_noshoot", buf);
+	}
+	// aggression
+	trap_Cvar_VariableStringBuffer("bot_ext_aggressive", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_ext_aggressive", buf);
 	}
 // Tobias END
 	// visualize jump pads

@@ -71,7 +71,7 @@ int BotSetLastOrderedTask(bot_state_t *bs);
 // selection of goals for teamplay
 void BotTeamGoals(bot_state_t *bs, int retreat);
 // returns the aggression of the bot in the range [0, 100]
-float BotAggression(bot_state_t *bs);
+const int BotAggression(bot_state_t *bs);
 // returns how bad the bot feels
 float BotFeelingBad(bot_state_t *bs);
 // returns true if the bot wants to retreat
@@ -180,7 +180,10 @@ extern int maxclients;	// maximum number of clients
 extern vmCvar_t bot_rocketjump;
 extern vmCvar_t bot_fastchat;
 extern vmCvar_t bot_nochat;
-extern vmCvar_t bot_noshoot; // Tobias DEBUG
+// Tobias DEBUG
+extern vmCvar_t bot_noshoot;
+extern vmCvar_t bot_ext_aggressive;
+// Tobias END
 extern vmCvar_t bot_testrchat;
 extern vmCvar_t bot_challenge;
 
