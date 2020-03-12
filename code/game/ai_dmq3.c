@@ -5885,17 +5885,25 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 BotRandomMove
 =======================================================================================================================================
 */
-void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
+void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed) {
 	vec3_t dir, angles;
+	int i;
 
 	angles[0] = 0;
 	angles[1] = random() * 360;
 	angles[2] = 0;
 
-	AngleVectors(angles, dir, NULL, NULL);
-	trap_BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+	for (i = 0; i < 8; i++) {
+		AngleVectorsForward(angles, dir);
 
-	moveresult->failure = qfalse;
+		if (trap_BotMoveInDirection(bs->ms, dir, speed, MOVE_WALK)) {
+			break;
+		}
+
+		angles[1] = ((int)angles[1] + 45) % 360;
+	}
+
+	moveresult->failure = (i == 8);
 
 	VectorCopy(dir, moveresult->movedir);
 }
@@ -5937,7 +5945,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if stuck in a solid area
 	if (moveresult->type == RESULTTYPE_INSOLIDAREA) {
 		// move in a random direction in the hope to get out
-		BotRandomMove(bs, moveresult);
+		BotRandomMove(bs, moveresult, speed);
 #ifdef OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: IN SOLID AREA!\n", netname);
 #endif
@@ -6020,7 +6028,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		VectorSet(angles, 0, 360 * random(), 0);
 		AngleVectorsForward(angles, hordir);
 	}
-
+/*
 	//if (moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) movetype = MOVE_JUMP;
 	//else
 	movetype = MOVE_WALK;
@@ -6050,6 +6058,41 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 			VectorMA(sideward, -1, hordir, sideward);
 			// move in the other direction
 			trap_BotMoveInDirection(bs->ms, sideward, speed, movetype);
+		}
+	}
+*/
+	movetype = MOVE_WALK;
+	// get the (right) sideward vector
+	CrossProduct(hordir, up, sideward);
+	// get the direction the blocking obstacle is moving
+	dir2[2] = 0;
+
+	VectorCopy(ent->client->ps.velocity, dir2);
+	// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
+	if (DotProduct(dir2, sideward) > 50.0f) {
+		// flip the direction
+		VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+#endif
+	}
+	// try to crouch or jump over barrier
+	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
+		// move sidwards
+		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+			// flip the direction
+			VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
+#endif
+			// move in the other direction
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+				// move in a random direction in the hope to get out
+				BotRandomMove(bs, moveresult, speed);
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
+#endif
+			}
 		}
 	}
 

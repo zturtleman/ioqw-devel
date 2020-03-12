@@ -32,7 +32,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define BFL_AIMATENEMY		 8 // bot aimed at the enemy this frame
 #define BFL_IDEALVIEWSET	16 // bot has ideal view angles set
 #define BFL_FIGHTSUICIDAL	32 // bot is in a suicidal fight
-#define BFL_AVOIDRIGHT		64 // avoid obstacles by going to the right
 // long term goal types
 #define LTG_GETFLAG			 1 // get the enemy flag
 #define LTG_ATTACKENEMYBASE	 2 // attack the enemy base
