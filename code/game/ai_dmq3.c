@@ -3064,10 +3064,10 @@ const int BotWantsToChase(bot_state_t *bs) {
 	if (BotInLavaOrSlime(bs)) {
 		return qfalse;
 	}
-	// enough air, so go chasing
+	// don't chase if not enough air
 	if (trap_AAS_PointContents(bs->eye) & CONTENTS_WATER) {
-		if (bs->lastair_time > FloatTime() - 15) {
-			return qtrue;
+		if (bs->lastair_time < FloatTime() - 15) {
+			return qfalse;
 		}
 	}
 
