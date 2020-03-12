@@ -68,6 +68,8 @@ char *EasyClientName(int client, char *name, int size);
 int BotSynonymContext(bot_state_t *bs);
 // set last ordered task
 int BotSetLastOrderedTask(bot_state_t *bs);
+// check the team scores
+void BotCheckTeamScores(bot_state_t *bs);
 // selection of goals for teamplay
 void BotTeamGoals(bot_state_t *bs, int retreat);
 // returns the aggression of the bot in the range [0, 100]

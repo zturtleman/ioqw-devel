@@ -1968,7 +1968,9 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-
+	// check the team scores
+	BotCheckTeamScores(bs);
+	// get the team goals
 	BotTeamGoals(bs, qfalse);
 	// get the current long term goal
 	if (!BotLongTermGoal(bs, bs->tfl, qfalse, &goal)) {
@@ -2491,7 +2493,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		// check if the bot has to deactivate obstacles
 		BotClearPath(bs, &moveresult);
 	}
-
+	// check the team scores
+	BotCheckTeamScores(bs);
+	// get the team goals
 	BotTeamGoals(bs, qtrue);
 	// get the current long term goal while retreating
 	if (!BotLongTermGoal(bs, bs->tfl, qtrue, &goal)) {
