@@ -2978,7 +2978,7 @@ const int BotWantsToRetreat(bot_state_t *bs) {
 			return qtrue;
 		}
 	}
-	
+
 	if (bs->enemy >= 0) {
 		// get the entity information
 		BotEntityInfo(bs->enemy, &entinfo);
