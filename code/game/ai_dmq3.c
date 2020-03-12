@@ -2965,54 +2965,84 @@ float BotFeelingBad(bot_state_t *bs) {
 BotWantsToRetreat
 =======================================================================================================================================
 */
-int BotWantsToRetreat(bot_state_t *bs) {
+const int BotWantsToRetreat(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 
-	if (gametype == GT_CTF) {
-		// always retreat when carrying a CTF flag
-		if (BotCTFCarryingFlag(bs)) {
-			return qtrue;
-		}
-	} else if (gametype == GT_1FCTF) {
-		// if carrying the flag then always retreat
-		if (Bot1FCTFCarryingFlag(bs)) {
-			return qtrue;
-		}
-	} else if (gametype == GT_OBELISK) {
-		// the bots should be dedicated to attacking the enemy obelisk
-		if (bs->ltgtype == LTG_ATTACKENEMYBASE) {
-			if (bs->enemy != redobelisk.entitynum && bs->enemy != blueobelisk.entitynum) {
-				return qtrue;
-			}
-		}
-
-		if (BotFeelingBad(bs) > 50) {
-			return qtrue;
-		}
-
-		return qfalse;
-	} else if (gametype == GT_HARVESTER) {
-		// if carrying cubes then always retreat
-		if (BotHarvesterCarryingCubes(bs)) {
+	// retreat when standing in lava or slime
+	if (BotInLavaOrSlime(bs)) {
+		return qtrue;
+	}
+	// not enough air, so retreat
+	if (trap_AAS_PointContents(bs->eye) & CONTENTS_WATER) {
+		if (bs->lastair_time < FloatTime() - 15) {
 			return qtrue;
 		}
 	}
-
+	
 	if (bs->enemy >= 0) {
 		// get the entity information
 		BotEntityInfo(bs->enemy, &entinfo);
-		// if the enemy is carrying a flag
-		if (EntityCarriesFlag(&entinfo)) {
-			return qfalse;
-		}
-		// if the enemy is carrying cubes
-		if (EntityCarriesCubes(&entinfo)) {
-			return qfalse;
-		}
 	}
-	// if the bot is getting the flag
-	if (bs->ltgtype == LTG_GETFLAG) {
-		return qtrue;
+
+	switch (gametype) {
+		case GT_CTF:
+			// always retreat when carrying a CTF flag
+			if (BotCTFCarryingFlag(bs)) {
+				return qtrue;
+			}
+			// if the enemy is carrying a flag
+			if (EntityCarriesFlag(&entinfo)) {
+				return qfalse;
+			}
+			// if the bot is getting the flag
+			if (bs->ltgtype == LTG_GETFLAG) {
+				return qtrue;
+			}
+
+			break;
+		case GT_1FCTF:
+			// if carrying the flag then always retreat
+			if (Bot1FCTFCarryingFlag(bs)) {
+				return qtrue;
+			}
+			// if the enemy is carrying a flag
+			if (EntityCarriesFlag(&entinfo)) {
+				return qfalse;
+			}
+			// if the bot is getting the flag
+			if (bs->ltgtype == LTG_GETFLAG) {
+				return qtrue;
+			}
+
+			break;
+		case GT_OBELISK:
+			// the bots should be dedicated to attacking the enemy obelisk
+			if (bs->ltgtype == LTG_ATTACKENEMYBASE) {
+				if (BotFeelingBad(bs) > 50) {
+					return qtrue;
+				}
+				// if this enemy is NOT an obelisk
+				if (bs->enemy >= MAX_CLIENTS && (bs->enemy != redobelisk.entitynum && bs->enemy != blueobelisk.entitynum)) {
+					return qtrue;
+				}
+
+				return qfalse;
+			}
+
+			break;
+		case GT_HARVESTER:
+			// if carrying cubes then always retreat
+			if (BotHarvesterCarryingCubes(bs)) {
+				return qtrue;
+			}
+			// if the enemy is carrying cubes
+			if (EntityCarriesCubes(&entinfo)) {
+				return qfalse;
+			}
+
+			break;
+		default:
+			break;
 	}
 
 	if (BotAggression(bs) < 50) {
@@ -3027,53 +3057,84 @@ int BotWantsToRetreat(bot_state_t *bs) {
 BotWantsToChase
 =======================================================================================================================================
 */
-int BotWantsToChase(bot_state_t *bs) {
+const int BotWantsToChase(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 
-	if (gametype == GT_CTF) {
-		// never chase when carrying a CTF flag
-		if (BotCTFCarryingFlag(bs)) {
-			return qfalse;
-		}
-		// get the entity information
-		BotEntityInfo(bs->enemy, &entinfo);
-		// always chase if the enemy is carrying a flag
-		if (EntityCarriesFlag(&entinfo)) {
-			return qtrue;
-		}
-	} else if (gametype == GT_1FCTF) {
-		// never chase if carrying the flag
-		if (Bot1FCTFCarryingFlag(bs)) {
-			return qfalse;
-		}
-		// get the entity information
-		BotEntityInfo(bs->enemy, &entinfo);
-		// always chase if the enemy is carrying a flag
-		if (EntityCarriesFlag(&entinfo)) {
-			return qtrue;
-		}
-	} else if (gametype == GT_OBELISK) {
-		// the bots should be dedicated to attacking the enemy obelisk
-		if (bs->ltgtype == LTG_ATTACKENEMYBASE) {
-			if (bs->enemy != redobelisk.entitynum && bs->enemy != blueobelisk.entitynum) {
-				return qfalse;
-			}
-		}
-	} else if (gametype == GT_HARVESTER) {
-		// never chase if carrying cubes
-		if (BotHarvesterCarryingCubes(bs)) {
-			return qfalse;
-		}
-		// get the entity information
-		BotEntityInfo(bs->enemy, &entinfo);
-		// always chase if the enemy is carrying cubes
-		if (EntityCarriesCubes(&entinfo)) {
+	// don't chase if in lava or slime
+	if (BotInLavaOrSlime(bs)) {
+		return qfalse;
+	}
+	// enough air, so go chasing
+	if (trap_AAS_PointContents(bs->eye) & CONTENTS_WATER) {
+		if (bs->lastair_time > FloatTime() - 15) {
 			return qtrue;
 		}
 	}
-	// if the bot is getting the flag
-	if (bs->ltgtype == LTG_GETFLAG) {
-		return qfalse;
+
+	if (bs->enemy >= 0) {
+		// get the entity information
+		BotEntityInfo(bs->enemy, &entinfo);
+	}
+
+	switch (gametype) {
+		case GT_CTF:
+			// never chase when carrying a CTF flag
+			if (BotCTFCarryingFlag(bs)) {
+				return qfalse;
+			}
+			// always chase if the enemy is carrying a flag
+			if (EntityCarriesFlag(&entinfo)) {
+				return qtrue;
+			}
+			// if the bot is getting the flag
+			if (bs->ltgtype == LTG_GETFLAG) {
+				return qfalse;
+			}
+
+			break;
+		case GT_1FCTF:
+			// never chase if carrying the flag
+			if (Bot1FCTFCarryingFlag(bs)) {
+				return qfalse;
+			}
+			// always chase if the enemy is carrying a flag
+			if (EntityCarriesFlag(&entinfo)) {
+				return qtrue;
+			}
+			// if the bot is getting the flag
+			if (bs->ltgtype == LTG_GETFLAG) {
+				return qfalse;
+			}
+
+			break;
+		case GT_OBELISK:
+			// the bots should be dedicated to attacking the enemy obelisk
+			if (bs->ltgtype == LTG_ATTACKENEMYBASE) {
+				if (BotFeelingBad(bs) > 50) {
+					return qfalse;
+				}
+				// if this enemy is an obelisk
+				if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
+					return qtrue;
+				}
+
+				return qfalse;
+			}
+
+			break;
+		case GT_HARVESTER:
+			// never chase if carrying cubes
+			if (BotHarvesterCarryingCubes(bs)) {
+				return qfalse;
+			}
+			// always chase if the enemy is carrying cubes
+			if (EntityCarriesCubes(&entinfo)) {
+				return qtrue;
+			}
+
+			break;
+		default:
+			break;
 	}
 
 	if (BotAggression(bs) > 50) {
