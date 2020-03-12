@@ -5947,11 +5947,53 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	BotEntityInfo(moveresult->blockentity, &entinfo);
 
 	ent = &g_entities[moveresult->blockentity];
+	// if blocked by a bsp model
+	if (!ent->client) {
+		if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
+			// a closed door without a targetname will operate automatically
+			if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
+				// if no targetname and not a shootable door
+				if (!ent->targetname && !ent->health) {
+#ifdef OBSTACLEDEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Ignoring blocking model %d (Door)!\n", netname, entinfo.modelindex);
+#endif // OBSTACLEDEBUG
+					return;
+				}
+			}
+			// buttons will operate on contact
+			if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Ignoring blocking model %d (Button)!\n", netname, entinfo.modelindex);
+#endif // OBSTACLEDEBUG
+				return;
+			}
+			// if the bot wants to activate the bsp entity
+			if (activatedonefunc != NULL) {
+				// find the bsp entity which should be activated in order to get the blocking entity out of the way
+				bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
-	VectorSubtract(entinfo.origin, bs->origin, dir1);
-	VectorNormalize(dir1);
+				if (bspent) {
+					if (bs->activatestack && !bs->activatestack->inuse) {
+						bs->activatestack = NULL;
+					}
+					// if not already trying to activate this entity
+					if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
+						BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
+					}
+					// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance, otherwise return
+					if (!(moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
+						return;
+					}
+				} else {
+					// enable any routing areas that were disabled
+					BotEnableActivateGoalAreas(&activategoal, qtrue);
+				}
+			}
+		}
 	// if blocked by a player
-	if (ent->client) {
+	} else {
+		VectorSubtract(entinfo.origin, bs->origin, dir1);
+		VectorNormalize(dir1);
 		VectorNormalize2(ent->client->ps.velocity, dir2);
 		// if the blocking entity is moving away from us (or moving along the same direction), or if it is an enemy farther away than 24 units
 		if (DotProduct(dir2, dir1) > 0.0 || !BotSameTeam(bs, moveresult->blockentity)) {
@@ -5967,47 +6009,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Ignoring blocking player moving along the same direction, or distant enemy!\n", netname);
 			}
 #endif
-		}
-	// if blocked by a bsp model
-	} else if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
-		// a closed door without a targetname will operate automatically
-		if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
-			// if no targetname and not a shootable door
-			if (!ent->targetname && !ent->health) {
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN, "%s: Ignoring blocking model %d (Door)!\n", netname, entinfo.modelindex);
-#endif // OBSTACLEDEBUG
-				return;
-			}
-		}
-		// buttons will operate on contact
-		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
-#ifdef OBSTACLEDEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN, "%s: Ignoring blocking model %d (Button)!\n", netname, entinfo.modelindex);
-#endif // OBSTACLEDEBUG
-			return;
-		}
-		// if the bot wants to activate the bsp entity
-		if (activatedonefunc != NULL) {
-			// find the bsp entity which should be activated in order to get the blocking entity out of the way
-			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
-
-			if (bspent) {
-				if (bs->activatestack && !bs->activatestack->inuse) {
-					bs->activatestack = NULL;
-				}
-				// if not already trying to activate this entity
-				if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
-					BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
-				}
-				// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance, otherwise return
-				if (!(moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
-					return;
-				}
-			} else {
-				// enable any routing areas that were disabled
-				BotEnableActivateGoalAreas(&activategoal, qtrue);
-			}
 		}
 	}
 	// just some basic dynamic obstacle avoidance code
