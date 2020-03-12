@@ -5935,7 +5935,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	}
 #ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
-#endif // OBSTACLEDEBUG
+#endif
 
 	if (!BotWantsToWalk(bs)) {
 		speed = 400;
@@ -5964,7 +5964,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 				if (!ent->targetname && !ent->health) {
 #ifdef OBSTACLEDEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Ignoring blocking model %d (Door)!\n", netname, entinfo.modelindex);
-#endif // OBSTACLEDEBUG
+#endif
 					return;
 				}
 			}
@@ -5972,7 +5972,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 			if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 #ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Ignoring blocking model %d (Button)!\n", netname, entinfo.modelindex);
-#endif // OBSTACLEDEBUG
+#endif
 				return;
 			}
 			// if the bot wants to activate the bsp entity
