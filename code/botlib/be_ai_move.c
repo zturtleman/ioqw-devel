@@ -1161,7 +1161,6 @@ BotCheckBarrierCrouch
 */
 int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	vec3_t hordir, end;
-	float currentspeed;
 	aas_trace_t trace;
 
 	hordir[0] = dir[0];
@@ -1169,10 +1168,7 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	hordir[2] = 0;
 	
 	VectorNormalize(hordir);
-	// get the current speed
-	currentspeed = DotProduct(ms->velocity, hordir);
-
-	VectorMA(ms->origin, (200 + currentspeed) * 0.1f, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
+	VectorMA(ms->origin, speed, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
 	// trace horizontally in the move direction
 	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
 	// this shouldn't happen... but we check anyway
@@ -1204,7 +1200,6 @@ BotCheckBarrierJump
 */
 int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean doMovement) {
 	vec3_t start, hordir, end;
-	float currentspeed;
 	aas_trace_t trace;
 
 	VectorCopy(ms->origin, end);
@@ -1226,10 +1221,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	hordir[2] = 0;
 
 	VectorNormalize(hordir);
-	// get the current speed
-	currentspeed = DotProduct(ms->velocity, hordir);
-
-	VectorMA(ms->origin, sv_maxbarrier->value + currentspeed * 0.275, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
+	VectorMA(ms->origin, speed, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
 	VectorCopy(trace.endpos, start);
 
 	end[2] = trace.endpos[2];
