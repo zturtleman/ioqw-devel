@@ -1161,6 +1161,7 @@ BotCheckBarrierCrouch
 */
 int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	vec3_t hordir, end;
+	float currentspeed;
 	aas_trace_t trace;
 
 	hordir[0] = dir[0];
@@ -1168,7 +1169,10 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	hordir[2] = 0;
 	
 	VectorNormalize(hordir);
-	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
+	// get the current speed
+	currentspeed = DotProduct(ms->velocity, hordir);
+
+	VectorMA(ms->origin, (200 + currentspeed) * 0.1f, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
 	// trace horizontally in the move direction
 	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
 	// this shouldn't happen... but we check anyway
@@ -1200,6 +1204,7 @@ BotCheckBarrierJump
 */
 int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean doMovement) {
 	vec3_t start, hordir, end;
+	float currentspeed;
 	aas_trace_t trace;
 
 	VectorCopy(ms->origin, end);
@@ -1221,7 +1226,10 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	hordir[2] = 0;
 
 	VectorNormalize(hordir);
-	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
+	// get the current speed
+	currentspeed = DotProduct(ms->velocity, hordir);
+
+	VectorMA(ms->origin, sv_maxbarrier->value + currentspeed * 0.275, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
 	VectorCopy(trace.endpos, start);
 
 	end[2] = trace.endpos[2];
@@ -1299,9 +1307,11 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		if (BotCheckBarrierJump(ms, dir, speed, qfalse)) {
 			type = MOVE_JUMP;
 			moveflags = MFL_BARRIERJUMP;
+			//botimport.Print(PRT_MESSAGE, "BotWalkInDirection: Barrier Jump!\n");
 		// if there is a barrier the bot can crouch through
 		} else if (BotCheckBarrierCrouch(ms, dir, speed)) {
 			type = MOVE_CROUCH;
+			//botimport.Print(PRT_MESSAGE, "BotWalkInDirection: Barrier Crouch!\n");
 		}
 		// horizontal direction
 		hordir[0] = dir[0];
@@ -1451,7 +1461,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// if the bot can step on
 	if (fabs(DotProduct(dir, up)) < 0.7) {
 		mins[2] += sv_maxstep->value; // Tobias CHECK: doesn't this contradict 'checkbottom'
-		maxs[2] -= 10; // a little lower to avoid low ceiling // Tobias CHECK: shrinking the bbox to avoid low ceiling? I think we have to make the bbox higher instead?
+		//maxs[2] -= 10; // a little lower to avoid low ceiling // Tobias CHECK: yes, I think this isn't used anymore?!
 	}
 /*
 	// get the current speed
