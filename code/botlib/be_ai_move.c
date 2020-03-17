@@ -1160,8 +1160,8 @@ BotCheckBarrierCrouch
 =======================================================================================================================================
 */
 int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
-	vec3_t hordir, end;
-	aas_trace_t trace;
+	vec3_t hordir, mins, maxs, end;
+	bsp_trace_t trace;
 
 	hordir[0] = dir[0];
 	hordir[1] = dir[1];
@@ -1169,8 +1169,11 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	
 	VectorNormalize(hordir);
 	VectorMA(ms->origin, speed, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
+	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+	// a stepheight higher to avoid low ceiling
+	maxs[2] += sv_maxstep->value;
 	// trace horizontally in the move direction
-	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// this shouldn't happen... but we check anyway
 	if (trace.startsolid) {
 		return qfalse;
@@ -1179,8 +1182,12 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	if (trace.fraction >= 1.0) {
 		return qfalse;
 	}
+
+	AAS_PresenceTypeBoundingBox(PRESENCE_CROUCH, mins, maxs);
+	// ignore obstacles if the bot can step on
+	mins[2] += sv_maxstep->value;
 	// trace horizontally in the move direction again
-	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_CROUCH, ms->entitynum);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// again this shouldn't happen
 	if (trace.startsolid) {
 		return qfalse;
@@ -1282,29 +1289,17 @@ BotWalkInDirection
 */
 int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 	vec3_t hordir, cmdmove, velocity, tmpdir, origin;
-	int moveflags, presencetype, maxframes, cmdframes, stopevent, gapdist;
+	int presencetype, maxframes, cmdframes, stopevent, gapdist;
 	aas_clientmove_t move;
 	qboolean predictSuccess;
-	
-	moveflags = 0;
 
 	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) {
 		ms->moveflags |= MFL_ONGROUND;
+		// remove barrier jump flag
+		ms->moveflags &= ~MFL_BARRIERJUMP;
 	}
 	// if the bot is on the ground
 	if (ms->moveflags & MFL_ONGROUND) {
-		// remove barrier jump flag
-		ms->moveflags &= ~MFL_BARRIERJUMP;
-		// if there is a barrier the bot can jump on
-		if (BotCheckBarrierJump(ms, dir, speed, qfalse)) {
-			type = MOVE_JUMP;
-			moveflags = MFL_BARRIERJUMP;
-			//botimport.Print(PRT_MESSAGE, "BotWalkInDirection: Barrier Jump!\n");
-		// if there is a barrier the bot can crouch through
-		} else if (BotCheckBarrierCrouch(ms, dir, speed)) {
-			type = MOVE_CROUCH;
-			//botimport.Print(PRT_MESSAGE, "BotWalkInDirection: Barrier Crouch!\n");
-		}
 		// horizontal direction
 		hordir[0] = dir[0];
 		hordir[1] = dir[1];
@@ -1415,7 +1410,6 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		EA_Move(ms->client, hordir, speed);
 
 		ms->presencetype = presencetype;
-		ms->moveflags |= moveflags;
 		// movement was succesfull
 		return qtrue;
 	} else {
@@ -1446,14 +1440,16 @@ THINKABOUTME: Is it really worth to waste CPU power for this permanent check?
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
-	int currentspeed;
+	float currentspeed;
 
 	// test for entities obstructing the bot's path
 	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 	// if the bot can step on
-	if (fabs(DotProduct(dir, up)) < 0.7) {
-		mins[2] += sv_maxstep->value; // Tobias CHECK: doesn't this contradict 'checkbottom'
-		//maxs[2] -= 10; // a little lower to avoid low ceiling // Tobias CHECK: yes, I think this isn't used anymore?!
+	if (fabs(DotProduct(dir, up)) < 0.7) { // Tobias CHECK: why do we need DotProduct here?
+		// ignore obstacles if the bot can step on
+		mins[2] += sv_maxstep->value;
+		// a stepheight higher to avoid low ceiling
+		maxs[2] += sv_maxstep->value;
 	}
 /*
 	// get the current speed
@@ -1509,6 +1505,19 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
+
+		if (BotCheckBarrierJump(ms, dir, (sv_maxbarrier->value + currentspeed * 1.1f) * 0.2f, qfalse)) {
+			result->flags |= MOVERESULT_BARRIER_JUMP;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Jump barrier dedected!\n", ms->client);
+#endif // DEBUG
+		// if there is a barrier the bot can crouch through
+		} else if (BotCheckBarrierCrouch(ms, dir, (200 + currentspeed) * 0.1f)) {
+			result->flags |= MOVERESULT_BARRIER_CROUCH;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
+#endif // DEBUG
+		}
 #ifdef DEBUG
 		botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %f.\n", ms->client, currentspeed * 1.4);
 #endif
@@ -1831,7 +1840,7 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, hordir);
 	// if pretty close to the barrier
-	if (reachhordist < (sv_maxbarrier->value + (currentspeed * 1.1)) * jumpdist) {
+	if (reachhordist < (sv_maxbarrier->value + currentspeed * 1.1f) * jumpdist) { // Tobias NOTE: tweak this (replaced thinktime dependency)
 		EA_Jump(ms->client);
 	}
 	// elementary action move in direction
