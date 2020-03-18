@@ -1278,6 +1278,7 @@ int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 
 	VectorCopy(dir, normdir);
 	VectorNormalize(normdir);
+	// elementary action move in direction
 	EA_Move(ms->client, normdir, speed);
 	return qtrue;
 }
@@ -1406,7 +1407,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		if (type & MOVE_CROUCH) {
 			EA_Crouch(ms->client);
 		}
-
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 
 		ms->presencetype = presencetype;
@@ -1416,6 +1417,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		if (ms->moveflags & MFL_BARRIERJUMP) {
 			// if near the top or going down
 			if (ms->velocity[2] < 50) {
+				// elementary action move in direction
 				EA_Move(ms->client, dir, speed);
 			}
 		}
@@ -1582,7 +1584,7 @@ int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type) {
 		Com_Memset(&result, 0, sizeof(result));
 
 		EA_GetInput(ms->client, ms->thinktime, &bi);
-		BotCheckBlocked(ms, bi.dir, qfalse, &result);
+		BotCheckBlocked(ms, bi.dir, qfalse, &result); // Tobias CHECK: checkbottom qtrue?
 
 		if (result.blocked) {
 			success = qfalse;
@@ -1609,7 +1611,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 	hordir[2] = 0;
 	dist = VectorNormalize(hordir);
 
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+	BotCheckBlocked(ms, hordir, qtrue, &result); // Tobias NOTE: checking for blocked movement without doing a move?
 
 	if (dist < 10) {
 		// walk straight to the reachability end
@@ -1695,7 +1697,10 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 		CrossProduct(hordir, up, sideward);
 		// if there is NO gap at the right side
 		if (!BotGapDistance(ms->origin, sideward, 100, ms->entitynum)) {
+			BotCheckBlocked(ms, sideward, qtrue, &result);
+			// elementary action move in direction
 			EA_Move(ms->client, sideward, 400);
+			VectorCopy(sideward, result.movedir);
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
@@ -1703,7 +1708,10 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 			VectorNegate(sideward, sideward);
 			// if there is NO gap at the left side
 			if (!BotGapDistance(ms->origin, sideward, 100, ms->entitynum)) {
+				BotCheckBlocked(ms, sideward, qtrue, &result);
+				// elementary action move in direction
 				EA_Move(ms->client, sideward, 400);
+				VectorCopy(sideward, result.movedir);
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
@@ -1711,6 +1719,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 		}
 	}
 // Tobias END
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -1805,8 +1814,6 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	if (dist > 100) {
 		dist = 100;
 	}
-
-	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	VectorCopy(ms->velocity, velocity);
@@ -1843,6 +1850,8 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	if (reachhordist < (sv_maxbarrier->value + currentspeed * 1.1f) * jumpdist) { // Tobias NOTE: tweak this (replaced thinktime dependency)
 		EA_Jump(ms->client);
 	}
+
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -1866,6 +1875,7 @@ bot_moveresult_t BotFinishTravel_BarrierJump(bot_movestate_t *ms, aas_reachabili
 		hordir[2] = 0;
 
 		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, 400);
 		VectorCopy(hordir, result.movedir);
 	}
@@ -1886,7 +1896,7 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach) 
 	VectorSubtract(reach->start, ms->origin, dir);
 	VectorNormalize(dir);
 	BotCheckBlocked(ms, dir, qtrue, &result);
-	// elementary actions
+	// elementary action move in direction
 	EA_Move(ms->client, dir, 400);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
@@ -1966,7 +1976,7 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 	dir[0] += crandom() * 10;
 	dir[1] += crandom() * 10;
 	dir[2] += 70 + crandom() * 10;
-	// elementary actions
+	// elementary action move in direction
 	EA_Move(ms->client, dir, 400);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
@@ -2442,12 +2452,14 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 #endif // DEBUG
 		}
 
-		if (ms->moveflags & MFL_WALK && dist2 > dist3) {
+		if (ms->moveflags & MFL_WALK && dist2 > dist3) { // Tobias NOTE: reducing speed, really??
 			speed = 200;
 		} else {
 			speed = 600;
 		}
 
+		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 
 		ms->jumpreach = ms->lastreachnum;
@@ -2476,6 +2488,8 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 			botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Going towards RU: dist1 O to RE = %f, dist2 O to RU = %f, dist3 RU to RE = %f (%f, %f)\n", dist1, dist2, dist3, currentspeed, DotProduct(dir1, dir2));
 		}
 #endif // DEBUG
+		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 	}
 
@@ -2547,7 +2561,7 @@ bot_moveresult_t BotTravel_Ladder(bot_movestate_t *ms, aas_reachability_t *reach
 		viewdir[2] = 3 * dir[2];
 
 		VectorToAngles(viewdir, result.ideal_viewangles);
-		// elementary action
+		// elementary actions
 		EA_Move(ms->client, origin, 0);
 		EA_MoveForward(ms->client);
 		// set movement view flag so the AI can see the view is focussed
@@ -2610,7 +2624,7 @@ bot_moveresult_t BotTravel_Teleport(bot_movestate_t *ms, aas_reachability_t *rea
 	dist = VectorNormalize(hordir);
 
 	BotCheckBlocked(ms, hordir, qtrue, &result);
-
+	// elementary action move in direction
 	if (dist < 30) {
 		EA_Move(ms->client, hordir, 200);
 	} else {
@@ -2661,8 +2675,10 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			hordir[2] = 0;
 
 			VectorNormalize(hordir);
+			BotCheckBlocked(ms, hordir, qfalse, &result);
 
 			if (!BotCheckBarrierJump(ms, hordir, 100, qtrue)) {
+				// elementary action move in direction
 				EA_Move(ms->client, hordir, 400);
 			}
 
@@ -2686,6 +2702,8 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 
 				speed = 400 - (400 - 4 * dist);
 
+				BotCheckBlocked(ms, hordir, qfalse, &result);
+				// elementary action move in direction
 				EA_Move(ms->client, hordir, speed);
 				VectorCopy(hordir, result.movedir);
 			}
@@ -2706,8 +2724,11 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 
 			speed = 360 - (360 - 6 * dist);
 
+			BotCheckBlocked(ms, dir, qfalse, &result);
+			// if swimming or no barrier jump
 			if ((ms->moveflags & MFL_SWIMMING) || !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
 				if (dist > 50) {
+					// elementary action move in direction
 					EA_Move(ms->client, dir, speed);
 				}
 			}
@@ -2737,7 +2758,6 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			dist = dist1;
 
 			VectorCopy(dir1, dir);
-			BotCheckBlocked(ms, dir, qfalse, &result);
 
 			if (dist > 60) {
 				dist = 60;
@@ -2745,8 +2765,11 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 
 			speed = 360 - (360 - 6 * dist);
 
+			BotCheckBlocked(ms, dir, qfalse, &result);
+
 			if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
 				if (dist > 50) {
+					// elementary action move in direction
 					EA_Move(ms->client, dir, speed);
 				}
 			}
@@ -2786,15 +2809,16 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			VectorCopy(dir1, dir);
 		}
 
-		BotCheckBlocked(ms, dir, qfalse, &result);
-
 		if (dist > 60) {
 			dist = 60;
 		}
 
 		speed = 400 - (400 - 6 * dist);
 
+		BotCheckBlocked(ms, dir, qfalse, &result);
+
 		if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
+			// elementary action move in direction
 			EA_Move(ms->client, dir, speed);
 		}
 
@@ -2826,9 +2850,13 @@ bot_moveresult_t BotFinishTravel_Elevator(bot_movestate_t *ms, aas_reachability_
 
 	if (fabs(bottomdir[2]) < fabs(topdir[2])) {
 		VectorNormalize(bottomdir);
+		BotCheckBlocked(ms, bottomdir, qfalse, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, bottomdir, 300);
 	} else {
 		VectorNormalize(topdir);
+		BotCheckBlocked(ms, topdir, qfalse, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, topdir, 300);
 	}
 
@@ -2929,8 +2957,10 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			hordir[2] = 0;
 
 			VectorNormalize(hordir);
+			BotCheckBlocked(ms, hordir, qfalse, &result);
 
 			if (!BotCheckBarrierJump(ms, hordir, 100, qtrue)) {
+				// elementary action move in direction
 				EA_Move(ms->client, hordir, 400);
 			}
 
@@ -2954,6 +2984,8 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 
 				speed = 400 - (400 - 4 * dist);
 
+				BotCheckBlocked(ms, hordir, qfalse, &result);
+				// elementary action move in direction
 				EA_Move(ms->client, hordir, speed);
 				VectorCopy(hordir, result.movedir);
 			}
@@ -2976,9 +3008,12 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			}
 
 			speed = 360 - (360 - 6 * dist);
+
+			BotCheckBlocked(ms, dir, qfalse, &result);
 			// if swimming or no barrier jump
 			if ((ms->moveflags & MFL_SWIMMING) || !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
 				if (dist > 50) {
+					// elementary action move in direction
 					EA_Move(ms->client, dir, speed);
 				}
 			}
@@ -3010,7 +3045,6 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			dist = dist1;
 
 			VectorCopy(dir1, dir);
-			BotCheckBlocked(ms, dir, qfalse, &result);
 
 			if (dist > 60) {
 				dist = 60;
@@ -3018,8 +3052,11 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 
 			speed = 360 - (360 - 6 * dist);
 
+			BotCheckBlocked(ms, dir, qfalse, &result);
+
 			if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
 				if (dist > 50) {
+					// elementary action move in direction
 					EA_Move(ms->client, dir, speed);
 				}
 			}
@@ -3060,15 +3097,16 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			VectorCopy(dir1, dir);
 		}
 
-		BotCheckBlocked(ms, dir, qfalse, &result);
-
 		if (dist > 60) {
 			dist = 60;
 		}
 
 		speed = 400 - (400 - 6 * dist);
 
+		BotCheckBlocked(ms, dir, qfalse, &result);
+
 		if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue)) {
+			// elementary action move in direction
 			EA_Move(ms->client, dir, speed);
 		}
 
@@ -3115,7 +3153,10 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 
 		speed = 360 - (360 - 6 * dist);
 
+		BotCheckBlocked(ms, dir, qfalse, &result);
+
 		if (dist > 50) {
+			// elementary action move in direction
 			EA_Move(ms->client, dir, speed);
 		}
 
@@ -3142,6 +3183,8 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 
 			speed = 400 - (400 - 4 * dist);
 
+			BotCheckBlocked(ms, hordir, qfalse, &result);
+			// elementary action move in direction
 			EA_Move(ms->client, hordir, speed);
 			VectorCopy(hordir, result.movedir);
 		}
@@ -3192,6 +3235,8 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 
 		speed = 400 - (400 - 5 * dist);
 
+		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 	}
 	// look in the movement direction
@@ -3254,6 +3299,8 @@ bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reac
 
 		speed = 400 - (400 - 5 * dist);
 
+		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 	}
 	// look in the movement direction
