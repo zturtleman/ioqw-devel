@@ -1270,50 +1270,6 @@ int BotAI(int client, float thinktime) {
 		BotAI_Print(PRT_FATAL, "BotAI: failed to get player state for player %d\n", client);
 		return qfalse;
 	}
-	// retrieve any waiting server commands
-	while (trap_BotGetServerCommand(client, buf, sizeof(buf))) {
-		// have buf point to the command and args to the command arguments
-		args = strchr(buf, ' ');
-
-		if (!args) {
-			continue;
-		}
-
-		*args++ = '\0';
-		// remove color espace sequences from the arguments
-		RemoveColorEscapeSequences(args);
-
-		if (!Q_stricmp(buf, "cp ")) {
-			/*CenterPrintf*/
-		} else if (!Q_stricmp(buf, "cs")) {
-			/*ConfigStringModified*/
-		} else if (!Q_stricmp(buf, "print")) {
-			// remove first and last quote from the chat message
-			memmove(args, args + 1, strlen(args));
-			args[strlen(args) - 1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
-		} else if (!Q_stricmp(buf, "chat")) {
-			// remove first and last quote from the chat message
-			memmove(args, args + 1, strlen(args));
-			args[strlen(args) - 1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
-		} else if (!Q_stricmp(buf, "tchat")) {
-			// remove first and last quote from the chat message
-			memmove(args, args + 1, strlen(args));
-			args[strlen(args) - 1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
-		} else if (!Q_stricmp(buf, "vchat")) {
-			BotVoiceChatCommand(bs, SAY_ALL, args);
-		} else if (!Q_stricmp(buf, "vtchat")) {
-			BotVoiceChatCommand(bs, SAY_TEAM, args);
-		} else if (!Q_stricmp(buf, "vtell")) {
-			BotVoiceChatCommand(bs, SAY_TELL, args);
-		} else if (!Q_stricmp(buf, "scores")) {
-			/*FIXME: parse scores?*/
-		} else if (!Q_stricmp(buf, "clientLevelShot")) {
-			/*ignore*/
-		}
-	}
 	// add the delta angles to the bot's current view angles
 	for (j = 0; j < 3; j++) {
 		bs->viewangles[j] = AngleMod(bs->viewangles[j] + SHORT2ANGLE(bs->cur_ps.delta_angles[j]));
@@ -1335,6 +1291,44 @@ int BotAI(int client, float thinktime) {
 	// subtract the delta angles
 	for (j = 0; j < 3; j++) {
 		bs->viewangles[j] = AngleMod(bs->viewangles[j] - SHORT2ANGLE(bs->cur_ps.delta_angles[j]));
+	}
+	// retrieve any waiting server commands
+	while (trap_BotGetServerCommand(client, buf, sizeof(buf))) {
+		// have buf point to the command and args to the command arguments
+		args = strchr(buf, ' ');
+
+		if (!args) {
+			continue;
+		}
+
+		*args++ = '\0';
+		// remove color espace sequences from the arguments
+		RemoveColorEscapeSequences(args);
+
+		if (!Q_stricmp(buf, "print")) {
+			// remove first and last quote from the chat message
+			memmove(args, args + 1, strlen(args));
+			args[strlen(args) - 1] = '\0';
+			trap_BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
+		} else if (!Q_stricmp(buf, "chat")) {
+			// remove first and last quote from the chat message
+			memmove(args, args + 1, strlen(args));
+			args[strlen(args) - 1] = '\0';
+			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
+		} else if (!Q_stricmp(buf, "tchat")) {
+			// remove first and last quote from the chat message
+			memmove(args, args + 1, strlen(args));
+			args[strlen(args) - 1] = '\0';
+			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
+		} else if (!Q_stricmp(buf, "vchat")) {
+			BotVoiceChatCommand(bs, SAY_ALL, args);
+		} else if (!Q_stricmp(buf, "vtchat")) {
+			BotVoiceChatCommand(bs, SAY_TEAM, args);
+		} else if (!Q_stricmp(buf, "vtell")) {
+			BotVoiceChatCommand(bs, SAY_TELL, args);
+		} else {
+			/*ignore*/
+		}
 	}
 	// everything was ok
 	return qtrue;
