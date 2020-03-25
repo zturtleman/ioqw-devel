@@ -486,6 +486,10 @@ void BotSetTeamStatus(bot_state_t *bs) {
 		case LTG_TEAMACCOMPANY:
 			// get the entity information
 			BotEntityInfo(bs->teammate, &entinfo);
+			// if the entity information is valid
+			if (!entinfo.valid) {
+				break;
+			}
 
 			if (((gametype == GT_CTF || gametype == GT_1FCTF) && EntityCarriesFlag(&entinfo)) || (gametype == GT_HARVESTER && EntityCarriesCubes(&entinfo))) {
 				teamtask = TEAMTASK_ESCORT;
@@ -1964,6 +1968,11 @@ void BotUpdateBattleInventory(bot_state_t *bs, int enemy) {
 
 	// get the entity information
 	BotEntityInfo(enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
+	}
+
 	VectorSubtract(entinfo.origin, bs->origin, dir);
 
 	bs->inventory[ENEMY_HEIGHT] = (int)dir[2];
@@ -2507,7 +2516,7 @@ const int BotAggression(bot_state_t *bs) {
 		if (bs->enemy >= 0) {
 			// get the entity information
 			BotEntityInfo(bs->enemy, &entinfo);
-
+			// if the entity information is valid
 			if (entinfo.valid) {
 				// if the bot is using the gauntlet
 				if (bs->weaponnum == WP_GAUNTLET) {
@@ -2684,7 +2693,7 @@ const int BotAggression(bot_state_t *bs) {
 		if (bs->enemy >= 0) {
 			// get the entity information
 			BotEntityInfo(bs->enemy, &entinfo);
-
+			// if the entity information is valid
 			if (entinfo.valid) {
 				// if the bot is using the gauntlet
 				if (bs->weaponnum == WP_GAUNTLET) {
@@ -3490,6 +3499,10 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return moveresult;
+	}
 	// direction towards the enemy
 	VectorSubtract(entinfo.origin, bs->origin, forward);
 	// the distance towards the enemy
@@ -3680,7 +3693,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
 	}
 	// get the entity information
 	BotEntityInfo(ent, &entinfo);
-	// if this player is active
+	// if the entity information is valid
 	if (!entinfo.valid) {
 		return qfalse;
 	}
@@ -3938,6 +3951,15 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	if (curenemy >= 0) {
 		// get the entity information
 		BotEntityInfo(curenemy, &curenemyinfo);
+		// if the entity information is valid
+		if (!curenemyinfo.valid) {
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy -> !curenemyinfo.valid\n"); // Tobias CHECK: shouldn't happen?
+			return qfalse;
+		}
+		// if the entity isn't the bot self
+		if (curenemyinfo.number == bs->entitynum) {
+			return qfalse;
+		}
 		// only concentrate on flag carrier if not carrying a flag
 		if (EntityCarriesFlag(&curenemyinfo) && !BotCTFCarryingFlag(bs)) {
 			return qfalse;
@@ -3978,8 +4000,9 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy -> !entinfo.valid\n"); // Tobias CHECK: shouldn't happen?
 			continue;
 		}
 		// if the entity isn't the bot self
@@ -4122,8 +4145,12 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -4160,8 +4187,12 @@ int BotTeamFlagCarrier(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -4194,8 +4225,12 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -4233,8 +4268,12 @@ void BotCountVisibleEnemies(bot_state_t *bs, int *enemies, float range) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if not within range
@@ -4278,8 +4317,12 @@ void BotCountVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *en
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 
@@ -4337,8 +4380,12 @@ int BotCountAllTeamMates(bot_state_t *bs, float range) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if not within range
@@ -4375,8 +4422,12 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if this player is carrying cubes
@@ -4413,8 +4464,12 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
 			continue;
 		}
 		// if this player is carrying cubes
@@ -4500,8 +4555,9 @@ qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotEqualizeWeakestHumanTeamScore -> !entinfo.valid\n"); // Tobias CHECK: shouldn't happen?
 			continue;
 		}
 		// if the entity isn't the bot self
@@ -4591,6 +4647,10 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
+	}
 	// if this is not a player (could be an obelisk)
 	if (bs->enemy >= MAX_CLIENTS) {
 		// if the entity is visible
@@ -4892,6 +4952,10 @@ void BotCheckAttack(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
+	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
 		return;
@@ -5083,8 +5147,9 @@ void BotMapScripts(bot_state_t *bs) {
 			}
 			// get the entity information
 			BotEntityInfo(i, &entinfo);
-			// if this player is active
+			// if the entity information is valid
 			if (!entinfo.valid) {
+				//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotMapScripts -> !entinfo.valid\n"); // Tobias CHECK: shouldn't happen?
 				continue;
 			}
 			// if the entity isn't the bot self
@@ -5625,6 +5690,11 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 	memset(activategoal, 0, sizeof(bot_activategoal_t));
 	// get the entity information
 	BotEntityInfo(entitynum, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return 0;
+	}
+
 	Com_sprintf(model, sizeof(model), "*%d", entinfo.modelindex);
 
 	for (ent = trap_AAS_NextBSPEntity(0); ent; ent = trap_AAS_NextBSPEntity(ent)) {
@@ -5845,6 +5915,12 @@ int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_
 	activategoal->aienter = aienter;
 	// get the entity information
 	BotEntityInfo(activategoal->goal.entitynum, &activateinfo);
+	// if the entity information is valid
+	if (!activateinfo.valid) {
+		AIEnter_Seek_LTG(bs, "ActivateGoal: goal ent invalid");
+		return qtrue;
+	}
+
 	VectorCopy(activateinfo.origin, activategoal->origin);
 
 	if (BotPushOntoActivateGoalStack(bs, activategoal)) {
@@ -5975,7 +6051,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 #ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
-
 	if (!BotWantsToWalk(bs)) {
 		speed = 400;
 	} else {
@@ -5992,6 +6067,10 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	}
 	// get info for the entity that is blocking the bot
 	BotEntityInfo(moveresult->blockentity, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
+	}
 
 	ent = &g_entities[moveresult->blockentity];
 	// if blocked by a bsp model

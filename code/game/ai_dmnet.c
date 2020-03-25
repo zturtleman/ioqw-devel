@@ -369,6 +369,11 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			bs->ltgtype = 0;
+			return qfalse;
+		}
 		// if the team mate is visible
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// if close just stand still there
@@ -382,7 +387,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			// last time the bot was NOT visible
 			bs->teammatevisible_time = FloatTime();
 		}
-		// if the entity information is valid (entity in PVS)
+		// if the entity information is valid
 		if (entinfo.valid) {
 			areanum = BotPointAreaNum(entinfo.origin);
 
@@ -418,6 +423,11 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			bs->ltgtype = 0;
+			return qfalse;
+		}
 		// if the companion is visible
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// update visible time
@@ -427,6 +437,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			if (VectorLengthSquared(dir) < Square(bs->formation_dist)) {
 				// if the client being followed bumps into this bot then the bot should back up
 				BotEntityInfo(bs->entitynum, &botinfo);
+				// if the entity information is valid
+				if (!entinfo.valid) {
+					return qfalse;
+				}
 				// if the followed client is not standing ontop of the bot
 				if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2]) {
 					// if the bounding boxes touch each other
@@ -509,7 +523,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				return qfalse;
 			}
 		}
-		// if the entity information is valid (entity in PVS)
+		// if the entity information is valid
 		if (entinfo.valid) {
 			areanum = BotPointAreaNum(entinfo.origin);
 
@@ -1160,7 +1174,7 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 		}
 		// get the entity information
 		BotEntityInfo(bs->lead_teammate, &entinfo);
-
+		// if the entity information is valid
 		if (entinfo.valid) {
 			areanum = BotPointAreaNum(entinfo.origin);
 
@@ -1611,10 +1625,18 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	if (targetvisible) {
 		// get the entity information of the entity the bot is shooting at
 		BotEntityInfo(goal->entitynum, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			AIEnter_Seek_LTG(bs, "activate entity: entity invalid");
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "activate entity: entity invalid -> seek ltg\n");
+#endif
+			return qfalse;
+		}
 		// if the entity the bot shoots at moved
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, "hit shootable button or trigger\n");
+			BotAI_Print(PRT_MESSAGE, "activate entity: hit shootable button or trigger\n");
 #endif // DEBUG
 			bs->activatestack->time = 0;
 			activated = qtrue;
@@ -1652,7 +1674,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			// if the bot touches the current goal
 			if (trap_BotTouchingGoal(bs->origin, goal)) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, "touched button or trigger\n");
+				BotAI_Print(PRT_MESSAGE, "activate entity: touched button or trigger\n");
 #endif // DEBUG
 				bs->activatestack->time = 0;
 				activated = qtrue;
@@ -2143,6 +2165,14 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		AIEnter_Seek_LTG(bs, "battle fight: enemy invalid");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "battle fight: entity invalid -> seek ltg\n");
+#endif
+		return qfalse;
+	}
 	// if the enemy is dead
 	if (bs->enemydeath_time) {
 		if (bs->enemydeath_time < FloatTime() - 1.0) {
@@ -2432,6 +2462,14 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		AIEnter_Seek_LTG(bs, "battle retreat: entity invalid");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "battle retreat: entity invalid -> seek ltg\n");
+#endif
+		return qfalse;
+	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_LTG(bs, "battle retreat: enemy dead");
@@ -2619,6 +2657,14 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		AIEnter_Seek_NBG(bs, "battle nbg: entity invalid");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "battle nbg: entity invalid -> seek nbg\n");
+#endif
+		return qfalse;
+	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_NBG(bs, "battle nbg: enemy dead");
