@@ -1766,16 +1766,12 @@ void BotSetupForMovement(bot_state_t *bs) {
 	initmove.entitynum = bs->entitynum;
 	initmove.client = bs->client;
 	initmove.thinktime = bs->thinktime;
-
-	VectorClear(initmove.viewoffset);
 	// set presence type
 	if (bs->cur_ps.pm_flags & PMF_DUCKED) {
 		initmove.presencetype = PRESENCE_CROUCH;
 	} else {
 		initmove.presencetype = PRESENCE_NORMAL;
 	}
-
-	initmove.viewoffset[2] += bs->cur_ps.viewheight;
 	// set the onground flag
 	if (bs->cur_ps.groundEntityNum != ENTITYNUM_NONE) {
 		initmove.or_moveflags |= MFL_ONGROUND;

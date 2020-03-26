@@ -52,7 +52,6 @@ typedef struct bot_movestate_s {
 	// input vars (all set outside the movement code)
 	vec3_t origin;								// origin of the bot
 	vec3_t velocity;							// velocity of the bot
-	vec3_t viewoffset;							// view offset
 	int entitynum;								// entity number of the bot
 	int client;									// client number of the bot
 	float thinktime;							// time the bot thinks
@@ -63,7 +62,6 @@ typedef struct bot_movestate_s {
 	int lastareanum;							// last area the bot was in
 	int lastgoalareanum;						// last goal area number
 	int lastreachnum;							// last reachability number
-	vec3_t lastorigin;							// origin previous cycle
 	int reachareanum;							// area number of the reachabilty
 	int moveflags;								// movement flags
 	int jumpreach;								// set when jumped
@@ -172,7 +170,6 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove) {
 
 	VectorCopy(initmove->origin, ms->origin);
 	VectorCopy(initmove->velocity, ms->velocity);
-	VectorCopy(initmove->viewoffset, ms->viewoffset);
 
 	ms->entitynum = initmove->entitynum;
 	ms->client = initmove->client;
@@ -3480,8 +3477,6 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	ms->lastareanum = 0;
 	ms->lastgoalareanum = goal->areanum;
 
-	VectorCopy(ms->origin, ms->lastorigin);
-
 	return result;
 }
 
@@ -3922,8 +3917,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	if (result->blocked) {
 		ms->reachability_time -= 10 * ms->thinktime;
 	}
-	// copy the last origin
-	VectorCopy(ms->origin, ms->lastorigin);
 }
 
 /*
