@@ -396,6 +396,7 @@ name:						default:	module(s):		description:
 "rs_startelevator"			"50"		be_aas_move.c
 "rs_falldamage5"			"300"		be_aas_move.c
 "rs_falldamage10"			"500"		be_aas_move.c
+"rs_maxfallheight"			"512"		be_aas_move.c
 "rs_maxjumpfallheight"		"450"		be_aas_move.c
 
 "max_aaslinks"				"4096"		be_aas_sample.c	maximum links in the AAS

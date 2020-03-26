@@ -1297,11 +1297,11 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 
 	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) {
 		ms->moveflags |= MFL_ONGROUND;
-		// remove barrier jump flag
-		ms->moveflags &= ~MFL_BARRIERJUMP;
 	}
 	// if the bot is on the ground
 	if (ms->moveflags & MFL_ONGROUND) {
+		// remove barrier jump flag
+		ms->moveflags &= ~MFL_BARRIERJUMP;
 		// horizontal direction
 		hordir[0] = dir[0];
 		hordir[1] = dir[1];
@@ -1400,7 +1400,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			tmpdir[1] = move.endpos[1] - ms->origin[1];
 			tmpdir[2] = 0;
 			// the bot is blocked by something
-			if (VectorLength(tmpdir) < speed * ms->thinktime * 0.5) {
+			if (VectorLength(tmpdir) < speed * ms->thinktime * ms->thinktime * 0.005) { // Tobias CHECK: should we remove this completely? We randomize this a bit more for now to get rid of the 'dance-with-blocker' problem...
 				return qfalse;
 			}
 		}
@@ -1454,62 +1454,17 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// if the bot can step on
 	if (fabs(DotProduct(dir, up)) < 0.7) { // Tobias CHECK: why do we need DotProduct here?
 		// ignore obstacles if the bot can step on
-		mins[2] += sv_maxstep->value;
+		mins[2] += sv_maxstep->value; // Tobias CHECK: doesn't this contradict 'checkbottom'
 		// a stepheight higher to avoid low ceiling
 		maxs[2] += sv_maxstep->value;
 	}
-/*
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, dir) + 24;
 	// do a full trace to check for distant obstacles to avoid, depending on current speed
 	VectorMA(ms->origin, currentspeed * 1.4, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and NOT hitting the world entity
-	if (!trace.startsolid && trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) {
-		result->blocked = qtrue;
-		result->blockentity = trace.entityNum;
-#ifdef DEBUG
-		botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %f.\n", ms->client, currentspeed * 1.4);
-#endif
-	// if no blocking obstacle was found, check bottom
-	} else if (checkbottom) {
-		VectorMA(ms->origin, -4, up, end);
-		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-		// if not started in solid and hitting an entity
-		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
-			result->blocked = qtrue;
-			result->blockentity = trace.entityNum;
-			// if the bot is standing on something and not in an area with reachability
-			if (!AAS_AreaReachability(ms->areanum)) {
-				result->flags |= MOVERESULT_ONTOPOF_OBSTACLE;
-#ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "%d: BotCheckBlocked: I'm on top of an obstacle without any reachability area!\n", ms->client);
-#endif
-			}
-		// check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
-		} else {
-			VectorMA(ms->origin, 4, dir, end);
-			trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-			// if not started in solid and hitting an entity
-			if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
-				result->blocked = qtrue;
-				result->blockentity = trace.entityNum;
-#ifdef DEBUG
-					botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "%d: BotCheckBlocked: I'm on top of an obstacle without any reachability area!\n", ms->client);
-				} else {
-					botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "%d: BotCheckBlocked: I'm on top of an obstacle!\n", ms->client);
-#endif
-			}
-		}
-	}
-*/
-	// get the current speed
-	currentspeed = DotProduct(ms->velocity, dir) + 24;
-	// do a full trace to check for distant obstacles to avoid, depending on current speed
-	VectorMA(ms->origin, currentspeed * 1.4, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-	// if not started in solid and NOT hitting the world entity
-	if (!trace.startsolid && trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) {
+	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 
