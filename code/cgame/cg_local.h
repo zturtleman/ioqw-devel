@@ -451,7 +451,7 @@ typedef struct {
 	int numpositions;
 } skulltrail_t;
 
-#define MAX_SOUNDBUFFER 20
+#define MAX_SOUNDBUFFER 32
 
 /**************************************************************************************************************************************
 

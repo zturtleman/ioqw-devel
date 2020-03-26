@@ -726,7 +726,7 @@ static void G_AddBot(const char *name, float skill, const char *team, int delay,
 	Info_SetValueForKey(userinfo, "rate", "25000");
 	Info_SetValueForKey(userinfo, "snaps", "60");
 	Info_SetValueForKey(userinfo, "skill", va("%.2f", skill));
-	Info_SetValueForKey(userinfo, "teampref", team);
+	Info_SetValueForKey(userinfo, "team", team);
 	// model
 	key = "model";
 	model = Info_ValueForKey(botinfo, key);

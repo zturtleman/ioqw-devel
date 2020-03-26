@@ -4502,17 +4502,18 @@ qboolean BotEqualizeTeamScore(bot_state_t *bs) {
 	if (gametype != GT_TEAM) {
 		return qfalse;
 	}
-#if 0 // DEBUG
+
 	if (bs->enemyteamscore + bot_equalizer_teambon.value < bs->ownteamscore) { // DEBUG: bot_equalizer_teambon
+#if 0 // DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "EQUALIZE for B! (%s) Blue scores: %s, Red scores: %i\n", enemyteamscore, ownteamscore);
 		} else {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "EQUALIZE for R! (%s) Blue scores: %s, Red scores: %i\n", enemyteamscore, ownteamscore);
 		}
-
+#endif // DEBUGEND
 		return qtrue;
 	}
-#endif // DEBUGEND
+
 	return qfalse;
 
 }
@@ -7174,9 +7175,9 @@ void BotSetupDeathmatchAI(void) {
 	trap_Cvar_Register(&bot_noshoot, "bot_noshoot", "0", 0);
 	trap_Cvar_Register(&bot_ext_aggressive, "bot_ext_aggressive", "1", 0);
 	trap_Cvar_Register(&bot_equalize, "bot_equalize", "1", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_aim, "bot_equalizer_aim", "0.8", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_react, "bot_equalizer_react", "0.5", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_fembon, "bot_equalizer_fembon", "4", CVAR_USERINFO|CVAR_ARCHIVE);
+	trap_Cvar_Register(&bot_equalizer_aim, "bot_equalizer_aim", "0.75", CVAR_USERINFO|CVAR_ARCHIVE);
+	trap_Cvar_Register(&bot_equalizer_react, "bot_equalizer_react", "0.55", CVAR_USERINFO|CVAR_ARCHIVE);
+	trap_Cvar_Register(&bot_equalizer_fembon, "bot_equalizer_fembon", "8", CVAR_USERINFO|CVAR_ARCHIVE);
 	trap_Cvar_Register(&bot_equalizer_teambon, "bot_equalizer_teambon", "5", CVAR_USERINFO|CVAR_ARCHIVE); //10
 // Tobias END
 	trap_Cvar_Register(&g_spSkill, "g_spSkill", "2", 0);

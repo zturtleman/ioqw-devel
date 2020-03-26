@@ -490,6 +490,7 @@ qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec
 
 	return qfalse;
 }
+
 /*
 =======================================================================================================================================
 BotOnMover
@@ -1345,6 +1346,8 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			//stopevent = SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA; // Tobias NOTE: ... and here...
 		}
 
+		//AAS_ClearShownDebugLines();
+
 		VectorCopy(ms->origin, origin);
 
 		origin[2] += 0.5;
@@ -1357,7 +1360,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		}
 		// don't fall from too high, don't enter slime or lava and don't fall in gaps
 		if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERSLIME|SE_ENTERLAVA)) {
-			//botimport.Print(PRT_MESSAGE, "client %d: predicted frame %d of %d, would be hurt ", ms->client, move.frames, maxframes);
+			//botimport.Print(PRT_MESSAGE, "client %d: predicted frame %d of %d, would be hurt\n", ms->client, move.frames, maxframes);
 			//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
 			//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, "slime\n");
 			//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, "lava\n");
@@ -1388,6 +1391,8 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			//botimport.Print(PRT_MESSAGE, "client %d: max prediction frames\n", ms->client);
 			return qfalse;
 		}
+
+		//AAS_DrawCross(move.endpos, 4, LINECOLOR_BLUE);
 
 		if (!(type & MOVE_JUMP)) {
 			// get horizontal movement
@@ -1732,11 +1737,12 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 BotFinishTravel_Walk
 =======================================================================================================================================
 */
+/*
 bot_moveresult_t BotFinishTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) {
 	vec3_t hordir;
 	float dist, speed;
 	bot_moveresult_t_cleared(result);
-
+*/
 	// if not on the ground and changed areas... don't walk back!!
 	// (doesn't seem to help)
 	/*
@@ -1749,6 +1755,7 @@ bot_moveresult_t BotFinishTravel_Walk(bot_movestate_t *ms, aas_reachability_t *r
 		return result;
 	}
 	*/
+/*
 	// go straight to the reachability end
 	hordir[0] = reach->end[0] - ms->origin[0];
 	hordir[1] = reach->end[1] - ms->origin[1];
@@ -1766,7 +1773,7 @@ bot_moveresult_t BotFinishTravel_Walk(bot_movestate_t *ms, aas_reachability_t *r
 
 	return result;
 }
-
+*/
 /*
 =======================================================================================================================================
 BotTravel_Crouch
@@ -2382,7 +2389,7 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 	bot_moveresult_t_cleared(result);
 
 	AAS_JumpReachRunStart(reach, runstart);
-/* // Tobias NOTE: I'm pretty sure there will be maps where this piece of code would make sense, anyways, this code is NOT correct and it even causes bots to NOT jump although they should (e.g.: q3dm6) (FIXME?)
+/* // Tobias NOTE: I'm pretty sure there are maps where this piece of code would make sense, anyways, this code is NOT correct and it even causes bots to NOT jump although they should (e.g.: q3dm6) (FIXME?)
 	hordir[0] = runstart[0] - reach->start[0];
 	hordir[1] = runstart[1] - reach->start[1];
 	hordir[2] = 0;

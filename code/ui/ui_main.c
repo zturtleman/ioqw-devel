@@ -3750,8 +3750,6 @@ static void UI_StartSkirmish(qboolean next) {
 	if (g > GT_TOURNAMENT) {
 		// send team command for game qvm
 		trap_Cmd_ExecuteText(EXEC_APPEND, "wait 5; team Blue\n");
-		// set g_localTeamPref for ioq3 game qvm
-		trap_Cvar_Set("g_localTeamPref", "Blue");
 	}
 }
 
@@ -7031,7 +7029,6 @@ static cvarTable_t cvarTable[] = {
 	{NULL, "fraglimit", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NORESTART},
 	{NULL, "capturelimit", "8", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NORESTART},
 	{NULL, "ui_videomode", "", CVAR_ROM},
-	{NULL, "g_localTeamPref", "", 0},
 };
 
 static int cvarTableSize = ARRAY_LEN(cvarTable);
