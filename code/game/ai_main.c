@@ -56,25 +56,50 @@ float regularupdate_time;
 
 int bot_interbreed;
 int bot_interbreedmatchcount;
-
-vmCvar_t bot_thinktime;
-vmCvar_t bot_memorydump;
+// Tobias DEBUG: new bot test cvars for debugging
+vmCvar_t bot_enable;
+vmCvar_t bot_developer;
+vmCvar_t bot_debug;
+vmCvar_t bot_maxdebugpolys;
+vmCvar_t bot_groundonly;
+vmCvar_t bot_reachability;
+vmCvar_t bot_visualizejumppads;
+vmCvar_t bot_forceclustering;
+vmCvar_t bot_forcereachability;
+vmCvar_t bot_forcewrite;
+vmCvar_t bot_aasoptimize;
 vmCvar_t bot_saveroutingcache;
-vmCvar_t bot_pause;
-vmCvar_t bot_report;
+vmCvar_t bot_thinktime;
+vmCvar_t bot_reloadcharacters;
+vmCvar_t bot_testichat;
+vmCvar_t bot_testrchat;
 vmCvar_t bot_testsolid;
 vmCvar_t bot_testclusters;
-vmCvar_t bot_developer;
+vmCvar_t bot_fastchat;
+vmCvar_t bot_nochat;
+vmCvar_t bot_pause;
+vmCvar_t bot_report;
+vmCvar_t bot_rocketjump;
+vmCvar_t bot_challenge;
 vmCvar_t bot_interbreedchar;
 vmCvar_t bot_interbreedbots;
 vmCvar_t bot_interbreedcycle;
 vmCvar_t bot_interbreedwrite;
-// Tobias DEBUG
+vmCvar_t bot_memorydump;
+vmCvar_t bot_visualrange;
+vmCvar_t bot_predictobstacles;
+vmCvar_t bot_equalize;
+vmCvar_t bot_equalizer_aim;
+vmCvar_t bot_equalizer_react;
+vmCvar_t bot_equalizer_fembon;
+vmCvar_t bot_equalizer_teambon;
+vmCvar_t bot_noshoot;
 vmCvar_t bot_shownodechanges;
 vmCvar_t bot_teambluestrategy;
 vmCvar_t bot_teamredstrategy;
+vmCvar_t bot_alt_aggressive;
+vmCvar_t bot_alt_pickup;
 // Tobias END
-
 void ExitLevel(void);
 
 /*
@@ -1665,22 +1690,49 @@ int BotAIStartFrame(int time) {
 	static int lastbotthink_time;
 
 	G_CheckBotSpawn();
-
-	trap_Cvar_Update(&bot_rocketjump);
+// Tobias DEBUG: new bot test cvars for debugging
+	trap_Cvar_Update(&bot_enable);
+	trap_Cvar_Update(&bot_developer);
+	trap_Cvar_Update(&bot_debug);
+	trap_Cvar_Update(&bot_maxdebugpolys);
+	trap_Cvar_Update(&bot_groundonly);
+	trap_Cvar_Update(&bot_reachability);
+	trap_Cvar_Update(&bot_visualizejumppads);
+	trap_Cvar_Update(&bot_forceclustering);
+	trap_Cvar_Update(&bot_forcereachability);
+	trap_Cvar_Update(&bot_forcewrite);
+	trap_Cvar_Update(&bot_aasoptimize);
+	trap_Cvar_Update(&bot_saveroutingcache);
+	trap_Cvar_Update(&bot_thinktime);
+	trap_Cvar_Update(&bot_reloadcharacters);
+	trap_Cvar_Update(&bot_testichat);
+	trap_Cvar_Update(&bot_testrchat);
+	trap_Cvar_Update(&bot_testsolid);
+	trap_Cvar_Update(&bot_testclusters);
 	trap_Cvar_Update(&bot_fastchat);
 	trap_Cvar_Update(&bot_nochat);
-	trap_Cvar_Update(&bot_testrchat);
-	trap_Cvar_Update(&bot_thinktime);
-	trap_Cvar_Update(&bot_memorydump);
-	trap_Cvar_Update(&bot_saveroutingcache);
 	trap_Cvar_Update(&bot_pause);
 	trap_Cvar_Update(&bot_report);
-// Tobias DEBUG
+	trap_Cvar_Update(&bot_rocketjump);
+	trap_Cvar_Update(&bot_challenge);
+	trap_Cvar_Update(&bot_interbreedchar);
+	trap_Cvar_Update(&bot_interbreedbots);
+	trap_Cvar_Update(&bot_interbreedcycle);
+	trap_Cvar_Update(&bot_interbreedwrite);
+	trap_Cvar_Update(&bot_memorydump);
+	trap_Cvar_Update(&bot_visualrange);
+	trap_Cvar_Update(&bot_predictobstacles);
+	trap_Cvar_Update(&bot_equalize);
+	trap_Cvar_Update(&bot_equalizer_aim);
+	trap_Cvar_Update(&bot_equalizer_react);
+	trap_Cvar_Update(&bot_equalizer_fembon);
+	trap_Cvar_Update(&bot_equalizer_teambon);
 	trap_Cvar_Update(&bot_noshoot);
-	trap_Cvar_Update(&bot_ext_aggressive);
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_teambluestrategy);
 	trap_Cvar_Update(&bot_teamredstrategy);
+	trap_Cvar_Update(&bot_alt_aggressive);
+	trap_Cvar_Update(&bot_alt_pickup);
 // Tobias END
 	if (bot_report.integer) {
 		if (bot_report.integer == 1) {
@@ -1922,10 +1974,16 @@ int BotInitLibrary(void) {
 		trap_BotLibVarSet("bot_noshoot", buf);
 	}
 	// aggression
-	trap_Cvar_VariableStringBuffer("bot_ext_aggressive", buf, sizeof(buf));
+	trap_Cvar_VariableStringBuffer("bot_alt_aggressive", buf, sizeof(buf));
 
 	if (strlen(buf)) {
-		trap_BotLibVarSet("bot_ext_aggressive", buf);
+		trap_BotLibVarSet("bot_alt_aggressive", buf);
+	}
+	// pickup
+	trap_Cvar_VariableStringBuffer("bot_alt_pickup", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_alt_pickup", buf);
 	}
 // Tobias END
 	// visualize jump pads
@@ -1983,26 +2041,52 @@ BotAISetup
 */
 int BotAISetup(int restart) {
 	int errnum;
-
-	trap_Cvar_Register(&bot_thinktime, "bot_thinktime", "100", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_memorydump, "bot_memorydump", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_saveroutingcache, "bot_saveroutingcache", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_pause, "bot_pause", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_report, "bot_report", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_testsolid, "bot_testsolid", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_testclusters, "bot_testclusters", "0", CVAR_CHEAT);
-	trap_Cvar_Register(&bot_developer, "bot_developer", "0", CVAR_CHEAT);
-// Tobias DEBUG
-	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", 0);
-	trap_Cvar_Register(&bot_teambluestrategy, "bot_teambluestrategy", "0", 0);
-	trap_Cvar_Register(&bot_teamredstrategy, "bot_teamredstrategy", "0", 0);
-// Tobias END
+// Tobias DEBUG: new bot test cvars for debugging
+	trap_Cvar_Register(&bot_enable, "bot_enable", "1", 0);
+	trap_Cvar_Register(&bot_developer, "bot_developer", "0", 0);
+	trap_Cvar_Register(&bot_debug, "bot_debug", "0", 0);
+	trap_Cvar_Register(&bot_maxdebugpolys, "bot_maxdebugpolys", "2", 0);
+	trap_Cvar_Register(&bot_groundonly, "bot_groundonly", "1", 0);
+	trap_Cvar_Register(&bot_reachability, "bot_reachability", "0", 0);
+	trap_Cvar_Register(&bot_visualizejumppads, "bot_visualizejumppads", "0", 0);
+	trap_Cvar_Register(&bot_forceclustering, "bot_forceclustering", "0", 0);
+	trap_Cvar_Register(&bot_forcereachability, "bot_forcereachability", "0", 0);
+	trap_Cvar_Register(&bot_forcewrite, "bot_forcewrite", "0", 0);
+	trap_Cvar_Register(&bot_aasoptimize, "bot_aasoptimize", "0", 0);
+	trap_Cvar_Register(&bot_saveroutingcache, "bot_saveroutingcache", "0", 0);
+	trap_Cvar_Register(&bot_thinktime, "bot_thinktime", "100", 0);
+	trap_Cvar_Register(&bot_reloadcharacters, "bot_reloadcharacters", "0", 0);
+	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);
+	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
+	trap_Cvar_Register(&bot_testsolid, "bot_testsolid", "0", 0);
+	trap_Cvar_Register(&bot_testclusters, "bot_testclusters", "0", 0);
+	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
+	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
+	trap_Cvar_Register(&bot_pause, "bot_pause", "0", 0);
+	trap_Cvar_Register(&bot_report, "bot_report", "0", 0);
+	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
+	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
 	trap_Cvar_Register(&bot_interbreedchar, "bot_interbreedchar", "", 0);
 	trap_Cvar_Register(&bot_interbreedbots, "bot_interbreedbots", "10", 0);
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);
 	trap_Cvar_Register(&bot_interbreedwrite, "bot_interbreedwrite", "", 0);
+	trap_Cvar_Register(&bot_memorydump, "bot_memorydump", "0", 0);
+	trap_Cvar_Register(&bot_visualrange, "bot_visualrange", "100000", 0);
+	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
+	trap_Cvar_Register(&bot_equalize, "bot_equalize", "1", 0);
+	trap_Cvar_Register(&bot_equalizer_aim, "bot_equalizer_aim", "0.75", 0);
+	trap_Cvar_Register(&bot_equalizer_react, "bot_equalizer_react", "0.55", 0);
+	trap_Cvar_Register(&bot_equalizer_fembon, "bot_equalizer_fembon", "8", 0);
+	trap_Cvar_Register(&bot_equalizer_teambon, "bot_equalizer_teambon", "5", 0); //10
+	trap_Cvar_Register(&bot_noshoot, "bot_noshoot", "0", 0);
+	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", 0);
+	trap_Cvar_Register(&bot_teambluestrategy, "bot_teambluestrategy", "0", 0);
+	trap_Cvar_Register(&bot_teamredstrategy, "bot_teamredstrategy", "0", 0);
+	trap_Cvar_Register(&bot_alt_aggressive, "bot_alt_aggressive", "1", 0);
+	trap_Cvar_Register(&bot_alt_pickup, "bot_alt_pickup", "1", 0);
 
-	level.botReportModificationCount = bot_report.modificationCount; // Tobias DEBUG
+	level.botReportModificationCount = bot_report.modificationCount;
+// Tobias END
 	// if the game is restarted for a tournament
 	if (restart) {
 		return qtrue;

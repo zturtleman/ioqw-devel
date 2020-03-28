@@ -1945,10 +1945,14 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	bot_goal_t goal;
 	vec3_t target, dir;
 	bot_moveresult_t moveresult;
-	int range;
+	int tt_ltg, range;
 	//char buf[128];
 	//bot_goal_t tmpgoal;
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "seek ltg: observer");
 		return qfalse;
@@ -2024,7 +2028,20 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 				range = 80;
 			}
 		}
-
+		// make sure to never go for a NBG that is further away from the bot than the LTG
+		tt_ltg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+// Tobias DEBUG
+		if (bot_alt_pickup.integer) {
+// Tobias END
+			if (tt_ltg && tt_ltg < range) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, "%s (seek ltg): tt_ltg < range -> range = tt_ltg\n", netname);
+#endif
+				range = tt_ltg;
+			}
+// Tobias DEBUG
+		}
+// Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
 			// get the goal at the top of the stack

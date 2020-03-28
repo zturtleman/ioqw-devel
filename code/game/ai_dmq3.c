@@ -59,22 +59,6 @@ bot_waypoint_t *botai_freewaypoints;
 // NOTE: not using a cvars which can be updated because the game should be reloaded anyway
 int gametype; // game type
 
-vmCvar_t bot_rocketjump;
-vmCvar_t bot_fastchat;
-vmCvar_t bot_nochat;
-vmCvar_t bot_testrchat;
-vmCvar_t bot_challenge;
-vmCvar_t bot_visualrange;
-vmCvar_t bot_predictobstacles;
-// Tobias DEBUG: new bot test cvars for debugging
-vmCvar_t bot_noshoot;
-vmCvar_t bot_ext_aggressive;
-vmCvar_t bot_equalize;
-vmCvar_t bot_equalizer_aim;
-vmCvar_t bot_equalizer_react;
-vmCvar_t bot_equalizer_fembon;
-vmCvar_t bot_equalizer_teambon;
-// Tobias END
 vmCvar_t g_spSkill;
 
 extern vmCvar_t bot_developer;
@@ -2491,7 +2475,7 @@ const int BotAggression(bot_state_t *bs) {
 	aggression = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AGGRESSION, 0, 1);
 	selfpreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_SELFPRESERVATION, 0, 1);
 
-	if (!bot_ext_aggressive.integer) {
+	if (!bot_alt_aggressive.integer) {
 		// if the enemy is located way higher than the bot
 		if (bs->inventory[ENEMY_HEIGHT] > 200) {
 			return 0;
@@ -4511,7 +4495,6 @@ qboolean BotEqualizeTeamScore(bot_state_t *bs) {
 	}
 
 	return qfalse;
-
 }
 
 /*
@@ -4619,7 +4602,6 @@ qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 	}
 
 	return qfalse;
-
 }
 // Tobias END
 /*
@@ -7160,22 +7142,6 @@ void BotSetupDeathmatchAI(void) {
 
 	gametype = trap_Cvar_VariableIntegerValue("g_gametype");
 
-	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
-	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
-	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
-	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
-	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
-	trap_Cvar_Register(&bot_visualrange, "bot_visualrange", "100000", 0);
-	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
-// Tobias DEBUG
-	trap_Cvar_Register(&bot_noshoot, "bot_noshoot", "0", 0);
-	trap_Cvar_Register(&bot_ext_aggressive, "bot_ext_aggressive", "1", 0);
-	trap_Cvar_Register(&bot_equalize, "bot_equalize", "1", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_aim, "bot_equalizer_aim", "0.75", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_react, "bot_equalizer_react", "0.55", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_fembon, "bot_equalizer_fembon", "8", CVAR_USERINFO|CVAR_ARCHIVE);
-	trap_Cvar_Register(&bot_equalizer_teambon, "bot_equalizer_teambon", "5", CVAR_USERINFO|CVAR_ARCHIVE); //10
-// Tobias END
 	trap_Cvar_Register(&g_spSkill, "g_spSkill", "2", 0);
 
 	if (gametype == GT_CTF) {
