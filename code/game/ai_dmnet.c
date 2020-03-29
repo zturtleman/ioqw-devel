@@ -324,7 +324,6 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 #ifdef DEBUG
 			char netname[128];
 
-			ClientName(bs->client, netname, sizeof(netname));
 			BotAI_Print(PRT_MESSAGE, "%s: no valid ltg (probably stuck)\n", ClientName(bs->client, netname, sizeof(netname)));
 #endif
 			//trap_BotDumpAvoidGoals(bs->gs);
@@ -2640,8 +2639,16 @@ AIEnter_Battle_NBG
 =======================================================================================================================================
 */
 void AIEnter_Battle_NBG(bot_state_t *bs, char *s) {
+	bot_goal_t goal;
+	char buf[144];
 
-	BotRecordNodeSwitch(bs, "BATTLE NBG", "", s);
+	if (trap_BotGetTopGoal(bs->gs, &goal)) {
+		trap_BotGoalName(goal.number, buf, 144);
+		BotRecordNodeSwitch(bs, "BATTLE NBG", buf, s);
+	} else {
+		BotRecordNodeSwitch(bs, "BATTLE NBG", "No goal", s);
+	}
+
 	bs->ainode = AINode_Battle_NBG;
 }
 
