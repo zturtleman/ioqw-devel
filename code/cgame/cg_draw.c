@@ -2381,28 +2381,30 @@ static qboolean CG_DrawBotInfo(void) {
 		return qfalse;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
+
+	leader = Info_ValueForKey(info, "l");
+
+	if (*leader) {
+		str = "Bot is Leader";
+		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
+		CG_DrawBigString(320 - w / 2, 174, str, 1.0f);
+	}
+
 	node = Info_ValueForKey(info, "n");
 
 	if (*node) {
 		str = va("AI Node: %s", node);
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 164, str, 1.0f);
+		CG_DrawBigString(320 - w / 2, 192, str, 1.0f);
 	}
 
 	action = Info_ValueForKey(info, "a");
 
 	if (*action) {
 		str = va("LTG: %s", action);
-		w = CG_DrawStrlen(action) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 182, str, 1.0f);
-	}
-
-	leader = Info_ValueForKey(info, "l");
-
-	if (*leader) {
-		str = "Bot is leader";
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 200, str, 1.0f);
+		CG_DrawBigString(320 - w / 2, 210, str, 1.0f);
 	}
 
 	carrying = Info_ValueForKey(info, "c");
@@ -2410,7 +2412,7 @@ static qboolean CG_DrawBotInfo(void) {
 	if (*carrying) {
 		str = va("Bot carrying: %s", carrying);
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 218, str, 1.0f);
+		CG_DrawBigString(320 - w / 2, 228, str, 1.0f);
 	}
 
 	return qtrue;

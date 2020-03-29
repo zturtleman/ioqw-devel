@@ -1927,11 +1927,11 @@ void BotUpdateInventory(bot_state_t *bs) {
 	bs->inventory[INVENTORY_NEUTRALFLAG] = bs->cur_ps.powerups[PW_NEUTRALFLAG] != 0;
 
 	if (BotTeam(bs) == TEAM_RED) {
-		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.tokens;
+		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
 		bs->inventory[INVENTORY_BLUECUBE] = 0;
 	} else {
 		bs->inventory[INVENTORY_REDCUBE] = 0;
-		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens;
+		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
 	}
 
 	BotCheckItemPickup(bs, oldinventory);
@@ -5896,7 +5896,7 @@ int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_
 	BotEntityInfo(activategoal->goal.entitynum, &activateinfo);
 	// if the entity information is valid
 	if (!activateinfo.valid) {
-		AIEnter_Seek_LTG(bs, "ActivateGoal: goal ent invalid");
+		AIEnter_Seek_LTG(bs, "BotGoForActivateGoal: goal ent invalid");
 		return qtrue;
 	}
 
@@ -5904,7 +5904,7 @@ int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_
 
 	if (BotPushOntoActivateGoalStack(bs, activategoal)) {
 		// enter the activate entity AI node
-		AIEnter_Seek_ActivateEntity(bs, "BotGoForActivateGoal");
+		AIEnter_Seek_ActivateEntity(bs, "BotGoForActivateGoal: entering activate ent.");
 		return qtrue;
 	} else {
 		// enable any routing areas that were disabled
