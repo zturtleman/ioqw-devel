@@ -80,7 +80,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define CHARACTERISTIC_JUMPER						20 // float [0, 1]
 // tendency to walk
 #define CHARACTERISTIC_WALKER						21 // float [0, 1]
-// tendency to walk
+// ?
 #define CHARACTERISTIC_AGILITY						22 // float [0, 1]
 // tendency to jump using a weapon
 #define CHARACTERISTIC_WEAPONJUMPING				23 // float [0, 1]
@@ -133,30 +133,34 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //=====================================================================================================================================
 // STRATEGY
 //=====================================================================================================================================
-#define CHARACTERISTIC_GOAL_MULTIPLIER				49 // int [1, 10000]
-#define CHARACTERISTIC_LEADER_STRATEGY				50 // int [1, 4]
+// how individually an experienced bot reacts on certain situations during battle
+#define CHARACTERISTIC_BATTLE_SENSE					49 // float [0, 1]
+// how much a bot likes to pick up items (time/range)
+#define CHARACTERISTIC_GOAL_MULTIPLIER				50 // int [1, 10000]
+// what team strategy a bot prefers most by default
+#define CHARACTERISTIC_LEADER_STRATEGY				51 // int [1, 4]
 //=====================================================================================================================================
 // CHAT
 //=====================================================================================================================================
 // tendency to insult/praise
-#define CHARACTERISTIC_CHAT_INSULT					51 // float [0, 1]
+#define CHARACTERISTIC_CHAT_INSULT					52 // float [0, 1]
 // tendency to chat about miscellaneous subject
-#define CHARACTERISTIC_CHAT_MISC					52 // float [0, 1]
+#define CHARACTERISTIC_CHAT_MISC					53 // float [0, 1]
 // tendency to chat at start or end of level
-#define CHARACTERISTIC_CHAT_STARTENDLEVEL			53 // float [0, 1]
+#define CHARACTERISTIC_CHAT_STARTENDLEVEL			54 // float [0, 1]
 // tendency to chat entering or exiting the game
-#define CHARACTERISTIC_CHAT_ENTEREXITGAME			54 // float [0, 1]
+#define CHARACTERISTIC_CHAT_ENTEREXITGAME			55 // float [0, 1]
 // tendency to chat when the character killed someone
-#define CHARACTERISTIC_CHAT_KILL					55 // float [0, 1]
+#define CHARACTERISTIC_CHAT_KILL					56 // float [0, 1]
 // tendency to chat when the character died
-#define CHARACTERISTIC_CHAT_DEATH					56 // float [0, 1]
+#define CHARACTERISTIC_CHAT_DEATH					57 // float [0, 1]
 // tendency to chat when enemy commits suicide
-#define CHARACTERISTIC_CHAT_ENEMYSUICIDE			57 // float [0, 1]
+#define CHARACTERISTIC_CHAT_ENEMYSUICIDE			58 // float [0, 1]
 // tendency to chat when bot was hit but didn't die
-#define CHARACTERISTIC_CHAT_HITNODEATH				58 // float [0, 1]
+#define CHARACTERISTIC_CHAT_HITNODEATH				59 // float [0, 1]
 // tendency to chat when bot hit the enemy but enemy didn't die
-#define CHARACTERISTIC_CHAT_HITNOKILL				59 // float [0, 1]
+#define CHARACTERISTIC_CHAT_HITNOKILL				60 // float [0, 1]
 // tendency to chat at random moments
-#define CHARACTERISTIC_CHAT_RANDOM					60 // float [0, 1]
+#define CHARACTERISTIC_CHAT_RANDOM					61 // float [0, 1]
 // tendency to reply to chats
-#define CHARACTERISTIC_CHAT_REPLY					61 // float [0, 1]
+#define CHARACTERISTIC_CHAT_REPLY					62 // float [0, 1]
