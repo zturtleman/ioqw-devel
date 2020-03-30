@@ -2309,6 +2309,7 @@ AINode_Battle_Chase
 int AINode_Battle_Chase(bot_state_t *bs) {
 	bot_goal_t goal;
 	vec3_t target, dir;
+	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	float range;
 
@@ -2329,6 +2330,13 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// if no enemy
 	if (bs->enemy < 0) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy.");
+		return qfalse;
+	}
+	// get the entity information
+	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity isn't dead
+	if (EntityIsDead(&entinfo)) {
+		AIEnter_Seek_LTG(bs, "BATTLE CHASE: enemy dead.");
 		return qfalse;
 	}
 	// if the enemy is visible
