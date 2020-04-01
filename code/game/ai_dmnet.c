@@ -1812,7 +1812,11 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	bot_goal_t goal;
 	vec3_t target, dir;
 	bot_moveresult_t moveresult;
+// Tobias DEBUG
+	float checkcvar;
 
+	checkcvar = bot_checktime.value;
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "SEEK NBG: joined observer.");
 		return qfalse;
@@ -1851,8 +1855,8 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		// pop the current goal from the stack
 		trap_BotPopGoal(bs->gs);
 		// check for new nearby items right away
-		// NOTE: we canNOT reset the check_time to zero because it would create an endless loop of node switches
-		bs->check_time = FloatTime() + 0.05;
+		// NOTE: we can NOT reset the check_time to zero because it would create an endless loop of node switches
+		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
 		// go back to seek ltg
 		AIEnter_Seek_LTG(bs, "SEEK NBG: time out.");
 		return qfalse;
@@ -1952,6 +1956,11 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	int tt_ltg, range;
 	//char buf[128];
 	//bot_goal_t tmpgoal;
+// Tobias DEBUG
+	float checkcvar;
+
+	checkcvar = bot_checktime.value;
+// Tobias END
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -2008,7 +2017,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	}
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
-		bs->check_time = FloatTime() + 0.5;
+		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
 		// check if the bot wants to camp
 		BotWantsToCamp(bs);
 
@@ -2312,7 +2321,11 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	float range;
+// Tobias DEBUG
+	float checkcvar;
 
+	checkcvar = bot_checktime.value;
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE CHASE: joined observer.");
 		return qfalse;
@@ -2382,7 +2395,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
-		bs->check_time = FloatTime() + 1;
+		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
 		range = 150;
 
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
@@ -2469,7 +2482,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	vec3_t target, dir;
 	float attack_skill, range;
 	int areanum;
+// Tobias DEBUG
+	float checkcvar;
 
+	checkcvar = bot_checktime.value;
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE RETREAT: joined observer.");
 		return qfalse;
@@ -2571,7 +2588,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
-		bs->check_time = FloatTime() + 1;
+		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
 		range = 150;
 
 		if (gametype == GT_CTF) {
