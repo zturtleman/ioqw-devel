@@ -322,7 +322,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			bs->ltg_time = FloatTime() + 20;
 		} else { // the bot gets sorta stuck with all the avoid timings, shouldn't happen though
 #ifdef DEBUG
-			char netname[128];
+			char netname[MAX_NETNAME];
 
 			BotAI_Print(PRT_MESSAGE, "%s: no valid ltg (probably stuck)\n", ClientName(bs->client, netname, sizeof(netname)));
 #endif
@@ -1313,6 +1313,7 @@ int AINode_Intermission(bot_state_t *bs) {
 		}
 
 		AIEnter_Stand(bs, "INTERMISION: chat.");
+		return qfalse;
 	}
 
 	return qtrue;
@@ -1342,6 +1343,7 @@ int AINode_Observer(bot_state_t *bs) {
 	// if the bot left observer mode
 	if (!BotIsObserver(bs)) {
 		AIEnter_Stand(bs, "OBSERVER: left observer.");
+		return qfalse;
 	}
 
 	return qtrue;
@@ -1396,7 +1398,7 @@ void AIEnter_Respawn(bot_state_t *bs, char *s) {
 	// reset some states
 	trap_BotResetMoveState(bs->ms);
 	trap_BotResetGoalState(bs->gs);
-	trap_BotResetAvoidGoals(bs->gs);
+//	trap_BotResetAvoidGoals(bs->gs); // Tobias CHECK: timings are still valid, so why reset? (cyr)
 	trap_BotResetAvoidReach(bs->ms);
 	// if the bot wants to chat
 	if (BotChat_Death(bs)) {
@@ -1422,6 +1424,7 @@ int AINode_Respawn(bot_state_t *bs) {
 	if (bs->respawn_wait) {
 		if (!BotIsDead(bs)) {
 			AIEnter_Seek_LTG(bs, "RESPAWN: respawned.");
+			return qfalse;
 		} else {
 			trap_EA_Respawn(bs->client);
 		}
@@ -1821,6 +1824,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		}
 
 		BotClearActivateGoalStack(bs);
+		return qfalse;
 	}
 
 	return qtrue;
@@ -1962,6 +1966,8 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 			// go fight
 			AIEnter_Battle_Fight(bs, "SEEK NBG: found enemy.");
 		}
+
+		return qfalse;
 	}
 
 	return qtrue;
@@ -2224,12 +2230,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE FIGHT: bot dead.");
 		return qfalse;
 	}
-	// if there is another better enemy
-	if (BotFindEnemy(bs, bs->enemy)) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: found new better enemy.\n");
-#endif
-	}
 	// if no enemy
 	if (bs->enemy < 0) {
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
@@ -2244,6 +2244,13 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: entity invalid -> seek ltg.\n");
 #endif
 		return qfalse;
+	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: found new better enemy.\n");
+#endif
+		return qtrue;
 	}
 	// if the enemy is dead
 	if (bs->enemydeath_time) {
@@ -2323,7 +2330,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	if (!(bs->flags & BFL_FIGHTSUICIDAL)) {
 		if (BotWantsToRetreat(bs)) {
 			AIEnter_Battle_Retreat(bs, "BATTLE FIGHT: wants to retreat.");
-			return qtrue;
+			return qfalse;
 		}
 	}
 	// if the bot's health decreased
@@ -2387,6 +2394,14 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		AIEnter_Seek_LTG(bs, "BATTLE CHASE: entity invalid.");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Chase: entity invalid -> seek ltg.\n");
+#endif
+		return qfalse;
+	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: enemy dead.");
@@ -2493,7 +2508,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// if the bot wants to retreat (the bot could have been damage during the chase)
 	if (BotWantsToRetreat(bs)) {
 		AIEnter_Battle_Retreat(bs, "BATTLE CHASE: wants to retreat.");
-		return qtrue;
+		return qfalse;
 	}
 
 	return qtrue;
@@ -2566,6 +2581,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Retreat: found new better enemy.\n");
 #endif
+		return qtrue;
 	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
