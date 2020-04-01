@@ -1404,6 +1404,7 @@ void BotMatch_Dismiss(bot_state_t *bs, bot_match_t *match) {
 	client = ClientFromName(netname);
 
 	bs->decisionmaker = client;
+	bs->ltg_time = 0;
 	bs->ltgtype = 0;
 	bs->lead_time = 0;
 	bs->lastgoal_ltgtype = 0;

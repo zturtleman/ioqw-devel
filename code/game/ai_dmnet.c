@@ -365,16 +365,19 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// if trying to help the team mate for more than a minute
 		if (bs->teamgoal_time < FloatTime()) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// if the team mate IS visible for quite some time
 		if (bs->teammatevisible_time < FloatTime() - 10) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the entity information is valid
 		if (!entinfo.valid) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 			return qfalse;
 		}
@@ -423,12 +426,14 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (bs->teamgoal_time < FloatTime()) {
 			BotAI_BotInitialChat(bs, "accompany_stop", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the entity information is valid
 		if (!entinfo.valid) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 			return qfalse;
 		}
@@ -547,6 +552,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (bs->teammatevisible_time < FloatTime() - 60) {
 			BotAI_BotInitialChat(bs, "accompany_cannotfind", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 			// just to make sure the bot won't spam this message
 			bs->teammatevisible_time = FloatTime();
@@ -577,6 +583,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "defend_stop", buf, NULL);
 			trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// if very close... go away for some time
@@ -609,10 +616,12 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			EasyClientName(bs->teamgoal.entitynum, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "kill_done", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// stop after some time
 		if (bs->teamgoal_time < FloatTime()) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// just roam around
@@ -633,6 +642,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
 		// stop after some time
 		if (bs->teamgoal_time < FloatTime()) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 
@@ -640,11 +650,13 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "getitem_notthere", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		} else if (BotReachedGoal(bs, goal)) {
 			trap_BotGoalName(bs->teamgoal.number, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "getitem_gotit", buf, NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 
@@ -672,12 +684,14 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
 			}
 
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 		// if the bot decided to camp
 		if (!bs->ordered) {
 			// if the bot should stop camping
 			if (!BotCanCamp(bs)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 		}
@@ -729,6 +743,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					}
 				}
 
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// FIXME: move around a bit
@@ -760,6 +775,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 
 		if (!bs->curpatrolpoint) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 			return qfalse;
 		}
@@ -785,10 +801,12 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (bs->teamgoal_time < FloatTime()) {
 			BotAI_BotInitialChat(bs, "patrol_stop", NULL);
 			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 
 		if (!bs->curpatrolpoint) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 			return qfalse;
 		}
@@ -816,6 +834,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &ctf_redflag, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
@@ -831,10 +850,12 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 						break;
 				}
 
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// stop after 3 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 
@@ -852,15 +873,18 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &ctf_blueflag, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
 			// if not carrying the flag anymore
 			if (!BotCTFCarryingFlag(bs)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// if touching the base flag the bot should loose the enemy flag
@@ -871,6 +895,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					bs->rushbaseaway_time = FloatTime() + 5 + 10 * random();
 					// FIXME: add chat to tell the others to get back the flag
 				} else {
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 				}
 			}
@@ -896,15 +921,18 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &ctf_redflag, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
 			// if touching the flag
 			if (trap_BotTouchingGoal(bs->origin, goal)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// stop after 3 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 
@@ -924,10 +952,12 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			memcpy(goal, &ctf_neutralflag, sizeof(bot_goal_t));
 			// if touching the flag
 			if (trap_BotTouchingGoal(bs->origin, goal)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// stop after 3 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 
@@ -944,19 +974,23 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &ctf_redflag, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
 			// if not carrying the flag anymore
 			if (!Bot1FCTFCarryingFlag(bs)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// if touching the base flag the bot should loose the enemy flag
 			if (trap_BotTouchingGoal(bs->origin, goal)) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 
@@ -981,11 +1015,13 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &ctf_redflag, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
 			// quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// if touching the base flag the bot should loose the enemy flag
@@ -1006,6 +1042,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			// stop after some time
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// just roam around
@@ -1029,6 +1066,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &redobelisk, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
@@ -1048,6 +1086,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			// quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 
@@ -1107,11 +1146,13 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					memcpy(goal, &redobelisk, sizeof(bot_goal_t));
 					break;
 				default:
+					bs->ltg_time = 0;
 					bs->ltgtype = 0;
 					return qfalse;
 			}
 			// quit rushing after 2 minutes
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// if touching the base flag the bot should loose the enemy flag
@@ -1134,6 +1175,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			memcpy(goal, &neutralobelisk, sizeof(bot_goal_t));
 			// stop after some time
 			if (bs->teamgoal_time < FloatTime()) {
+				bs->ltg_time = 0;
 				bs->ltgtype = 0;
 			}
 			// if touching the goal
@@ -2215,8 +2257,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			if (bs->lastkilledplayer == bs->enemy) {
 				BotChat_Kill(bs);
 			}
-
-			bs->ltg_time = 0;
 
 			AIEnter_Seek_LTG(bs, "BATTLE FIGHT: enemy dead.");
 			return qfalse;

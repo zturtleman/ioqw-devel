@@ -640,6 +640,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the team mate being accompanied no longer carries the flag
 		if (!EntityCarriesFlag(&entinfo)) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 	}
@@ -783,6 +784,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 	}
 	// if the bot decided to do something on its own and has a last ordered goal
 	if (!bs->ordered && bs->lastgoal_ltgtype) {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 	}
 	// if already a CTF or team goal
@@ -849,6 +851,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 
 		BotSetTeamStatus(bs);
 	} else {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
 		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
@@ -921,6 +924,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the team mate being accompanied no longer carries the flag
 		if (!EntityCarriesFlag(&entinfo)) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 	}
@@ -1034,6 +1038,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 	}
 	// if the bot decided to do something on its own and has a last ordered goal
 	if (!bs->ordered && bs->lastgoal_ltgtype) {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 	}
 	// if already a CTF or team goal
@@ -1099,6 +1104,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 
 		BotSetTeamStatus(bs);
 	} else {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
 		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
@@ -1220,6 +1226,7 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 
 		BotSetTeamStatus(bs);
 	} else {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
 		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
@@ -1296,6 +1303,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 		BotEntityInfo(bs->teammate, &entinfo);
 		// if the team mate being accompanied no longer carries the flag
 		if (!EntityCarriesCubes(&entinfo)) {
+			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
 	}
@@ -1392,6 +1400,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 
 		BotSetTeamStatus(bs);
 	} else {
+		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
 		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
