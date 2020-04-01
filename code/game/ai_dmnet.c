@@ -1596,7 +1596,7 @@ AIEnter_Seek_ActivateEntity
 */
 void AIEnter_Seek_ActivateEntity(bot_state_t *bs, char *s) {
 
-	BotRecordNodeSwitch(bs, "ACTIVATE ENTITY", "", s);
+	BotRecordNodeSwitch(bs, S_COLOR_BLUE "ACTIVATE ENTITY", "", s);
 	bs->ainode = AINode_Seek_ActivateEntity;
 }
 
@@ -1841,9 +1841,9 @@ void AIEnter_Seek_NBG(bot_state_t *bs, char *s) {
 
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
-		BotRecordNodeSwitch(bs, "SEEK NBG", buf, s);
+		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK NBG", buf, s);
 	} else {
-		BotRecordNodeSwitch(bs, "SEEK NBG", "No goal", s);
+		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK NBG", "No goal", s);
 	}
 
 	bs->ainode = AINode_Seek_NBG;
@@ -1984,9 +1984,9 @@ void AIEnter_Seek_LTG(bot_state_t *bs, char *s) {
 
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
-		BotRecordNodeSwitch(bs, "SEEK LTG", buf, s);
+		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK LTG", buf, s);
 	} else {
-		BotRecordNodeSwitch(bs, "SEEK LTG", "No goal", s);
+		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK LTG", "No goal", s);
 	}
 
 	bs->ainode = AINode_Seek_LTG;
@@ -2184,7 +2184,7 @@ AIEnter_Battle_Fight
 */
 void AIEnter_Battle_Fight(bot_state_t *bs, char *s) {
 
-	BotRecordNodeSwitch(bs, "BATTLE FIGHT", "", s);
+	BotRecordNodeSwitch(bs, S_COLOR_RED "BATTLE FIGHT", "", s);
 	trap_BotResetLastAvoidReach(bs->ms);
 
 	bs->ainode = AINode_Battle_Fight;
@@ -2198,7 +2198,7 @@ AIEnter_Battle_SuicidalFight
 */
 void AIEnter_Battle_SuicidalFight(bot_state_t *bs, char *s) {
 
-	BotRecordNodeSwitch(bs, "BATTLE FIGHT", "", s);
+	BotRecordNodeSwitch(bs, S_COLOR_RED "BATTLE FIGHT", "", s);
 	trap_BotResetLastAvoidReach(bs->ms);
 
 	bs->ainode = AINode_Battle_Fight;
@@ -2352,7 +2352,7 @@ AIEnter_Battle_Chase
 */
 void AIEnter_Battle_Chase(bot_state_t *bs, char *s) {
 
-	BotRecordNodeSwitch(bs, "BATTLE CHASE", "", s);
+	BotRecordNodeSwitch(bs, S_COLOR_CYAN "BATTLE CHASE", "", s);
 	bs->chase_time = FloatTime();
 	bs->ainode = AINode_Battle_Chase;
 }
@@ -2521,7 +2521,7 @@ AIEnter_Battle_Retreat
 */
 void AIEnter_Battle_Retreat(bot_state_t *bs, char *s) {
 
-	BotRecordNodeSwitch(bs, "BATTLE RETREAT", "", s);
+	BotRecordNodeSwitch(bs, S_COLOR_YELLOW "BATTLE RETREAT", "", s);
 	bs->ainode = AINode_Battle_Retreat;
 }
 
@@ -2725,9 +2725,9 @@ void AIEnter_Battle_NBG(bot_state_t *bs, char *s) {
 
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
-		BotRecordNodeSwitch(bs, "BATTLE NBG", buf, s);
+		BotRecordNodeSwitch(bs, S_COLOR_MAGENTA "BATTLE NBG", buf, s);
 	} else {
-		BotRecordNodeSwitch(bs, "BATTLE NBG", "No goal", s);
+		BotRecordNodeSwitch(bs, S_COLOR_MAGENTA "BATTLE NBG", "No goal", s);
 	}
 
 	bs->ainode = AINode_Battle_NBG;
