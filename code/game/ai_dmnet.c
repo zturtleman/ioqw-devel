@@ -152,7 +152,7 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 BotGoForAir
 =======================================================================================================================================
 */
-int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
+int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	bot_goal_t goal;
 
 	// if the bot needs air
@@ -188,7 +188,7 @@ int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 BotNearbyGoal
 =======================================================================================================================================
 */
-int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
+const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	int ret;
 
 	// check if the bot should go for air
@@ -2385,7 +2385,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	vec3_t target, dir;
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
-	float range;
+	int range;
 // Tobias DEBUG
 	float checkcvar;
 
@@ -2553,8 +2553,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	vec3_t target, dir;
-	float attack_skill, range;
-	int areanum;
+	float attack_skill;
+	int areanum, range;
 // Tobias DEBUG
 	float checkcvar;
 
