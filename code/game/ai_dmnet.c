@@ -2211,11 +2211,16 @@ AINode_Battle_Fight
 =======================================================================================================================================
 */
 int AINode_Battle_Fight(bot_state_t *bs) {
-	int areanum;
+	int areanum, range;
+	bot_goal_t goal;
 	vec3_t target;
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
+// Tobias DEBUG
+	float checkcvar;
 
+	checkcvar = bot_checktime.value;
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE FIGHT: joined observer.");
 		return qfalse;
@@ -2308,6 +2313,19 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			return qfalse;
 		} else {
 			AIEnter_Seek_LTG(bs, "BATTLE FIGHT: enemy out of sight.");
+			return qfalse;
+		}
+	}
+	// check for nearby goals periodicly
+	if (bs->check_time < FloatTime()) {
+		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
+		range = 150;
+
+		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
+			trap_BotResetLastAvoidReach(bs->ms);
+			// time the bot gets to pick up the nearby goal item
+			bs->nbg_time = FloatTime() + 0.1 * range + 1;
+			AIEnter_Battle_NBG(bs, "BATTLE FIGHT: check for Nbg.");
 			return qfalse;
 		}
 	}
