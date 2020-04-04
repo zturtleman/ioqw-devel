@@ -113,9 +113,8 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 	vec3_t end, mins = {-15, -15, -2}, maxs = {15, 15, 2};
 	int areanum;
 
-	// trace up until we hit solid
 	VectorCopy(bs->origin, end);
-
+	// trace up until we hit solid
 	end[2] += 1000;
 
 	BotAI_Trace(&bsptrace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
@@ -128,7 +127,7 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 
 		if (areanum) {
 			VectorCopy(bsptrace.endpos, goal->origin);
-			goal->origin[2] -= 2;
+			goal->origin[2] += 32; // Tobias CHECK: why 32 now? Is this too much (was 2)
 			goal->areanum = areanum;
 			goal->mins[0] = -15;
 			goal->mins[1] = -15;
@@ -192,7 +191,7 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	int ret;
 
 	// check if the bot should go for air
-	if (BotGoForAir(bs, tfl, ltg, range)) {
+	if (BotGoForAir(bs, tfl, ltg, 10)) {
 		return qtrue;
 	}
 	// if the bot is carrying a flag or cubes
