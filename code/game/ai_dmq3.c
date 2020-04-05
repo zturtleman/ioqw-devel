@@ -4686,7 +4686,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 	if (aim_skill > 0.95) {
 		// don't aim too early
-		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 
 		if (bs->enemysight_time > FloatTime() - reactiontime) {
 			return;
@@ -4959,7 +4959,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		}
 	}
 
-	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 	// if the enemy is invisible
 	if (EntityIsInvisible(&entinfo)) {
 		reactiontime += 1.5f;

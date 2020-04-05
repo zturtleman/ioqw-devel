@@ -47,7 +47,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // the field of view of the bot
 #define CHARACTERISTIC_FOV							 7 // int [0, 360]
 // overreaction view model etc.
-#define CHARACTERISTIC_VIEW_TYPE					 8 // int [0, 2]
+#define CHARACTERISTIC_VIEW_TYPE					 8 // float [0, 1]
 // view angle difference to angle change factor
 #define CHARACTERISTIC_VIEW_FACTOR					 9 // float [0, 1]
 // maximum view angle change
@@ -136,9 +136,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // how individually an experienced bot reacts on certain situations during battle
 #define CHARACTERISTIC_BATTLE_SENSE					49 // float [0, 1]
 // how much a bot likes to pick up items (time/range)
-#define CHARACTERISTIC_GOAL_MULTIPLIER				50 // int [1, 10000]
+#define CHARACTERISTIC_GOAL_MULTIPLIER				50 // float [0, 100]
 // what team strategy a bot prefers most by default
-#define CHARACTERISTIC_LEADER_STRATEGY				51 // int [1, 4]
+#define CHARACTERISTIC_LEADER_STRATEGY				51 // int [0, 4]
 //=====================================================================================================================================
 // CHAT
 //=====================================================================================================================================
