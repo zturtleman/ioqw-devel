@@ -1943,6 +1943,8 @@ void BotUpdateInventory(bot_state_t *bs) {
 		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
 	}
 
+	bs->inventory[BOT_IS_IN_HURRY] = (int)BotHasEmergencyGoal(bs);
+
 	BotCheckItemPickup(bs, oldinventory);
 }
 
@@ -3007,6 +3009,62 @@ float BotFeelingBad(bot_state_t *bs) {
 	}
 
 	return 0;
+}
+
+/*
+=======================================================================================================================================
+BotHasEmergencyGoal
+=======================================================================================================================================
+*/
+qboolean BotHasEmergencyGoal(bot_state_t *bs) {
+
+	switch (gametype) {
+		case GT_CTF:
+			// if the bot carries a flag and the own flag is at base
+			if (BotCTFCarryingFlag(bs)) {
+				if (BotTeam(bs) == TEAM_RED) {
+					if (bs->redflagstatus == 0) {
+						return qtrue;
+					}
+				} else {
+					if (bs->blueflagstatus == 0) {
+						return qtrue;
+					}
+				}
+			}
+			// if the bot is trying to get the flag and the own flag is NOT at base
+			if (bs->ltgtype == LTG_GETFLAG) {
+				if (BotTeam(bs) == TEAM_RED) {
+					if (bs->redflagstatus == 1) {
+						return qtrue;
+					}
+				} else {
+					if (bs->blueflagstatus == 1) {
+						return qtrue;
+					}
+				}
+			}
+
+			break;
+		case GT_1FCTF:
+			if (Bot1FCTFCarryingFlag(bs)) {
+				return qtrue;
+			}
+
+			break;
+		case GT_OBELISK:
+			break;
+		case GT_HARVESTER:
+			if (BotHarvesterCarryingCubes(bs)) {
+				return qtrue;
+			}
+
+			break;
+		default:
+			break;
+	}
+
+	return qfalse;
 }
 
 /*
