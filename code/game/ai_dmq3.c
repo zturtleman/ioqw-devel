@@ -1973,6 +1973,57 @@ void BotUpdateBattleInventory(bot_state_t *bs, int enemy) {
 
 /*
 =======================================================================================================================================
+BotNearbyGoalPickupRange_NoLTG
+
+Used to determine the range for how far the bot should check for picking up items on it's way.
+Used for AI node 'BATTLE FIGHT' and AI node 'BATTLE CHASE'.
+=======================================================================================================================================
+*/
+const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs) {
+	int range;
+
+	range = 150;
+
+	return range;
+}
+
+/*
+=======================================================================================================================================
+BotNearbyGoalPickupRange_LTG
+
+Used to determine the range for how far the bot should check for picking up items on it's way.
+Used for AI node 'SEEK LTG' and AI node 'BATTLE RETREAT'.
+=======================================================================================================================================
+*/
+const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs) {
+	int range;
+
+	if (bs->ltgtype == LTG_DEFENDKEYAREA) {
+		range = 400;
+	} else {
+		range = 150;
+	}
+
+	if (gametype == GT_CTF) {
+		// if carrying a flag the bot shouldn't be distracted too much
+		if (BotCTFCarryingFlag(bs)) {
+			range = 50;
+		}
+	} else if (gametype == GT_1FCTF) {
+		if (Bot1FCTFCarryingFlag(bs)) {
+			range = 50;
+		}
+	} else if (gametype == GT_HARVESTER) {
+		if (BotHarvesterCarryingCubes(bs)) {
+			range = 80;
+		}
+	}
+
+	return range;
+}
+
+/*
+=======================================================================================================================================
 BotWantsToUseKamikaze
 =======================================================================================================================================
 */

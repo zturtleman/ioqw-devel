@@ -2005,14 +2005,13 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	//bot_goal_t tmpgoal;
 // Tobias DEBUG
 	float checkcvar;
-
-	checkcvar = bot_checktime.value;
-// Tobias END
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
+	checkcvar = bot_checktime.value;
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "SEEK LTG: joined observer.");
 		return qfalse;
@@ -2067,32 +2066,37 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
 		// check if the bot wants to camp
 		BotWantsToCamp(bs);
-
-		if (bs->ltgtype == LTG_DEFENDKEYAREA) {
-			range = 400;
-		} else {
-			range = 150;
-		}
-
-		if (gametype == GT_CTF) {
-			// if carrying a flag the bot shouldn't be distracted too much
-			if (BotCTFCarryingFlag(bs)) {
-				range = 50;
-			}
-		} else if (gametype == GT_1FCTF) {
-			if (Bot1FCTFCarryingFlag(bs)) {
-				range = 50;
-			}
-		} else if (gametype == GT_HARVESTER) {
-			if (BotHarvesterCarryingCubes(bs)) {
-				range = 80;
-			}
-		}
-		// make sure to never go for a NBG that is further away from the bot than the LTG
-		tt_ltg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		// get the range to check for picking up nearby goal items
 // Tobias DEBUG
-		if (bot_alt_pickup.integer) {
+		if (!bot_alt_pickup.integer) {
 // Tobias END
+			if (bs->ltgtype == LTG_DEFENDKEYAREA) {
+				range = 400;
+			} else {
+				range = 150;
+			}
+
+			if (gametype == GT_CTF) {
+				// if carrying a flag the bot shouldn't be distracted too much
+				if (BotCTFCarryingFlag(bs)) {
+					range = 50;
+				}
+			} else if (gametype == GT_1FCTF) {
+				if (Bot1FCTFCarryingFlag(bs)) {
+					range = 50;
+				}
+			} else if (gametype == GT_HARVESTER) {
+				if (BotHarvesterCarryingCubes(bs)) {
+					range = 80;
+				}
+			}
+// Tobias DEBUG
+		} else {
+// Tobias END
+			range = BotNearbyGoalPickupRange_LTG(bs);
+			// make sure to never go for a NBG that is further away from the bot than the LTG
+			tt_ltg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+
 			if (tt_ltg && tt_ltg < range) {
 #ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, "AINode_Seek_LTG (%s): tt_ltg < range -> range = tt_ltg.\n", netname);
@@ -2318,8 +2322,16 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
-		range = 150;
-
+		// get the range to check for picking up nearby goal items
+// Tobias DEBUG
+		if (!bot_alt_pickup.integer) {
+// Tobias END
+			range = 150;
+// Tobias DEBUG
+		} else {
+			range = BotNearbyGoalPickupRange_NoLTG(bs);
+		}
+// Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
 			// time the bot gets to pick up the nearby goal item
@@ -2468,8 +2480,16 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
-		range = 150;
-
+		// get the range to check for picking up nearby goal items
+// Tobias DEBUG
+		if (!bot_alt_pickup.integer) {
+// Tobias END
+			range = 150;
+// Tobias DEBUG
+		} else {
+			range = BotNearbyGoalPickupRange_NoLTG(bs);
+		}
+// Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
 			// time the bot gets to pick up the nearby goal item
@@ -2662,23 +2682,31 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
-		range = 150;
+		// get the range to check for picking up nearby goal items
+// Tobias DEBUG
+		if (!bot_alt_pickup.integer) {
+// Tobias END
+			range = 150;
 
-		if (gametype == GT_CTF) {
-			// if carrying a flag the bot shouldn't be distracted too much
-			if (BotCTFCarryingFlag(bs)) {
-				range = 50;
+			if (gametype == GT_CTF) {
+				// if carrying a flag the bot shouldn't be distracted too much
+				if (BotCTFCarryingFlag(bs)) {
+					range = 50;
+				}
+			} else if (gametype == GT_1FCTF) {
+				if (Bot1FCTFCarryingFlag(bs)) {
+					range = 50;
+				}
+			} else if (gametype == GT_HARVESTER) {
+				if (BotHarvesterCarryingCubes(bs)) {
+					range = 80;
+				}
 			}
-		} else if (gametype == GT_1FCTF) {
-			if (Bot1FCTFCarryingFlag(bs)) {
-				range = 50;
-			}
-		} else if (gametype == GT_HARVESTER) {
-			if (BotHarvesterCarryingCubes(bs)) {
-				range = 80;
-			}
+// Tobias DEBUG
+		} else {
+			range = BotNearbyGoalPickupRange_LTG(bs);
 		}
-
+// Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
 			// time the bot gets to pick up the nearby goal item

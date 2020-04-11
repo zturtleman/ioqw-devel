@@ -521,7 +521,7 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		default:
 		{
 			if (!trap_BotGetTopGoal(bs->gs, &goal)) {
-				Com_sprintf(action, sizeof(action),"No Goal during %s", bs->ainodename);
+				Com_sprintf(action, sizeof(action), "No Item LTG during %s", bs->ainodename);
 			} else {
 				trap_BotGoalName(goal.number, goalname, sizeof(goalname));
 				Com_sprintf(action, sizeof(action), "Roaming %s", goalname);

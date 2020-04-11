@@ -40,6 +40,10 @@ void BotUpdateInventory(bot_state_t *bs);
 void BotUpdateBattleInventory(bot_state_t *bs, int enemy);
 // use holdable items during battle
 void BotBattleUseItems(bot_state_t *bs);
+// get the range for picking up items when the bot is involved in fighting
+const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs);
+// get the range for picking up items when the bot is going for his long term goal
+const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs);
 // return true if the bot is dead
 qboolean BotIsDead(bot_state_t *bs);
 // returns true if the bot is in observer mode
