@@ -3054,7 +3054,31 @@ Used for AI node 'SEEK LTG' and AI node 'BATTLE RETREAT'.
 */
 const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs) {
 	int range;
+// Tobias DEBUG
+#ifdef DEBUG
+	float nbg_multiplier;
+	char buf1[MAX_INFO_STRING];
+	char action[MAX_MESSAGE_SIZE];
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+
+	nbg_multiplier = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_GOAL_MULTIPLIER, 0, 100);
+
+	if (nbg_multiplier == 0.0) {
+		range = 150;
+		// RETREAT is drawn in YELLOW
+		if (bs->ainode == AINode_Battle_Retreat) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Range = %i.\n", netname, (int)range);
+		// SEEK LTG is drawn in GREEN
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Range = %i.\n", netname, (int)range);
+		}
+
+		return range;
+	}
+#endif
+// Tobias END
 	if (bs->ltgtype == LTG_DEFENDKEYAREA) {
 		range = 400;
 	} else {
@@ -3064,7 +3088,39 @@ const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs) {
 	if (BotHasEmergencyGoal(bs)) {
 		range = 50;
 	}
+// Tobias DEBUG
+#ifdef DEBUG
+// RETREAT is drawn in YELLOW
+	if (bs->ainode == AINode_Battle_Retreat) {
+		if (bot_report.integer) {
+			trap_GetConfigstring(CS_BOTINFO + bs->client, buf1, sizeof(buf1));
+			Q_strncpyz(action, Info_ValueForKey(buf1, "a"), sizeof(action));
 
+			if (!*buf1) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Range = %i.\n", netname, range);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: %s Range = %i.\n", netname, action, range);
+			}
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Range = %i.\n", netname, range);
+		}
+	// SEEK LTG is drawn in GREEN
+	} else {
+		if (bot_report.integer) {
+			trap_GetConfigstring(CS_BOTINFO + bs->client, buf1, sizeof(buf1));
+			Q_strncpyz(action, Info_ValueForKey(buf1, "a"), sizeof(action));
+
+			if (!*buf1) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Range = %i.\n", netname, range);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: %s Range = %i.\n", netname, action, range);
+			}
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Range = %i.\n", netname, range);
+		}
+	}
+#endif
+// Tobias END
 	return range;
 }
 
