@@ -203,8 +203,8 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	if (BotGoForAir(bs, tfl, ltg, 10)) {
 		return qtrue;
 	}
-	// if the bot is carrying a flag or cubes
-	if (BotHasEmergencyGoal(bs)) {
+	// if doing something important the bot shouldn't be distracted too much
+	if (BotOnlyPickupImportantItems(bs)) {
 		// if the bot is just a few secs away from team goal area number
 		if (trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, bs->teamgoal.areanum, TFL_DEFAULT) < 300) { // Tobias NOTE: this is wrong, and it was always wrong, teamgoal.areanum is NOT always a base!
 			// make the range really small

@@ -80,8 +80,8 @@ void BotTeamGoals(bot_state_t *bs, int retreat);
 const int BotAggression(bot_state_t *bs);
 // returns how bad the bot feels
 float BotFeelingBad(bot_state_t *bs);
-// returns true if the bot is in hurry
-qboolean BotHasEmergencyGoal(bot_state_t *bs);
+// returns true if the bot is in hurry and should only pick up useful items
+qboolean BotOnlyPickupImportantItems(bot_state_t *bs);
 // returns true if the bot wants to retreat
 const int BotWantsToRetreat(bot_state_t *bs);
 // returns true if the bot wants to chase

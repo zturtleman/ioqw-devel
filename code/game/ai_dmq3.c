@@ -1943,7 +1943,7 @@ void BotUpdateInventory(bot_state_t *bs) {
 		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
 	}
 
-	bs->inventory[BOT_IS_IN_HURRY] = (int)BotHasEmergencyGoal(bs);
+	bs->inventory[BOT_IS_IN_HURRY] = BotOnlyPickupImportantItems(bs);
 
 	BotCheckItemPickup(bs, oldinventory);
 }
@@ -3014,9 +3014,19 @@ float BotFeelingBad(bot_state_t *bs) {
 /*
 =======================================================================================================================================
 BotHasEmergencyGoal
+
+The bot is in hurry sometimes, he shouldn't pick up every single item on it's way.
+
+1.DONE: If the bot carries the enmemy CTF flag and the own flag is at base.
+1.DONE: If the bot is trying to get the enemy CTF flag and the own flag is NOT at base.
+3.DONE: If the bot carries the 1CTF flag.
+4.DONE: If the bot carries cubes.
+
+TODO: If the bot is rushing the enemy base and the bot isn't in the fov of an enemy (or no enemy at their home base).
+TODO: If the enemy obelsik (GT_OBELISK) is seriously damaged and will explode very likely.
 =======================================================================================================================================
 */
-qboolean BotHasEmergencyGoal(bot_state_t *bs) {
+static qboolean BotHasEmergencyGoal(bot_state_t *bs) {
 
 	switch (gametype) {
 		case GT_CTF:
@@ -3047,6 +3057,7 @@ qboolean BotHasEmergencyGoal(bot_state_t *bs) {
 
 			break;
 		case GT_1FCTF:
+			// if the bot carries the flag
 			if (Bot1FCTFCarryingFlag(bs)) {
 				return qtrue;
 			}
@@ -3055,6 +3066,7 @@ qboolean BotHasEmergencyGoal(bot_state_t *bs) {
 		case GT_OBELISK:
 			break;
 		case GT_HARVESTER:
+			// if the bot carries cubes
 			if (BotHarvesterCarryingCubes(bs)) {
 				return qtrue;
 			}
@@ -3062,6 +3074,32 @@ qboolean BotHasEmergencyGoal(bot_state_t *bs) {
 			break;
 		default:
 			break;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
+BotOnlyPickupImportantItems
+
+Only pick up items that are really needed (health items if low on health, useful ammo etc.). The goal is to not waste time by picking
+up 'useless' items (bots will not collect ammo for weapons they don't own etc). This will attract bots to move faster to their own base
+if they are carrying a flag. They will also less likely lose line of sight when chasing an enemy.
+In those cases the bot will only pick up items that are useful and he will only pick up those items if they are in a closer range.
+
+1.DONE: If the bot is carrying a flag or cubes and should rush to base as fast as possible (CHECK TODO's).
+
+TODO: If the bot needs air.
+TODO: If chasing the enemy and view will be lost when going for NBGs.
+TODO: Only if healthy enough, and at least some good weapon with ammo (per gametype?).
+=======================================================================================================================================
+*/
+qboolean BotOnlyPickupImportantItems(bot_state_t *bs) {
+
+	// if the bot is carrying a flag or cubes and should rush to base as fast as possible
+	if (BotHasEmergencyGoal(bs)) {
+		return qtrue;
 	}
 
 	return qfalse;
