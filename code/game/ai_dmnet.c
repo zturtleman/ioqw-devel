@@ -189,31 +189,46 @@ BotNearbyGoal
 */
 const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	int ret;
+// Tobias DEBUG
+#ifdef DEBUG
+	bot_goal_t goal;
+	int tt_nbg;
+	char netname[MAX_NETNAME];
+	char buf[128];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
+// Tobias END
 	// check if the bot should go for air
 	if (BotGoForAir(bs, tfl, ltg, 10)) {
 		return qtrue;
 	}
 	// if the bot is carrying a flag or cubes
-	if (BotCTFCarryingFlag(bs) || Bot1FCTFCarryingFlag(bs) || BotHarvesterCarryingCubes(bs)) {
+	if (BotHasEmergencyGoal(bs)) {
 		// if the bot is just a few secs away from the base
 		if (trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, bs->teamgoal.areanum, TFL_DEFAULT) < 300) {
 			// make the range really small
-			range = 50;
+			range *= 0.1;
 		}
 	}
 
 	ret = trap_BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range);
-	/*
+// Tobias DEBUG
+#ifdef DEBUG
 	if (ret) {
-		char buf[128];
-
+		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, bs->teamgoal.areanum, TFL_DEFAULT);
 		// get the goal at the top of the stack
 		trap_BotGetTopGoal(bs->gs, &goal);
 		trap_BotGoalName(goal.number, buf, sizeof(buf));
-		BotAI_Print(PRT_MESSAGE, "%1.1f: new nearby goal %s\n", FloatTime(), buf);
+
+		if (tt_nbg && tt_nbg < 300) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%1.1f: (%s) NBG (%s) Traveltime: %i Range: %i.\n", FloatTime(), netname, buf, tt_nbg, range);
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%1.1f: (%s) NBG (%s) Traveltime: %i Range: %i.\n", FloatTime(), netname, buf, tt_nbg, range);
+		}
 	}
-	*/
+#endif
+// Tobias END
 	return ret;
 }
 
