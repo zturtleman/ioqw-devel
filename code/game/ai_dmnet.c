@@ -205,10 +205,10 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	}
 	// if the bot is carrying a flag or cubes
 	if (BotHasEmergencyGoal(bs)) {
-		// if the bot is just a few secs away from the base
-		if (trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, bs->teamgoal.areanum, TFL_DEFAULT) < 300) {
+		// if the bot is just a few secs away from team goal area number
+		if (trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, bs->teamgoal.areanum, TFL_DEFAULT) < 300) { // Tobias NOTE: this is wrong, and it was always wrong, teamgoal.areanum is NOT always a base!
 			// make the range really small
-			range *= 0.1;
+			range = 10;
 		}
 	}
 
@@ -220,12 +220,7 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 		// get the goal at the top of the stack
 		trap_BotGetTopGoal(bs->gs, &goal);
 		trap_BotGoalName(goal.number, buf, sizeof(buf));
-
-		if (tt_nbg && tt_nbg < 300) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%1.1f: (%s) NBG (%s) Traveltime: %i Range: %i.\n", FloatTime(), netname, buf, tt_nbg, range);
-		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%1.1f: (%s) NBG (%s) Traveltime: %i Range: %i.\n", FloatTime(), netname, buf, tt_nbg, range);
-		}
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%1.1f: (%s) NBG (%s) Traveltime: %i Range: %i.\n", FloatTime(), netname, buf, tt_nbg, range);
 	}
 #endif
 // Tobias END
@@ -2021,6 +2016,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 // Tobias DEBUG
 	float checkcvar;
 #ifdef DEBUG
+	int tt_nbg;
 	char netname[MAX_NETNAME];
 
 	ClientName(bs->client, netname, sizeof(netname));
@@ -2084,7 +2080,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		// get the range to check for picking up nearby goal items
 // Tobias DEBUG
 		if (!bot_alt_pickup.integer) {
-// Tobias END
 			if (bs->ltgtype == LTG_DEFENDKEYAREA) {
 				range = 400;
 			} else {
@@ -2105,7 +2100,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 					range = 80;
 				}
 			}
-// Tobias DEBUG
 		} else {
 // Tobias END
 			range = BotNearbyGoalPickupRange_LTG(bs);
@@ -2120,6 +2114,10 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 			}
 // Tobias DEBUG
 		}
+#ifdef DEBUG
+		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+#endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
@@ -2236,7 +2234,12 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 // Tobias DEBUG
 	float checkcvar;
+#ifdef DEBUG
+	int tt_nbg;
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	checkcvar = bot_checktime.value;
 // Tobias END
 	if (BotIsObserver(bs)) {
@@ -2346,6 +2349,10 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		} else {
 			range = BotNearbyGoalPickupRange_NoLTG(bs);
 		}
+#ifdef DEBUG
+		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: NBG Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+#endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
@@ -2414,7 +2421,12 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	int range;
 // Tobias DEBUG
 	float checkcvar;
+#ifdef DEBUG
+	int tt_nbg;
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	checkcvar = bot_checktime.value;
 // Tobias END
 	if (BotIsObserver(bs)) {
@@ -2504,6 +2516,10 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		} else {
 			range = BotNearbyGoalPickupRange_NoLTG(bs);
 		}
+#ifdef DEBUG
+		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+#endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
@@ -2591,7 +2607,12 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	int areanum, range;
 // Tobias DEBUG
 	float checkcvar;
+#ifdef DEBUG
+	int tt_nbg;
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	checkcvar = bot_checktime.value;
 // Tobias END
 	if (BotIsObserver(bs)) {
@@ -2700,7 +2721,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		// get the range to check for picking up nearby goal items
 // Tobias DEBUG
 		if (!bot_alt_pickup.integer) {
-// Tobias END
 			range = 150;
 
 			if (gametype == GT_CTF) {
@@ -2717,10 +2737,15 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 					range = 80;
 				}
 			}
-// Tobias DEBUG
 		} else {
+// Tobias END
 			range = BotNearbyGoalPickupRange_LTG(bs);
+// Tobias DEBUG
 		}
+#ifdef DEBUG
+		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+#endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
 			trap_BotResetLastAvoidReach(bs->ms);
