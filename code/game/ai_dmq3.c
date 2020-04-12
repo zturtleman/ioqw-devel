@@ -3088,15 +3088,26 @@ up 'useless' items (bots will not collect ammo for weapons they don't own etc). 
 if they are carrying a flag. They will also less likely lose line of sight when chasing an enemy.
 In those cases the bot will only pick up items that are useful and he will only pick up those items if they are in a closer range.
 
-1.DONE: If the bot is carrying a flag or cubes and should rush to base as fast as possible (CHECK TODO's).
+1.DONE: If the bot is standing in lava or slime.
+2.DONE: If the bot needs air.
+3.DONE: If the bot is carrying a flag or cubes and should rush to base as fast as possible (CHECK TODO's).
 
-TODO: If the bot needs air.
 TODO: If chasing the enemy and view will be lost when going for NBGs.
 TODO: Only if healthy enough, and at least some good weapon with ammo (per gametype?).
 =======================================================================================================================================
 */
 qboolean BotOnlyPickupImportantItems(bot_state_t *bs) {
 
+	// when standing in lava or slime, get out of this hell
+	if (BotInLavaOrSlime(bs)) {
+		return qtrue;
+	}
+	// if the bot needs air
+	if (trap_AAS_PointContents(bs->eye) & CONTENTS_WATER) {
+		if (bs->lastair_time < FloatTime() - 15) {
+			return qtrue;
+		}
+	}
 	// if the bot is carrying a flag or cubes and should rush to base as fast as possible
 	if (BotHasEmergencyGoal(bs)) {
 		return qtrue;

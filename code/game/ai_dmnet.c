@@ -211,7 +211,11 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 			range = 10;
 		}
 	}
-
+// Tobias DEBUG
+#ifdef DEBUG
+	BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Range: %i.\n", netname, range);
+#endif
+// Tobias END
 	ret = trap_BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range);
 // Tobias DEBUG
 #ifdef DEBUG
