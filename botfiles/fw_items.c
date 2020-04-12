@@ -64,7 +64,42 @@ weight "item_health_small"
 		{
 			switch (INVENTORY_HEALTH)
 			{
-				case 10: return HEALTH_SCALE(40);
+				case 10: return HEALTH_SCALE(60);
+				case 20: return HEALTH_SCALE(40);
+				case 30: return HEALTH_SCALE(20);
+				case 40: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
+	}
+}
+
+weight "item_health"
+{
+	switch (BOT_IS_IN_HURRY)
+	{
+		case 1:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(90);
+				case 20: return HEALTH_SCALE(90);
+				case 30: return HEALTH_SCALE(90);
+				case 40: return HEALTH_SCALE(90);
+				case 50: return HEALTH_SCALE(80);
+				case 60: return HEALTH_SCALE(80);
+				case 70: return HEALTH_SCALE(60);
+				case 80: return HEALTH_SCALE(60);
+				case 90: return HEALTH_SCALE(50);
+				case 100: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(60);
 				case 20: return HEALTH_SCALE(40);
 				case 30: return HEALTH_SCALE(40);
 				case 40: return HEALTH_SCALE(20);
@@ -76,57 +111,77 @@ weight "item_health_small"
 	}
 }
 
-weight "item_health"
-{
-	switch (INVENTORY_HEALTH)
-	{
-		case 10: return HEALTH_SCALE(90);
-		case 20: return HEALTH_SCALE(90);
-		case 30: return HEALTH_SCALE(90);
-		case 40: return HEALTH_SCALE(90);
-		case 50: return HEALTH_SCALE(80);
-		case 60: return HEALTH_SCALE(80);
-		case 70: return HEALTH_SCALE(60);
-		case 80: return HEALTH_SCALE(60);
-		case 90: return HEALTH_SCALE(50);
-		case 100: return HEALTH_SCALE(0);
-		default: return 0;
-	}
-}
-
 weight "item_health_large"
 {
-	switch (INVENTORY_HEALTH)
+	switch (BOT_IS_IN_HURRY)
 	{
-		case 10: return HEALTH_SCALE(100);
-		case 20: return HEALTH_SCALE(100);
-		case 30: return HEALTH_SCALE(100);
-		case 40: return HEALTH_SCALE(100);
-		case 50: return HEALTH_SCALE(90);
-		case 60: return HEALTH_SCALE(90);
-		case 70: return HEALTH_SCALE(80);
-		case 80: return HEALTH_SCALE(80);
-		case 90: return HEALTH_SCALE(50);
-		case 100: return HEALTH_SCALE(0);
-		default: return 0;
+		case 1:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(100);
+				case 20: return HEALTH_SCALE(100);
+				case 30: return HEALTH_SCALE(100);
+				case 40: return HEALTH_SCALE(100);
+				case 50: return HEALTH_SCALE(90);
+				case 60: return HEALTH_SCALE(90);
+				case 70: return HEALTH_SCALE(80);
+				case 80: return HEALTH_SCALE(80);
+				case 90: return HEALTH_SCALE(50);
+				case 100: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(80);
+				case 20: return HEALTH_SCALE(60);
+				case 30: return HEALTH_SCALE(40);
+				case 40: return HEALTH_SCALE(20);
+				case 50: return HEALTH_SCALE(20);
+				case 60: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
 	}
 }
 
 weight "item_health_mega"
 {
-	switch (INVENTORY_HEALTH)
+	switch (BOT_IS_IN_HURRY)
 	{
-		case 10: return HEALTH_SCALE(110);
-		case 20: return HEALTH_SCALE(110);
-		case 30: return HEALTH_SCALE(110);
-		case 40: return HEALTH_SCALE(110);
-		case 50: return HEALTH_SCALE(100);
-		case 60: return HEALTH_SCALE(100);
-		case 70: return HEALTH_SCALE(90);
-		case 80: return HEALTH_SCALE(90);
-		case 90: return HEALTH_SCALE(80);
-		case 100: return HEALTH_SCALE(0);
-		default: return 0;
+		case 1:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(110);
+				case 20: return HEALTH_SCALE(110);
+				case 30: return HEALTH_SCALE(110);
+				case 40: return HEALTH_SCALE(110);
+				case 50: return HEALTH_SCALE(100);
+				case 60: return HEALTH_SCALE(100);
+				case 70: return HEALTH_SCALE(90);
+				case 80: return HEALTH_SCALE(90);
+				case 90: return HEALTH_SCALE(80);
+				case 100: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_HEALTH)
+			{
+				case 10: return HEALTH_SCALE(80);
+				case 20: return HEALTH_SCALE(80);
+				case 30: return HEALTH_SCALE(60);
+				case 40: return HEALTH_SCALE(40);
+				case 50: return HEALTH_SCALE(20);
+				case 60: return HEALTH_SCALE(0);
+				default: return 0;
+			}
+		}
 	}
 }
 
@@ -170,85 +225,152 @@ weight "item_armor_shard"
 
 weight "item_armor_combat"
 {
-	switch (INVENTORY_ARMOR)
+	switch (BOT_IS_IN_HURRY)
 	{
-		case 10: return ARMOR_SCALE(60);
-		case 20: return ARMOR_SCALE(60);
-		case 30: return ARMOR_SCALE(60);
-		case 40: return ARMOR_SCALE(60);
-		case 50: return ARMOR_SCALE(60);
-		case 60: return ARMOR_SCALE(50);
-		case 70: return ARMOR_SCALE(50);
-		case 80: return ARMOR_SCALE(50);
-		case 90: return ARMOR_SCALE(50);
-		case 100: return ARMOR_SCALE(50);
-		case 110: return ARMOR_SCALE(40);
-		case 120: return ARMOR_SCALE(40);
-		case 130: return ARMOR_SCALE(40);
-		case 140: return ARMOR_SCALE(40);
-		case 150: return ARMOR_SCALE(40);
-		case 160: return ARMOR_SCALE(40);
-		case 170: return ARMOR_SCALE(40);
-		case 180: return ARMOR_SCALE(40);
-		case 190: return ARMOR_SCALE(40);
-		case 200: return ARMOR_SCALE(40);
-		default: return ARMOR_SCALE(1);
+		case 1:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(60);
+				case 20: return ARMOR_SCALE(60);
+				case 30: return ARMOR_SCALE(60);
+				case 40: return ARMOR_SCALE(60);
+				case 50: return ARMOR_SCALE(60);
+				case 60: return ARMOR_SCALE(50);
+				case 70: return ARMOR_SCALE(50);
+				case 80: return ARMOR_SCALE(50);
+				case 90: return ARMOR_SCALE(50);
+				case 100: return ARMOR_SCALE(50);
+				case 110: return ARMOR_SCALE(40);
+				case 120: return ARMOR_SCALE(40);
+				case 130: return ARMOR_SCALE(40);
+				case 140: return ARMOR_SCALE(40);
+				case 150: return ARMOR_SCALE(40);
+				case 160: return ARMOR_SCALE(20);
+				case 170: return ARMOR_SCALE(20);
+				case 180: return ARMOR_SCALE(20);
+				case 190: return ARMOR_SCALE(20);
+				case 200: return ARMOR_SCALE(20);
+				default: return ARMOR_SCALE(1);
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(60);
+				case 20: return ARMOR_SCALE(40);
+				case 30: return ARMOR_SCALE(40);
+				case 40: return ARMOR_SCALE(20);
+				case 50: return ARMOR_SCALE(20);
+				case 60: return ARMOR_SCALE(0);
+				default: return 0;
+			}
+		}
 	}
 }
 
 weight "item_armor_body"
 {
-	switch (INVENTORY_ARMOR)
+	switch (BOT_IS_IN_HURRY)
 	{
-		case 10: return ARMOR_SCALE(90);
-		case 20: return ARMOR_SCALE(90);
-		case 30: return ARMOR_SCALE(90);
-		case 40: return ARMOR_SCALE(90);
-		case 50: return ARMOR_SCALE(90);
-		case 60: return ARMOR_SCALE(50);
-		case 70: return ARMOR_SCALE(50);
-		case 80: return ARMOR_SCALE(50);
-		case 90: return ARMOR_SCALE(50);
-		case 100: return ARMOR_SCALE(50);
-		case 110: return ARMOR_SCALE(20);
-		case 120: return ARMOR_SCALE(20);
-		case 130: return ARMOR_SCALE(20);
-		case 140: return ARMOR_SCALE(20);
-		case 150: return ARMOR_SCALE(20);
-		case 160: return ARMOR_SCALE(20);
-		case 170: return ARMOR_SCALE(20);
-		case 180: return ARMOR_SCALE(20);
-		case 190: return ARMOR_SCALE(20);
-		case 200: return ARMOR_SCALE(20);
-		default: return ARMOR_SCALE(1);
+		case 1:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(90);
+				case 20: return ARMOR_SCALE(90);
+				case 30: return ARMOR_SCALE(90);
+				case 40: return ARMOR_SCALE(90);
+				case 50: return ARMOR_SCALE(90);
+				case 60: return ARMOR_SCALE(60);
+				case 70: return ARMOR_SCALE(60);
+				case 80: return ARMOR_SCALE(60);
+				case 90: return ARMOR_SCALE(60);
+				case 100: return ARMOR_SCALE(60);
+				case 110: return ARMOR_SCALE(50);
+				case 120: return ARMOR_SCALE(50);
+				case 130: return ARMOR_SCALE(50);
+				case 140: return ARMOR_SCALE(50);
+				case 150: return ARMOR_SCALE(50);
+				case 160: return ARMOR_SCALE(20);
+				case 170: return ARMOR_SCALE(20);
+				case 180: return ARMOR_SCALE(20);
+				case 190: return ARMOR_SCALE(20);
+				case 200: return ARMOR_SCALE(20);
+				default: return ARMOR_SCALE(1);
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(60);
+				case 20: return ARMOR_SCALE(40);
+				case 30: return ARMOR_SCALE(40);
+				case 40: return ARMOR_SCALE(20);
+				case 50: return ARMOR_SCALE(20);
+				case 60: return ARMOR_SCALE(10);
+				case 70: return ARMOR_SCALE(10);
+				case 80: return ARMOR_SCALE(10);
+				case 90: return ARMOR_SCALE(10);
+				case 100: return ARMOR_SCALE(10);
+				case 110: return ARMOR_SCALE(0);
+				default: return 0;
+			}
+		}
 	}
 }
 
 weight "item_armor_full"
 {
-	switch (INVENTORY_ARMOR)
+	switch (BOT_IS_IN_HURRY)
 	{
-		case 10: return ARMOR_SCALE(100);
-		case 20: return ARMOR_SCALE(100);
-		case 30: return ARMOR_SCALE(100);
-		case 40: return ARMOR_SCALE(100);
-		case 50: return ARMOR_SCALE(100);
-		case 60: return ARMOR_SCALE(70);
-		case 70: return ARMOR_SCALE(70);
-		case 80: return ARMOR_SCALE(70);
-		case 90: return ARMOR_SCALE(70);
-		case 100: return ARMOR_SCALE(70);
-		case 110: return ARMOR_SCALE(30);
-		case 120: return ARMOR_SCALE(30);
-		case 130: return ARMOR_SCALE(30);
-		case 140: return ARMOR_SCALE(30);
-		case 150: return ARMOR_SCALE(30);
-		case 160: return ARMOR_SCALE(30);
-		case 170: return ARMOR_SCALE(30);
-		case 180: return ARMOR_SCALE(30);
-		case 190: return ARMOR_SCALE(30);
-		case 200: return ARMOR_SCALE(30);
-		default: return ARMOR_SCALE(1);
+		case 1:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(100);
+				case 20: return ARMOR_SCALE(100);
+				case 30: return ARMOR_SCALE(100);
+				case 40: return ARMOR_SCALE(100);
+				case 50: return ARMOR_SCALE(100);
+				case 60: return ARMOR_SCALE(80);
+				case 70: return ARMOR_SCALE(80);
+				case 80: return ARMOR_SCALE(80);
+				case 90: return ARMOR_SCALE(80);
+				case 100: return ARMOR_SCALE(50);
+				case 110: return ARMOR_SCALE(50);
+				case 120: return ARMOR_SCALE(50);
+				case 130: return ARMOR_SCALE(50);
+				case 140: return ARMOR_SCALE(50);
+				case 150: return ARMOR_SCALE(50);
+				case 160: return ARMOR_SCALE(20);
+				case 170: return ARMOR_SCALE(20);
+				case 180: return ARMOR_SCALE(20);
+				case 190: return ARMOR_SCALE(20);
+				case 200: return ARMOR_SCALE(20);
+				default: return ARMOR_SCALE(1);
+			}
+		}
+		default:
+		{
+			switch (INVENTORY_ARMOR)
+			{
+				case 10: return ARMOR_SCALE(80);
+				case 20: return ARMOR_SCALE(60);
+				case 30: return ARMOR_SCALE(40);
+				case 40: return ARMOR_SCALE(20);
+				case 50: return ARMOR_SCALE(20);
+				case 60: return ARMOR_SCALE(10);
+				case 70: return ARMOR_SCALE(10);
+				case 80: return ARMOR_SCALE(10);
+				case 90: return ARMOR_SCALE(10);
+				case 100: return ARMOR_SCALE(10);
+				case 110: return ARMOR_SCALE(0);
+				default: return 0;
+			}
+		}
 	}
 }
 
