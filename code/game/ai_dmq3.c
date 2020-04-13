@@ -3032,31 +3032,193 @@ static qboolean BotHasEmergencyGoal(bot_state_t *bs) {
 =======================================================================================================================================
 BotNearbyGoalPickupRange_NoLTG
 
-Used to determine the range for how far the bot should check for picking up items on it's way.
+Used to determine the range for how far the bot should check for picking up items.
 Used for AI node 'BATTLE FIGHT' and AI node 'BATTLE CHASE'.
 =======================================================================================================================================
 */
 const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs) {
+	float selfpreservation, nbg_multiplier;
 	int range;
+	aas_entityinfo_t entinfo;
+	vec3_t dir, angles;
+// Tobias DEBUG
+#ifdef DEBUG
+	char buf1[MAX_INFO_STRING];
+	char action[MAX_MESSAGE_SIZE];
+	char netname[MAX_NETNAME];
 
-	range = 150;
+	ClientName(bs->client, netname, sizeof(netname));
 
-	return range;
+	nbg_multiplier = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_GOAL_MULTIPLIER, 0, 100);
+
+	if (nbg_multiplier == 0.0) {
+		range = 150;
+		// FIGHT is drawn in RED
+		if (bs->ainode == AINode_Battle_Fight) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Range = %i.\n", netname, range);
+		// CHASE is drawn in CYAN
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Range = %i.\n", netname, range);
+		}
+
+		return range;
+	}
+#endif
+// Tobias END
+	selfpreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_SELFPRESERVATION, 0, 1);
+	nbg_multiplier = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_GOAL_MULTIPLIER, 0, 100);
+	// default range
+	range = 100;
+	// current enemy
+	if (bs->enemy >= 0) {
+		// get the entity information
+		BotEntityInfo(bs->enemy, &entinfo);
+		// if the entity information is valid
+		if (entinfo.valid) {
+			// if the bot is using the gauntlet
+			if (bs->weaponnum == WP_GAUNTLET) {
+				// if the enemy is near enough, check if we can attack the enemy from behind
+				if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
+					VectorSubtract(bs->origin, entinfo.origin, dir);
+					VectorToAngles(dir, angles);
+					// if not in the enemy's field of vision, attack!
+					if (!InFieldOfVision(entinfo.angles, 180, angles)) {
+// Tobias DEBUG
+#ifdef DEBUG
+						BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: BACKSTABBING! Range = %i.\n", netname, range);
+#endif
+// Tobias END
+						return 10;
+					}
+				}
+			}
+			// if the bot is out for revenge
+			if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+				range -= 20;
+			}
+		}
+	}
+	// if the bot is using the gauntlet
+	if (bs->weaponnum == WP_GAUNTLET) {
+		return 300;
+	}
+	// if the bot has the quad damage powerup
+	if (bs->inventory[INVENTORY_QUAD]) {
+		range -= 50;
+	}
+	// if the bot has the invisibility powerup
+	if (bs->inventory[INVENTORY_INVISIBILITY]) {
+		range -= 50;
+	}
+	// if the bot has the doubler powerup
+	if (bs->inventory[INVENTORY_DOUBLER]) {
+		range -= 50;
+	}
+	// if the bot has the scout powerup
+	if (bs->inventory[INVENTORY_SCOUT]) {
+		range += 50;
+	}
+	// if the bot can use the machine gun
+	if (bs->inventory[INVENTORY_MACHINEGUN] > 0 && bs->inventory[INVENTORY_BULLETS] > 40) {
+		range -= 10;
+	}
+	// if the bot can use the chain gun
+	if (bs->inventory[INVENTORY_CHAINGUN] > 0 && bs->inventory[INVENTORY_BELT] > 50) {
+		range -= 50;
+	}
+		// if the bot can use the shot gun
+	if (bs->inventory[INVENTORY_SHOTGUN] > 0 && bs->inventory[INVENTORY_SHELLS] > 5) {
+		range -= 10;
+	}
+	// if the bot can use the nail gun
+	if (bs->inventory[INVENTORY_NAILGUN] > 0 && bs->inventory[INVENTORY_NAILS] > 5) {
+		range -= 10;
+	}
+	// if the bot can use the rocket launcher
+	if (bs->inventory[INVENTORY_ROCKETLAUNCHER] > 0 && bs->inventory[INVENTORY_ROCKETS] > 5) {
+		range -= 10;
+	}
+	// if the bot can use the beam gun
+	if (bs->inventory[INVENTORY_BEAMGUN] > 0 && bs->inventory[INVENTORY_BEAMGUN_AMMO] > 50) {
+		range -= 10;
+	}
+	// if the bot can use the railgun
+	if (bs->inventory[INVENTORY_RAILGUN] > 0 && bs->inventory[INVENTORY_SLUGS] > 3) {
+		range -= 50;
+	}
+	// if the bot can use the plasma gun
+	if (bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 40) {
+		range -= 10;
+	}
+	// if the bot can use the bfg
+	if (bs->inventory[INVENTORY_BFG10K] > 0 && bs->inventory[INVENTORY_BFG_AMMO] > 5) {
+		range -= 10;
+	}
+	// if the bot is low on health
+	if (selfpreservation < 0.9) {
+		range -= bs->inventory[INVENTORY_HEALTH];
+	}
+	// if the bot accompanies someone
+	if (bs->ltgtype == LTG_TEAMACCOMPANY && !BotTeamFlagCarrierVisible(bs)) {
+		range *= 4;
+		// if the team mate isn't visible for quite some time
+		if (bs->teammatevisible_time < FloatTime() - 5) {
+			range *= 0.25;
+		}
+	}
+
+	range *= nbg_multiplier;
+	// just for safety sake
+	if (range < 10) {
+		range = 10;
+	}
+// Tobias DEBUG
+#ifdef DEBUG
+	// FIGHT is drawn in RED
+	if (bs->ainode == AINode_Battle_Fight) {
+		if (bot_report.integer) {
+			trap_GetConfigstring(CS_BOTINFO + bs->client, buf1, sizeof(buf1));
+			Q_strncpyz(action, Info_ValueForKey(buf1, "a"), sizeof(action));
+
+			if (!*buf1) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Range = %i.\n", netname, range);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: %s Range = %i.\n", netname, action, range);
+			}
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Range = %i.\n", netname, range);
+		}
+	// CHASE is drawn in CYAN
+	} else {
+		if (bot_report.integer) {
+			trap_GetConfigstring(CS_BOTINFO + bs->client, buf1, sizeof(buf1));
+			Q_strncpyz(action, Info_ValueForKey(buf1, "a"), sizeof(action));
+
+			if (!*buf1) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Range = %i.\n", netname, range);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: %s Range = %i.\n", netname, action, range);
+			}
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Range = %i.\n", netname, range);
+		}
+	}
+#endif
+// Tobias END
+	return (int)range;
 }
 
 /*
 =======================================================================================================================================
 BotNearbyGoalPickupRange_LTG
 
-Used to determine the range for how far the bot should check for picking up items on it's way.
+Used to determine the range for how far the bot should check for picking up items.
 Used for AI node 'SEEK LTG' and AI node 'BATTLE RETREAT'.
 =======================================================================================================================================
 */
 const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs) {
 	float selfpreservation, nbg_multiplier;
 	int range;
-	aas_entityinfo_t entinfo;
-	vec3_t dir, angles;
 // Tobias DEBUG
 #ifdef DEBUG
 	char buf1[MAX_INFO_STRING];
@@ -3093,35 +3255,6 @@ const int BotNearbyGoalPickupRange_LTG(bot_state_t *bs) {
 		range = 200;
 	}
 	// Tobias END
-	// current enemy
-	if (bs->enemy >= 0) {
-		// get the entity information
-		BotEntityInfo(bs->enemy, &entinfo);
-		// if the entity information is valid
-		if (entinfo.valid) {
-			// if the bot is using the gauntlet
-			if (bs->weaponnum == WP_GAUNTLET) {
-				// if the enemy is near enough, check if we can attack the enemy from behind
-				if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-					VectorSubtract(bs->origin, entinfo.origin, dir);
-					VectorToAngles(dir, angles);
-					// if not in the enemy's field of vision, attack!
-					if (!InFieldOfVision(entinfo.angles, 180, angles)) {
-// Tobias DEBUG
-#ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: BACKSTABBING! Range = %i.\n", netname, range);
-#endif
-// Tobias END
-						return 10;
-					}
-				}
-			}
-			// if the bot is out for revenge
-			if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
-				range -= 20;
-			}
-		}
-	}
 	// if the bot is using the gauntlet
 	if (bs->weaponnum == WP_GAUNTLET) {
 		return 300;
