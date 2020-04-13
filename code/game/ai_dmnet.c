@@ -1604,6 +1604,117 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 
 /*
 =======================================================================================================================================
+AIEnter_Wait
+=======================================================================================================================================
+*/
+void AIEnter_Wait(bot_state_t *bs, char *s) {
+	bot_goal_t goal;
+	char buf[144];
+
+	if (trap_BotGetTopGoal(bs->gs, &goal)) {
+		trap_BotGoalName(goal.number, buf, 144);
+		BotRecordNodeSwitch(bs, S_COLOR_BLUE "WAIT", buf, s);
+	} else {
+		BotRecordNodeSwitch(bs, S_COLOR_BLUE "WAIT", "No goal", s);
+	}
+
+	bs->wait_time = FloatTime(); // Tobias NOTE: setting the wait time here?
+	bs->ainode = AINode_Wait;
+}
+
+/*
+=======================================================================================================================================
+AINode_Wait
+=======================================================================================================================================
+*/
+int AINode_Wait(bot_state_t *bs) {
+	bot_goal_t goal;
+	vec3_t target, dir;
+	bot_moveresult_t moveresult;
+
+	if (BotIsObserver(bs)) {
+		AIEnter_Observer(bs, "WAIT: joined observer.");
+		return qfalse;
+	}
+	// if in the intermission
+	if (BotIntermission(bs)) {
+		AIEnter_Intermission(bs, "WAIT: joined intermission.");
+		return qfalse;
+	}
+	// respawn if dead
+	if (BotIsDead(bs)) {
+		AIEnter_Respawn(bs, "WAIT: bot dead.");
+		return qfalse;
+	}
+	// if in lava or slime the bot should be able to get out
+	if (BotInLavaOrSlime(bs)) {
+		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// map specific code
+	BotMapScripts(bs);
+	// no enemy
+	bs->enemy = -1;
+	// if there is an enemy
+	if (BotFindEnemy(bs, -1)) {
+		if (BotWantsToRetreat(bs)) {
+			// keep the current long term goal and retreat
+			AIEnter_Battle_Retreat(bs, "WAIT: found enemy.");
+			return qfalse;
+		} else {
+			trap_BotResetLastAvoidReach(bs->ms);
+			// empty the goal stack
+			trap_BotEmptyGoalStack(bs->gs);
+			// go fight
+			AIEnter_Battle_Fight(bs, "WAIT: found enemy.");
+			return qfalse;
+		}
+	}
+	// check if the bot is blocked
+	BotAIBlocked(bs, &moveresult, AIEnter_Wait);
+	// check if the bot has to deactivate obstacles
+	BotClearPath(bs, &moveresult);
+	// if the view angles are used for the movement
+	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
+		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+	// if waiting for something
+	} else if (moveresult.flags & MOVERESULT_WAITING) {
+		if (random() < bs->thinktime * 0.8) {
+			BotRoamGoal(bs, target);
+			VectorSubtract(target, bs->origin, dir);
+			VectorToAngles(dir, bs->ideal_viewangles);
+			bs->ideal_viewangles[2] *= 0.5;
+		}
+	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
+		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			VectorSubtract(target, bs->origin, dir);
+			VectorToAngles(dir, bs->ideal_viewangles);
+		// FIXME: look at cluster portals?
+		} else if (VectorLengthSquared(moveresult.movedir)) {
+			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+		} else if (random() < bs->thinktime * 0.8) {
+			BotRoamGoal(bs, target);
+			VectorSubtract(target, bs->origin, dir);
+			VectorToAngles(dir, bs->ideal_viewangles);
+			bs->ideal_viewangles[2] *= 0.5;
+		}
+
+		bs->ideal_viewangles[2] *= 0.5;
+	}
+	// if the weapon is used for the bot movement
+	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
+		bs->weaponnum = moveresult.weapon;
+	}
+	// when done waiting
+	if (bs->wait_time < FloatTime() - 0.5) {
+		AIEnter_Seek_LTG(bs, "WAIT: time out.");
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 AIEnter_Seek_ActivateEntity
 =======================================================================================================================================
 */
@@ -1898,6 +2009,11 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal, AIEnter_Seek_NBG)) {
+		AIEnter_Wait(bs, "SEEK NBG: waiting.");
+		return qfalse;
+	}
 	// map specific code
 	BotMapScripts(bs);
 	// no enemy
@@ -2048,6 +2164,11 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
+	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal, AIEnter_Seek_LTG)) {
+		AIEnter_Wait(bs, "SEEK LTG: waiting.");
+		return qfalse;
 	}
 	// map specific code
 	BotMapScripts(bs);
@@ -2490,6 +2611,11 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Chase)) {
+		AIEnter_Wait(bs, "BATTLE CHASE: waiting.");
+		return qfalse;
+	}
 	// map specific code
 	BotMapScripts(bs);
 	// create the chase goal
@@ -2663,6 +2789,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Retreat)) {
+		AIEnter_Wait(bs, "BATTLE RETREAT: waiting.");
+		return qfalse;
 	}
 	// map specific code
 	BotMapScripts(bs);

@@ -2962,6 +2962,25 @@ float BotFeelingBad(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotAIWaiting
+=======================================================================================================================================
+*/
+qboolean BotAIWaiting(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc) {
+
+	// never wait if there is an enemy
+	if (bs->enemy >= 0) {
+		return qfalse;
+	}
+	// and never wait when the health is decreasing
+	if (level.clients[bs->client].lasthurt_time > level.time - 1000) {
+		return qfalse;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
 BotHasEmergencyGoal
 
 The bot is in hurry sometimes, he shouldn't pick up every single item on it's way.

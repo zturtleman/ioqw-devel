@@ -164,6 +164,7 @@ typedef struct bot_state_s {
 	float enemyvisible_time;				// time the enemy was last visible
 	float check_time;						// time to check for nearby items
 	float stand_time;						// time the bot is standing still
+	float wait_time;						// time the bot is waiting for something
 	float lastchat_time;					// time the bot last selected a chat
 	float kamikaze_time;					// time to check for kamikaze usage
 	float standfindenemy_time;				// time to find enemy while standing

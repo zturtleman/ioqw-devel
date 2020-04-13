@@ -80,6 +80,8 @@ void BotTeamGoals(bot_state_t *bs, int retreat);
 const int BotAggression(bot_state_t *bs);
 // returns how bad the bot feels
 float BotFeelingBad(bot_state_t *bs);
+// the bot should NOT walk further, he should wait for a specific period of time
+qboolean BotAIWaiting(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc);
 // returns true if the bot is in hurry and should only pick up useful items
 qboolean BotOnlyPickupImportantItems(bot_state_t *bs);
 // returns true if the bot wants to retreat
