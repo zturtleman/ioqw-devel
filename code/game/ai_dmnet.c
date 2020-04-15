@@ -2425,21 +2425,25 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			bs->enemydeath_time = FloatTime();
 		}
 	}
+	// update the last time the enemy was visible
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+		bs->enemyvisible_time = FloatTime();
 
-	VectorCopy(entinfo.origin, target);
-	// if not a player enemy
-	if (bs->enemy >= MAX_CLIENTS) {
-		// if attacking an obelisk
-		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
-			target[2] += OBELISK_TARGET_HEIGHT;
+		VectorCopy(entinfo.origin, target);
+		// if not a player enemy
+		if (bs->enemy >= MAX_CLIENTS) {
+			// if attacking an obelisk
+			if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
+				target[2] += OBELISK_TARGET_HEIGHT;
+			}
 		}
-	}
-	// update the reachability area and origin if possible
-	areanum = BotPointAreaNum(target);
+		// update the reachability area and origin if possible
+		areanum = BotPointAreaNum(target);
 
-	if (areanum && trap_AAS_AreaReachability(areanum)) {
-		VectorCopy(target, bs->lastenemyorigin);
-		bs->lastenemyareanum = areanum;
+		if (areanum && trap_AAS_AreaReachability(areanum)) {
+			VectorCopy(target, bs->lastenemyorigin);
+			bs->lastenemyareanum = areanum;
+		}
 	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
@@ -2447,8 +2451,8 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
-	// if the enemy is not visible
-	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+	// if the enemy is NOT visible
+	if (bs->enemyvisible_time < FloatTime()) {
 		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
 			AIEnter_Battle_Chase(bs, "BATTLE FIGHT: obelisk out of sight.");
 			return qfalse;
