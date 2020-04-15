@@ -3092,5 +3092,25 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	// attack the enemy if possible
 	BotCheckAttack(bs);
+	// if there is an enemy
+	if (BotFindEnemy(bs, -1)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "AINode_Battle_NBG: another enemy.\n");
+#endif
+		trap_BotResetLastAvoidReach(bs->ms); // Tobias NOTE: really needed?
+		// empty the goal stack
+		trap_BotEmptyGoalStack(bs->gs);
+
+		if (BotWantsToRetreat(bs)) {
+			// keep the current long term goal and retreat
+			AIEnter_Battle_Retreat(bs, "BATTLE NBG: another enemy.");
+			return qfalse;
+		} else {
+			// go fight
+			AIEnter_Battle_Fight(bs, "BATTLE NBG: another enemy.");
+			return qfalse;
+		}
+	}
+
 	return qtrue;
 }
