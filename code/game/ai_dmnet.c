@@ -2088,15 +2088,15 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		if (BotWantsToRetreat(bs)) {
 			// keep the current long term goal and retreat
 			AIEnter_Battle_NBG(bs, "SEEK NBG: found enemy.");
+			return qfalse;
 		} else {
 			trap_BotResetLastAvoidReach(bs->ms);
 			// empty the goal stack
 			trap_BotEmptyGoalStack(bs->gs);
 			// go fight
 			AIEnter_Battle_Fight(bs, "SEEK NBG: found enemy.");
+			return qfalse;
 		}
-
-		return qfalse;
 	}
 
 	return qtrue;
@@ -3033,6 +3033,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// if the bot has no goal or touches the current goal
 	if (!trap_BotGetTopGoal(bs->gs, &goal)) {
 		bs->nbg_time = 0;
+	// if the bot touches the current goal
 	} else if (BotReachedGoal(bs, &goal)) {
 		bs->nbg_time = 0;
 	}
@@ -3043,11 +3044,11 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		// if the bot still has a goal
 		if (trap_BotGetTopGoal(bs->gs, &goal)) {
 			AIEnter_Battle_Retreat(bs, "BATTLE NBG: time out.");
+			return qfalse;
 		} else {
 			AIEnter_Battle_Fight(bs, "BATTLE NBG: time out.");
+			return qfalse;
 		}
-
-		return qfalse;
 	}
 	// predict obstacles
 	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_NBG)) {
