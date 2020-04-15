@@ -4477,6 +4477,10 @@ static qboolean BotEntityIndirectlyVisible(bot_state_t *bs, int ent) {
 	if (ent < 0 || ent >= ENTITYNUM_MAX_NORMAL) {
 		return qfalse;
 	}
+	// ignore new enemies if we already have one
+	if (bs->enemy >= 0) {
+		return qfalse;
+	}
 	// there is no need to have obelisks indirectly visible
 	if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
 		return qfalse;
