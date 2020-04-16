@@ -192,7 +192,7 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo) {
 
 	// if attacking an obelisk
 	if (entinfo->number >= MAX_CLIENTS && (entinfo->number == redobelisk.entitynum || entinfo->number == blueobelisk.entitynum)) {
-		// if obelisk is respawning return
+		// if the obelisk is respawning
 		if (g_entities[entinfo->number].activator && g_entities[entinfo->number].activator->s.frame == 2) {
 			return qtrue;
 		}
@@ -4579,6 +4579,11 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			goal = &blueobelisk;
 		} else {
 			goal = &redobelisk;
+		}
+		// if the obelisk is respawning
+		if (g_entities[goal->entitynum].activator && g_entities[goal->entitynum].activator->s.frame == 2) {
+			// Tobias FIXME: qtrue if Proxylauncher in bag to place mines at respawning obelisk, otherwise -> node WAIT or collect ammo?
+			return qfalse;
 		}
 		// if the obelisk is visible
 		VectorCopy(goal->origin, target);
