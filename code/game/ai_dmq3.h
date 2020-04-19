@@ -119,7 +119,7 @@ void BotCountVisibleEnemies(bot_state_t *bs, int *enemies, float range);
 // returns true if within the field of vision for the given angles
 qboolean InFieldOfVision(vec3_t viewangles, int fov, vec3_t angles);
 // returns true and sets the .enemy field when an enemy is found
-int BotFindEnemy(bot_state_t *bs, int curenemy);
+const int BotFindEnemy(bot_state_t *bs, int curenemy);
 // returns a roam goal
 void BotRoamGoal(bot_state_t *bs, vec3_t goal);
 // returns entity visibility in the range [0, 1]

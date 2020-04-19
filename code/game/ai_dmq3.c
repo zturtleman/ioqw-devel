@@ -4554,9 +4554,9 @@ static qboolean BotEntityIndirectlyVisible(bot_state_t *bs, int ent) {
 BotFindEnemy
 =======================================================================================================================================
 */
-int BotFindEnemy(bot_state_t *bs, int curenemy) {
-	int i, f, healthdecrease, enemyArea;
-	float /*alertness, */aggression, easyfragger, squaredist, cursquaredist;
+const int BotFindEnemy(bot_state_t *bs, int curenemy) {
+	int i, squaredist, cursquaredist, f, healthdecrease, enemyArea;
+	float /*alertness, */aggression, easyfragger;
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 	qboolean foundEnemy;
@@ -4788,9 +4788,11 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		VectorCopy(entinfo.origin, bs->lastenemyorigin);
 
 		bs->lastenemyareanum = BotPointAreaNum(entinfo.origin);
+
+		return qtrue;
 	}
 
-	return foundEnemy;
+	return qfalse;
 }
 
 /*
