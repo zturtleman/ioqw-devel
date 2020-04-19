@@ -4556,15 +4556,18 @@ BotFindEnemy
 */
 int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	int i, f, healthdecrease, enemyArea;
-	float easyfragger, squaredist, cursquaredist;
+	float /*alertness, */aggression, easyfragger, squaredist, cursquaredist;
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 	qboolean foundEnemy;
-	//char botname[32];
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
 
-	//ClientName(bs->client, botname, sizeof(botname));
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	//alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
 	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
+	aggression = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AGGRESSION, 0, 1);
 	// check if the health decreased by a reliable method (consider automatic decrease if health > max. health!)
 	healthdecrease = g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000;
 	// remember the current health value
@@ -4632,8 +4635,14 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		}
 		// calculate the distance towards the enemy
 		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
-
-		cursquaredist = VectorLengthSquared(dir);
+		// less aggressive bots will immediatly stop firing if the enemy is dead
+		if (EntityIsDead(&curenemyinfo) && aggression < 0.5) {
+			curenemy = -1;
+			cursquaredist = 0;
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy dead!Immediately check for another enemy.\n", netname);
+		} else {
+			cursquaredist = VectorLengthSquared(dir);
+		}
 	} else {
 		cursquaredist = 0;
 	}
@@ -4752,7 +4761,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			// if the bot isn't in the fov of the enemy
 			if (!InFieldOfVision(entinfo.angles, 90, angles)) {
 				// update some stuff for this enemy
-				BotUpdateBattleInventory(bs, i);
+				BotUpdateBattleInventory(bs, i); // Tobias CHECK: delete this after ENEMY_HEIGHT in BotAggression is replaced by real values?
 				// if the bot doesn't really want to fight
 				if (BotWantsToRetreat(bs)) {
 					continue;
