@@ -1699,6 +1699,96 @@ int BotSynonymContext(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotUsesLongRangeInstantHitWeapon
+=======================================================================================================================================
+*/
+/*
+static const qboolean BotUsesLongRangeInstantHitWeapon(bot_state_t *bs) {
+
+	switch (bs->weaponnum) {
+		case WP_RAILGUN:
+			return qtrue;
+		default:
+			return qfalse;
+	}
+}
+*/
+/*
+=======================================================================================================================================
+BotUsesMidRangeWeapon
+=======================================================================================================================================
+*/
+static const qboolean BotUsesMidRangeWeapon(bot_state_t *bs) {
+
+	switch (bs->weaponnum) {
+		case WP_MACHINEGUN:
+		case WP_CHAINGUN:
+		case WP_NAPALMLAUNCHER:
+		case WP_ROCKETLAUNCHER:
+		case WP_BEAMGUN:
+		case WP_RAILGUN:
+		case WP_PLASMAGUN:
+		case WP_BFG:
+			return qtrue;
+		default:
+			return qfalse;
+	}
+}
+
+/*
+=======================================================================================================================================
+BotUsesGravityAffectedProjectileWeapon
+=======================================================================================================================================
+*/
+static const qboolean BotUsesGravityAffectedProjectileWeapon(bot_state_t *bs) {
+
+	switch (bs->weaponnum) {
+		case WP_PROXLAUNCHER:
+		case WP_GRENADELAUNCHER:
+		case WP_NAPALMLAUNCHER:
+			return qtrue;
+		default:
+			return qfalse;
+	}
+}
+
+/*
+=======================================================================================================================================
+BotUsesInstantHitWeapon
+=======================================================================================================================================
+*/
+static const qboolean BotUsesInstantHitWeapon(bot_state_t *bs) {
+
+	switch (bs->weaponnum) {
+		case WP_GAUNTLET:
+		case WP_MACHINEGUN:
+		case WP_CHAINGUN:
+		case WP_SHOTGUN:
+		case WP_BEAMGUN:
+		case WP_RAILGUN:
+			return qtrue;
+		default:
+			return qfalse;
+	}
+}
+
+/*
+=======================================================================================================================================
+BotUsesCloseCombatWeapon
+=======================================================================================================================================
+*/
+static const qboolean BotUsesCloseCombatWeapon(bot_state_t *bs) {
+
+	switch (bs->weaponnum) {
+		case WP_GAUNTLET:
+			return qtrue;
+		default:
+			return qfalse;
+	}
+}
+
+/*
+=======================================================================================================================================
 BotChooseWeapon
 =======================================================================================================================================
 */
@@ -4556,16 +4646,20 @@ BotFindEnemy
 */
 const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	int i, squaredist, cursquaredist, f, healthdecrease, enemyArea;
-	float /*alertness, */aggression, easyfragger;
+	float /*alertness, */aggression, enemypreference, easyfragger;
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 	qboolean foundEnemy;
 #ifdef DEBUG
-	char netname[MAX_NETNAME];
+	//int curdist, dist;
+	char netname1[MAX_NETNAME];
+	char netname2[MAX_NETNAME];
+	char netname3[MAX_NETNAME];
 
-	ClientName(bs->client, netname, sizeof(netname));
+	ClientName(bs->client, netname1, sizeof(netname1));
 #endif
 	//alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+	enemypreference = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ENEMY_PREFERENCE, 0, 1);
 	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
 	aggression = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AGGRESSION, 0, 1);
 	// check if the health decreased by a reliable method (consider automatic decrease if health > max. health!)
@@ -4608,13 +4702,13 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			return qtrue;
 		}
 	}
-
+	// if the bot already has an enemy
 	if (curenemy >= 0) {
 		// get the entity information
 		BotEntityInfo(curenemy, &curenemyinfo);
 		// if the entity information is valid
 		if (!curenemyinfo.valid) {
-			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy -> !curenemyinfo.valid\n"); // Tobias CHECK: shouldn't happen?
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy: !curenemyinfo.valid\n"); // Tobias CHECK: shouldn't happen?
 			return qfalse;
 		}
 		// if the entity isn't the bot self
@@ -4623,23 +4717,44 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		}
 		// only concentrate on flag carrier if not carrying a flag
 		if (EntityCarriesFlag(&curenemyinfo) && !BotCTFCarryingFlag(bs)) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "%s: Enemy (%s) is carrying a flag.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 			return qfalse;
 		}
 		// only concentrate on cube carrier if not carrying cubes
 		if (EntityCarriesCubes(&curenemyinfo) && !BotHarvesterCarryingCubes(bs)) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "%s: Enemy (%s) is carrying cubes.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 			return qfalse;
 		}
 		// looking for revenge
 		if (curenemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "%s: Found revenge enemy (%s).\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
+			return qfalse;
+		}
+		// stupid bots don't accept new enemies at all
+		if (enemypreference < 0.2) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "%s: I already have an enemy (%s).\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 			return qfalse;
 		}
 		// calculate the distance towards the enemy
 		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
+#ifdef DEBUG
+		curdist = VectorLength(dir);
+#endif
 		// less aggressive bots will immediatly stop firing if the enemy is dead
 		if (EntityIsDead(&curenemyinfo) && aggression < 0.5) {
 			curenemy = -1;
 			cursquaredist = 0;
-			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy dead!Immediately check for another enemy.\n", netname);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy dead! Immediately check for another enemy.\n", netname1);
+#endif
 		} else {
 			cursquaredist = VectorLengthSquared(dir);
 		}
@@ -4669,7 +4784,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		BotEntityInfo(i, &entinfo);
 		// if the entity information is valid
 		if (!entinfo.valid) {
-			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy -> !entinfo.valid\n"); // Tobias CHECK: shouldn't happen?
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BotFindEnemy: !entinfo.valid\n"); // Tobias CHECK: shouldn't happen?
 			continue;
 		}
 		// if the entity isn't the bot self
@@ -4696,6 +4811,87 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				continue;
 			}
 		}
+		// calculate the distance towards the enemy
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+#ifdef DEBUG
+		dist = VectorLength(dir);
+#endif
+		squaredist = VectorLengthSquared(dir);
+		// if this entity is not carrying a flag or cubes
+		if (!EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
+// Tobias NOTE: check, repair, and extend this!
+/*
+			// if the enemy is standing still, or is just moving slowly (could be a camper)
+			if (enemypreference > 0.4 && squaredist < Square(1024) && VectorLength(g_entities[i].client->ps.velocity) < 10) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: NewEn (%s) Enemy isn't moving (Vel. = %f).\n", netname1, ClientName(i, netname3, sizeof(netname3)), VectorLength(g_entities[i].client->ps.velocity));
+#endif
+				squaredist *= 0.25;
+			}
+			// if this enemy has the quad damage or the regenration powerup
+			if (enemypreference > 0.7 && (entinfo.powerups & (1 << PW_QUAD) || entinfo.powerups & (1 << PW_REGEN))) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s (%i): CurEn (%s (%i)) Dist = %i (%i). NewEn (%s (%i)) Dist = %i (%i). Enemy has powerup.\n", netname1, bs->lasthealth, ClientName(curenemy, netname2, sizeof(netname2)), g_entities[curenemy].health, cursquaredist, curdist * curdist, ClientName(i, netname3, sizeof(netname3)), g_entities[i].health, squaredist, dist * dist);
+#endif
+				squaredist *= 0.25;
+			}
+			// if using the missile launcher, prefer enemies on stationary weapons
+			if (COM_BitCheck(bs->cur_ps.weapons, WP_MISSILELAUNCHER) && (g_entities[i].client->ps.eFlags & EF_STAT_MG_ACTIVE)) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s (%i): CurEn (%s (%i)) Dist = %i (%i). NewEn (%s (%i)) Dist = %i (%i). Enemy using stationary weapon.\n", netname1, bs->lasthealth, ClientName(curenemy, netname2, sizeof(netname2)), g_entities[curenemy].health, cursquaredist, curdist * curdist, ClientName(i, netname3, sizeof(netname3)), g_entities[i].health, squaredist, dist * dist);
+#endif
+				squaredist *= 0.5;
+			}
+			// if this is enemy is attempting to disarm dynamite/build, they take preference!
+			if (g_entities[i].client->ps.weapon == WP_PLIERS && g_entities[i].client->touchingTOI) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s (%i): CurEn (%s (%i)) Dist = %i (%i). NewEn (%s (%i)) Dist = %i (%i). Enemy is constructing.\n", netname1, bs->lasthealth, ClientName(curenemy, netname2, sizeof(netname2)), g_entities[curenemy].health, cursquaredist, curdist * curdist, ClientName(i, netname3, sizeof(netname3)), g_entities[i].health, squaredist, dist * dist);
+#endif
+				squaredist *= 0.25;
+			}
+*/
+// Tobias END
+			// if the bot already has an enemy, compare both enemies
+			if (curenemy >= 0) {
+				// if this enemy is not too far away, is carrying no flags or skulls, and the bot has a precise weapon
+				if (enemypreference > 0.6 && squaredist < Square(700) && BotUsesMidRangeWeapon(bs) && !BotCTFCarryingFlag(bs) && !BotHarvesterCarryingCubes(bs)/* && bs->lasthealth - 40 > g_entities[curenemy].health*/) { // Tobias NOTE: care must be taken -> BEAMGUN range!
+					// if the current enemy is lower on health than this one
+					if (g_entities[i].health > g_entities[curenemy].health + 20) {
+#ifdef DEBUG
+						BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s (%i): CurEn (%s (%i)) NewEn (%s (%i)) Skip new enemy, current enemy is lower on health.\n", netname1, bs->lasthealth, ClientName(curenemy, netname2, sizeof(netname2)), g_entities[curenemy].health, ClientName(i, netname3, sizeof(netname3)), g_entities[i].health);
+#endif
+						continue;
+					}
+					// prefer targets near the goal
+					if (enemypreference > 0.8 && BotAggression(bs) > 50 && bs->ltgtype != 0 && DistanceSquared(entinfo.origin, bs->teamgoal.origin) * 1.5 > DistanceSquared(curenemyinfo.origin, bs->teamgoal.origin)) {
+#ifdef DEBUG
+						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: CurEn (%s) NewEn (%s). Skip new enemy, prefer the enemy near goal.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)), ClientName(i, netname3, sizeof(netname3)));
+#endif
+						continue;
+					}
+					// prefer enemies with higher scores
+					if (enemypreference > 0.9 && g_entities[i].client->ps.persistant[PERS_SCORE] < g_entities[curenemy].client->ps.persistant[PERS_SCORE] && g_entities[curenemy].client->ps.persistant[PERS_SCORE] > bs->cur_ps.persistant[PERS_SCORE]) {
+#ifdef DEBUG
+						BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s (%i): CurEn (%s (%i)). NewEn (%s (%i)). Skip new enemy, score (%i) lower current enemy score (%i) higher own score (%i).\n", netname1, bs->cur_ps.persistant[PERS_SCORE], ClientName(curenemy, netname2, sizeof(netname2)), g_entities[curenemy].client->ps.persistant[PERS_SCORE], ClientName(i, netname3, sizeof(netname3)), g_entities[i].client->ps.persistant[PERS_SCORE], g_entities[i].client->ps.persistant[PERS_SCORE], g_entities[curenemy].client->ps.persistant[PERS_SCORE], bs->cur_ps.persistant[PERS_SCORE]);
+#endif
+						continue;
+					}
+				}
+				// if this enemy is further away than the current one
+				if (squaredist > cursquaredist) {
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: CurEn (%s) Dist = %i (%i). NewEn (%s) Dist = %i (%i). Skip new enemy, it's further away than the old one!\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)), cursquaredist, curdist * curdist, ClientName(i, netname3, sizeof(netname3)), squaredist, dist * dist);
+#endif
+					continue;
+				}
+			}
+		}
+/*
+		// if the bot has no
+		if (squaredist > Square(900.0 + alertness * 4000.0)) {
+			continue;
+		}
+*/
 		// if the bot's health decreased or the enemy is shooting
 		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo))) {
 			f = 360;
@@ -4726,23 +4922,6 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				continue;
 			}
 		}
-		// calculate the distance towards the enemy
-		VectorSubtract(entinfo.origin, bs->origin, dir);
-
-		squaredist = VectorLengthSquared(dir);
-		// if this entity is not carrying a flag or cubes
-		if (!EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
-			// if this enemy is further away than the current one
-			if (curenemy >= 0 && squaredist > cursquaredist) {
-				continue;
-			}
-		}
-/*
-		// if the bot has no
-		if (squaredist > Square(900.0 + alertness * 4000.0)) {
-			continue;
-		}
-*/
 		// if the enemy is quite far away and doesn't have a flag or cubes and the bot is not damaged try to ignore this enemy
 		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
 			// get the entity information
