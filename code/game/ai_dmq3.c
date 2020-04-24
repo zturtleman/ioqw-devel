@@ -5786,6 +5786,10 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		bestorigin[0] += 20 * crandom() * (1 - aim_accuracy);
 		bestorigin[1] += 20 * crandom() * (1 - aim_accuracy);
 		bestorigin[2] += 10 * crandom() * (1 - aim_accuracy);
+
+		BotAI_Trace(&trace, bs->eye, NULL, NULL, bestorigin, bs->entitynum, MASK_SHOT);
+		VectorCopy(trace.endpos, bs->aimtarget);
+	// if the enemy is NOT visible
 	} else {
 		VectorCopy(bs->lastenemyorigin, bestorigin);
 
@@ -5804,22 +5808,20 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
 					VectorSubtract(target, bs->eye, dir);
-
-					if (VectorLengthSquared(dir) > Square(80)) {
+					// if the hitpoint is far enough from the bot
+					if (VectorLengthSquared(dir) > Square(100)) {
 						VectorCopy(target, bestorigin);
-						bestorigin[2] -= 20;
+						// if the projectile does large radial damage try to aim at the ground in front of the enemy
+						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+							bestorigin[2] -= 20;
+						}
 					}
 				}
 
 				aim_accuracy = 1;
 			}
 		}
-	}
 
-	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
-		BotAI_Trace(&trace, bs->eye, NULL, NULL, bestorigin, bs->entitynum, MASK_SHOT);
-		VectorCopy(trace.endpos, bs->aimtarget);
-	} else {
 		VectorCopy(bestorigin, bs->aimtarget);
 	}
 	// get aim direction
