@@ -5481,7 +5481,7 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	int i;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity;
-	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
+	vec3_t mins = {-2, -2, -2}, maxs = {2, 2, 2};
 	weaponinfo_t wi;
 	aas_entityinfo_t entinfo;
 	bot_goal_t goal;
@@ -5696,7 +5696,11 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
 		// if the enemy is NOT hit
 		if (trace.fraction <= 1 && trace.entityNum != entinfo.number) {
-			bestorigin[2] += 16;
+			// aim a bit higher
+			bestorigin[2] += 8;
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
+#endif
 		}
 		// if it is not an instant hit weapon the bot might want to predict the enemy
 		if (!BotUsesInstantHitWeapon(bs)) {
@@ -5751,7 +5755,7 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 				end[2] -= 64;
 
 				BotAI_Trace(&trace, entinfo.origin, NULL, NULL, end, entinfo.number, MASK_SHOT);
-				VectorCopy(bestorigin, groundtarget);
+				VectorCopy(bestorigin, groundtarget); // Tobias CHECK: is 'bestorigin' wrong now (changed above), or was it always strange to use 'bestorigin' instead of 'end' ?
 
 				if (trace.startsolid) {
 					groundtarget[2] = entinfo.origin[2] - 16;
