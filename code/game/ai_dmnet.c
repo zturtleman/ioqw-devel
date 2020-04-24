@@ -2503,7 +2503,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, NULL);
 	// aim at the enemy
-	BotAimAtEnemy(bs);
+	BotAimAtEnemy(&bs->cur_ps, bs);
 	// attack the enemy if possible
 	BotCheckAttack(bs);
 	// if the bot wants to retreat
@@ -2687,7 +2687,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (bs->chase_time > FloatTime() - 2) {
-			BotAimAtEnemy(bs);
+			BotAimAtEnemy(&bs->cur_ps, bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
@@ -2917,7 +2917,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
-			BotAimAtEnemy(bs);
+			BotAimAtEnemy(&bs->cur_ps, bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
@@ -3079,7 +3079,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
-			BotAimAtEnemy(bs);
+			BotAimAtEnemy(&bs->cur_ps, bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);

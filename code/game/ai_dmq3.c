@@ -5477,7 +5477,7 @@ qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 BotAimAtEnemy
 =======================================================================================================================================
 */
-void BotAimAtEnemy(bot_state_t *bs) {
+void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	int i;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity;
@@ -5685,7 +5685,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(entinfo.origin, bestorigin);
 
-		bestorigin[2] += 8;
+		bestorigin[2] += ps->viewheight;
 		// get the start point shooting from
 		// NOTE: the x and y projectile start offsets are ignored
 		VectorCopy(bs->origin, start);
