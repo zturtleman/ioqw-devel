@@ -5952,8 +5952,8 @@ BotCheckAttack
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float points, reactiontime, fov, firethrottle;
-	int attackentity;
+	float points, reactiontime, firethrottle;
+	int attackentity, fov;
 	bsp_trace_t bsptrace;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
@@ -5961,10 +5961,18 @@ void BotCheckAttack(bot_state_t *bs) {
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
 	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
+		return;
+	}
+
+	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
 		return;
 	}
 	// get the entity information
@@ -5977,14 +5985,11 @@ void BotCheckAttack(bot_state_t *bs) {
 	if (EntityIsDead(&entinfo)) {
 		return;
 	}
-	// if not attacking a player
-	if (attackentity >= MAX_CLIENTS) {
-		// if attacking an obelisk
-		if (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum) {
-			// if the obelisk is respawning
-			if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-				return;
-			}
+	// if attacking an obelisk
+	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
+		// if the obelisk is respawning
+		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
+			return;
 		}
 	}
 
@@ -6000,50 +6005,43 @@ void BotCheckAttack(bot_state_t *bs) {
 // Tobias HACK
 	if (BotEqualizeWeakestHumanTeamScore(bs) || BotEqualizeTeamScore(bs)) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
-#if 0 // DEBUG
+#ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "EQUALIZE for BLUE! RED score: %i, BLUE score: %i.\n", bs->ownteamscore, bs->enemyteamscore);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: EQUALIZE for BLUE! RED score: %i, BLUE score: %i.\n", bs->ownteamscore, bs->enemyteamscore);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "EQUALIZE for RED! BLUE score: %i, RED score: %i.\n", bs->ownteamscore, bs->enemyteamscore);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: EQUALIZE for RED! BLUE score: %i, RED score: %i.\n", bs->ownteamscore, bs->enemyteamscore);
 		}
-#endif // DEBUGEND
+#endif
 	}
 // Tobias END
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+#endif
 		return;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+#endif
 		return;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
 		return;
 	}
-	// check fire throttle characteristic
-	if (bs->firethrottlewait_time > FloatTime()) {
+
+	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, MASK_SHOT);
+
+	if (bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
+#endif
 		return;
 	}
 
-	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
-
-	if (bs->firethrottleshoot_time < FloatTime()) {
-		if (random() > firethrottle) {
-			bs->firethrottlewait_time = FloatTime() + firethrottle;
-			bs->firethrottleshoot_time = 0;
-		} else {
-			bs->firethrottleshoot_time = FloatTime() + 1 - firethrottle;
-			bs->firethrottlewait_time = 0;
-		}
-	}
-
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
-
-	if (bs->weaponnum == WP_GAUNTLET) {
-		if (VectorLengthSquared(dir) > Square(60)) {
-			return;
-		}
-	}
 
 	if (VectorLengthSquared(dir) < Square(100)) {
 		fov = 120;
@@ -6054,22 +6052,19 @@ void BotCheckAttack(bot_state_t *bs) {
 	VectorToAngles(dir, angles);
 
 	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+#endif
 		return;
 	}
-
-	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, CONTENTS_SOLID);
-
-	if (bsptrace.fraction < 1 && bsptrace.entityNum != attackentity) {
-		return;
-	}
-	// get the weapon info
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
 
 	start[2] += bs->cur_ps.viewheight;
 
 	AngleVectors(bs->viewangles, forward, right, NULL);
+	// get the weapon info
+	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 
 	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
@@ -6100,6 +6095,32 @@ void BotCheckAttack(bot_state_t *bs) {
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
+		}
+	}
+	// check fire throttle characteristic
+	if (bs->firethrottlewait_time > FloatTime()) {
+		return;
+	}
+
+	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
+	// if attacking an obelisk or if the bot wants to retreat and using the grenadelauncher
+	if ((bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) || (bs->weaponnum == WP_GRENADELAUNCHER && BotWantsToRetreat(bs))) {
+		firethrottle = 0;
+	}
+
+	if (bs->firethrottleshoot_time < FloatTime()) {
+		if (random() > firethrottle) {
+			bs->firethrottlewait_time = FloatTime() + firethrottle;
+			bs->firethrottleshoot_time = 0;
+		} else {
+			bs->firethrottleshoot_time = FloatTime() + 1 - firethrottle;
+			bs->firethrottlewait_time = 0;
+		}
+	}
+
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
+		if (VectorLengthSquared(dir) > Square(60)) {
+			return;
 		}
 	}
 // Tobias DEBUG
