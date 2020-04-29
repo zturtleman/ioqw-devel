@@ -6043,10 +6043,23 @@ void BotCheckAttack(bot_state_t *bs) {
 
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
 
-	if (VectorLengthSquared(dir) < Square(100)) {
+	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+#endif
 	} else {
-		fov = 50;
+		switch (bs->weaponnum) {
+			// Tobias NOTE: consider spin-up weapons here, also don't contradict enemy predictin and add bouncing projectiles?
+			case WP_MACHINEGUN:
+			case WP_CHAINGUN:
+				fov = 100;
+			default:
+				fov = 50;
+		}
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+#endif
 	}
 
 	VectorToAngles(dir, angles);
