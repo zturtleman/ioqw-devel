@@ -5481,7 +5481,7 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	int i;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, enemyHeight;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
-	vec3_t mins = {-2, -2, -2}, maxs = {2, 2, 2};
+	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
 	weaponinfo_t wi;
 	aas_entityinfo_t entinfo;
 	bot_goal_t goal;
@@ -5960,7 +5960,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
-	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
+	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -6032,7 +6032,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		return;
 	}
 
-	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, MASK_SHOT);
+	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, MASK_SHOT);
 
 	if (bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
@@ -6070,9 +6070,9 @@ void BotCheckAttack(bot_state_t *bs) {
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// end point aiming at
-	VectorMA(start, 1000, forward, end);
+	VectorMA(start, 262144, forward, end);
 	// a little back to make sure not inside a very close enemy
-	VectorMA(start, -12, forward, start);
+	VectorMA(start, -8, forward, start);
 	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, MASK_SHOT);
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
