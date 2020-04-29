@@ -5479,7 +5479,7 @@ BotAimAtEnemy
 */
 void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	int i;
-	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, enemyHeight;
+	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
 	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
 	weaponinfo_t wi;
@@ -5623,41 +5623,41 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	}
 	// if the bot is standing still
 	if (VectorLengthSquared(bs->cur_ps.velocity) <= 0) {
-		aim_accuracy += 0.3;
+		aim_accuracy += 0.3f;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Standing still (+0.2): aim accuracy: %f, vel: %i.\n", netname, aim_accuracy, (int)VectorLengthSquared(bs->cur_ps.velocity));
 #endif
 	}
 	// if the bot is crouching
 	if (bs->cur_ps.pm_flags & PMF_DUCKED) {
-		aim_accuracy += 0.2;
+		aim_accuracy += 0.2f;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Crouching (+0.1): aim accuracy: %f.\n", netname, aim_accuracy);
 #endif
 	}
-	// Tobias TODO: add prone ~ + 0.2;
+	// Tobias TODO: add prone ~ + 0.2f;
 	// if the enemy is standing still
 	f = VectorLength(bs->enemyvelocity);
 
-	if (f > 200) {
-		f = 200;
+	if (f > 200.0f) {
+		f = 200.0f;
 	}
 
-	aim_accuracy += 0.2 * (0.5 - (f / 200.0));
+	aim_accuracy += 0.2f * (0.5f - (f / 200.0f));
 #ifdef DEBUG
 	if (f <= 0) {
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy standing still (+0.2): aim accuracy: %f, enemy vel: %i.\n", netname, aim_accuracy, (int)f);
 	}
 #endif
 	// if the bot needs some time to react on the enemy, aiming gets better with time
-	if (reactiontime > 1.75) {
+	if (reactiontime > 1.75f) {
 		f = FloatTime() - bs->enemysight_time;
 
-		if (f > 2.0) {
-			f = 2.0;
+		if (f > 2.0f) {
+			f = 2.0f;
 		}
 
-		aim_accuracy += 0.2 * f / 2.0;
+		aim_accuracy += 0.2f * (f * 0.5f);
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: time based aim accuracy: %f.\n", netname, aim_accuracy);
 #endif
@@ -5670,17 +5670,17 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 #endif
 	}
 // Tobias END
-#ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: final aim accuracy: %f.\n", netname, aim_accuracy);
-#endif
 	// keep a minimum accuracy
-	if (aim_accuracy <= 0) {
+	if (aim_accuracy <= 0.0f) {
 		aim_accuracy = 0.0001f;
 	}
 	// also set a maximum accuracy
-	if (aim_accuracy > 1.0) {
-		aim_accuracy = 1.0;
+	if (aim_accuracy > 1.0f) {
+		aim_accuracy = 1.0f;
 	}
+#ifdef DEBUG
+	BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: final aim accuracy: %f.\n", netname, aim_accuracy);
+#endif
 	// if the enemy is visible
 	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(entinfo.origin, bestorigin);
@@ -5791,9 +5791,11 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 			}
 		}
 
-		bestorigin[0] += 20 * crandom() * (1 - aim_accuracy);
-		bestorigin[1] += 20 * crandom() * (1 - aim_accuracy);
-		bestorigin[2] += 10 * crandom() * (1 - aim_accuracy);
+		if (aim_accuracy < 1.0f) {
+			bestorigin[0] += 20 * crandom() * (1 - aim_accuracy);
+			bestorigin[1] += 20 * crandom() * (1 - aim_accuracy);
+			bestorigin[2] += 10 * crandom() * (1 - aim_accuracy);
+		}
 
 		BotAI_Trace(&trace, bs->eye, NULL, NULL, bestorigin, bs->entitynum, MASK_SHOT);
 		VectorCopy(trace.endpos, bs->aimtarget);
@@ -5826,7 +5828,7 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 					}
 				}
 
-				aim_accuracy = 1;
+				aim_accuracy = 1.0f;
 			}
 		}
 
@@ -5905,7 +5907,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 	// get aim direction
 	VectorSubtract(bestorigin, bs->eye, dir);
 
-	if (BotUsesInstantHitWeapon(bs)) {
+	if (aim_accuracy < 1.0f && BotUsesInstantHitWeapon(bs)) {
 		// distance towards the enemy
 		dist = VectorLength(dir);
 
@@ -5913,15 +5915,15 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 			dist = 150;
 		}
 
-		f = 0.6 + dist / 150 * 0.4;
+		f = 0.6f + dist / 150 * 0.4f;
 		aim_accuracy *= f;
 	}
 	// add some random stuff to the aim direction depending on the aim accuracy
-	if (aim_accuracy < 0.8) {
+	if (aim_accuracy < 0.8f) {
 		VectorNormalize(dir);
 
 		for (i = 0; i < 3; i++) {
-			dir[i] += 0.3 * crandom() * (1 - aim_accuracy);
+			dir[i] += 0.3f * crandom() * (1 - aim_accuracy);
 		}
 	}
 	// set the ideal view angles
@@ -5931,10 +5933,12 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 	bs->ideal_viewangles[PITCH] = AngleMod(bs->ideal_viewangles[PITCH]);
 	bs->ideal_viewangles[YAW] += 6 * wi.hspread * crandom() * (1 - aim_accuracy);
 	bs->ideal_viewangles[YAW] = AngleMod(bs->ideal_viewangles[YAW]);
+
+	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 	// if the bots should be really challenging
-	if (bot_challenge.integer) {
+	if (viewType > 0.9) {
 		// if the bot is really accurate and has the enemy in view for some time
-		if (aim_accuracy > 0.9 && bs->enemysight_time < FloatTime() - 1) {
+		if (aim_accuracy > 0.9f && bs->enemysight_time < FloatTime() - 1) {
 			// set the view angles directly
 			if (bs->ideal_viewangles[PITCH] > 180) {
 				bs->ideal_viewangles[PITCH] -= 360;
