@@ -5523,7 +5523,6 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	}
 
 	//BotAI_Print(PRT_MESSAGE, "client %d: aiming at client %d\n", bs->entitynum, bs->enemy);
-	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
 	aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 	aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 	// get the weapon information
@@ -5575,10 +5574,11 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 		default:
 			break;
 	}
-
+// Tobias FIXME: this is nonsense, if reactiontime is 0 than this has no effect (0.5 * 0 = 0)
+/*
 	if (aim_skill > 0.95) {
 		// don't aim too early
-		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5); // Tobias FIXME: this is nonsense, if reactiontime is 0 than this has no effect (0.5 * 0 = 0)
+		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 
 		if (bs->enemysight_time > FloatTime() - reactiontime) {
 			return;
@@ -5588,7 +5588,8 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 			return;
 		}
 	}
-
+*/
+// Tobias END
 	VectorSubtract(entinfo.origin, entinfo.lastvisorigin, enemyvelocity);
 	VectorScale(enemyvelocity, 1 / entinfo.update_time, enemyvelocity);
 	// enemy origin and velocity is remembered every 0.5 seconds
@@ -5650,6 +5651,8 @@ void BotAimAtEnemy(playerState_t *ps, bot_state_t *bs) {
 	}
 #endif
 	// if the bot needs some time to react on the enemy, aiming gets better with time
+	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+
 	if (reactiontime > 1.75f) {
 		f = FloatTime() - bs->enemysight_time;
 
@@ -5998,6 +6001,15 @@ void BotCheckAttack(bot_state_t *bs) {
 	}
 
 	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
+
+	switch (bs->weaponnum) {
+		case WP_RAILGUN:
+			if (reactiontime < 0.7) {
+				reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
+			}
+		default:
+			break;
+	}
 	// if the enemy is invisible
 	if (EntityIsInvisible(&entinfo)) {
 		reactiontime += 1.5f;
@@ -6018,6 +6030,9 @@ void BotCheckAttack(bot_state_t *bs) {
 #endif
 	}
 // Tobias END
+#ifdef DEBUG
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: final reactiontime = %f.\n", netname, reactiontime);
+#endif
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
