@@ -5956,6 +5956,12 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 /*
 =======================================================================================================================================
 BotCheckAttack
+
+Tobias NOTE: This function has (and always had) a lot of bugs.
+Lot of code is not really working well. There is no real trace call that stops from firing the weapon if the trace endpos is solid.
+The teammate radial damage check is missing, and many other pieces of this code is not really written well.
+We should rewrite this function to make it more robust ...
+Care must be taken because this function holds our Railgun/Reactiontime bugfix!
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
@@ -6051,7 +6057,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		return;
 	}
 
-	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, MASK_SHOT);
+	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, MASK_SHOT); // Tobias NOTE: does this still contradict aiming at the floor in front of enemies if mins/maxs is set? Why NULL, NULL?
 
 	if (bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
@@ -6102,7 +6108,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// end point aiming at
-	VectorMA(start, 262144, forward, end);
+	VectorMA(start, 1000, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
 	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, MASK_SHOT);
