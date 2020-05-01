@@ -831,7 +831,11 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 
 	for (i = 0; i < 2; i++) {
-		if (viewType > 0.9) {
+		if (viewType > 0.9
+//#ifdef DEBUG
+			|| bot_challenge.integer
+//#endif
+			) {
 			// smooth slowdown view model
 			diff = fabs(AngleDifference(bs->viewangles[i], bs->ideal_viewangles[i]));
 			anglespeed = diff * factor;
