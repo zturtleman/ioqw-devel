@@ -787,6 +787,26 @@ float AngleDelta(float angle1, float angle2) {
 
 /*
 =======================================================================================================================================
+SetMovedir
+=======================================================================================================================================
+*/
+void SetMovedir(vec3_t angles, vec3_t movedir) {
+	static const vec3_t VEC_UP = {0, -1, 0};
+	static const vec3_t MOVEDIR_UP = {0, 0, 1};
+	static const vec3_t VEC_DOWN = {0, -2, 0};
+	static const vec3_t MOVEDIR_DOWN = {0, 0, -1};
+
+	if (VectorCompare(angles, VEC_UP)) {
+		VectorCopy(MOVEDIR_UP, movedir);
+	} else if (VectorCompare(angles, VEC_DOWN)) {
+		VectorCopy(MOVEDIR_DOWN, movedir);
+	} else {
+		AngleVectorsForward(angles, movedir);
+	}
+}
+
+/*
+=======================================================================================================================================
 SetPlaneSignbits
 =======================================================================================================================================
 */

@@ -3779,7 +3779,7 @@ void AAS_Reachability_JumpPad(void) {
 		}
 
 //		AAS_VectorForBSPEpairKey(ent, "angles", angles);
-//		AAS_SetMovedir(angles, velocity);
+//		SetMovedir(angles, velocity);
 //		VectorScale(velocity, speed, velocity);
 		VectorClear(angles);
 		// get the mins, maxs and origin of the model

@@ -6348,26 +6348,6 @@ void BotMapScripts(bot_state_t *bs) {
 	}
 }
 
-static vec3_t VEC_UP = {0, -1, 0};
-static vec3_t MOVEDIR_UP = {0, 0, 1};
-static vec3_t VEC_DOWN = {0, -2, 0};
-static vec3_t MOVEDIR_DOWN = {0, 0, -1};
-/*
-=======================================================================================================================================
-BotSetMovedir
-=======================================================================================================================================
-*/
-void BotSetMovedir(vec3_t angles, vec3_t movedir) {
-
-	if (VectorCompare(angles, VEC_UP)) {
-		VectorCopy(MOVEDIR_UP, movedir);
-	} else if (VectorCompare(angles, VEC_DOWN)) {
-		VectorCopy(MOVEDIR_DOWN, movedir);
-	} else {
-		AngleVectorsForward(angles, movedir);
-	}
-}
-
 /*
 =======================================================================================================================================
 BotModelMinsMaxs
@@ -6458,7 +6438,7 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 	// get the move direction from the angle
 	trap_AAS_FloatForBSPEpairKey(bspent, "angle", &angle);
 	VectorSet(angles, 0, angle, 0);
-	BotSetMovedir(angles, movedir);
+	SetMovedir(angles, movedir);
 	// button size
 	VectorSubtract(maxs, mins, size);
 	// button origin
