@@ -550,7 +550,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 		AAS_Reachability_WeaponJump(703, 716);
 	}
 	*/
-	AngleVectors(parm3, forward, right, NULL);
+	AngleVectorsForwardRight(parm3, forward, right);
 	// get the eye 16 units to the right of the origin
 	VectorMA(parm2, 8, right, eye);
 	// get the eye 24 units up

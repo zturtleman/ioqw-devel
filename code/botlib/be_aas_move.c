@@ -325,7 +325,7 @@ float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage) {
 
 	start[2] += 8; // view offset Z
 
-	AngleVectors(viewangles, forward, right, NULL);
+	AngleVectorsForwardRight(viewangles, forward, right);
 
 	start[0] += forward[0] * rocketoffset[0] + right[0] * rocketoffset[1];
 	start[1] += forward[1] * rocketoffset[0] + right[1] * rocketoffset[1];

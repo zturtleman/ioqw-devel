@@ -1113,7 +1113,7 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	angles[YAW] = bi->viewangles[YAW];
 	angles[ROLL] = 0;
 
-	AngleVectors(angles, forward, right, NULL);
+	AngleVectorsForwardRight(angles, forward, right);
 	// bot input speed is in the range [0, 400]
 	bi->speed = bi->speed * 127 / 400;
 	// set the view independent movement

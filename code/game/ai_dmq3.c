@@ -6168,7 +6168,7 @@ void BotCheckAttack(bot_state_t *bs) {
 
 	start[2] += bs->cur_ps.viewheight;
 
-	AngleVectors(bs->viewangles, forward, right, NULL);
+	AngleVectorsForwardRight(bs->viewangles, forward, right);
 	// get the weapon info
 	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 

@@ -470,7 +470,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 						if (botinfo.origin[1] + botinfo.maxs[1] > entinfo.origin[1] + entinfo.mins[1] - 4 && botinfo.origin[1] + botinfo.mins[1] < entinfo.origin[1] + entinfo.maxs[1] + 4) {
 							if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2] - 4 && botinfo.origin[2] + botinfo.mins[2] < entinfo.origin[2] + entinfo.maxs[2] + 4) {
 								// if the followed client looks in the direction of this bot
-								AngleVectors(entinfo.angles, dir, NULL, NULL);
+								AngleVectorsForward(entinfo.angles, dir);
 
 								dir[2] = 0;
 
