@@ -1816,21 +1816,49 @@ BotWantsToWalk
 =======================================================================================================================================
 */
 qboolean BotWantsToWalk(bot_state_t *bs) {
+//#ifdef DEBUG
+	if (bot_nowalk.integer) {
+		return qfalse;
+	}
+//#endif
+	if (bs->walker < 0.1f) {
+		return qfalse;
+	}
 
-	if (bs->walker <= 0.5f) {
-		return qfalse;
-	}
-	// never walk if carrying a flag
-	if (BotCTFCarryingFlag(bs)) {
-		return qfalse;
-	}
+	switch (gametype) {
+		case GT_SINGLE_PLAYER:
+			break;
+		case GT_FFA:
+			break;
+		case GT_TOURNAMENT:
+			break;
+		case GT_TEAM:
+			break;
+		case GT_CTF:
+			// never walk if carrying a flag
+			if (BotCTFCarryingFlag(bs)) {
+				return qfalse;
+			}
 
-	if (Bot1FCTFCarryingFlag(bs)) {
-		return qfalse;
-	}
-	// never walk if carrying cubes
-	if (BotHarvesterCarryingCubes(bs)) {
-		return qfalse;
+			break;
+		case GT_1FCTF:
+			// never walk if carrying the flag
+			if (Bot1FCTFCarryingFlag(bs)) {
+				return qfalse;
+			}
+
+			break;
+		case GT_OBELISK:
+			break;
+		case GT_HARVESTER:
+			// never walk if carrying cubes
+			if (BotHarvesterCarryingCubes(bs)) {
+				return qfalse;
+			}
+
+			break;
+		default:
+			break;
 	}
 
 	return qtrue;

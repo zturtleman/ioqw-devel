@@ -31,6 +31,7 @@ Ioid3-qw is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L62
     *  `bot_teambluestrategy` (0/1/2/3/4) - The strategy the blue team will choose in team gametypes (WIP).
     *  `bot_teamredstrategy` (0/1/2/3/4) - The strategy the red team will choose in team gametypes (WIP).
     *  `bot_noshoot` (0/1) - Bots will act as usual, but they suppress fire. They react and aim unaffected but they won't hit the trigger (added for various development benefits).
+    *  `bot_nowalk` (0/1) - Bots are forced to run instead of walking slowly.
     *  `bot_equalize` (0/1) - (unknown/obsolet?)
 
 ## Main features from Spearmint:

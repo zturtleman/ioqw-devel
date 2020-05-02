@@ -335,6 +335,7 @@ extern vmCvar_t bot_equalizer_react;
 extern vmCvar_t bot_equalizer_fembon;
 extern vmCvar_t bot_equalizer_teambon;
 extern vmCvar_t bot_noshoot;
+extern vmCvar_t bot_nowalk;
 extern vmCvar_t bot_shownodechanges;
 extern vmCvar_t bot_teambluestrategy;
 extern vmCvar_t bot_teamredstrategy;
