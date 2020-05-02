@@ -1566,7 +1566,8 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 	int gapdist;
 	vec3_t hordir, sideward, up = {0, 0, 1};
 	bot_moveresult_t_cleared(result);
-
+// Tobias NOTE: This is weird, why should we go to the reachability start first? Walk straight to the reachability end instead?
+/*
 	// first walk straight to the reachability start
 	hordir[0] = reach->start[0] - ms->origin[0];
 	hordir[1] = reach->start[1] - ms->origin[1];
@@ -1574,14 +1575,15 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 	dist = VectorNormalize(hordir);
 
 	BotCheckBlocked(ms, hordir, qtrue, &result); // Tobias NOTE: checking for blocked movement without doing a move?
-
-	if (dist < 10) {
+*/
+	//if (dist < 10) {
 		// walk straight to the reachability end
 		hordir[0] = reach->end[0] - ms->origin[0];
 		hordir[1] = reach->end[1] - ms->origin[1];
 		hordir[2] = 0;
 		dist = VectorNormalize(hordir);
-	}
+	//}
+// Tobias END
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, hordir);
 	// if going towards a crouch area
