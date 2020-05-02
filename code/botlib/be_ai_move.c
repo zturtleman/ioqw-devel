@@ -3452,7 +3452,7 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	}
 
 	if (ms->moveflags & MFL_WALK) {
-		speed = 200 - (200 - 2 * dist);
+		speed = 200;
 	} else {
 		speed = 400 - (400 - 4 * dist);
 	}
