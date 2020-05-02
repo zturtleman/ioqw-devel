@@ -109,6 +109,21 @@ typedef struct bot_activategoal_s {
 	bot_aienter_t aienter;				// function to call to return to AI node from before going to activate entity
 	struct bot_activategoal_s *next;	// next activate goal on stack
 } bot_activategoal_t;
+// definitions for view history
+#define VIEWHISTORY_SIZE 128
+
+typedef struct viewhistory_s {
+	vec3_t real_viewangles;
+	vec3_t lastviewcommand;
+	vec3_t totalviewdistortion;
+	float lastUpdateTime;
+	int oldestEntry;
+	struct {
+		float time;
+		vec3_t ideal_view;
+		vec3_t viewdistortion;
+	} entryTab[VIEWHISTORY_SIZE];
+} viewhistory_t;
 // bot state
 #define MAX_SUBTEAM_SIZE 32
 
@@ -211,6 +226,7 @@ typedef struct bot_state_s {
 	vec3_t viewangles;						// current view angles
 	vec3_t ideal_viewangles;				// ideal view angles
 	vec3_t viewanglespeed;
+	viewhistory_t viewhistory;
 	int ltgtype;							// long term goal type
 	// team goals
 	int teammate;							// team mate involved in this team goal

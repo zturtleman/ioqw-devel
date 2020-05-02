@@ -5963,7 +5963,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 	// if the bots should be really challenging
 	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 
-	if (viewType == 1.0
+	if (viewType > 0.9
 //#ifdef DEBUG
 		|| bot_challenge.integer
 //#endif
@@ -5996,7 +5996,7 @@ Care must be taken because this function holds our Railgun/Reactiontime bugfix!
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float points, reactiontime, firethrottle;
+	float points, reactiontime, viewType, firethrottle;
 	int attackentity, fov;
 	bsp_trace_t bsptrace;
 	//float selfpreservation;
@@ -6116,13 +6116,24 @@ void BotCheckAttack(bot_state_t *bs) {
 #endif
 	}
 
-	VectorToAngles(dir, angles);
+	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 
-	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+	if (viewType < 0.4) {
+		if (!InFieldOfVision(bs->viewangles, fov, bs->viewhistory.real_viewangles)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-		return;
+			return;
+		}
+	} else {
+		VectorToAngles(dir, angles);
+
+		if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+#endif
+			return;
+		}
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
