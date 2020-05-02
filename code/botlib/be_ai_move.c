@@ -3719,7 +3719,9 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		if (reachnum) {
 			// get the reachability from the number
 			AAS_ReachabilityFromNum(reachnum, &reach);
+#ifdef DEBUG
 			result->traveltype = reach.traveltype;
+#endif // DEBUG
 #ifdef DEBUG_AI_MOVE
 			AAS_ClearShownDebugLines();
 			AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
@@ -3774,20 +3776,20 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotTravel_FuncBobbing(ms, &reach);
 					break;
 				default:
-				{
+#ifdef DEBUG
 					botimport.Print(PRT_FATAL, "travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
+#endif // DEBUG
 					break;
-				}
 			}
 
 			result->traveltype = reach.traveltype;
-			result->flags |= resultflags;
 		} else {
 			result->failure = qtrue;
-			result->flags |= resultflags;
 
 			Com_Memset(&reach, 0, sizeof(aas_reachability_t));
 		}
+
+		result->flags |= resultflags;
 #ifdef DEBUG
 		if (botDeveloper) {
 			if (result->failure) {
@@ -3849,7 +3851,9 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		if (ms->lastreachnum) {
 			//botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum - 1));
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
+#ifdef DEBUG
 			result->traveltype = reach.traveltype;
+#endif // DEBUG
 #ifdef DEBUG
 			//botimport.Print(PRT_MESSAGE, "client %d finish: ", ms->client);
 			//AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
@@ -3897,10 +3901,10 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotFinishTravel_FuncBobbing(ms, &reach);
 					break;
 				default:
-				{
+#ifdef DEBUG
 					botimport.Print(PRT_FATAL, "(last) travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
+#endif // DEBUG
 					break;
-				}
 			}
 
 			result->traveltype = reach.traveltype;
