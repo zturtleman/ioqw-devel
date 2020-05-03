@@ -1437,7 +1437,6 @@ int AINode_Respawn(bot_state_t *bs) {
 	if (bs->respawn_wait) {
 		if (!BotIsDead(bs)) {
 			AIEnter_Seek_LTG(bs, "RESPAWN: respawned.");
-			return qfalse;
 		} else {
 			trap_EA_Respawn(bs->client);
 		}
