@@ -1863,12 +1863,10 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach) 
 	BotCheckBlocked(ms, dir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, dir, 400);
+	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
-
-	result.flags |= MOVERESULT_SWIMVIEW;
-
-	VectorCopy(dir, result.movedir);
+	result.flags |= MOVERESULT_SWIMVIEW; // Tobias CHECK: if (ms->moveflags & MFL_SWIMMING) {
 
 	return result;
 }
@@ -1904,12 +1902,11 @@ bot_moveresult_t BotTravel_WaterJump(bot_movestate_t *ms, aas_reachability_t *re
 			EA_MoveUp(ms->client);
 		}
 	}
-	// set the ideal view angles
-	VectorToAngles(dir, result.ideal_viewangles);
-
-	result.flags |= MOVERESULT_MOVEMENTVIEW;
 
 	VectorCopy(dir, result.movedir);
+	// set the ideal view angles
+	VectorToAngles(dir, result.ideal_viewangles);
+	result.flags |= MOVERESULT_MOVEMENTVIEW; // Tobias CHECK: _MOVEMENTVIEW?
 
 	return result;
 }
@@ -1943,12 +1940,10 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 	dir[2] += 70 + crandom() * 10;
 	// elementary action move in direction
 	EA_Move(ms->client, dir, 400);
+	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
-
 	result.flags |= MOVERESULT_MOVEMENTVIEW;
-
-	VectorCopy(dir, result.movedir);
 
 	return result;
 }
@@ -2523,7 +2518,7 @@ bot_moveresult_t BotTravel_Ladder(bot_movestate_t *ms, aas_reachability_t *reach
 		viewdir[0] = dir[0];
 		viewdir[1] = dir[1];
 		viewdir[2] = 3 * dir[2];
-
+		// set the ideal view angles
 		VectorToAngles(viewdir, result.ideal_viewangles);
 		// elementary actions
 		EA_Move(ms->client, origin, 0);
@@ -2595,11 +2590,12 @@ bot_moveresult_t BotTravel_Teleport(bot_movestate_t *ms, aas_reachability_t *rea
 		EA_Move(ms->client, hordir, 400);
 	}
 
+	VectorCopy(hordir, result.movedir);
+
 	if (ms->moveflags & MFL_SWIMMING) {
 		result.flags |= MOVERESULT_SWIMVIEW;
 	}
 
-	VectorCopy(hordir, result.movedir);
 	return result;
 }
 
@@ -2682,6 +2678,9 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 		dist = VectorLength(dir);
 
 		if (dist < 64) {
+#ifdef DEBUG_ELEVATOR
+			botimport.Print(PRT_MESSAGE, "bot moving to end\n");
+#endif // DEBUG_ELEVATOR
 			if (dist > 60) {
 				dist = 60;
 			}
@@ -2763,6 +2762,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			botimport.Print(PRT_MESSAGE, "bot moving to center\n");
 #endif // DEBUG_ELEVATOR
 			dist = dist2;
+
 			VectorCopy(dir2, dir);
 		} else { // closer to the reachability start
 #ifdef DEBUG_ELEVATOR
@@ -2907,14 +2907,14 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 	if (BotOnMover(ms->origin, ms->entitynum, reach)) {
 #ifdef DEBUG_FUNCBOB
 		botimport.Print(PRT_MESSAGE, "bot on func_bobbing\n");
-#endif
+#endif // DEBUG_FUNCBOB
 		// if near end point of reachability
 		VectorSubtract(bob_origin, bob_end, dir);
 
 		if (VectorLength(dir) < 24) {
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "bot moving to reachability end\n");
-#endif
+#endif // DEBUG_FUNCBOB
 			// move to the end point
 			VectorSubtract(reach->end, ms->origin, hordir);
 
@@ -2940,7 +2940,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			if (dist > 10) {
 #ifdef DEBUG_FUNCBOB
 				botimport.Print(PRT_MESSAGE, "bot moving to func_bobbing center\n");
-#endif
+#endif // DEBUG_FUNCBOB
 				// move to the center of the func_bobbing
 				if (dist > 100) {
 					dist = 100;
@@ -2957,7 +2957,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 	} else {
 #ifdef DEBUG_FUNCBOB
 		botimport.Print(PRT_MESSAGE, "bot not ontop of func_bobbing\n");
-#endif
+#endif // DEBUG_FUNCBOB
 		// if very near the reachability end
 		VectorSubtract(reach->end, ms->origin, dir);
 
@@ -2966,7 +2966,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 		if (dist < 64) {
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "bot moving to end\n");
-#endif
+#endif // DEBUG_FUNCBOB
 			if (dist > 60) {
 				dist = 60;
 			}
@@ -3048,14 +3048,14 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 		if (dist1 < 20 || dist2 < dist1 || DotProduct(dir1, dir2) < 0) {
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "bot moving to func_bobbing center\n");
-#endif
+#endif // DEBUG_FUNCBOB
 			dist = dist2;
 
 			VectorCopy(dir2, dir);
 		} else { // closer to the reachability start
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "bot moving to reachability start\n");
-#endif
+#endif // DEBUG_FUNCBOB
 			dist = dist1;
 
 			VectorCopy(dir1, dir);
@@ -3218,6 +3218,7 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
 
 	VectorCopy(hordir, result.movedir);
+
 	return result;
 }
 
@@ -3282,6 +3283,7 @@ bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reac
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
 
 	VectorCopy(hordir, result.movedir);
+
 	return result;
 }
 
@@ -3467,9 +3469,9 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	// elementary action move in direction
 	EA_Move(ms->client, dir, speed);
 	VectorCopy(dir, result.movedir);
-
+	// set the ideal view angles
 	if (ms->moveflags & MFL_SWIMMING) {
-		VectorToAngles(dir, result.ideal_viewangles);
+		VectorToAngles(dir, result.ideal_viewangles); // Tobias CHECK: only if MFL_SWIMMING
 		result.flags |= MOVERESULT_SWIMVIEW;
 	}
 	//if (!debugline) debugline = botimport.DebugLineCreate();
