@@ -1664,7 +1664,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 			BotCheckBlocked(ms, sideward, qtrue, &result);
 			// elementary action move in direction
 			EA_Move(ms->client, sideward, 400);
-			VectorCopy(sideward, result.movedir);
+			//VectorCopy(sideward, result.movedir); // Tobias NOTE: no need to save the movement direction here?
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
@@ -1675,7 +1675,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 				BotCheckBlocked(ms, sideward, qtrue, &result);
 				// elementary action move in direction
 				EA_Move(ms->client, sideward, 400);
-				VectorCopy(sideward, result.movedir);
+				//VectorCopy(sideward, result.movedir); // Tobias NOTE: no need to save the movement direction here?
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
@@ -1866,7 +1866,10 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach) 
 	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
-	result.flags |= MOVERESULT_SWIMVIEW; // Tobias CHECK: if (ms->moveflags & MFL_SWIMMING) {
+
+	if (ms->moveflags & MFL_SWIMMING) {
+		result.flags |= MOVERESULT_SWIMVIEW;
+	}
 
 	return result;
 }
@@ -1906,7 +1909,12 @@ bot_moveresult_t BotTravel_WaterJump(bot_movestate_t *ms, aas_reachability_t *re
 	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
-	result.flags |= MOVERESULT_MOVEMENTVIEW; // Tobias CHECK: _MOVEMENTVIEW?
+
+	if (ms->moveflags & MFL_SWIMMING) {
+		result.flags |= MOVERESULT_SWIMVIEW;
+	} else {
+		result.flags |= MOVERESULT_MOVEMENTVIEW;
+	}
 
 	return result;
 }
@@ -3470,8 +3478,9 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	EA_Move(ms->client, dir, speed);
 	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
+	VectorToAngles(dir, result.ideal_viewangles);
+
 	if (ms->moveflags & MFL_SWIMMING) {
-		VectorToAngles(dir, result.ideal_viewangles); // Tobias CHECK: only if MFL_SWIMMING
 		result.flags |= MOVERESULT_SWIMVIEW;
 	}
 	//if (!debugline) debugline = botimport.DebugLineCreate();
