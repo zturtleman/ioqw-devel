@@ -3960,6 +3960,10 @@ void BotResetAvoidReach(int movestate) {
 	Com_Memset(ms->avoidreach, 0, MAX_AVOIDREACH * sizeof(int));
 	Com_Memset(ms->avoidreachtimes, 0, MAX_AVOIDREACH * sizeof(float));
 	Com_Memset(ms->avoidreachtries, 0, MAX_AVOIDREACH * sizeof(int));
+	// also clear some movestate stuff
+	ms->lastareanum = 0;
+	ms->lastgoalareanum = 0;
+	ms->lastreachnum = 0;
 }
 
 /*
