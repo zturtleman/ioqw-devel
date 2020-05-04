@@ -38,6 +38,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "botlib.h"
 #include "be_aas.h"
 #include "be_aas_funcs.h"
+#include "be_aas_route.h"
 #include "be_interface.h"
 #include "be_aas_def.h"
 #include "be_ea.h"
@@ -3504,9 +3505,10 @@ BotMoveToGoal
 =======================================================================================================================================
 */
 void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, int travelflags) {
-	int reachnum, lastreachnum, foundjumppad, ent, resultflags;
+	int reachnum, lastreachnum, foundjumppad, ent, resultflags, ftraveltime, freachnum, straveltime, ltraveltime;
 	aas_reachability_t reach, lastreach;
 	bot_movestate_t *ms;
+	vec3_t dir;
 	//vec3_t mins, maxs, up = {0, 0, 1};
 	//bsp_trace_t trace;
 	//static int debugline;
@@ -3940,6 +3942,48 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	// FIXME: is it right to do this here?
 	if (result->blocked) {
 		ms->reachability_time -= 10 * ms->thinktime;
+	}
+	// try to look in the direction we will be moving ahead of time
+	if (reachnum > 0 && !(result->flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW))) {
+		AAS_ReachabilityFromNum(reachnum, &reach);
+
+		if (reach.areanum != goal->areanum) {
+			if (AAS_AreaRouteToGoalArea(reach.areanum, reach.end, goal->areanum, travelflags, &straveltime, &freachnum)) {
+				ltraveltime = 999999;
+
+				while (AAS_AreaRouteToGoalArea(reach.areanum, reach.end, goal->areanum, travelflags, &ftraveltime, &freachnum)) {
+					// make sure we are not in a loop
+					if (ftraveltime > ltraveltime) {
+						break;
+					}
+
+					ltraveltime = ftraveltime;
+
+					AAS_ReachabilityFromNum(freachnum, &reach);
+
+					if (reach.areanum == goal->areanum) {
+						VectorSubtract(goal->origin, ms->origin, dir);
+						VectorNormalize(dir);
+						VectorToAngles(dir, result->ideal_viewangles);
+						result->flags |= MOVERESULT_FUTUREVIEW;
+						break;
+					}
+
+					if (straveltime - ftraveltime > 120) {
+						VectorSubtract(reach.end, ms->origin, dir);
+						VectorNormalize(dir);
+						VectorToAngles(dir, result->ideal_viewangles);
+						result->flags |= MOVERESULT_FUTUREVIEW;
+						break;
+					}
+				}
+			}
+		} else {
+			VectorSubtract(goal->origin, ms->origin, dir);
+			VectorNormalize(dir);
+			VectorToAngles(dir, result->ideal_viewangles);
+			result->flags |= MOVERESULT_FUTUREVIEW;
+		}
 	}
 }
 
