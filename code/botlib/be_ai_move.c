@@ -888,7 +888,8 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, in
 			continue;
 		}
 		// get the travel time (ignore routes that leads us back to our current area)
-		t = AAS_AreaTravelTimeToGoalAreaCheckLoop(reach.areanum, reach.end, goal->areanum, travelflags, areanum);
+		//t = AAS_AreaTravelTimeToGoalAreaCheckLoop(reach.areanum, reach.end, goal->areanum, travelflags, areanum); // Tobias NOTE: this doesn't work well for q3 CTF games (only use it for ai_cast monsters?)
+		t = AAS_AreaTravelTimeToGoalArea(reach.areanum, reach.end, goal->areanum, travelflags);
 		// if the goal area isn't reachable from the reachable area
 		if (!t) {
 			continue;
