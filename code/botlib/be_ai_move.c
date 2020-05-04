@@ -883,8 +883,12 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, in
 		if (!BotValidTravel(origin, &reach, travelflags)) {
 			continue;
 		}
-		// get the travel time
-		t = AAS_AreaTravelTimeToGoalArea(reach.areanum, reach.end, goal->areanum, travelflags);
+		// ignore disabled areas
+		if (!AAS_AreaReachability(reach.areanum)) {
+			continue;
+		}
+		// get the travel time (ignore routes that leads us back to our current area)
+		t = AAS_AreaTravelTimeToGoalAreaCheckLoop(reach.areanum, reach.end, goal->areanum, travelflags, areanum);
 		// if the goal area isn't reachable from the reachable area
 		if (!t) {
 			continue;
@@ -1586,8 +1590,8 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 // Tobias END
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, hordir);
-	// if going towards a crouch area
-	if (!(AAS_AreaPresenceType(reach->areanum) & PRESENCE_NORMAL)) {
+	// if going towards a crouch area (some areas have a 0 presence)
+	if ((AAS_AreaPresenceType(reach->areanum) & PRESENCE_CROUCH) && !(AAS_AreaPresenceType(reach->areanum) & PRESENCE_NORMAL)) {
 		// if pretty close to the reachable area
 		if (dist < (200 + currentspeed) * 0.1f) {
 			EA_Crouch(ms->client);
@@ -3459,7 +3463,7 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 
 	dist = VectorNormalize(dir);
 
-	if (dist > 100) {
+	if (dist > 100 || (goal->flags & GFL_NOSLOWAPPROACH)) {
 		dist = 100;
 	}
 
@@ -3512,6 +3516,8 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	result->blockentity = 0;
 	result->traveltype = 0;
 	result->flags = 0;
+
+	reachnum = 0;
 
 	ms = BotMoveStateFromHandle(movestate);
 
