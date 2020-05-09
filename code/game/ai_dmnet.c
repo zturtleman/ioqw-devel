@@ -2504,7 +2504,13 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// aim at the enemy
 	BotAimAtEnemy(bs);
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	if (!bot_alt_attack.integer) {
+		BotCheckAttack(bs);
+	} else {
+		BotCheckAttack_Alt(bs);
+	}
+// DEBUG
 	// if the bot wants to retreat
 	if (!(bs->flags & BFL_FIGHTSUICIDAL)) {
 		if (BotWantsToRetreat(bs)) {
@@ -2933,7 +2939,13 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	if (!bot_alt_attack.integer) {
+		BotCheckAttack(bs);
+	} else {
+		BotCheckAttack_Alt(bs);
+	}
+// DEBUG
 	return qtrue;
 }
 
@@ -3095,7 +3107,13 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	if (!bot_alt_attack.integer) {
+		BotCheckAttack(bs);
+	} else {
+		BotCheckAttack_Alt(bs);
+	}
+// DEBUG
 	// if there is an enemy
 	if (BotFindEnemy(bs, -1)) {
 #ifdef DEBUG

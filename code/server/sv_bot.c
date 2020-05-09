@@ -553,12 +553,13 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_equalizer_fembon", "8", 0);
 	Cvar_Get("bot_equalizer_teambon", "5", 0); //10
 	Cvar_Get("bot_noshoot", "0", 0);
-	Cvar_Get("bot_nowalk", "0", 0);
+	Cvar_Get("bot_nowalk", "1", 0);
 	Cvar_Get("bot_shownodechanges", "0", 0);
 	Cvar_Get("bot_teambluestrategy", "0", 0);
 	Cvar_Get("bot_teamredstrategy", "0", 0);
 	// try alternate variants
 	Cvar_Get("bot_alt_aggressive", "1", 0);
+	Cvar_Get("bot_alt_attack", "1", 0);
 	Cvar_Get("bot_alt_pickup", "1", 0);
 	// server info
 	Cvar_Get("bot_minplayers", "0", CVAR_SERVERINFO);	// minimum players in a team or the game
