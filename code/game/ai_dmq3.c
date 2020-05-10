@@ -5509,7 +5509,11 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	int i;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
-	vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
+	static vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
+//	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
+//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
+//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
+//	float *mins, *maxs;
 	weaponinfo_t wi;
 	aas_entityinfo_t entinfo;
 	bot_goal_t goal;
@@ -5724,6 +5728,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		aim_accuracy = 1.0f;
 	}
 //#endif
+	bs->allowHitWorld = qfalse;
 	// if the enemy is visible
 	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(entinfo.origin, bestorigin);
@@ -5807,7 +5812,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 				end[2] -= 64;
 
-				BotAI_Trace(&trace, entinfo.origin, NULL, NULL, end, entinfo.number, MASK_SHOT);
+				BotAI_Trace(&trace, entinfo.origin, mins, maxs, end, entinfo.number, MASK_SHOT);
 				VectorCopy(bestorigin, groundtarget); // Tobias CHECK: is 'bestorigin' wrong now (changed above), or was it always strange to use 'bestorigin' instead of 'end' ?
 
 				if (trace.startsolid) {
@@ -5816,7 +5821,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					groundtarget[2] = trace.endpos[2] - 8;
 				}
 				// trace a line from projectile start to ground target
-				BotAI_Trace(&trace, start, NULL, NULL, groundtarget, bs->entitynum, MASK_SHOT);
+				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->entitynum, MASK_SHOT);
 				// if hitpoint is not vertically too far from the ground target
 				if (fabs(trace.endpos[2] - groundtarget[2]) < 50) {
 					VectorSubtract(trace.endpos, groundtarget, dir);
@@ -5828,13 +5833,15 @@ void BotAimAtEnemy(bot_state_t *bs) {
 							// check if the bot is visible from the ground target
 							trace.endpos[2] += 1;
 
-							BotAI_Trace(&trace, trace.endpos, NULL, NULL, entinfo.origin, entinfo.number, MASK_SHOT);
+							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, MASK_SHOT);
 
 							if (trace.fraction >= 1) {
 #ifdef DEBUG
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, AAS_Time());
 #endif
 								VectorCopy(groundtarget, bestorigin);
+								// allow the bot to shoot at the ground
+								bs->allowHitWorld = qtrue;
 							}
 						}
 					}
@@ -5850,7 +5857,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 //#ifdef DEBUG
 		}
 //#endif
-		BotAI_Trace(&trace, bs->eye, NULL, NULL, bestorigin, bs->entitynum, MASK_SHOT);
+		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	// if the enemy is NOT visible
 	} else {
@@ -5880,7 +5887,8 @@ void BotAimAtEnemy(bot_state_t *bs) {
 						}
 					}
 				}
-
+				// allow the bot to shoot at the ground
+				bs->allowHitWorld = qtrue;
 				aim_accuracy = 1.0f;
 			}
 		}
@@ -6120,7 +6128,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		return;
 	}
 
-	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, MASK_SHOT); // Tobias NOTE: does this still contradict aiming at the floor in front of enemies if mins/maxs is set? Why NULL, NULL?
+	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, MASK_SHOT);
 
 	if (bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
@@ -6443,9 +6451,9 @@ void BotCheckAttack_Alt(bot_state_t *bs) {
 		}
 	}
 
-	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, mask); // Tobias NOTE: does this still contradict aiming at the floor in front of enemies if mins/maxs is set? Why NULL, NULL?
+	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
 
-	if (bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
+	if (!bs->allowHitWorld && bsptrace.fraction < 1.0 && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
