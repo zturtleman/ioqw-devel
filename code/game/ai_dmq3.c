@@ -5746,12 +5746,21 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 
 		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
 		// if the enemy is NOT hit
-		if (trace.fraction <= 1 && trace.entityNum != entinfo.number) {
+		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
 			bestorigin[2] += 8;
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
+			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
+			// if the enemy is still NOT hit
+			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
+				// aim a bit lower
+				bestorigin[2] -= 24;
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy NOT hit. Aiming lower!\n", netname);
+#endif
+			}
 		}
 		// if it is not an instant hit weapon the bot might want to predict the enemy
 		if (!BotUsesInstantHitWeapon(bs)) {
@@ -6272,12 +6281,21 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
 		// if the enemy is NOT hit
-		if (trace.fraction <= 1 && trace.entityNum != entinfo.number) {
+		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
 			bestorigin[2] += 8;
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
+			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
+			// if the enemy is still NOT hit
+			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
+				// aim a bit lower
+				bestorigin[2] -= 24;
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy NOT hit. Aiming lower!\n", netname);
+#endif
+			}
 		}
 		// if it is not an instant hit weapon the bot might want to predict the enemy
 		if (!BotUsesInstantHitWeapon(bs)) {
