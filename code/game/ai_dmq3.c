@@ -5507,14 +5507,13 @@ BotAimAtEnemy_Alt
 =======================================================================================================================================
 */
 void BotAimAtEnemy_Alt(bot_state_t *bs) {
-	int i;
+	int i, mask;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight;
 	vec3_t dir, bestorigin, end, start, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
-	static vec3_t mins = {-4, -4, -4}, maxs = {4, 4, 4};
-//	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
+	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
 //	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
-//	float *mins, *maxs;
+	float *mins, *maxs;
 	weaponinfo_t wi;
 	aas_entityinfo_t entinfo;
 	bot_goal_t goal;
@@ -5564,54 +5563,97 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 		case WP_MACHINEGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_CHAINGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_SHOTGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_NAILGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_NAILGUN, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_PROXLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PROXLAUNCHER, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
 			break;
 		case WP_GRENADELAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
 			break;
 		case WP_NAPALMLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_NAPALMLAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAPALMLAUNCHER, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
 			break;
 		case WP_ROCKETLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
 			break;
 		case WP_BEAMGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
 			break;
 		case WP_PLASMAGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
 			break;
 		case WP_BFG:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
 			break;
 		default:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
 			break;
 	}
 // Tobias FIXME: this is nonsense, if reactiontime is 0 than this has no effect (0.5 * 0 = 0)
@@ -5744,7 +5786,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 		start[2] += bs->cur_ps.viewheight;
 		start[2] += wi.offset[2];
 
-		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
+		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
 		// if the enemy is NOT hit
 		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
@@ -5752,7 +5794,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
-			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
+			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
 			// if the enemy is still NOT hit
 			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 				// aim a bit lower
@@ -5822,7 +5864,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 
 				end[2] -= 64;
 
-				BotAI_Trace(&trace, entinfo.origin, mins, maxs, end, entinfo.number, MASK_SHOT);
+				BotAI_Trace(&trace, entinfo.origin, mins, maxs, end, entinfo.number, mask);
 				VectorCopy(bestorigin, groundtarget); // Tobias CHECK: is 'bestorigin' wrong now (changed above), or was it always strange to use 'bestorigin' instead of 'end' ?
 
 				if (trace.startsolid) {
@@ -5831,7 +5873,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 					groundtarget[2] = trace.endpos[2] - 8;
 				}
 				// trace a line from projectile start to ground target
-				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->entitynum, MASK_SHOT);
+				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->entitynum, mask);
 				// if hitpoint is not vertically too far from the ground target
 				if (fabs(trace.endpos[2] - groundtarget[2]) < 50) {
 					VectorSubtract(trace.endpos, groundtarget, dir);
@@ -5843,9 +5885,9 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 							// check if the bot is visible from the ground target
 							trace.endpos[2] += 1;
 
-							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, MASK_SHOT);
+							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, mask);
 
-							if (trace.fraction >= 1) {
+							if (trace.fraction >= 1.0f) {
 #ifdef DEBUG
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, AAS_Time());
 #endif
@@ -5867,7 +5909,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 //#ifdef DEBUG
 		}
 //#endif
-		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
+		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, mask);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	// if the enemy is NOT visible
 	} else {
@@ -5959,17 +6001,17 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 
 		topOfArc[2] += (dist * wi.proj.gravity) + (enemyHeight > 0 ? enemyHeight * 0.1 : 0);
 		// trace from start to middle, check if the projectile will be blocked by something
-		BotAI_Trace(&trace, start, mins, maxs, topOfArc, entinfo.number, MASK_SHOT);
+		BotAI_Trace(&trace, start, mins, maxs, topOfArc, entinfo.number, mask);
 		// if the projectile will not be blocked
-		if (trace.fraction >= 1) {
+		if (trace.fraction >= 1.0f) {
 			// get the end point (the projectiles impact point), for safety sake take overhead ledges into account (so we trace along the highest point of the arc, from middle to end)
 			VectorCopy(entinfo.origin, end);
 
 			end[2] += 20;
 			// trace from middle to end, check if the projectile will be blocked by something
-			BotAI_Trace(&trace, topOfArc, mins, maxs, end, entinfo.number, MASK_SHOT);
+			BotAI_Trace(&trace, topOfArc, mins, maxs, end, entinfo.number, mask);
 			// if the projectile will not be blocked
-			if (trace.fraction >= 1) {
+			if (trace.fraction >= 1.0f) {
 				// take projectile speed, gravity and enemy height into account
 				bestorigin[2] += (dist * dist / wi.speed * wi.proj.gravity) + (enemyHeight > 0 ? enemyHeight * 0.1 : 0);
 #ifdef DEBUG
