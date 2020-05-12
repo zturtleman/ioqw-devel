@@ -1114,12 +1114,14 @@ qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter) {
 	bottomcenter[2] = reach->start[2];
 	return qtrue;
 }
-
+// Tobias NOTE: we do not (or no longer) need a BSPC version of 'BotGapDistance' so we trace through the bsp instead of the aas world.
+//#ifdef BSPC
 /*
 =======================================================================================================================================
 BotGapDistance
 =======================================================================================================================================
 */
+/*
 static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 	int gapdist, checkdist;
 	vec3_t start, end;
@@ -1153,6 +1155,57 @@ static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 					break;
 				}
 				// if a gap is found slow down
+				return gapdist;
+			}
+
+			origin[2] = trace.endpos[2];
+		}
+	}
+
+	return 0;
+}
+#else
+*/
+/*
+=======================================================================================================================================
+BotGapDistance
+=======================================================================================================================================
+*/
+static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
+	int gapdist, checkdist;
+	vec3_t start, end, mins, maxs;
+	bsp_trace_t trace;
+
+	// get the current speed
+	checkdist = DotProduct(ms->velocity, hordir);
+
+	if (checkdist < 8) {
+		checkdist = 8;
+	}
+	// do gap checking
+	for (gapdist = 8; gapdist <= checkdist; gapdist += 8) {
+		VectorMA(origin, gapdist, hordir, start);
+
+		start[2] = origin[2] + 24;
+
+		VectorCopy(start, end);
+
+		end[2] -= 48 + sv_maxbarrier->value;
+
+		AAS_PresenceTypeBoundingBox(PRESENCE_CROUCH, mins, maxs);
+		trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		// if solid is found the bot can't walk any further and fall into a gap
+		if (!trace.startsolid) {
+			// if it is a gap
+			if (trace.endpos[2] < origin[2] - sv_maxbarrier->value) {
+				VectorCopy(trace.endpos, end);
+
+				end[2] -= 20;
+
+				if (AAS_PointContents(end) & CONTENTS_WATER) {
+					break;
+				}
+				// if a gap is found slow down
 				//botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "BotGapDistance: found a gap at %i (checkdist = %i).\n", gapdist, checkdist);
 				return gapdist;
 			}
@@ -1163,7 +1216,7 @@ static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 
 	return 0;
 }
-
+//#endif // Tobias END
 /*
 =======================================================================================================================================
 BotCheckBarrierCrouch
@@ -1216,14 +1269,16 @@ BotCheckBarrierJump
 =======================================================================================================================================
 */
 int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean doMovement) {
-	vec3_t start, hordir, end;
-	aas_trace_t trace;
+	vec3_t start, hordir, mins, maxs, end;
+	bsp_trace_t trace;
 
 	VectorCopy(ms->origin, end);
 
 	end[2] += sv_maxbarrier->value;
+
+	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 	// trace right up
-	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// this shouldn't happen... but we check anyway
 	if (trace.startsolid) {
 		return qfalse;
@@ -1243,7 +1298,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 
 	end[2] = trace.endpos[2];
 	// trace from previous trace end pos horizontally in the move direction
-	trace = AAS_TraceClientBBox(start, end, PRESENCE_NORMAL, ms->entitynum);
+	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// again this shouldn't happen
 	if (trace.startsolid) {
 		return qfalse;
@@ -1254,7 +1309,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 
 	end[2] = ms->origin[2];
 	// trace down from the previous trace end pos
-	trace = AAS_TraceClientBBox(start, end, PRESENCE_NORMAL, ms->entitynum);
+	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if solid
 	if (trace.startsolid) {
 		return qfalse;
