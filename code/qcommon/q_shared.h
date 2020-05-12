@@ -652,6 +652,7 @@ qboolean BoundsIntersectSphere(const vec3_t mins, const vec3_t maxs, const vec3_
 qboolean BoundsIntersectPoint(const vec3_t mins, const vec3_t maxs, const vec3_t origin);
 float AngleMod(float a);
 float LerpAngle(float from, float to, float frac);
+float AngleDifference(float ang1, float ang2);
 float AngleSubtract(float a1, float a2);
 void AnglesSubtract(vec3_t v1, vec3_t v2, vec3_t v3);
 float AngleNormalize360(float angle);
