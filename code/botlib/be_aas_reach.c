@@ -3067,6 +3067,7 @@ void AAS_Reachability_Teleport(void) {
 			lreach->traveltype |= AAS_TravelFlagsForTeam(ent);
 			lreach->traveltime = aassettings.rs_teleport;
 			lreach->next = areareachability[area1num];
+
 			areareachability[area1num] = lreach;
 
 			reach_teleport++;
@@ -3711,12 +3712,11 @@ void AAS_Reachability_FuncBobbing(void) {
 					lreach->traveltype = TRAVEL_FUNCBOB;
 					lreach->traveltype |= AAS_TravelFlagsForTeam(ent);
 					lreach->traveltime = aassettings.rs_funcbob;
-
-					reach_funcbob++;
-
 					lreach->next = areareachability[startreach->areanum];
 
 					areareachability[startreach->areanum] = lreach;
+
+					reach_funcbob++;
 				}
 			}
 
@@ -4269,7 +4269,9 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 						}
 
 						lreach->next = areareachability[area1num];
+
 						areareachability[area1num] = lreach;
+
 						reach_rocketjump++;
 						return qtrue;
 					}
