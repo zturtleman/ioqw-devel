@@ -50,12 +50,13 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define REACHABILITYAREASPERCYCLE 15
 // number of units reachability points are placed inside the areas
 #define INSIDEUNITS 2
-#define INSIDEUNITS_SWIM 1
 #define INSIDEUNITS_WALKSTART 0.1
 #define INSIDEUNITS_WALKEND 5
 // added this for better walking off ledges
 #define INSIDEUNITS_WALKOFFLEDGESTART 0.1
 #define INSIDEUNITS_WALKOFFLEDGEEND 5
+#define INSIDEUNITS_SWIMSTART 1
+#define INSIDEUNITS_SWIMEND 2
 #define INSIDEUNITS_WATERJUMP 15
 // area flag used for weapon jumping
 #define AREA_WEAPONJUMP 8192 // valid area to weapon jump to
@@ -883,7 +884,7 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 	aas_lreachability_t *lreach;
 	aas_face_t *face1;
 	aas_plane_t *plane;
-	vec3_t start;
+	vec3_t start, end;
 
 	if (!AAS_AreaSwim(area1num) || !AAS_AreaSwim(area2num)) {
 		return qfalse;
@@ -930,11 +931,11 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 					lreach->facenum = face1num;
 					lreach->edgenum = 0;
 
-					VectorCopy(start, lreach->start);
-
 					plane = &aasworld.planes[face1->planenum ^ side1];
 
-					VectorMA(lreach->start, INSIDEUNITS_SWIM, plane->normal, lreach->end);
+					VectorCopy(start, end);
+					VectorMA(start, INSIDEUNITS_SWIMSTART, plane->normal, lreach->start);
+					VectorMA(end, INSIDEUNITS_SWIMEND, plane->normal, lreach->end);
 
 					lreach->traveltype = TRAVEL_SWIM;
 					lreach->traveltime = 1;
@@ -1475,7 +1476,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 	// check for a waterjump reachability
 	if (water_foundreach) {
 		// get a test point a little bit towards area1
-		VectorMA(water_bestend, -INSIDEUNITS_SWIM, water_bestnormal, testpoint);
+		VectorMA(water_bestend, -INSIDEUNITS, water_bestnormal, testpoint);
 		// go down the maximum waterjump height
 		testpoint[2] -= aassettings.phys_maxwaterjump;
 		// if there IS water the phys_maxwaterjump height below the bestend point
