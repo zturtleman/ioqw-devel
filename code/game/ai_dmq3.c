@@ -1638,12 +1638,16 @@ char *EasyClientName(int client, char *buf, int size) {
 			memmove(str2, str1 + 1, strlen(str1 + 1) + 1);
 		}
 	}
-	// remove Mr prefix
-	if ((name[0] == 'm' || name[0] == 'M') && (name[1] == 'r' || name[1] == 'R')) {
+	// remove Mr and Ms prefix
+	if ((name[0] == 'm' || name[0] == 'M') && (name[1] == 'r' || name[1] == 'R' || name[1] == 's' || name[1] == 'S')) {
 		memmove(name, name + 2, strlen(name + 2) + 1);
 	}
 	// only allow lower case alphabet characters
 	ptr = name;
+	// allow first character being upper case
+	if (*ptr >= 'A' && *ptr <= 'Z') {
+		ptr++;
+	}
 
 	while (*ptr) {
 		c = *ptr;
