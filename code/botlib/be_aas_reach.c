@@ -50,8 +50,12 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define REACHABILITYAREASPERCYCLE 15
 // number of units reachability points are placed inside the areas
 #define INSIDEUNITS 2
-#define INSIDEUNITS_WALKEND 5
+#define INSIDEUNITS_SWIM 1
 #define INSIDEUNITS_WALKSTART 0.1
+#define INSIDEUNITS_WALKEND 5
+// added this for better walking off ledges
+#define INSIDEUNITS_WALKOFFLEDGESTART 0.1
+#define INSIDEUNITS_WALKOFFLEDGEEND 5
 #define INSIDEUNITS_WATERJUMP 15
 // area flag used for weapon jumping
 #define AREA_WEAPONJUMP 8192 // valid area to weapon jump to
@@ -930,7 +934,7 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 
 					plane = &aasworld.planes[face1->planenum ^ side1];
 
-					VectorMA(lreach->start, -INSIDEUNITS, plane->normal, lreach->end);
+					VectorMA(lreach->start, INSIDEUNITS_SWIM, plane->normal, lreach->end);
 
 					lreach->traveltype = TRAVEL_SWIM;
 					lreach->traveltime = 1;
@@ -1042,8 +1046,8 @@ int AAS_Reachability_EqualFloorHeight(int area1num, int area2num) {
 					CrossProduct(edgevec, plane2->normal, normal);
 					VectorNormalize(normal);
 					//VectorMA(start, -1, normal, start);
-					VectorMA(end, INSIDEUNITS_WALKEND, normal, end);
 					VectorMA(start, INSIDEUNITS_WALKSTART, normal, start);
+					VectorMA(end, INSIDEUNITS_WALKEND, normal, end);
 
 					end[2] += 0.125;
 					height = DotProduct(invgravity, start);
@@ -1471,7 +1475,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 	// check for a waterjump reachability
 	if (water_foundreach) {
 		// get a test point a little bit towards area1
-		VectorMA(water_bestend, -INSIDEUNITS, water_bestnormal, testpoint);
+		VectorMA(water_bestend, -INSIDEUNITS_SWIM, water_bestnormal, testpoint);
 		// go down the maximum waterjump height
 		testpoint[2] -= aassettings.phys_maxwaterjump;
 		// if there IS water the phys_maxwaterjump height below the bestend point
@@ -1644,8 +1648,8 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 							lreach->facenum = 0;
 							lreach->edgenum = ground_bestarea2groundedgenum;
 
-							VectorCopy(ground_beststart, lreach->start);
-							VectorCopy(ground_bestend, lreach->end);
+							VectorMA(ground_beststart, INSIDEUNITS_WALKOFFLEDGESTART, ground_bestnormal, lreach->start);
+							VectorMA(ground_bestend, INSIDEUNITS_WALKOFFLEDGEEND, ground_bestnormal, lreach->end);
 
 							lreach->traveltype = TRAVEL_WALKOFFLEDGE;
 							lreach->traveltime = aassettings.rs_startwalkoffledge + fabs(ground_bestdist) * 50 / aassettings.phys_gravity;
