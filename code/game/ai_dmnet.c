@@ -309,6 +309,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 
 	// if the bot has no goal
 	if (!trap_BotGetTopGoal(bs->gs, goal)) {
+		AIEnter_Wait(bs, "BotDeathmatchAI: no ltg on stack");
 		//BotAI_Print(PRT_MESSAGE, "no ltg on stack\n");
 		bs->ltg_time = 0;
 	// if the bot touches the current goal
