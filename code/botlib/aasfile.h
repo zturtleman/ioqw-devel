@@ -50,7 +50,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TRAVEL_TELEPORT		10 // teleportation
 #define TRAVEL_ELEVATOR		11 // travel by elevator
 #define TRAVEL_ROCKETJUMP	12 // rocket jumping required for travel
-#define TRAVEL_BFGJUMP		13 // bfg jumping required for travel
+//#define TRAVEL_BFGJUMP		13 // bfg jumping required for travel
 #define TRAVEL_GRAPPLEHOOK	14 // grappling hook required for travel // Tobias TODO: Removing this breaks compatibility!
 #define TRAVEL_DOUBLEJUMP	15 // double jump
 #define TRAVEL_RAMPJUMP		16 // ramp jump

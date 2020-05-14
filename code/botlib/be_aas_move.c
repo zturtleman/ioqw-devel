@@ -106,7 +106,6 @@ void AAS_InitSettings(void) {
 	aassettings.rs_startwalkoffledge = LibVarValue("rs_startwalkoffledge", "70");
 	aassettings.rs_startjump = LibVarValue("rs_startjump", "300");
 	aassettings.rs_rocketjump = LibVarValue("rs_rocketjump", "500");
-	aassettings.rs_bfgjump = LibVarValue("rs_bfgjump", "500");
 	aassettings.rs_jumppad = LibVarValue("rs_jumppad", "250");
 	aassettings.rs_aircontrolledjumppad = LibVarValue("rs_aircontrolledjumppad", "300");
 	aassettings.rs_funcbob = LibVarValue("rs_funcbob", "300");
@@ -324,8 +323,6 @@ float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage) {
 	if (points < 0) {
 		points = 0;
 	}
-	// the owner of the rocket gets half the damage
-	points *= 0.5;
 	// mass of the bot (g_client.c: PutClientInServer)
 	mass = 200;
 	// knockback is the same as the damage points
@@ -347,16 +344,6 @@ AAS_RocketJumpZVelocity
 */
 float AAS_RocketJumpZVelocity(vec3_t origin) {
 	// rocket radius damage is 120 (g_weapon.c: Weapon_RocketLauncher_Fire)
-	return AAS_WeaponJumpZVelocity(origin, 120);
-}
-
-/*
-=======================================================================================================================================
-AAS_BFGJumpZVelocity
-=======================================================================================================================================
-*/
-float AAS_BFGJumpZVelocity(vec3_t origin) {
-	// bfg radius damage is 120 (g_weapon.c: Weapon_BFG_Fire)
 	return AAS_WeaponJumpZVelocity(origin, 120);
 }
 
