@@ -45,7 +45,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TFL_TELEPORT		0x00000400 // teleporting
 #define TFL_ELEVATOR		0x00000800 // elevator
 #define TFL_ROCKETJUMP		0x00001000 // rocket jumping
-#define TFL_BFGJUMP			0x00002000 // bfg jumping
+//#define TFL_BFGJUMP			0x00002000 // bfg jumping
 #define TFL_DOUBLEJUMP		0x00004000 // double jump
 #define TFL_RAMPJUMP		0x00008000 // ramp jump
 #define TFL_STRAFEJUMP		0x00010000 // strafe jump

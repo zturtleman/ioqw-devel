@@ -563,9 +563,6 @@ void AAS_PrintTravelType(int traveltype) {
 		case TRAVEL_ROCKETJUMP:
 			str = "TRAVEL_ROCKETJUMP";
 			break;
-		case TRAVEL_BFGJUMP:
-			str = "TRAVEL_BFGJUMP";
-			break;
 		case TRAVEL_JUMPPAD:
 			str = "TRAVEL_JUMPPAD";
 			break;

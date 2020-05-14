@@ -464,7 +464,6 @@ void AAS_ShowTotals(void)
 	AAS_ShowNumReachabilities(TRAVEL_TELEPORT, "teleport");
 	AAS_ShowNumReachabilities(TRAVEL_ELEVATOR, "elevator");
 	AAS_ShowNumReachabilities(TRAVEL_ROCKETJUMP, "rocket jump");
-	AAS_ShowNumReachabilities(TRAVEL_BFGJUMP, "bfg jump");
 	AAS_ShowNumReachabilities(TRAVEL_DOUBLEJUMP, "double jump");
 	AAS_ShowNumReachabilities(TRAVEL_RAMPJUMP, "ramp jump");
 	AAS_ShowNumReachabilities(TRAVEL_STRAFEJUMP, "strafe jump");

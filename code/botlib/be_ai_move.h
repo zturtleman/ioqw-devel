@@ -31,7 +31,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define MOVE_JUMP		0x00000002
 #define MOVE_CROUCH		0x00000004
 #define MOVE_ROCKETJUMP	0x00000008
-#define MOVE_BFGJUMP	0x00000010
 // move flags
 #define MFL_ONGROUND		0x00000001 // bot is in the ground
 #define MFL_BARRIERJUMP		0x00000002 // bot is performing a barrier jump
