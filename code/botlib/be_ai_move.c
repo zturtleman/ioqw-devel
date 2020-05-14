@@ -3976,7 +3976,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		ms->reachability_time -= 10 * ms->thinktime;
 	}
 	// try to look in the direction we will be moving ahead of time
-	if (reachnum > 0 && !(result->flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW))) {
+	if (reachnum > 0 && !(result->flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTWEAPON|MOVERESULT_SWIMVIEW))) {
 		AAS_ReachabilityFromNum(reachnum, &reach);
 
 		if (reach.areanum != goal->areanum) {
