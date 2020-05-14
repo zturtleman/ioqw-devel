@@ -1924,6 +1924,8 @@ bot_moveresult_t BotTravel_WaterJump(bot_movestate_t *ms, aas_reachability_t *re
 	VectorNormalize(dir);
 
 	dist = VectorNormalize(hordir);
+
+	BotCheckBlocked(ms, dir, qfalse, &result);
 	// elementary actions
 	//EA_Move(ms->client, dir, 400);
 	EA_MoveForward(ms->client);
@@ -1976,12 +1978,19 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 	dir[0] += crandom() * 10;
 	dir[1] += crandom() * 10;
 	dir[2] += 70 + crandom() * 10;
+
+	BotCheckBlocked(ms, dir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, dir, 400);
 	VectorCopy(dir, result.movedir);
 	// set the ideal view angles
 	VectorToAngles(dir, result.ideal_viewangles);
-	result.flags |= MOVERESULT_MOVEMENTVIEW;
+
+	if (ms->moveflags & MFL_SWIMMING) {
+		result.flags |= MOVERESULT_SWIMVIEW;
+	} else {
+		result.flags |= MOVERESULT_MOVEMENTVIEW;
+	}
 
 	return result;
 }
@@ -2201,8 +2210,7 @@ bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachabil
 	bot_moveresult_t_cleared(result);
 
 	VectorSubtract(reach->end, ms->origin, dir);
-	BotCheckBlocked(ms, dir, qtrue, &result);
-	VectorSubtract(reach->end, ms->origin, v);
+	VectorSubtract(reach->end, ms->origin, v); // Tobias NOTE: dir AND v?
 
 	v[2] = 0;
 	dist = VectorNormalize(v);
@@ -2219,6 +2227,8 @@ bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachabil
 		hordir[2] = 0;
 		speed = 400;
 	}
+
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -3275,6 +3285,8 @@ bot_moveresult_t BotFinishTravel_WeaponJump(bot_movestate_t *ms, aas_reachabilit
 		VectorNormalize(hordir);
 		speed = 400;
 	}
+
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -3296,7 +3308,7 @@ bot_moveresult_t BotTravel_JumpPad(bot_movestate_t *ms, aas_reachability_t *reac
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
 
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+	BotCheckBlocked(ms, hordir, qfalse, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, 400);
 	VectorCopy(hordir, result.movedir);
