@@ -3205,20 +3205,19 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	float dist, speed;
 	bot_moveresult_t_cleared(result);
 
-	//botimport.Print(PRT_MESSAGE, "BotTravel_RocketJump: bah\n");
-
 	hordir[0] = reach->start[0] - ms->origin[0];
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
 
 	dist = VectorNormalize(hordir);
-	// look in the movement direction
+	// set the ideal view angles (look in the movement direction)
 	VectorToAngles(hordir, result.ideal_viewangles);
 	// look straight down
 	result.ideal_viewangles[PITCH] = 90;
+	// set the view angles directly
+	EA_View(ms->client, result.ideal_viewangles);
 
-	if (dist < 5 && fabs(AngleDifference(result.ideal_viewangles[0], ms->viewangles[0])) < 5 && fabs(AngleDifference(result.ideal_viewangles[1], ms->viewangles[1])) < 5) {
-		//botimport.Print(PRT_MESSAGE, "between jump start and run start point\n");
+	if (dist < 24 && fabs(AngleDifference(result.ideal_viewangles[0], ms->viewangles[0])) < 5 && fabs(AngleDifference(result.ideal_viewangles[1], ms->viewangles[1])) < 5) {
 		hordir[0] = reach->end[0] - ms->origin[0];
 		hordir[1] = reach->end[1] - ms->origin[1];
 		hordir[2] = 0;
@@ -3241,12 +3240,8 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 		// elementary action move in direction
 		EA_Move(ms->client, hordir, speed);
 	}
-	// look in the movement direction
-	VectorToAngles(hordir, result.ideal_viewangles);
-	// look straight down
-	result.ideal_viewangles[PITCH] = 90;
-	// set the view angles directly
-	EA_View(ms->client, result.ideal_viewangles);
+
+	VectorCopy(hordir, result.movedir);
 	// view is important for the movement
 	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
 	// select the rocket launcher
@@ -3254,8 +3249,6 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	// weapon is used for movement
 	result.weapon = (int)weapindex_rocketlauncher->value;
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
-
-	VectorCopy(hordir, result.movedir);
 
 	return result;
 }
@@ -3274,16 +3267,7 @@ bot_moveresult_t BotFinishTravel_WeaponJump(bot_movestate_t *ms, aas_reachabilit
 	if (!ms->jumpreach) {
 		return result;
 	}
-	/*
-	// go straight to the reachability end
-	hordir[0] = reach->end[0] - ms->origin[0];
-	hordir[1] = reach->end[1] - ms->origin[1];
-	hordir[2] = 0;
-	VectorNormalize(hordir);
-	// always use max speed when traveling through the air
-	EA_Move(ms->client, hordir, 800);
-	VectorCopy(hordir, result.movedir);
-	*/
+
 	if (!BotAirControl(ms->origin, ms->velocity, reach->end, hordir, &speed)) {
 		// go straight to the reachability end
 		VectorSubtract(reach->end, ms->origin, hordir);
