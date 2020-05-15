@@ -52,6 +52,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 typedef struct bot_movestate_s {
 	// input vars (all set outside the movement code)
 	vec3_t origin;								// origin of the bot
+	vec3_t lastorigin;							// origin previous cycle
 	vec3_t velocity;							// velocity of the bot
 	int entitynum;								// entity number of the bot
 	int client;									// client number of the bot
@@ -60,6 +61,7 @@ typedef struct bot_movestate_s {
 	vec3_t viewangles;							// view angles of the bot
 	// state vars
 	int areanum;								// area the bot is in
+	float lasttime;
 	int lastareanum;							// last area the bot was in
 	int lastgoalareanum;						// last goal area number
 	int lastreachnum;							// last reachability number
@@ -650,7 +652,7 @@ void BotAddToAvoidReach(bot_movestate_t *ms, int number, float avoidtime) {
 		}
 	}
 }
-
+// Tobias NOTE: please move those to qcommon!
 /*
 =======================================================================================================================================
 DistanceFromLineSquared
@@ -693,7 +695,7 @@ float VectorDistanceSquared(vec3_t p1, vec3_t p2) {
 	VectorSubtract(p2, p1, dir);
 	return VectorLengthSquared(dir);
 }
-
+// Tobias END!
 /*
 =======================================================================================================================================
 BotAvoidSpots
@@ -3498,7 +3500,10 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	}
 	//if (!debugline) debugline = botimport.DebugLineCreate();
 	//botimport.DebugLineShow(debugline, ms->origin, goal->origin, LINECOLOR_BLUE);
+	// copy the last origin
+	VectorCopy(ms->origin, ms->lastorigin);
 
+	ms->lasttime = AAS_Time();
 	ms->lastreachnum = 0;
 	ms->lastareanum = 0;
 	ms->lastgoalareanum = goal->areanum;
@@ -3690,7 +3695,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				}
 #endif // DEBUG
 				// if the goal area changed or the reachability timed out or the area changed
-				if (ms->lastgoalareanum != goal->areanum || ms->reachability_time < AAS_Time() || ms->lastareanum != ms->areanum) {
+				if (ms->lastgoalareanum != goal->areanum || ms->reachability_time < AAS_Time() || ms->lastareanum != ms->areanum || ((ms->lasttime > (AAS_Time() - 0.5)) && (VectorDistance(ms->origin, ms->lastorigin) < 5 * (AAS_Time() - ms->lasttime)))) { // Tobias NOTE: The hardcoded distance here (5, in RtCW 20) should actually be tied to speed!
 					reachnum = 0;
 					//botimport.Print(PRT_MESSAGE, "area change or timeout\n");
 				}
@@ -3946,6 +3951,10 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	if (result->blocked) {
 		ms->reachability_time -= 10 * ms->thinktime;
 	}
+	// copy the last origin
+	VectorCopy(ms->origin, ms->lastorigin);
+
+	ms->lasttime = AAS_Time();
 	// try to look in the direction we will be moving ahead of time
 	if (reachnum > 0 && !(result->flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTWEAPON|MOVERESULT_SWIMVIEW))) {
 		AAS_ReachabilityFromNum(reachnum, &reach);

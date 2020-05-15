@@ -57,3 +57,4 @@ int AAS_AreaLadder(int areanum);
 int AAS_AreaJumpPad(int areanum);
 // returns true if the area is donotenter
 int AAS_AreaDoNotEnter(int areanum);
+float VectorDistance(vec3_t v1, vec3_t v2); // Tobias NOTE: please move those to qcommon!
