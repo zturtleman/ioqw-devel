@@ -2205,18 +2205,17 @@ BotFinishTravel_WalkOffLedge
 =======================================================================================================================================
 */
 bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach) {
-	vec3_t dir, hordir, end, v;
+	vec3_t dir, hordir, end;
 	float dist, speed;
 	bot_moveresult_t_cleared(result);
 
 	VectorSubtract(reach->end, ms->origin, dir);
-	VectorSubtract(reach->end, ms->origin, v); // Tobias NOTE: dir AND v?
 
-	v[2] = 0;
-	dist = VectorNormalize(v);
+	dir[2] = 0;
+	dist = VectorNormalize(dir);
 
 	if (dist > 16) {
-		VectorMA(reach->end, 16, v, end);
+		VectorMA(reach->end, 16, dir, end);
 	} else {
 		VectorCopy(reach->end, end);
 	}
