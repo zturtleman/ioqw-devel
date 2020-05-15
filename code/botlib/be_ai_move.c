@@ -1906,8 +1906,7 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach) 
 	bot_moveresult_t_cleared(result);
 
 	// swim straight to reachability end
-	VectorSubtract(reach->start, ms->origin, dir);
-	VectorNormalize(dir);
+	VectorSubtract(reach->end, ms->origin, dir);
 	// check if blocked
 	BotCheckBlocked(ms, dir, qtrue, &result);
 	// elementary action move in direction
@@ -1995,6 +1994,7 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 	}
 	// swim straight to reachability end
 	VectorSubtract(reach->end, ms->origin, dir);
+
 	dir[0] += crandom() * 10;
 	dir[1] += crandom() * 10;
 	dir[2] += 70 + crandom() * 10;
