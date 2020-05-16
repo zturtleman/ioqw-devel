@@ -289,6 +289,7 @@ int main (int argc, char **argv)
 	Log_Print(BSPC_NAME" version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
 
 #ifdef ZTMAUTOARGS
+	calcscoutreach = true;
 	forcesidesvisible = true; // Currently always required or BSPC fails?
 #endif
 	DefaultCfg();
@@ -404,6 +405,13 @@ int main (int argc, char **argv)
 			calcscoutreach = true;
 			Log_Print("scoutreach = true\n");
 		} //end else if
+#ifdef ZTMAUTOARGS
+		else if (!stricmp(argv[i], "-noscoutreach"))
+		{
+			calcscoutreach = false;
+			Log_Print("scoutreach = false\n");
+		} //end else if
+#endif
 		else if (!stricmp(argv[i], "-nobrushmerge"))
 		{
 			nobrushmerge = true;
