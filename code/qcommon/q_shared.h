@@ -1080,7 +1080,7 @@ typedef struct usercmd_s {
 	signed char forwardmove, rightmove, upmove;
 } usercmd_t;
 
-#define SCOUT_SPEED_SCALE 1.5
+#define SCOUT_SPEED_SCALE 1.5f
 // if entityState->solid == SOLID_BMODEL, modelindex is an inline model number
 #define SOLID_BMODEL 0xffffff
 

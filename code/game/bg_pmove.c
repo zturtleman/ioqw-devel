@@ -434,7 +434,7 @@ static qboolean PM_CheckJump(void) {
 	pm->ps->velocity[2] = JUMP_VELOCITY;
 
 	if (bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT) {
-		pm->ps->velocity[2] *= 1.5;
+		pm->ps->velocity[2] *= SCOUT_SPEED_SCALE;
 	}
 
 	PM_AddEvent(EV_JUMP);
