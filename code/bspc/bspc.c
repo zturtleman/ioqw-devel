@@ -49,6 +49,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas_bspc.h"
 
 extern	int use_nodequeue;		//brushbsp.c
+extern	int calcscoutreach;		//be_aas_reach.c
 
 float			subdivide_size = 240;
 char			source[1024];
@@ -398,6 +399,11 @@ int main (int argc, char **argv)
 			freetree = true;
 			Log_Print("freetree = true\n");
 		} //end else if
+		else if (!stricmp(argv[i], "-scoutreach"))
+		{
+			calcscoutreach = true;
+			Log_Print("scoutreach = true\n");
+		} //end else if
 		else if (!stricmp(argv[i], "-nobrushmerge"))
 		{
 			nobrushmerge = true;
@@ -718,7 +724,7 @@ int main (int argc, char **argv)
 #else
 			"   forcesidesvisible                    = force all sides to be visible\n"
 #endif
-
+			"   scoutreach                           = calculate scout reachabilities\n"
 /*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"

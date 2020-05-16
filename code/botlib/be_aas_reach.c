@@ -78,6 +78,8 @@ int reach_rampjump;		// ramp jump
 int reach_strafejump;	// strafe jump (just normal jump but further)
 int reach_rocketjump;	// rocket jump
 int reach_jumppad;		// jump pads
+
+int calcscoutreach; // if true scout reachabilities are calculated
 // linked reachability
 typedef struct aas_lreachability_s {
 	int areanum;					// number of the reachable area
@@ -4699,7 +4701,9 @@ void AAS_InitReachability(void) {
 		return;
 #endif // BSPC
 	}
-
+#ifndef BSPC
+	calcscoutreach = LibVarGetValue("scoutreach");
+#endif
 	aasworld.savefile = qtrue;
 	// start with area 1 because area zero is a dummy
 	aasworld.numreachabilityareas = 1;
