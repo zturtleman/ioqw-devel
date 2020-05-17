@@ -285,6 +285,35 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
 
 /*
 =======================================================================================================================================
+AAS_ScoutJumpReachRunStart
+=======================================================================================================================================
+*/
+void AAS_ScoutJumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
+	vec3_t hordir, start, cmdmove;
+	aas_clientmove_t move;
+
+	hordir[0] = reach->start[0] - reach->end[0];
+	hordir[1] = reach->start[1] - reach->end[1];
+	hordir[2] = 0;
+
+	VectorNormalize(hordir);
+	// start point
+	VectorCopy(reach->start, start);
+
+	start[2] += 1;
+	// get command movement
+	VectorScale(hordir, 400, cmdmove);
+	// movement prediction
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	VectorCopy(move.endpos, runstart);
+	// don't enter slime or lava and don't fall from too high
+	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
+		VectorCopy(start, runstart);
+	}
+}
+
+/*
+=======================================================================================================================================
 AAS_WeaponJumpZVelocity
 
 Returns the Z velocity when rocket jumping at the origin.
