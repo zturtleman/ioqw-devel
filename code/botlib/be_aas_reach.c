@@ -2572,7 +2572,7 @@ Between these two points there must be one or more gaps. If the gaps exist a pot
 int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 	int i, j, k, l, face1num, face2num, edge1num, edge2num, traveltype;
 	int stopevent, areas[10], numareas;
-	float phys_jumpvelscout, maxscoutjumpdistance, maxscoutjumpheight, height, bestdist, speed;
+	float phys_jumpvelscout, maxscoutjumpdistance, maxscoutjumpheight, /*height, */bestdist, speed;
 	vec_t *v1, *v2, *v3, *v4;
 	vec3_t beststart = {0}, beststart2 = {0}, bestend = {0}, bestend2 = {0};
 	vec3_t teststart, testend, dir, velocity, cmdmove, up = {0, 0, 1}, sidewards;
@@ -2659,6 +2659,8 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 	VectorMiddle(bestend, bestend2, bestend);
 
 	if (bestdist > 4 && bestdist < maxscoutjumpdistance) {
+/* // Tobias NOTE: I don't know if WALKOFFLEDGE reachabilities should be calculated, aren't they calculated already, via jump calculations?
+   // This is really bad: enabling this code will create more WALKOFFLEDGE reachabilities (as BSPC is reporting) but are they additionally created (and needed) for the scout or are some of them just duplicate (which would be a waste of resources),.... SHIT!
 //		Log_Write("shortest distance between %d and %d is %f\r\n", area1num, area2num, bestdist);
 		// if very close and almost no height difference then the bot can walk
 		if (bestdist <= 48 && fabs(beststart[2] - bestend[2]) < 8) {
@@ -2669,8 +2671,9 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 			speed *= 1.2f;
 			traveltype = TRAVEL_WALKOFFLEDGE;
 		} else {
+*/
 			// get the horizontal speed for the jump, if it isn't possible to calculate this speed (the jump is not possible) then there's no jump reachability created
-			if (!AAS_HorizontalVelocityForScoutJump(phys_jumpvelscout, beststart, bestend, &speed)) { // Tobias CHECK: AAS_HorizontalVelocityForScutJump really needed?
+			if (!AAS_HorizontalVelocityForScoutJump(phys_jumpvelscout, beststart, bestend, &speed)) {
 				return qfalse;
 			}
 
@@ -2684,8 +2687,9 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 			if (VectorLength(dir) < 10) {
 				return qfalse;
 			}
+/*
 		}
-
+*/
 		VectorSubtract(bestend, beststart, dir);
 		VectorNormalize(dir);
 		VectorMA(beststart, 1, dir, teststart);
@@ -2825,16 +2829,19 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 		lreach->traveltype = traveltype;
 
 		VectorSubtract(bestend, beststart, dir);
-
+/*
 		height = dir[2];
+*/
 		dir[2] = 0;
-
+/*
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_WALKOFFLEDGE && height > VectorLength(dir)) {
 			lreach->traveltime = aassettings.rs_startwalkoffledge + height * 50 / aassettings.phys_gravity;
 		} else {
+*/
 			lreach->traveltime = aassettings.rs_startjump + VectorDistance(bestend, beststart) * 240 / aassettings.phys_maxscoutvelocity;
+/*
 		}
-
+*/
 		if (!AAS_AreaJumpPad(area2num)) {
 			if (AAS_FallDelta(beststart[2] - bestend[2]) > aassettings.phys_falldelta5) {
 				lreach->traveltime += aassettings.rs_falldamage5;
@@ -2845,12 +2852,15 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 
 		lreach->next = areareachability[area1num];
 		areareachability[area1num] = lreach;
-
+/*
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_SCOUTJUMP) {
+*/
 			reach_scoutjump++;
+/*
 		} else {
 			reach_walkoffledge++;
 		}
+*/
 	}
 
 	return qfalse;
