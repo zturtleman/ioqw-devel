@@ -41,5 +41,6 @@ int AAS_AgainstLadder(vec3_t origin);
 float AAS_RocketJumpZVelocity(vec3_t origin);
 // calculates the horizontal velocity needed for a jump and returns true this velocity could be calculated
 int AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
+int AAS_HorizontalVelocityForScoutJump(float zvel, vec3_t start, vec3_t end, float *velocity);
 int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs);
 void AAS_InitSettings(void);

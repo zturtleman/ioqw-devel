@@ -39,13 +39,14 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TFL_BARRIERJUMP		0x00000008 // jumping onto a barrier
 #define TFL_SCOUTBARRIER	0x00000010 // jumping onto a barrier (the scout powerup is required)
 #define TFL_JUMP			0x00000020 // jumping
-#define TFL_LADDER			0x00000040 // climbing a ladder
-#define TFL_WALKOFFLEDGE	0x00000080 // walking of a ledge
-#define TFL_SWIM			0x00000100 // swimming
-#define TFL_WATERJUMP		0x00000200 // jumping out of the water
-#define TFL_TELEPORT		0x00000400 // teleporting
-#define TFL_ELEVATOR		0x00000800 // elevator
-#define TFL_ROCKETJUMP		0x00001000 // rocket jumping
+#define TFL_SCOUTJUMP		0x00000040 // jumping (the scout powerup is required)
+#define TFL_LADDER			0x00000080 // climbing a ladder
+#define TFL_WALKOFFLEDGE	0x00000100 // walking of a ledge
+#define TFL_SWIM			0x00000200 // swimming
+#define TFL_WATERJUMP		0x00000400 // jumping out of the water
+#define TFL_TELEPORT		0x00000800 // teleporting
+#define TFL_ELEVATOR		0x00001000 // elevator
+#define TFL_ROCKETJUMP		0x00002000 // rocket jumping
 //#define TFL_BFGJUMP			0x00002000 // bfg jumping
 #define TFL_DOUBLEJUMP		0x00004000 // double jump
 #define TFL_RAMPJUMP		0x00008000 // ramp jump

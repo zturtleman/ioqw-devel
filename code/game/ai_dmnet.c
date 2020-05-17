@@ -1652,7 +1652,7 @@ int AINode_Wait(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 	// map specific code
 	BotMapScripts(bs);
@@ -1766,7 +1766,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 	// map specific code
 	BotMapScripts(bs);
@@ -2017,7 +2017,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
@@ -2177,7 +2177,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
@@ -2470,7 +2470,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
@@ -2645,7 +2645,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
@@ -2841,7 +2841,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER;
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 	// if the bot is waiting for something
 	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Retreat)) {

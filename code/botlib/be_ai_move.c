@@ -727,6 +727,9 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_JUMP:
 			checkbetween = qfalse;
 			break;
+		case TRAVEL_SCOUTJUMP:
+			checkbetween = qfalse;
+			break;
 		case TRAVEL_SWIM:
 			checkbetween = qtrue;
 			break;
@@ -3426,6 +3429,8 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 			return 5;
 		case TRAVEL_JUMP:
 			return 5;
+		case TRAVEL_SCOUTJUMP:
+			return 5;
 		case TRAVEL_SWIM:
 			return 5;
 		case TRAVEL_WATERJUMP:
@@ -3787,6 +3792,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotTravel_WalkOffLedge(ms, &reach);
 					break;
 				case TRAVEL_JUMP:
+				case TRAVEL_SCOUTJUMP: // Tobias NOTE: separate 'BotTravel_ScoutJump' needed?
 					*result = BotTravel_Jump(ms, &reach);
 					break;
 				case TRAVEL_SWIM:
@@ -3912,6 +3918,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotFinishTravel_WalkOffLedge(ms, &reach);
 					break;
 				case TRAVEL_JUMP:
+				case TRAVEL_SCOUTJUMP: // Tobias NOTE: separate 'BotFinishTravel_ScoutJump' needed?
 					*result = BotFinishTravel_Jump(ms, &reach);
 					break;
 				case TRAVEL_SWIM:

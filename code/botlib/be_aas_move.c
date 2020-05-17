@@ -86,6 +86,7 @@ void AAS_InitSettings(void) {
 	aassettings.phys_waterfriction = LibVarValue("phys_waterfriction", "1");
 	aassettings.phys_watergravity = LibVarValue("phys_watergravity", "400");
 	aassettings.phys_maxvelocity = LibVarValue("phys_maxvelocity", "260");
+	aassettings.phys_maxscoutvelocity = LibVarValue("phys_maxscoutvelocity", "390");
 	aassettings.phys_maxwalkvelocity = LibVarValue("phys_maxwalkvelocity", "280");
 	aassettings.phys_maxcrouchvelocity = LibVarValue("phys_maxcrouchvelocity", "100");
 	aassettings.phys_maxswimvelocity = LibVarValue("phys_maxswimvelocity", "45");
@@ -98,6 +99,7 @@ void AAS_InitSettings(void) {
 	aassettings.phys_maxbarrier = LibVarValue("phys_maxbarrier", "43");
 	aassettings.phys_maxscoutbarrier = LibVarValue("phys_maxscoutbarrier", "73");
 	aassettings.phys_jumpvel = LibVarValue("phys_jumpvel", "200");
+	aassettings.phys_jumpvelscout = LibVarValue("phys_jumpvelscout", "300");
 	aassettings.phys_falldelta5 = LibVarValue("phys_falldelta5", "40");
 	aassettings.phys_falldelta10 = LibVarValue("phys_falldelta10", "60");
 	aassettings.rs_waterjump = LibVarValue("rs_waterjump", "400");
@@ -519,7 +521,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	float phys_watergravity;
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
 	float phys_maxwalkvelocity, phys_maxcrouchvelocity, phys_maxswimvelocity;
-	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_maxscoutbarrier, phys_jumpvel, friction;
+	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_maxscoutbarrier, phys_jumpvel, phys_jumpvelscout, friction;
 	float gravity, delta, maxvel, wishspeed, accelerate;
 	//float velchange, newvel;
 	//int ax;
@@ -552,6 +554,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	phys_maxbarrier = aassettings.phys_maxbarrier;
 	phys_maxscoutbarrier = aassettings.phys_maxscoutbarrier;
 	phys_jumpvel = aassettings.phys_jumpvel * frametime;
+	phys_jumpvelscout = aassettings.phys_jumpvelscout * frametime;
 
 	Com_Memset(move, 0, sizeof(*move));
 	Com_Memset(&trace, 0, sizeof(trace));
@@ -1123,6 +1126,57 @@ int AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *v
 	// the horizontal speed must be lower than the max speed
 	if (*velocity > phys_maxvelocity) {
 		*velocity = phys_maxvelocity;
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+=======================================================================================================================================
+AAS_HorizontalVelocityForScoutJump
+
+Calculates the horizontal velocity needed to perform a jump from start to end using the scout powerup.
+
+Parameter:	zvel	: z velocity for jump.
+			start	: start position of jump.
+			end		: end position of jump.
+			*speed	: returned speed for jump.
+Returns: qfalse if too high or too far from start to end.
+=======================================================================================================================================
+*/
+int AAS_HorizontalVelocityForScoutJump(float zvel, vec3_t start, vec3_t end, float *velocity) {
+	float phys_gravity, phys_maxscoutvelocity;
+	float maxscoutjump, height2fall, t, top;
+	vec3_t dir;
+
+	phys_gravity = aassettings.phys_gravity;
+	phys_maxscoutvelocity = aassettings.phys_maxscoutvelocity;
+	// maximum height a player can jump with the given initial z velocity
+	maxscoutjump = 0.5 * phys_gravity * (zvel / phys_gravity) * (zvel / phys_gravity);
+	// top of the parabolic jump
+	top = start[2] + maxscoutjump;
+	// height the bot will fall from the top
+	height2fall = top - end[2];
+	// if the goal is to high to jump to
+	if (height2fall < 0) {
+		*velocity = phys_maxscoutvelocity;
+		return 0;
+	}
+	// time a player takes to fall the height
+	t = sqrt(height2fall / (0.5 * phys_gravity));
+	// direction from start to end
+	VectorSubtract(end, start, dir);
+
+	if ((t + zvel / phys_gravity) == 0.0f) {
+		*velocity = phys_maxscoutvelocity;
+		return 0;
+	}
+	// calculate horizontal speed
+	*velocity = sqrt(dir[0] * dir[0] + dir[1] * dir[1]) / (t + zvel / phys_gravity);
+	// the horizontal speed must be lower than the max speed
+	if (*velocity > phys_maxscoutvelocity) {
+		*velocity = phys_maxscoutvelocity;
 		return 0;
 	}
 

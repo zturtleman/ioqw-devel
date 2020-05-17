@@ -369,6 +369,7 @@ name:						default:	module(s):		description:
 "phys_waterfriction"		"1"			be_aas_move.c	water friction
 "phys_watergravity"			"400"		be_aas_move.c	gravity in water
 "phys_maxvelocity"			"260"		be_aas_move.c	maximum velocity
+"phys_maxscoutvelocity"		"390"		be_aas_move.c	maximum velocity (using the scout powerup)
 "phys_maxwalkvelocity"		"280"		be_aas_move.c	maximum walk velocity
 "phys_maxcrouchvelocity"	"100"		be_aas_move.c	maximum crouch velocity
 "phys_maxswimvelocity"		"45"		be_aas_move.c	maximum swim velocity
@@ -381,6 +382,7 @@ name:						default:	module(s):		description:
 "phys_maxbarrier"			"43"		be_aas_move.c	maximum barrier height
 "phys_maxscoutbarrier"		"73"		be_aas_move.c	maximum barrier height (using the scout powerup)
 "phys_jumpvel"				"200"		be_aas_move.c	jump z velocity
+"phys_jumpvelscout"			"300"		be_aas_move.c	jump z velocity (using the scout powerup)
 "phys_falldelta5"			"40"		be_aas_move.c
 "phys_falldelta10"			"60"		be_aas_move.c
 "rs_waterjump"				"400"		be_aas_move.c
