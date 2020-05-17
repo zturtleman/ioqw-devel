@@ -729,10 +729,11 @@ int main (int argc, char **argv)
 			"   nocsg                                = disables brush chopping\n"
 #ifdef ZTMAUTOARGS
 			"   noforcesidesvisible                  = don't force all sides to be visible\n"
+			"   noscoutreach                         = don't calculate scout reachabilities\n"
 #else
 			"   forcesidesvisible                    = force all sides to be visible\n"
-#endif
 			"   scoutreach                           = calculate scout reachabilities\n"
+#endif
 /*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"
