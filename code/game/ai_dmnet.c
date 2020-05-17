@@ -1650,6 +1650,10 @@ int AINode_Wait(bot_state_t *bs) {
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
 	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
+	}
 	// map specific code
 	BotMapScripts(bs);
 	// no enemy
@@ -1759,6 +1763,10 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
 	}
 	// map specific code
 	BotMapScripts(bs);
@@ -2007,6 +2015,10 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
 	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
+	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
@@ -2162,6 +2174,10 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
 	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
@@ -2452,6 +2468,10 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
 	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
+	}
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the enemy is NOT visible
@@ -2622,6 +2642,10 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
 	}
 
 	if (BotCanAndWantsToRocketJump(bs)) {
@@ -2814,6 +2838,10 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER;
 	}
 	// if the bot is waiting for something
 	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Retreat)) {

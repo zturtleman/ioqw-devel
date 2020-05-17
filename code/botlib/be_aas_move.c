@@ -96,6 +96,7 @@ void AAS_InitSettings(void) {
 	aassettings.phys_maxsteepness = LibVarValue("phys_maxsteepness", "0.7");
 	aassettings.phys_maxwaterjump = LibVarValue("phys_maxwaterjump", "20");
 	aassettings.phys_maxbarrier = LibVarValue("phys_maxbarrier", "43");
+	aassettings.phys_maxscoutbarrier = LibVarValue("phys_maxscoutbarrier", "73");
 	aassettings.phys_jumpvel = LibVarValue("phys_jumpvel", "200");
 	aassettings.phys_falldelta5 = LibVarValue("phys_falldelta5", "40");
 	aassettings.phys_falldelta10 = LibVarValue("phys_falldelta10", "60");
@@ -518,7 +519,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	float phys_watergravity;
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
 	float phys_maxwalkvelocity, phys_maxcrouchvelocity, phys_maxswimvelocity;
-	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_jumpvel, friction;
+	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_maxscoutbarrier, phys_jumpvel, friction;
 	float gravity, delta, maxvel, wishspeed, accelerate;
 	//float velchange, newvel;
 	//int ax;
@@ -549,6 +550,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	phys_maxstep = aassettings.phys_maxstep;
 	phys_maxsteepness = aassettings.phys_maxsteepness;
 	phys_maxbarrier = aassettings.phys_maxbarrier;
+	phys_maxscoutbarrier = aassettings.phys_maxscoutbarrier;
 	phys_jumpvel = aassettings.phys_jumpvel * frametime;
 
 	Com_Memset(move, 0, sizeof(*move));

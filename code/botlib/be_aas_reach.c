@@ -66,6 +66,7 @@ int reach_equalfloor;	// walk on floors with equal height
 int reach_step;			// step up
 int reach_walk;			// walk of step
 int reach_barrier;		// jump up to a barrier
+int reach_scoutbarrier;	// jump up to a barrier
 int reach_waterjump;	// jump out of water
 int reach_walkoffledge;	// walk of a ledge
 int reach_jump;			// jump
@@ -1674,6 +1675,59 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 							// like the ladder reachability
 							return qtrue;
 						}
+					}
+				}
+			}
+		}
+	}
+	//
+	// Scout Barrier Jumps
+	// Tobias NOTE: It seems this calculation must be done AFTER all other calculations (even after TRAVEL_WALKOFFLEDGE). To be honest, technically I don't understand why order dependance is important here...
+	//
+	//        ---------
+	//        |
+	//        |
+	//        |
+	//        |
+	//        |         higher than step height lower than barrier height -> TRAVEL_SCOUTBARRIER
+	//--------|
+	//
+	//        ---------
+	//        |
+	//        |
+	//        |
+	//        |
+	//~~~~~~~~|         higher than step height lower than barrier height
+	//--------|         and a thin layer of water in the area to jump from -> TRAVEL_SCOUTBARRIER
+	//
+	if (calcscoutreach) {
+		//check for a barrier jump reachability using the scout powerup
+		if (ground_foundreach) {
+			//if area2 is higher but lower than the maximum barrier jump height
+			if (ground_bestdist > 0 && ground_bestdist < aassettings.phys_maxscoutbarrier) {
+				//if no water in area1 or a very thin layer of water on the ground
+				if (!water_foundreach || (ground_bestdist - water_bestdist < 16)) {
+					//cannot perform a barrier jump towards or from a crouch area in Quake2
+					if (!AAS_AreaCrouch(area1num) && !AAS_AreaCrouch(area2num)) {
+						//create barrier jump reachability from area1 to area2
+						lreach = AAS_AllocReachability();
+
+						if (!lreach) {
+							return qfalse;
+						}
+
+						lreach->areanum = area2num;
+						lreach->facenum = 0;
+						lreach->edgenum = ground_bestarea2groundedgenum;
+						VectorMA(ground_beststart, INSIDEUNITS_WALKSTART, ground_bestnormal, lreach->start);
+						VectorMA(ground_bestend, INSIDEUNITS_WALKEND, ground_bestnormal, lreach->end);
+						lreach->traveltype = TRAVEL_SCOUTBARRIER;
+						lreach->traveltime = aassettings.rs_barrierjump;
+						lreach->next = areareachability[area1num];
+						areareachability[area1num] = lreach;
+						// we've got another barrierjump reachability for when using scout powerup
+						reach_scoutbarrier++;
+						return qtrue;
 					}
 				}
 			}
@@ -4511,22 +4565,23 @@ void AAS_StoreReachability(void) {
 =======================================================================================================================================
 AAS_ContinueInitReachability
 
- TRAVEL_WALK		100% equal floor height + steps
- TRAVEL_CROUCH		100%
- TRAVEL_BARRIERJUMP	100%
- TRAVEL_JUMP		 80%
- TRAVEL_LADDER		100% + fall down from ladder + jump up to ladder
- TRAVEL_WALKOFFLEDGE 90% walk off very steep walls?
- TRAVEL_SWIM		100%
- TRAVEL_WATERJUMP	100%
- TRAVEL_TELEPORT	100%
- TRAVEL_ELEVATOR	100%
- TRAVEL_DOUBLEJUMP	  0%
- TRAVEL_RAMPJUMP	  0%
- TRAVEL_STRAFEJUMP	  0%
- TRAVEL_ROCKETJUMP	100% (currently limited towards areas with items)
- TRAVEL_JUMPPAD		100%
- TRAVEL_FUNCBOB		100%
+ TRAVEL_WALK			100% equal floor height + steps
+ TRAVEL_CROUCH			100%
+ TRAVEL_BARRIERJUMP		100%
+ TRAVEL_SCOUTBARRIER	100%
+ TRAVEL_JUMP			 80%
+ TRAVEL_LADDER			100% + fall down from ladder + jump up to ladder
+ TRAVEL_WALKOFFLEDGE	 90% walk off very steep walls?
+ TRAVEL_SWIM			100%
+ TRAVEL_WATERJUMP		100%
+ TRAVEL_TELEPORT		100%
+ TRAVEL_ELEVATOR		100%
+ TRAVEL_DOUBLEJUMP		  0%
+ TRAVEL_RAMPJUMP		  0%
+ TRAVEL_STRAFEJUMP		  0%
+ TRAVEL_ROCKETJUMP		100% (currently limited towards areas with items)
+ TRAVEL_JUMPPAD			100%
+ TRAVEL_FUNCBOB			100%
 
 Returns: true if NOT finished.
 =======================================================================================================================================
@@ -4650,6 +4705,7 @@ int AAS_ContinueInitReachability(float time) {
 		botimport.Print(PRT_MESSAGE, "%6d reach equal floor\n", reach_equalfloor);
 		botimport.Print(PRT_MESSAGE, "%6d reach step\n", reach_step);
 		botimport.Print(PRT_MESSAGE, "%6d reach barrier\n", reach_barrier);
+		botimport.Print(PRT_MESSAGE, "%6d reach scoutbarrier\n", reach_scoutbarrier);
 		botimport.Print(PRT_MESSAGE, "%6d reach waterjump\n", reach_waterjump);
 		botimport.Print(PRT_MESSAGE, "%6d reach walkoffledge\n", reach_walkoffledge);
 		botimport.Print(PRT_MESSAGE, "%6d reach jump\n", reach_jump);

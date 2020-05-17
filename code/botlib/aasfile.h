@@ -42,14 +42,15 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TRAVEL_WALK			 2 // walking
 #define TRAVEL_CROUCH		 3 // crouching
 #define TRAVEL_BARRIERJUMP	 4 // jumping onto a barrier
-#define TRAVEL_JUMP			 5 // jumping
-#define TRAVEL_LADDER		 6 // climbing a ladder
-#define TRAVEL_WALKOFFLEDGE	 7 // walking of a ledge
-#define TRAVEL_SWIM			 8 // swimming
-#define TRAVEL_WATERJUMP	 9 // jump out of the water
-#define TRAVEL_TELEPORT		10 // teleportation
-#define TRAVEL_ELEVATOR		11 // travel by elevator
-#define TRAVEL_ROCKETJUMP	12 // rocket jumping required for travel
+#define TRAVEL_SCOUTBARRIER	 5 // the scout powerup is required for jumping onto this barrier
+#define TRAVEL_JUMP			 6 // jumping
+#define TRAVEL_LADDER		 7 // climbing a ladder
+#define TRAVEL_WALKOFFLEDGE	 8 // walking of a ledge
+#define TRAVEL_SWIM			 9 // swimming
+#define TRAVEL_WATERJUMP	10 // jump out of the water
+#define TRAVEL_TELEPORT		11 // teleportation
+#define TRAVEL_ELEVATOR		12 // travel by elevator
+#define TRAVEL_ROCKETJUMP	13 // rocket jumping required for travel
 //#define TRAVEL_BFGJUMP		13 // bfg jumping required for travel
 #define TRAVEL_GRAPPLEHOOK	14 // grappling hook required for travel // Tobias TODO: Removing this breaks compatibility!
 #define TRAVEL_DOUBLEJUMP	15 // double jump

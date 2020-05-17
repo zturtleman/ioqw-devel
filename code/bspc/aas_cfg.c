@@ -71,6 +71,7 @@ fielddef_t cfg_fields[] =
 	{"phys_maxsteepness", CFG_OFS(phys_maxsteepness), FT_FLOAT},
 	{"phys_maxwaterjump", CFG_OFS(phys_maxwaterjump), FT_FLOAT},
 	{"phys_maxbarrier", CFG_OFS(phys_maxbarrier), FT_FLOAT},
+	{"phys_maxscoutbarrier", CFG_OFS(phys_maxscoutbarrier), FT_FLOAT},
 	{"phys_jumpvel", CFG_OFS(phys_jumpvel), FT_FLOAT},
 	{"phys_falldelta5", CFG_OFS(phys_falldelta5), FT_FLOAT},
 	{"phys_falldelta10", CFG_OFS(phys_falldelta10), FT_FLOAT},

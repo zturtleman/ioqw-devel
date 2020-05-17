@@ -713,6 +713,7 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 			checkbetween = qtrue;
 			break;
 		case TRAVEL_BARRIERJUMP:
+		case TRAVEL_SCOUTBARRIER:
 			checkbetween = qtrue;
 			break;
 		case TRAVEL_LADDER:
@@ -3415,6 +3416,8 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 			return 5;
 		case TRAVEL_BARRIERJUMP:
 			return 5;
+		case TRAVEL_SCOUTBARRIER:
+			return 5;
 		case TRAVEL_LADDER:
 			return 6;
 		case TRAVEL_WALKOFFLEDGE:
@@ -3772,6 +3775,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotTravel_Crouch(ms, &reach);
 					break;
 				case TRAVEL_BARRIERJUMP:
+				case TRAVEL_SCOUTBARRIER:
 					*result = BotTravel_BarrierJump(ms, &reach);
 					break;
 				case TRAVEL_LADDER:
@@ -3896,6 +3900,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					/*do nothing*/
 					break;
 				case TRAVEL_BARRIERJUMP:
+				case TRAVEL_SCOUTBARRIER:
 					*result = BotFinishTravel_BarrierJump(ms, &reach);
 					break;
 				case TRAVEL_LADDER:

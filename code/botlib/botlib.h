@@ -379,6 +379,7 @@ name:						default:	module(s):		description:
 "phys_maxsteepness"			"0.7"		be_aas_move.c	maximum floor steepness
 "phys_maxwaterjump"			"20"		be_aas_move.c	maximum waterjump height
 "phys_maxbarrier"			"43"		be_aas_move.c	maximum barrier height
+"phys_maxscoutbarrier"		"73"		be_aas_move.c	maximum barrier height (using the scout powerup)
 "phys_jumpvel"				"200"		be_aas_move.c	jump z velocity
 "phys_falldelta5"			"40"		be_aas_move.c
 "phys_falldelta10"			"60"		be_aas_move.c
