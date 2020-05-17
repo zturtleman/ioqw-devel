@@ -565,7 +565,7 @@ intptr_t SV_GameSystemCalls(intptr_t *args) {
 		case BOTLIB_AAS_ENABLE_ROUTING_AREA:
 			return botlib_export->aas.AAS_EnableRoutingArea(args[1], args[2]);
 		case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
-			return botlib_export->aas.AAS_PredictClientMovement(VMA(1), args[2], VMA(3), args[4], args[5], VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13]);
+			return botlib_export->aas.AAS_PredictClientMovement(VMA(1), args[2], VMA(3), args[4], args[5], args[6], VMA(7), VMA(8), args[9], args[10], VMF(11), args[12], args[13], args[14]);
 		case BOTLIB_AAS_PREDICT_ROUTE:
 			return botlib_export->aas.AAS_PredictRoute(VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);
 		case BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL:

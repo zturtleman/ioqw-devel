@@ -275,7 +275,7 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qfalse, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
 	VectorCopy(move.endpos, runstart);
 	// don't enter slime or lava and don't fall from too high
 	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
@@ -516,7 +516,7 @@ Parameter:	origin			: origin to start with.
 Returns: aas_clientmove_t
 =======================================================================================================================================
 */
-static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, const vec3_t origin, int presencetype, int onground, const vec3_t velocity, const vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, const vec3_t mins, const vec3_t maxs, int visualize) {
+static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, const vec3_t origin, int presencetype, int onground, int scoutmove, const vec3_t velocity, const vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, const vec3_t mins, const vec3_t maxs, int visualize) {
 	float phys_friction, phys_stopspeed, phys_gravity, phys_waterfriction;
 	float phys_watergravity;
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
@@ -611,7 +611,12 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 				// if not swimming and upmove is positive then jump
 				if (!swimming && cmdmove[2] > 1) {
 					// jump velocity minus the gravity for one frame + 5 for safety
-					frame_test_vel[2] = phys_jumpvel - (gravity * 0.1 * frametime) + 5;
+					if (!scoutmove) {
+						frame_test_vel[2] = phys_jumpvel - (gravity * 0.1 * frametime) + 5;
+					} else {
+						frame_test_vel[2] = phys_jumpvelscout - (gravity * 0.1 * frametime) + 5;
+					}
+
 					jump_frame = n;
 					// jumping so air accelerate
 					accelerate = phys_airaccelerate;
@@ -1038,9 +1043,9 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 AAS_PredictClientMovement
 =======================================================================================================================================
 */
-int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize) {
+int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize) {
 	vec3_t mins, maxs;
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, frametime, stopevent, stopareanum, mins, maxs, visualize);
+	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, scoutmove, velocity, cmdmove, cmdframes, maxframes, frametime, stopevent, stopareanum, mins, maxs, visualize);
 }
 
 /*
@@ -1048,8 +1053,8 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t 
 AAS_ClientMovementHitBBox
 =======================================================================================================================================
 */
-int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, vec3_t mins, vec3_t maxs, int visualize) {
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, frametime, SE_HITBOUNDINGBOX, 0, mins, maxs, visualize);
+int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, vec3_t mins, vec3_t maxs, int visualize) {
+	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, scoutmove, velocity, cmdmove, cmdframes, maxframes, frametime, SE_HITBOUNDINGBOX, 0, mins, maxs, visualize);
 }
 
 /*
@@ -1074,7 +1079,7 @@ void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir) {
 
 	AAS_ClearShownDebugLines();
 	// movement prediction
-	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue); //SE_LEAVEGROUND
+	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue); //SE_LEAVEGROUND
 
 	if (move.stopevent & SE_LEAVEGROUND) {
 		botimport.Print(PRT_MESSAGE, "leave ground\n");
