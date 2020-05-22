@@ -3144,6 +3144,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 					lreach->traveltype = TRAVEL_LADDER;
 					lreach->traveltime = 10;
 					lreach->next = areareachability[area1num];
+
 					areareachability[area1num] = lreach;
 
 					reach_ladder++;
