@@ -659,8 +659,6 @@ float AAS_MaxJumpHeight(float phys_jumpvel) {
 /*
 =======================================================================================================================================
 AAS_MaxJumpDistance
-
-Returns true if a player can only crouch in the area.
 =======================================================================================================================================
 */
 float AAS_MaxJumpDistance(float phys_jumpvel) {
@@ -2751,6 +2749,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 					lreach->traveltype = TRAVEL_LADDER;
 					lreach->traveltime = 10;
 					lreach->next = areareachability[area1num];
+
 					areareachability[area1num] = lreach;
 
 					reach_ladder++;
