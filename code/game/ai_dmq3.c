@@ -4253,10 +4253,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	int movetype, i, attackentity;
 	float attack_skill, jumper, croucher, dist, strafechange_time;
 	float attack_dist, attack_range;
-	vec3_t forward, backward, sideward, hordir, up = {0, 0, 1};
+	vec3_t forward, backward, sideward, start, hordir, up = {0, 0, 1}, mins = {-4, -4, -4}, maxs = {4, 4, 4};
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	bot_goal_t goal;
+	bsp_trace_t bsptrace;
 
 	attackentity = bs->enemy;
 
@@ -4301,6 +4302,10 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	VectorNegate(forward, backward);
 	// walk, crouch or jump
 	movetype = MOVE_WALK;
+	// don't crouch when swimming
+	if (trap_AAS_Swimming(bs->origin)) {
+		bs->crouch_time = FloatTime() - 1;
+	}
 
 	if (bs->crouch_time < FloatTime() - 1) {
 		if (random() < jumper) {
@@ -4310,9 +4315,18 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			bs->crouch_time = FloatTime() + croucher * 5;
 		}
 	}
-
+	// if the bot wants to crouch
 	if (bs->crouch_time > FloatTime()) {
-		movetype = MOVE_CROUCH;
+		// get the start point shooting from
+		VectorCopy(bs->origin, start);
+		// get the crouch view height
+		start[2] += CROUCH_VIEWHEIGHT;
+		// only try to crouch if the enemy remains visible
+		BotAI_Trace(&bsptrace, start, mins, maxs, entinfo.origin, bs->client, MASK_SHOT);
+		// if the enemy remains visible from the predicted position
+		if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == attackentity) {
+			movetype = MOVE_CROUCH;
+		}
 	}
 	// if the bot should jump
 	if (movetype == MOVE_JUMP) {
