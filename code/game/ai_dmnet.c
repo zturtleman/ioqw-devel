@@ -360,13 +360,14 @@ We could also create a separate AI node for every long term goal type. However, 
 =======================================================================================================================================
 */
 int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
-	vec3_t target, dir, dir2;
+	vec3_t target, dir, dir2, start, mins = {-4, -4, -4}, maxs = {4, 4, 4};
 	char netname[MAX_NETNAME];
 	char buf[MAX_MESSAGE_SIZE];
 	int areanum;
 	float croucher;
 	aas_entityinfo_t entinfo, botinfo;
 	bot_waypoint_t *wp;
+	bsp_trace_t bsptrace;
 
 	if (bs->ltgtype == LTG_TEAMHELP && !retreat) {
 		// check for bot typing status message
@@ -488,6 +489,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 						}
 					}
 				}
+				// don't crouch when swimming
+				if (trap_AAS_Swimming(bs->origin)) {
+					bs->crouch_time = FloatTime() - 1;
+				}
 				// check if the bot wants to crouch, don't crouch if crouched less than 5 seconds ago
 				if (bs->crouch_time < FloatTime() - 5) {
 					croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
@@ -495,10 +500,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					if (random() < bs->thinktime * croucher) {
 						bs->crouch_time = FloatTime() + 5 + croucher * 15;
 					}
-				}
-				// don't crouch when swimming
-				if (trap_AAS_Swimming(bs->origin)) {
-					bs->crouch_time = FloatTime() - 1;
 				}
 				// if not arrived yet or arived some time ago
 				if (bs->arrive_time < FloatTime() - 2) {
@@ -510,7 +511,15 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 						bs->arrive_time = FloatTime();
 					// if the bot wants to crouch
 					} else if (bs->crouch_time > FloatTime()) {
-						trap_EA_Crouch(bs->client);
+						VectorCopy(bs->origin, start);
+						// get the crouch view height
+						start[2] += CROUCH_VIEWHEIGHT;
+						// only try to crouch if the team mate remains visible
+						BotAI_Trace(&bsptrace, start, mins, maxs, entinfo.origin, bs->client, MASK_SHOT);
+						// if the team mate remains visible from the predicted position
+						if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == bs->teammate) {
+							trap_EA_Crouch(bs->client);
+						}
 					// else do some model taunts
 					} else if (random() < bs->thinktime * 0.05) {
 						// do a gesture :)
@@ -730,6 +739,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				VectorToAngles(dir, bs->ideal_viewangles);
 				bs->ideal_viewangles[2] *= 0.5;
 			}
+			// don't crouch when swimming
+			if (trap_AAS_Swimming(bs->origin)) {
+				bs->crouch_time = FloatTime() - 1;
+			}
 			// check if the bot wants to crouch, don't crouch if crouched less than 5 seconds ago
 			if (bs->crouch_time < FloatTime() - 5) {
 				croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
@@ -741,10 +754,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			// if the bot wants to crouch
 			if (bs->crouch_time > FloatTime()) {
 				trap_EA_Crouch(bs->client);
-			}
-			// don't crouch when swimming
-			if (trap_AAS_Swimming(bs->origin)) {
-				bs->crouch_time = FloatTime() - 1;
 			}
 			// make sure the bot is not gonna drown
 			if (trap_PointContents(bs->eye, bs->entitynum) & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA)) {
