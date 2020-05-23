@@ -551,7 +551,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
 	float phys_maxwalkvelocity, phys_maxcrouchvelocity, phys_maxswimvelocity;
 	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_maxscoutbarrier, phys_jumpvel, phys_jumpvelscout, friction;
-	float gravity, delta, maxvel, wishspeed, accelerate;
+	float gravity, delta, maxvel, maxjumpvel, maxbarrierheight, wishspeed, accelerate;
 	//float velchange, newvel;
 	//int ax;
 	int n, i, j, pc, step, swimming, crouch, event, jump_frame, areanum;
@@ -562,6 +562,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	vec3_t up = {0, 0, 1};
 	aas_plane_t *plane, *plane2, *lplane;
 	aas_trace_t trace, steptrace;
+	aas_trace_t gaptrace;
 
 	if (frametime <= 0) {
 		frametime = 0.1f;
@@ -628,6 +629,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 		} else if (n < cmdframes) {
 			// ax = 0;
 			maxvel = phys_maxwalkvelocity;
+			maxjumpvel = !scoutmove ? phys_jumpvel : phys_jumpvelscout;
 			accelerate = phys_airaccelerate;
 
 			VectorCopy(cmdmove, wishdir);
@@ -640,12 +642,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 				// if not swimming and upmove is positive then jump
 				if (!swimming && cmdmove[2] > 1) {
 					// jump velocity minus the gravity for one frame + 5 for safety
-					if (!scoutmove) {
-						frame_test_vel[2] = phys_jumpvel - (gravity * 0.1 * frametime) + 5;
-					} else {
-						frame_test_vel[2] = phys_jumpvelscout - (gravity * 0.1 * frametime) + 5;
-					}
-
+					frame_test_vel[2] = maxjumpvel - (gravity * 0.1 * frametime) + 5;
 					jump_frame = n;
 					// jumping so air accelerate
 					accelerate = phys_airaccelerate;
@@ -1022,20 +1019,19 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 			move->frames = n;
 			return qtrue;
 		} else if (stopevent & SE_GAP) {
-			aas_trace_t gaptrace;
-
 			VectorCopy(org, start);
 
 			start[2] += 24;
 
 			VectorCopy(start, end);
 
-			end[2] -= 48 + phys_maxbarrier;
+			maxbarrierheight = !scoutmove ? phys_maxbarrier : phys_maxscoutbarrier;
+			end[2] -= 48 + maxbarrierheight;
 			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, entnum);
 			// if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid) {
-				// if it is a gap (lower than phys_maxbarrier height)
-				if (gaptrace.endpos[2] < org[2] - phys_maxbarrier) {
+				// if it is a gap (lower than maxbarrierheight)
+				if (gaptrace.endpos[2] < org[2] - maxbarrierheight) {
 					if (!(AAS_PointContents(end) & CONTENTS_WATER)) {
 						VectorCopy(lastorg, move->endpos);
 						VectorScale(frame_test_vel, 1 / frametime, move->velocity);
