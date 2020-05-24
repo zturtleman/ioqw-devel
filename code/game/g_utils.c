@@ -472,19 +472,19 @@ G_FreeEntity
 Marks the entity as free.
 =======================================================================================================================================
 */
-void G_FreeEntity(gentity_t *ed) {
+void G_FreeEntity(gentity_t *ent) {
 
-	trap_UnlinkEntity(ed); // unlink from world
+	trap_UnlinkEntity(ent); // unlink from world
 
-	if (ed->neverFree) {
+	if (ent->neverFree) {
 		return;
 	}
 
-	memset(ed, 0, sizeof(*ed));
+	memset(ent, 0, sizeof(*ent));
 
-	ed->classname = "freed";
-	ed->freetime = level.time;
-	ed->inuse = qfalse;
+	ent->classname = "freed";
+	ent->freetime = level.time;
+	ent->inuse = qfalse;
 }
 
 /*

@@ -163,19 +163,19 @@ libvar_t *droppedweight = NULL;
 BotGoalStateFromHandle
 =======================================================================================================================================
 */
-bot_goalstate_t *BotGoalStateFromHandle(int handle) {
+bot_goalstate_t *BotGoalStateFromHandle(int goalstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
+	if (goalstate <= 0 || goalstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", goalstate);
 		return NULL;
 	}
 
-	if (!botgoalstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid goal state %d\n", handle);
+	if (!botgoalstates[goalstate]) {
+		botimport.Print(PRT_FATAL, "invalid goal state %d\n", goalstate);
 		return NULL;
 	}
 
-	return botgoalstates[handle];
+	return botgoalstates[goalstate];
 }
 
 /*
@@ -852,7 +852,7 @@ void BotSetAvoidGoalTime(int goalstate, int number, float avoidtime) {
 BotGetLevelItemGoal
 =======================================================================================================================================
 */
-int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal) {
+int BotGetLevelItemGoal(int index, char *classname, bot_goal_t *goal) {
 	levelitem_t *li;
 
 	if (!itemconfig) {
@@ -889,7 +889,7 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal) {
 			continue;
 		}
 
-		if (!Q_stricmp(name, itemconfig->iteminfo[li->iteminfo].name)) {
+		if (!Q_stricmp(classname, itemconfig->iteminfo[li->iteminfo].classname)) {
 			goal->areanum = li->goalareanum;
 			VectorCopy(li->goalorigin, goal->origin);
 			goal->entitynum = li->entitynum;
@@ -903,7 +903,7 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal) {
 			}
 
 			goal->iteminfo = li->iteminfo;
-			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].name);
+			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].classname);
 			return li->number;
 		}
 	}
@@ -1869,22 +1869,22 @@ int BotAllocGoalState(int client) {
 BotFreeGoalState
 =======================================================================================================================================
 */
-void BotFreeGoalState(int handle) {
+void BotFreeGoalState(int goalstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
+	if (goalstate <= 0 || goalstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", goalstate);
 		return;
 	}
 
-	if (!botgoalstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid goal state handle %d\n", handle);
+	if (!botgoalstates[goalstate]) {
+		botimport.Print(PRT_FATAL, "invalid goal state handle %d\n", goalstate);
 		return;
 	}
 
-	BotFreeItemWeights(handle);
-	FreeMemory(botgoalstates[handle]);
+	BotFreeItemWeights(goalstate);
+	FreeMemory(botgoalstates[goalstate]);
 
-	botgoalstates[handle] = NULL;
+	botgoalstates[goalstate] = NULL;
 }
 
 /*

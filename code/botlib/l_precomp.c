@@ -2587,7 +2587,7 @@ PC_Directive_eval
 =======================================================================================================================================
 */
 int PC_Directive_eval(source_t *source) {
-	signed long int value;
+	int value;
 	token_t token;
 
 	if (!PC_Evaluate(source, &value, NULL, qtrue)) {

@@ -77,19 +77,19 @@ bot_character_t *botcharacters[MAX_HANDLES + 1];
 BotCharacterFromHandle
 =======================================================================================================================================
 */
-bot_character_t *BotCharacterFromHandle(int handle) {
+bot_character_t *BotCharacterFromHandle(int character) {
 
-	if (handle <= 0 || handle > MAX_HANDLES) {
-		botimport.Print(PRT_FATAL, "character handle %d out of range\n", handle);
+	if (character <= 0 || character > MAX_HANDLES) {
+		botimport.Print(PRT_FATAL, "character handle %d out of range\n", character);
 		return NULL;
 	}
 
-	if (!botcharacters[handle]) {
-		botimport.Print(PRT_FATAL, "invalid character %d\n", handle);
+	if (!botcharacters[character]) {
+		botimport.Print(PRT_FATAL, "invalid character %d\n", character);
 		return NULL;
 	}
 
-	return botcharacters[handle];
+	return botcharacters[character];
 }
 
 /*
@@ -97,11 +97,11 @@ bot_character_t *BotCharacterFromHandle(int handle) {
 BotReferenceHandle
 =======================================================================================================================================
 */
-static bot_character_t *BotReferenceHandle(int handle, int refmod) {
+static bot_character_t *BotReferenceHandle(int character, int refmod) {
 	bot_character_t *ch;
 
-	if (handle > 0 && handle <= MAX_HANDLES) {
-		ch = botcharacters[handle];
+	if (character > 0 && character <= MAX_HANDLES) {
+		ch = botcharacters[character];
 
 		if (ch) {
 			ch->refcnt += refmod;
@@ -164,22 +164,22 @@ void BotFreeCharacterStrings(bot_character_t *ch) {
 BotFreeCharacter2
 =======================================================================================================================================
 */
-void BotFreeCharacter2(int handle) {
+void BotFreeCharacter2(int character) {
 
-	if (handle <= 0 || handle > MAX_HANDLES) {
-		botimport.Print(PRT_FATAL, "character handle %d out of range\n", handle);
+	if (character <= 0 || character > MAX_HANDLES) {
+		botimport.Print(PRT_FATAL, "character handle %d out of range\n", character);
 		return;
 	}
 
-	if (!botcharacters[handle]) {
-		botimport.Print(PRT_FATAL, "invalid character %d\n", handle);
+	if (!botcharacters[character]) {
+		botimport.Print(PRT_FATAL, "invalid character %d\n", character);
 		return;
 	}
 
-	BotFreeCharacterStrings(botcharacters[handle]);
-	FreeMemory(botcharacters[handle]);
+	BotFreeCharacterStrings(botcharacters[character]);
+	FreeMemory(botcharacters[character]);
 
-	botcharacters[handle] = NULL;
+	botcharacters[character] = NULL;
 }
 
 /*
@@ -187,10 +187,10 @@ void BotFreeCharacter2(int handle) {
 BotFreeCharacter
 =======================================================================================================================================
 */
-void BotFreeCharacter(int handle) {
+void BotFreeCharacter(int character) {
 	bot_character_t *ch;
 
-	ch = BotCharacterFromHandle(handle);
+	ch = BotCharacterFromHandle(character);
 
 	if (ch) {
 		if (ch->refcnt > 0) {
@@ -208,7 +208,7 @@ void BotFreeCharacter(int handle) {
 		return;
 	}
 
-	BotFreeCharacter2(handle);
+	BotFreeCharacter2(character);
 }
 
 /*

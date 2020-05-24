@@ -136,19 +136,19 @@ int BotValidWeaponNumber(int weaponnum) {
 BotWeaponStateFromHandle
 =======================================================================================================================================
 */
-bot_weaponstate_t *BotWeaponStateFromHandle(int handle) {
+bot_weaponstate_t *BotWeaponStateFromHandle(int weaponstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", handle);
+	if (weaponstate <= 0 || weaponstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", weaponstate);
 		return NULL;
 	}
 
-	if (!botweaponstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", handle);
+	if (!botweaponstates[weaponstate]) {
+		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", weaponstate);
 		return NULL;
 	}
 
-	return botweaponstates[handle];
+	return botweaponstates[weaponstate];
 }
 #ifdef DEBUG_AI_WEAP
 /*
@@ -489,21 +489,21 @@ int BotAllocWeaponState(void) {
 BotFreeWeaponState
 =======================================================================================================================================
 */
-void BotFreeWeaponState(int handle) {
+void BotFreeWeaponState(int weaponstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", handle);
+	if (weaponstate <= 0 || weaponstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", weaponstate);
 		return;
 	}
 
-	if (!botweaponstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", handle);
+	if (!botweaponstates[weaponstate]) {
+		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", weaponstate);
 		return;
 	}
 
-	BotFreeWeaponWeights(handle);
-	FreeMemory(botweaponstates[handle]);
-	botweaponstates[handle] = NULL;
+	BotFreeWeaponWeights(weaponstate);
+	FreeMemory(botweaponstates[weaponstate]);
+	botweaponstates[weaponstate] = NULL;
 }
 
 /*

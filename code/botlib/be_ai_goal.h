@@ -106,7 +106,7 @@ void BotFreeItemWeights(int goalstate);
 // returns the handle of a newly allocated goal state
 int BotAllocGoalState(int client);
 // free the given goal state
-void BotFreeGoalState(int handle);
+void BotFreeGoalState(int goalstate);
 // setup the goal AI
 int BotSetupGoalAI(void);
 // shut down the goal AI

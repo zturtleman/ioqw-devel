@@ -177,7 +177,7 @@ localEntity_t *CG_SmokePuff(const vec3_t p, const vec3_t vel, float radius, floa
 
 	re = &le->refEntity;
 	re->rotation = Q_random(&seed) * 360;
-	re->radius = radius;
+	re->radius = le->radius;
 	re->shaderTime = startTime;
 
 	le->leType = LE_MOVE_SCALE_FADE;
@@ -208,7 +208,6 @@ localEntity_t *CG_SmokePuff(const vec3_t p, const vec3_t vel, float radius, floa
 	re->shaderRGBA[2] = le->color[2] * 0xff;
 	re->shaderRGBA[3] = 0xff;
 	re->reType = RT_SPRITE;
-	re->radius = le->radius;
 
 	return le;
 }

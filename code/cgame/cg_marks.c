@@ -129,7 +129,7 @@ CG_ImpactMark
 Temporary marks will not be stored or randomly oriented, but immediately passed to the renderer.
 =======================================================================================================================================
 */
-void CG_ImpactMark(qhandle_t markShader, const vec3_t origin, const vec3_t dir, float orientation, float red, float green, float blue, float alpha, qboolean alphaFade, float markRadius, qboolean temporary) {
+void CG_ImpactMark(qhandle_t markShader, const vec3_t origin, const vec3_t dir, float orientation, float r, float g, float b, float a, qboolean alphaFade, float markRadius, qboolean temporary) {
 	vec3_t axis[3], originalPoints[4], markPoints[MAX_MARK_POINTS], projection, delta, localOrigin;
 	markFragment_t markFragments[MAX_MARK_FRAGMENTS], *mf;
 	markPoly_t *mark;
@@ -169,10 +169,10 @@ void CG_ImpactMark(qhandle_t markShader, const vec3_t origin, const vec3_t dir, 
 
 	numFragments = trap_CM_MarkFragments(4, (void *)originalPoints, projection, MAX_MARK_POINTS, markPoints[0], MAX_MARK_FRAGMENTS, markFragments);
 
-	colors[0] = red * 255;
-	colors[1] = green * 255;
-	colors[2] = blue * 255;
-	colors[3] = alpha * 255;
+	colors[0] = r * 255;
+	colors[1] = g * 255;
+	colors[2] = b * 255;
+	colors[3] = a * 255;
 
 	for (i = 0, mf = markFragments; i < numFragments; i++, mf++) {
 		// create the texture axis
@@ -218,10 +218,10 @@ void CG_ImpactMark(qhandle_t markShader, const vec3_t origin, const vec3_t dir, 
 		mark->alphaFade = alphaFade;
 		mark->markShader = markShader;
 		mark->numVerts = mf->numPoints;
-		mark->color[0] = red;
-		mark->color[1] = green;
-		mark->color[2] = blue;
-		mark->color[3] = alpha;
+		mark->color[0] = r;
+		mark->color[1] = g;
+		mark->color[2] = b;
+		mark->color[3] = a;
 
 		memcpy(mark->verts, verts, mf->numPoints * sizeof(verts[0]));
 

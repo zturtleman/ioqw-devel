@@ -22,5 +22,5 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 =======================================================================================================================================
 */
 
-int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voicechat);
+int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voiceChat);
 void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode);

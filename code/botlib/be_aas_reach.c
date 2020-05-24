@@ -2833,9 +2833,8 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 		VectorSubtract(bestend, beststart, dir);
 /*
 		height = dir[2];
-*/
 		dir[2] = 0;
-/*
+
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_WALKOFFLEDGE && height > VectorLength(dir)) {
 			lreach->traveltime = aassettings.rs_startwalkoffledge + height * 50 / aassettings.phys_gravity;
 		} else {

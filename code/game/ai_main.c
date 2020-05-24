@@ -235,16 +235,16 @@ BotAI_GetSnapshotEntity
 =======================================================================================================================================
 */
 int BotAI_GetSnapshotEntity(int clientNum, int sequence, entityState_t *state) {
-	int entNum;
+	int entityNum;
 
-	entNum = trap_BotGetSnapshotEntity(clientNum, sequence);
+	entityNum = trap_BotGetSnapshotEntity(clientNum, sequence);
 
-	if (entNum == -1) {
+	if (entityNum == -1) {
 		memset(state, 0, sizeof(entityState_t));
 		return -1;
 	}
 
-	BotAI_GetEntityState(entNum, state);
+	BotAI_GetEntityState(entityNum, state);
 
 	return sequence + 1;
 }

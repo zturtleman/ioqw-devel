@@ -646,7 +646,7 @@ void AAS_CreateAreaSettings(void)
 tmp_node_t *AAS_CreateArea(node_t *node)
 {
 	int pside;
-	int areafaceflags;
+	//int areafaceflags;
 	portal_t	*p;
 	tmp_face_t *tmpface;
 	tmp_area_t *tmparea;
@@ -656,7 +656,7 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 	tmparea = AAS_AllocTmpArea();
 	tmparea->tmpfaces = NULL;
 	//clear the area face flags
-	areafaceflags = 0;
+	//areafaceflags = 0;
 	//make aas faces from the portals
 	for (p = node->portals; p; p = p->next[pside])
 	{
@@ -719,7 +719,7 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 				tmpface->faceflags |= FACE_GROUND;
 			} //end if
 			//
-			areafaceflags |= tmpface->faceflags;
+			//areafaceflags |= tmpface->faceflags;
 			//no aas face number yet (zero is a dummy in the aasworld faces)
 			tmpface->aasfacenum = 0;
 			//add the front side of the face to the area

@@ -226,7 +226,7 @@ AAS_PointAreaNum
 Returns the AAS area the point is in.
 =======================================================================================================================================
 */
-int AAS_PointAreaNum(vec3_t point) {
+int AAS_PointAreaNum(vec3_t origin) {
 	int nodenum;
 	vec_t dist;
 	aas_node_t *node;
@@ -255,7 +255,7 @@ int AAS_PointAreaNum(vec3_t point) {
 		}
 #endif // AAS_SAMPLE_DEBUG
 		plane = &aasworld.planes[node->planenum];
-		dist = DotProduct(point, plane->normal) - plane->dist;
+		dist = DotProduct(origin, plane->normal) - plane->dist;
 
 		if (dist > 0) {
 			nodenum = node->children[0];
@@ -363,14 +363,14 @@ AAS_PointPresenceType
 Returns the presence type at the given point.
 =======================================================================================================================================
 */
-int AAS_PointPresenceType(vec3_t point) {
+int AAS_PointPresenceType(vec3_t origin) {
 	int areanum;
 
 	if (!aasworld.loaded) {
 		return 0;
 	}
 
-	areanum = AAS_PointAreaNum(point);
+	areanum = AAS_PointAreaNum(origin);
 
 	if (!areanum) {
 		return PRESENCE_NONE;
@@ -896,7 +896,7 @@ int AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int max
 			// put the crosspoint TRACEPLANE_EPSILON pixels on the near side
 			if (front < 0) {
 				frac = (front) / (front - back);
-			} else {
+			} else { // Tobias CHECK: this doesn't make sense (see above) either something is missing here or the comment is wrong...
 				frac = (front) / (front - back);
 			}
 

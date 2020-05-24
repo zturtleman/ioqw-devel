@@ -190,7 +190,7 @@ void UI_PlayerInfo_SetModel(playerInfo_t *pi, const char *model, const char *hea
 void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat);
 void UI_ColorFromIndex(int val, vec3_t color);
 void UI_PlayerInfo_UpdateColor(playerInfo_t *pi);
-qboolean UI_RegisterClientModelname(playerInfo_t *pi, const char *modelSkinName, const char *headName, const char *teamName);
+qboolean UI_RegisterClientModelname(playerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName);
 
 // new ui stuff
 #define MAX_HEADS 64

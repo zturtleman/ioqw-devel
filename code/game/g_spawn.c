@@ -192,7 +192,7 @@ void SP_team_CTF_bluespawn(gentity_t *ent);
 void SP_team_blueobelisk(gentity_t *ent);
 void SP_team_redobelisk(gentity_t *ent);
 void SP_team_neutralobelisk(gentity_t *ent);
-void SP_item_botroam(gentity_t *ent){};
+void SP_item_botroam(gentity_t *ent) {}
 void SP_dlight(gentity_t *ent);
 void SP_corona(gentity_t *ent);
 void SP_props_skyportal(gentity_t *ent);

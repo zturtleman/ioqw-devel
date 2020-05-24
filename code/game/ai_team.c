@@ -435,14 +435,14 @@ void BotSayTeamOrder(bot_state_t *bs, int toclient) {
 BotVoiceChat
 =======================================================================================================================================
 */
-void BotVoiceChat(bot_state_t *bs, int toclient, char *voicechat) {
+void BotVoiceChat(bot_state_t *bs, int toclient, char *voiceChat) {
 
 	if (toclient == -1) {
 		// voice only say team
-		trap_EA_Command(bs->client, va("vsay_team %s", voicechat));
+		trap_EA_Command(bs->client, va("vsay_team %s", voiceChat));
 	} else {
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("vtell %d %s", toclient, voicechat));
+		trap_EA_Command(bs->client, va("vtell %d %s", toclient, voiceChat));
 	}
 }
 
@@ -451,14 +451,14 @@ void BotVoiceChat(bot_state_t *bs, int toclient, char *voicechat) {
 BotVoiceChatOnly
 =======================================================================================================================================
 */
-void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voicechat) {
+void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voiceChat) {
 
 	if (toclient == -1) {
 		// voice only say team
-		trap_EA_Command(bs->client, va("vosay_team %s", voicechat));
+		trap_EA_Command(bs->client, va("vosay_team %s", voiceChat));
 	} else {
 		// voice only tell single player
-		trap_EA_Command(bs->client, va("votell %d %s", toclient, voicechat));
+		trap_EA_Command(bs->client, va("votell %d %s", toclient, voiceChat));
 	}
 }
 
@@ -467,8 +467,8 @@ void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voicechat) {
 BotSayVoiceTeamOrder
 =======================================================================================================================================
 */
-void BotSayVoiceTeamOrder(bot_state_t *bs, int toclient, char *voicechat) {
-	BotVoiceChat(bs, toclient, voicechat);
+void BotSayVoiceTeamOrder(bot_state_t *bs, int toclient, char *voiceChat) {
+	BotVoiceChat(bs, toclient, voiceChat);
 }
 
 /*

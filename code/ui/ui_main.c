@@ -1574,7 +1574,6 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 	char team[256];
 	char head[256];
 	vec3_t viewangles;
-	vec3_t moveangles;
 
 	if (trap_Cvar_VariableValue("ui_Q3Model")) {
 		Q_strncpyz(model, UI_Cvar_VariableString("model"), sizeof(model));
@@ -1603,8 +1602,6 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 		viewangles[YAW] = 180 - 10;
 		viewangles[PITCH] = 0;
 		viewangles[ROLL] = 0;
-
-		VectorClear(moveangles);
 
 		UI_PlayerInfo_SetModel(&info, model, head, team);
 		UI_PlayerInfo_SetInfo(&info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse);
@@ -1816,7 +1813,6 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 	char headmodel[MAX_QPATH];
 	char team[256];
 	vec3_t viewangles;
-	vec3_t moveangles;
 
 	if (updateOpponentModel) {
 		Q_strncpyz(model, UI_Cvar_VariableString("ui_opponentModel"), sizeof(model));
@@ -1829,8 +1825,6 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 		viewangles[YAW] = 180 - 10;
 		viewangles[PITCH] = 0;
 		viewangles[ROLL] = 0;
-
-		VectorClear(moveangles);
 
 		UI_PlayerInfo_SetModel(&info2, model, headmodel, "");
 		UI_PlayerInfo_SetInfo(&info2, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse);
@@ -4345,19 +4339,19 @@ static void UI_RunMenuScript(char **args) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("addbot %s %i %s\n", name, uiInfo.skillIndex + 1, (uiInfo.redBlue == 0) ? "Red" : "Blue"));
 		} else if (Q_stricmp(name, "addFavorite") == 0) {
 			if (ui_netSource.integer != UIAS_FAVORITES) {
-				char name[MAX_NAME_LENGTH];
+				char hostname[MAX_NAME_LENGTH];
 				char addr[MAX_ADDRESSLENGTH];
 				int res;
 
 				trap_LAN_GetServerInfo(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, MAX_STRING_CHARS);
 
-				name[0] = addr[0] = '\0';
+				hostname[0] = addr[0] = '\0';
 
-				Q_strncpyz(name, Info_ValueForKey(buff, "hostname"), sizeof(name));
+				Q_strncpyz(hostname, Info_ValueForKey(buff, "hostname"), sizeof(hostname));
 				Q_strncpyz(addr, Info_ValueForKey(buff, "addr"), sizeof(addr));
 
-				if (strlen(name) > 0 && strlen(addr) > 0) {
-					res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
+				if (strlen(hostname) > 0 && strlen(addr) > 0) {
+					res = trap_LAN_AddServer(AS_FAVORITES, hostname, addr);
 
 					if (res == 0) {
 						// server already in the list
@@ -4386,17 +4380,17 @@ static void UI_RunMenuScript(char **args) {
 				}
 			}
 		} else if (Q_stricmp(name, "createFavorite") == 0) {
-			char name[MAX_NAME_LENGTH];
+			char hostname[MAX_NAME_LENGTH];
 			char addr[MAX_ADDRESSLENGTH];
 			int res;
 
-			name[0] = addr[0] = '\0';
+			hostname[0] = addr[0] = '\0';
 
-			Q_strncpyz(name, UI_Cvar_VariableString("ui_favoriteName"), sizeof(name));
+			Q_strncpyz(hostname, UI_Cvar_VariableString("ui_favoriteName"), sizeof(hostname));
 			Q_strncpyz(addr, UI_Cvar_VariableString("ui_favoriteAddress"), sizeof(addr));
 
-			if (strlen(name) > 0 && strlen(addr) > 0) {
-				res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
+			if (strlen(hostname) > 0 && strlen(addr) > 0) {
+				res = trap_LAN_AddServer(AS_FAVORITES, hostname, addr);
 
 				if (res == 0) {
 					// server already in the list

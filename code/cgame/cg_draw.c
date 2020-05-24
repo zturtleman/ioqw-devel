@@ -1580,7 +1580,7 @@ static void CG_DrawBottomLineRight(void) {
 	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
 	if (cg_drawClock.integer) {
-		y = CG_DrawRealTimeClock(y);
+		CG_DrawRealTimeClock(y);
 	}
 }
 #ifndef BASEGAME

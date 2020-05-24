@@ -326,8 +326,8 @@ int trap_PC_SourceFileAndLine(int handle, char *filename, int *line) {
 trap_LocateGameData
 =======================================================================================================================================
 */
-void trap_LocateGameData(gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGClient) {
-	syscall(G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGClient);
+void trap_LocateGameData(gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGameClient) {
+	syscall(G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
 }
 
 /*
@@ -506,8 +506,8 @@ void trap_UnlinkEntity(gentity_t *ent) {
 trap_EntitiesInBox
 =======================================================================================================================================
 */
-int trap_EntitiesInBox(const vec3_t mins, const vec3_t maxs, int *list, int maxcount) {
-	return syscall(G_ENTITIES_IN_BOX, mins, maxs, list, maxcount);
+int trap_EntitiesInBox(const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount) {
+	return syscall(G_ENTITIES_IN_BOX, mins, maxs, entityList, maxcount);
 }
 
 /*
@@ -634,8 +634,8 @@ int trap_BotLibLoadMap(const char *mapname) {
 trap_BotLibUpdateEntity
 =======================================================================================================================================
 */
-int trap_BotLibUpdateEntity(int ent, void /*struct bot_updateentity_s*/ *bue) {
-	return syscall(BOTLIB_UPDATENTITY, ent, bue);
+int trap_BotLibUpdateEntity(int entnum, void /*struct bot_updateentity_s*/ *bue) {
+	return syscall(BOTLIB_UPDATENTITY, entnum, bue);
 }
 
 /*
@@ -745,8 +745,8 @@ int trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, in
 trap_AAS_PointAreaNum
 =======================================================================================================================================
 */
-int trap_AAS_PointAreaNum(vec3_t point) {
-	return syscall(BOTLIB_AAS_POINT_AREA_NUM, point);
+int trap_AAS_PointAreaNum(vec3_t origin) {
+	return syscall(BOTLIB_AAS_POINT_AREA_NUM, origin);
 }
 
 /*
@@ -763,8 +763,8 @@ int trap_AAS_PointContents(vec3_t point) {
 trap_AAS_PointReachabilityAreaIndex
 =======================================================================================================================================
 */
-int trap_AAS_PointReachabilityAreaIndex(vec3_t point) {
-	return syscall(BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, point);
+int trap_AAS_PointReachabilityAreaIndex(vec3_t origin) {
+	return syscall(BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, origin);
 }
 
 /*
@@ -1174,8 +1174,8 @@ int trap_BotAllocChatState(void) {
 trap_BotFreeChatState
 =======================================================================================================================================
 */
-void trap_BotFreeChatState(int handle) {
-	syscall(BOTLIB_AI_FREE_CHAT_STATE, handle);
+void trap_BotFreeChatState(int chatstate) {
+	syscall(BOTLIB_AI_FREE_CHAT_STATE, chatstate);
 }
 
 /*
@@ -1582,8 +1582,8 @@ void trap_BotMutateGoalFuzzyLogic(int goalstate, float range) {
 trap_BotAllocGoalState
 =======================================================================================================================================
 */
-int trap_BotAllocGoalState(int state) {
-	return syscall(BOTLIB_AI_ALLOC_GOAL_STATE, state);
+int trap_BotAllocGoalState(int client) {
+	return syscall(BOTLIB_AI_ALLOC_GOAL_STATE, client);
 }
 
 /*
@@ -1591,8 +1591,8 @@ int trap_BotAllocGoalState(int state) {
 trap_BotFreeGoalState
 =======================================================================================================================================
 */
-void trap_BotFreeGoalState(int handle) {
-	syscall(BOTLIB_AI_FREE_GOAL_STATE, handle);
+void trap_BotFreeGoalState(int goalstate) {
+	syscall(BOTLIB_AI_FREE_GOAL_STATE, goalstate);
 }
 
 /*
@@ -1690,8 +1690,8 @@ int trap_BotAllocMoveState(void) {
 trap_BotFreeMoveState
 =======================================================================================================================================
 */
-void trap_BotFreeMoveState(int handle) {
-	syscall(BOTLIB_AI_FREE_MOVE_STATE, handle);
+void trap_BotFreeMoveState(int movestate) {
+	syscall(BOTLIB_AI_FREE_MOVE_STATE, movestate);
 }
 
 /*
@@ -1699,8 +1699,8 @@ void trap_BotFreeMoveState(int handle) {
 trap_BotInitMoveState
 =======================================================================================================================================
 */
-void trap_BotInitMoveState(int handle, void /*struct bot_initmove_s*/ *initmove) {
-	syscall(BOTLIB_AI_INIT_MOVE_STATE, handle, initmove);
+void trap_BotInitMoveState(int movestate, void /*struct bot_initmove_s*/ *initmove) {
+	syscall(BOTLIB_AI_INIT_MOVE_STATE, movestate, initmove);
 }
 
 /*

@@ -2857,8 +2857,8 @@ static void Scroll_ListBox_ThumbFunc(void *p) {
 		}
 
 		r.x = si->item->window.rect.x + SCROLLBAR_SIZE + 1;
-		r.y = si->item->window.rect.y + si->item->window.rect.h - SCROLLBAR_SIZE - 1;
-		r.h = SCROLLBAR_SIZE;
+		//r.y = si->item->window.rect.y + si->item->window.rect.h - SCROLLBAR_SIZE - 1;
+		//r.h = SCROLLBAR_SIZE;
 		r.w = si->item->window.rect.w - (SCROLLBAR_SIZE * 2) - 2;
 
 		max = Item_ListBox_MaxScroll(si->item);
@@ -2873,10 +2873,10 @@ static void Scroll_ListBox_ThumbFunc(void *p) {
 		listPtr->startPos = pos;
 		si->xStart = DC->cursorx;
 	} else if (DC->cursory != si->yStart) {
-		r.x = si->item->window.rect.x + si->item->window.rect.w - SCROLLBAR_SIZE - 1;
+		//r.x = si->item->window.rect.x + si->item->window.rect.w - SCROLLBAR_SIZE - 1;
 		r.y = si->item->window.rect.y + SCROLLBAR_SIZE + 1;
 		r.h = si->item->window.rect.h - (SCROLLBAR_SIZE * 2) - 2;
-		r.w = SCROLLBAR_SIZE;
+		//r.w = SCROLLBAR_SIZE;
 
 		max = Item_ListBox_MaxScroll(si->item);
 		pos = (DC->cursory - r.y - SCROLLBAR_SIZE * 0.5) * max / (r.h - SCROLLBAR_SIZE);
@@ -3976,8 +3976,7 @@ typedef struct {
 
 typedef struct {
 	char *name;
-	float defaultvalue;
-	float value;
+	//float value;
 } configcvar_t;
 
 static bind_t g_bindings[] = {

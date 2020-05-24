@@ -119,21 +119,21 @@ int BotAllocMoveState(void) {
 BotFreeMoveState
 =======================================================================================================================================
 */
-void BotFreeMoveState(int handle) {
+void BotFreeMoveState(int movestate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
+	if (movestate <= 0 || movestate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", movestate);
 		return;
 	}
 
-	if (!botmovestates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
+	if (!botmovestates[movestate]) {
+		botimport.Print(PRT_FATAL, "invalid move state %d\n", movestate);
 		return;
 	}
 
-	FreeMemory(botmovestates[handle]);
+	FreeMemory(botmovestates[movestate]);
 
-	botmovestates[handle] = NULL;
+	botmovestates[movestate] = NULL;
 }
 
 /*
@@ -141,19 +141,19 @@ void BotFreeMoveState(int handle) {
 BotMoveStateFromHandle
 =======================================================================================================================================
 */
-bot_movestate_t *BotMoveStateFromHandle(int handle) {
+bot_movestate_t *BotMoveStateFromHandle(int movestate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
+	if (movestate <= 0 || movestate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", movestate);
 		return NULL;
 	}
 
-	if (!botmovestates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
+	if (!botmovestates[movestate]) {
+		botimport.Print(PRT_FATAL, "invalid move state %d\n", movestate);
 		return NULL;
 	}
 
-	return botmovestates[handle];
+	return botmovestates[movestate];
 }
 
 /*
@@ -161,10 +161,10 @@ bot_movestate_t *BotMoveStateFromHandle(int handle) {
 BotInitMoveState
 =======================================================================================================================================
 */
-void BotInitMoveState(int handle, bot_initmove_t *initmove) {
+void BotInitMoveState(int movestate, bot_initmove_t *initmove) {
 	bot_movestate_t *ms;
 
-	ms = BotMoveStateFromHandle(handle);
+	ms = BotMoveStateFromHandle(movestate);
 
 	if (!ms) {
 		return;

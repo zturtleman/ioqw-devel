@@ -133,7 +133,7 @@ void AAS_FreeTmpArea(tmp_area_t *tmparea);
 //allocate a tmp node
 tmp_node_t *AAS_AllocTmpNode(void);
 //free a tmp node
-void AAS_FreeTmpNode(tmp_node_t *node);
+void AAS_FreeTmpNode(tmp_node_t *tmpnode);
 //checks if an area is ok
 void AAS_CheckArea(tmp_area_t *tmparea);
 //flips the area faces where needed

@@ -641,7 +641,7 @@ typedef struct {
 } bgGenTracemap_t;
 
 void BG_GenerateTracemap(const char *mapname, vec3_t mapcoordsMins, vec3_t mapcoordsMaxs, bgGenTracemap_t *gen);
-qboolean BG_LoadTraceMap(char *rawmapname, vec2_t world_mins, vec2_t world_maxs);
+qboolean BG_LoadTraceMap(char *mapname, vec2_t world_mins, vec2_t world_maxs);
 float BG_GetSkyHeightAtPoint(vec3_t pos);
 float BG_GetSkyGroundHeightAtPoint(vec3_t pos);
 float BG_GetGroundHeightAtPoint(vec3_t pos);
