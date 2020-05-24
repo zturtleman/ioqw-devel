@@ -65,7 +65,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define RESULTTYPE_WAITFORFUNCBOBBING	0x00000002 // waiting for func_bobbing to arrive
 #define RESULTTYPE_INSOLIDAREA			0x00000004 // stuck in solid area, this is bad
 // structure used to initialize the movement state
-// the or_moveflags MFL_ONGROUND, MFL_WATERJUMP and MFL_TELEPORTED come from the playerstate
+// the or_moveflags MFL_ONGROUND, MFL_WATERJUMP, MFL_SCOUT and MFL_TELEPORTED come from the playerstate
 typedef struct bot_initmove_s {
 	vec3_t origin;		// origin of the bot
 	vec3_t velocity;	// velocity of the bot

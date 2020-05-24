@@ -540,8 +540,14 @@ void AAS_PrintTravelType(int traveltype) {
 		case TRAVEL_BARRIERJUMP:
 			str = "TRAVEL_BARRIERJUMP";
 			break;
+		case TRAVEL_SCOUTBARRIER:
+			str = "TRAVEL_SCOUTBARRIER";
+			break;
 		case TRAVEL_JUMP:
 			str = "TRAVEL_JUMP";
+			break;
+		case TRAVEL_SCOUTJUMP:
+			str = "TRAVEL_SCOUTJUMP";
 			break;
 		case TRAVEL_LADDER:
 			str = "TRAVEL_LADDER";
@@ -637,7 +643,7 @@ void AAS_ShowReachability(aas_reachability_t *reach) {
 
 		cmdmove[2] = aassettings.phys_jumpvel;
 		// movement prediction
-		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 3, 30, 0.1f, SE_HITGROUND|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE, 0, qtrue);
+		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 3, 30, 0.1f, SE_HITGROUND|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE, 0, qtrue);
 
 		if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMP) {
 			AAS_JumpReachRunStart(reach, dir);
@@ -656,7 +662,7 @@ void AAS_ShowReachability(aas_reachability_t *reach) {
 		VectorScale(dir, speed, cmdmove);
 		VectorSet(velocity, 0, 0, zvel);
 		// movement prediction
-		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
+		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
 	} else if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMPPAD) {
 		VectorSet(cmdmove, 0, 0, 0);
 		VectorSubtract(reach->end, reach->start, dir);
@@ -670,7 +676,7 @@ void AAS_ShowReachability(aas_reachability_t *reach) {
 		// NOTE: the facenum is the Z velocity
 		velocity[2] = reach->facenum;
 		// movement prediction
-		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
+		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA, reach->areanum, qtrue);
 	}
 }
 

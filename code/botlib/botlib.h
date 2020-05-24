@@ -181,7 +181,7 @@ typedef struct aas_export_s {
 	int (*AAS_AreaReachability)(int areanum);
 	int (*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
 	int (*AAS_EnableRoutingArea)(int areanum, int enable);
-	int (*AAS_PredictClientMovement)(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
+	int (*AAS_PredictClientMovement)(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
 	int (*AAS_PredictRoute)(struct aas_predictroute_s *route, int areanum, vec3_t origin, int goalareanum, int travelflags, int maxareas, int maxtime, int stopevent, int stopcontents, int stoptfl, int stopareanum);
 	int (*AAS_AlternativeRouteGoals)(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags, struct aas_altroutegoal_s *altroutegoals, int maxaltroutegoals, int type);
 	int (*AAS_ValueForBSPEpairKey)(int ent, char *key, char *value, int size);
@@ -369,6 +369,7 @@ name:						default:	module(s):		description:
 "phys_waterfriction"		"1"			be_aas_move.c	water friction
 "phys_watergravity"			"400"		be_aas_move.c	gravity in water
 "phys_maxvelocity"			"260"		be_aas_move.c	maximum velocity
+"phys_maxscoutvelocity"		"390"		be_aas_move.c	maximum velocity (using the scout powerup)
 "phys_maxwalkvelocity"		"280"		be_aas_move.c	maximum walk velocity
 "phys_maxcrouchvelocity"	"100"		be_aas_move.c	maximum crouch velocity
 "phys_maxswimvelocity"		"45"		be_aas_move.c	maximum swim velocity
@@ -379,7 +380,9 @@ name:						default:	module(s):		description:
 "phys_maxsteepness"			"0.7"		be_aas_move.c	maximum floor steepness
 "phys_maxwaterjump"			"20"		be_aas_move.c	maximum waterjump height
 "phys_maxbarrier"			"43"		be_aas_move.c	maximum barrier height
+"phys_maxscoutbarrier"		"73"		be_aas_move.c	maximum barrier height (using the scout powerup)
 "phys_jumpvel"				"200"		be_aas_move.c	jump z velocity
+"phys_jumpvelscout"			"300"		be_aas_move.c	jump z velocity (using the scout powerup)
 "phys_falldelta5"			"40"		be_aas_move.c
 "phys_falldelta10"			"60"		be_aas_move.c
 "rs_waterjump"				"400"		be_aas_move.c

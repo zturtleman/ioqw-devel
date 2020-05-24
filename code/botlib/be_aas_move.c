@@ -86,6 +86,7 @@ void AAS_InitSettings(void) {
 	aassettings.phys_waterfriction = LibVarValue("phys_waterfriction", "1");
 	aassettings.phys_watergravity = LibVarValue("phys_watergravity", "400");
 	aassettings.phys_maxvelocity = LibVarValue("phys_maxvelocity", "260");
+	aassettings.phys_maxscoutvelocity = LibVarValue("phys_maxscoutvelocity", "390");
 	aassettings.phys_maxwalkvelocity = LibVarValue("phys_maxwalkvelocity", "280");
 	aassettings.phys_maxcrouchvelocity = LibVarValue("phys_maxcrouchvelocity", "100");
 	aassettings.phys_maxswimvelocity = LibVarValue("phys_maxswimvelocity", "45");
@@ -96,7 +97,9 @@ void AAS_InitSettings(void) {
 	aassettings.phys_maxsteepness = LibVarValue("phys_maxsteepness", "0.7");
 	aassettings.phys_maxwaterjump = LibVarValue("phys_maxwaterjump", "20");
 	aassettings.phys_maxbarrier = LibVarValue("phys_maxbarrier", "43");
+	aassettings.phys_maxscoutbarrier = LibVarValue("phys_maxscoutbarrier", "73");
 	aassettings.phys_jumpvel = LibVarValue("phys_jumpvel", "200");
+	aassettings.phys_jumpvelscout = LibVarValue("phys_jumpvelscout", "300");
 	aassettings.phys_falldelta5 = LibVarValue("phys_falldelta5", "40");
 	aassettings.phys_falldelta10 = LibVarValue("phys_falldelta10", "60");
 	aassettings.rs_waterjump = LibVarValue("rs_waterjump", "400");
@@ -272,7 +275,36 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qfalse, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	VectorCopy(move.endpos, runstart);
+	// don't enter slime or lava and don't fall from too high
+	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
+		VectorCopy(start, runstart);
+	}
+}
+
+/*
+=======================================================================================================================================
+AAS_ScoutJumpReachRunStart
+=======================================================================================================================================
+*/
+void AAS_ScoutJumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
+	vec3_t hordir, start, cmdmove;
+	aas_clientmove_t move;
+
+	hordir[0] = reach->start[0] - reach->end[0];
+	hordir[1] = reach->start[1] - reach->end[1];
+	hordir[2] = 0;
+
+	VectorNormalize(hordir);
+	// start point
+	VectorCopy(reach->start, start);
+
+	start[2] += 1;
+	// get command movement
+	VectorScale(hordir, 400, cmdmove);
+	// movement prediction
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
 	VectorCopy(move.endpos, runstart);
 	// don't enter slime or lava and don't fall from too high
 	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
@@ -513,13 +545,13 @@ Parameter:	origin			: origin to start with.
 Returns: aas_clientmove_t
 =======================================================================================================================================
 */
-static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, const vec3_t origin, int presencetype, int onground, const vec3_t velocity, const vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, const vec3_t mins, const vec3_t maxs, int visualize) {
+static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, const vec3_t origin, int presencetype, int onground, int scoutmove, const vec3_t velocity, const vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, const vec3_t mins, const vec3_t maxs, int visualize) {
 	float phys_friction, phys_stopspeed, phys_gravity, phys_waterfriction;
 	float phys_watergravity;
 	float phys_walkaccelerate, phys_airaccelerate, phys_swimaccelerate;
 	float phys_maxwalkvelocity, phys_maxcrouchvelocity, phys_maxswimvelocity;
-	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_jumpvel, friction;
-	float gravity, delta, maxvel, wishspeed, accelerate;
+	float phys_maxstep, phys_maxsteepness, phys_maxbarrier, phys_maxscoutbarrier, phys_jumpvel, phys_jumpvelscout, friction;
+	float gravity, delta, maxvel, maxjumpvel, maxbarrierheight, wishspeed, accelerate;
 	//float velchange, newvel;
 	//int ax;
 	int n, i, j, pc, step, swimming, crouch, event, jump_frame, areanum;
@@ -530,6 +562,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	vec3_t up = {0, 0, 1};
 	aas_plane_t *plane, *plane2, *lplane;
 	aas_trace_t trace, steptrace;
+	aas_trace_t gaptrace;
 
 	if (frametime <= 0) {
 		frametime = 0.1f;
@@ -549,7 +582,9 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 	phys_maxstep = aassettings.phys_maxstep;
 	phys_maxsteepness = aassettings.phys_maxsteepness;
 	phys_maxbarrier = aassettings.phys_maxbarrier;
+	phys_maxscoutbarrier = aassettings.phys_maxscoutbarrier;
 	phys_jumpvel = aassettings.phys_jumpvel * frametime;
+	phys_jumpvelscout = aassettings.phys_jumpvelscout * frametime;
 
 	Com_Memset(move, 0, sizeof(*move));
 	Com_Memset(&trace, 0, sizeof(trace));
@@ -594,6 +629,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 		} else if (n < cmdframes) {
 			// ax = 0;
 			maxvel = phys_maxwalkvelocity;
+			maxjumpvel = !scoutmove ? phys_jumpvel : phys_jumpvelscout;
 			accelerate = phys_airaccelerate;
 
 			VectorCopy(cmdmove, wishdir);
@@ -606,7 +642,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 				// if not swimming and upmove is positive then jump
 				if (!swimming && cmdmove[2] > 1) {
 					// jump velocity minus the gravity for one frame + 5 for safety
-					frame_test_vel[2] = phys_jumpvel - (gravity * 0.1 * frametime) + 5;
+					frame_test_vel[2] = maxjumpvel - (gravity * 0.1 * frametime) + 5;
 					jump_frame = n;
 					// jumping so air accelerate
 					accelerate = phys_airaccelerate;
@@ -983,20 +1019,19 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 			move->frames = n;
 			return qtrue;
 		} else if (stopevent & SE_GAP) {
-			aas_trace_t gaptrace;
-
 			VectorCopy(org, start);
 
 			start[2] += 24;
 
 			VectorCopy(start, end);
 
-			end[2] -= 48 + phys_maxbarrier;
+			maxbarrierheight = !scoutmove ? phys_maxbarrier : phys_maxscoutbarrier;
+			end[2] -= 48 + maxbarrierheight;
 			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, entnum);
 			// if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid) {
-				// if it is a gap (lower than phys_maxbarrier height)
-				if (gaptrace.endpos[2] < org[2] - phys_maxbarrier) {
+				// if it is a gap (lower than maxbarrierheight)
+				if (gaptrace.endpos[2] < org[2] - maxbarrierheight) {
 					if (!(AAS_PointContents(end) & CONTENTS_WATER)) {
 						VectorCopy(lastorg, move->endpos);
 						VectorScale(frame_test_vel, 1 / frametime, move->velocity);
@@ -1033,9 +1068,9 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 AAS_PredictClientMovement
 =======================================================================================================================================
 */
-int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize) {
+int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize) {
 	vec3_t mins, maxs;
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, frametime, stopevent, stopareanum, mins, maxs, visualize);
+	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, scoutmove, velocity, cmdmove, cmdframes, maxframes, frametime, stopevent, stopareanum, mins, maxs, visualize);
 }
 
 /*
@@ -1043,8 +1078,8 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move, int entnum, vec3_t 
 AAS_ClientMovementHitBBox
 =======================================================================================================================================
 */
-int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, vec3_t mins, vec3_t maxs, int visualize) {
-	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, frametime, SE_HITBOUNDINGBOX, 0, mins, maxs, visualize);
+int AAS_ClientMovementHitBBox(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, vec3_t mins, vec3_t maxs, int visualize) {
+	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground, scoutmove, velocity, cmdmove, cmdframes, maxframes, frametime, SE_HITBOUNDINGBOX, 0, mins, maxs, visualize);
 }
 
 /*
@@ -1069,7 +1104,7 @@ void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir) {
 
 	AAS_ClearShownDebugLines();
 	// movement prediction
-	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue, velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue); //SE_LEAVEGROUND
+	AAS_PredictClientMovement(&move, entnum, origin, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 13, 13, 0.1f, SE_HITGROUND, 0, qtrue); //SE_LEAVEGROUND
 
 	if (move.stopevent & SE_LEAVEGROUND) {
 		botimport.Print(PRT_MESSAGE, "leave ground\n");
@@ -1121,6 +1156,57 @@ int AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *v
 	// the horizontal speed must be lower than the max speed
 	if (*velocity > phys_maxvelocity) {
 		*velocity = phys_maxvelocity;
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+=======================================================================================================================================
+AAS_HorizontalVelocityForScoutJump
+
+Calculates the horizontal velocity needed to perform a jump from start to end using the scout powerup.
+
+Parameter:	zvel	: z velocity for jump.
+			start	: start position of jump.
+			end		: end position of jump.
+			*speed	: returned speed for jump.
+Returns: qfalse if too high or too far from start to end.
+=======================================================================================================================================
+*/
+int AAS_HorizontalVelocityForScoutJump(float zvel, vec3_t start, vec3_t end, float *velocity) {
+	float phys_gravity, phys_maxscoutvelocity;
+	float maxscoutjump, height2fall, t, top;
+	vec3_t dir;
+
+	phys_gravity = aassettings.phys_gravity;
+	phys_maxscoutvelocity = aassettings.phys_maxscoutvelocity;
+	// maximum height a player can jump with the given initial z velocity
+	maxscoutjump = 0.5 * phys_gravity * (zvel / phys_gravity) * (zvel / phys_gravity);
+	// top of the parabolic jump
+	top = start[2] + maxscoutjump;
+	// height the bot will fall from the top
+	height2fall = top - end[2];
+	// if the goal is to high to jump to
+	if (height2fall < 0) {
+		*velocity = phys_maxscoutvelocity;
+		return 0;
+	}
+	// time a player takes to fall the height
+	t = sqrt(height2fall / (0.5 * phys_gravity));
+	// direction from start to end
+	VectorSubtract(end, start, dir);
+
+	if ((t + zvel / phys_gravity) == 0.0f) {
+		*velocity = phys_maxscoutvelocity;
+		return 0;
+	}
+	// calculate horizontal speed
+	*velocity = sqrt(dir[0] * dir[0] + dir[1] * dir[1]) / (t + zvel / phys_gravity);
+	// the horizontal speed must be lower than the max speed
+	if (*velocity > phys_maxscoutvelocity) {
+		*velocity = phys_maxscoutvelocity;
 		return 0;
 	}
 

@@ -61,6 +61,7 @@ settings
 	phys_waterfriction			1
 	phys_watergravity			400
 	phys_maxvelocity			280
+	phys_maxscoutvelocity		390
 	phys_maxwalkvelocity		280
 	phys_maxcrouchvelocity		100
 	phys_maxswimvelocity		150
@@ -71,7 +72,9 @@ settings
 	phys_maxsteepness			0.7
 	phys_maxwaterjump			12
 	phys_maxbarrier				43
+	phys_maxscoutbarrier		73
 	phys_jumpvel				200
+	phys_jumpvelscout			300
 	phys_falldelta5				40
 	phys_falldelta10			60
 	phys_strafejumping			1

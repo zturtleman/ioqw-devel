@@ -49,6 +49,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas_bspc.h"
 
 extern	int use_nodequeue;		//brushbsp.c
+extern	int calcscoutreach;		//be_aas_reach.c
 
 float			subdivide_size = 240;
 char			source[1024];
@@ -288,6 +289,7 @@ int main (int argc, char **argv)
 	Log_Print(BSPC_NAME" version "BSPC_VERSION", %s %s\n", __DATE__, __TIME__);
 
 #ifdef ZTMAUTOARGS
+	calcscoutreach = true;
 	forcesidesvisible = true; // Currently always required or BSPC fails?
 #endif
 	DefaultCfg();
@@ -398,6 +400,18 @@ int main (int argc, char **argv)
 			freetree = true;
 			Log_Print("freetree = true\n");
 		} //end else if
+		else if (!stricmp(argv[i], "-scoutreach"))
+		{
+			calcscoutreach = true;
+			Log_Print("scoutreach = true\n");
+		} //end else if
+#ifdef ZTMAUTOARGS
+		else if (!stricmp(argv[i], "-noscoutreach"))
+		{
+			calcscoutreach = false;
+			Log_Print("scoutreach = false\n");
+		} //end else if
+#endif
 		else if (!stricmp(argv[i], "-nobrushmerge"))
 		{
 			nobrushmerge = true;
@@ -715,10 +729,11 @@ int main (int argc, char **argv)
 			"   nocsg                                = disables brush chopping\n"
 #ifdef ZTMAUTOARGS
 			"   noforcesidesvisible                  = don't force all sides to be visible\n"
+			"   noscoutreach                         = don't calculate scout reachabilities\n"
 #else
 			"   forcesidesvisible                    = force all sides to be visible\n"
+			"   scoutreach                           = calculate scout reachabilities\n"
 #endif
-
 /*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"

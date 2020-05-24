@@ -126,7 +126,9 @@ void AAS_InitTravelFlagFromType(void) {
 	aasworld.travelflagfortype[TRAVEL_WALK] = TFL_WALK;
 	aasworld.travelflagfortype[TRAVEL_CROUCH] = TFL_CROUCH;
 	aasworld.travelflagfortype[TRAVEL_BARRIERJUMP] = TFL_BARRIERJUMP;
+	aasworld.travelflagfortype[TRAVEL_SCOUTBARRIER] = TFL_SCOUTBARRIER;
 	aasworld.travelflagfortype[TRAVEL_JUMP] = TFL_JUMP;
+	aasworld.travelflagfortype[TRAVEL_SCOUTJUMP] = TFL_SCOUTJUMP;
 	aasworld.travelflagfortype[TRAVEL_LADDER] = TFL_LADDER;
 	aasworld.travelflagfortype[TRAVEL_WALKOFFLEDGE] = TFL_WALKOFFLEDGE;
 	aasworld.travelflagfortype[TRAVEL_SWIM] = TFL_SWIM;
@@ -1178,6 +1180,7 @@ void AAS_InitReachabilityAreas(void) {
 		switch (reach->traveltype & TRAVELTYPE_MASK) {
 			// trace areas from start to end
 			case TRAVEL_BARRIERJUMP:
+			case TRAVEL_SCOUTBARRIER:
 			case TRAVEL_WATERJUMP:
 				VectorCopy(reach->start, end);
 				end[2] = reach->end[2];
@@ -1190,6 +1193,8 @@ void AAS_InitReachabilityAreas(void) {
 				break;
 			// trace arch
 			case TRAVEL_JUMP:
+				break;
+			case TRAVEL_SCOUTJUMP:
 				break;
 			case TRAVEL_ROCKETJUMP:
 				break;

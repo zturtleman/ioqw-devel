@@ -456,7 +456,9 @@ void AAS_ShowTotals(void)
 	AAS_ShowNumReachabilities(TRAVEL_WALK, "walk");
 	AAS_ShowNumReachabilities(TRAVEL_CROUCH, "crouch");
 	AAS_ShowNumReachabilities(TRAVEL_BARRIERJUMP, "barrier jump");
+	AAS_ShowNumReachabilities(TRAVEL_SCOUTBARRIER, "scout barrier jump");
 	AAS_ShowNumReachabilities(TRAVEL_JUMP, "jump");
+	AAS_ShowNumReachabilities(TRAVEL_SCOUTJUMP, "scout jump");
 	AAS_ShowNumReachabilities(TRAVEL_LADDER, "ladder");
 	AAS_ShowNumReachabilities(TRAVEL_WALKOFFLEDGE, "walk off ledge");
 	AAS_ShowNumReachabilities(TRAVEL_SWIM, "swim");

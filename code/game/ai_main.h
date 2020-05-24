@@ -169,8 +169,6 @@ typedef struct bot_state_s {
 	int enemyteamscore;						// enemy team score
 	int ownteamscore;						// own team score
 	float walker;							// walker charactertic
-	float croucher;							// crouch charactertic
-	float jumper;							// jumper charactertic
 	float ltime;							// local bot time
 	float entergame_time;					// time the bot entered the game
 	float ltg_time;							// long term goal time

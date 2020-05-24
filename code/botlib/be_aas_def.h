@@ -70,6 +70,7 @@ typedef struct aas_settings_s {
 	float phys_waterfriction;
 	float phys_watergravity;
 	float phys_maxvelocity;
+	float phys_maxscoutvelocity;
 	float phys_maxwalkvelocity;
 	float phys_maxcrouchvelocity;
 	float phys_maxswimvelocity;
@@ -80,7 +81,9 @@ typedef struct aas_settings_s {
 	float phys_maxsteepness;
 	float phys_maxwaterjump;
 	float phys_maxbarrier;
+	float phys_maxscoutbarrier;
 	float phys_jumpvel;
+	float phys_jumpvelscout;
 	float phys_falldelta5;
 	float phys_falldelta10;
 	float rs_waterjump;

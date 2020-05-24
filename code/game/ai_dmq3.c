@@ -50,6 +50,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define AREACONTENTS_MAXMODELNUM 0xFF
 #define AREACONTENTS_MODELNUM (AREACONTENTS_MAXMODELNUM << AREACONTENTS_MODELNUMSHIFT)
 
+#define IDEAL_ATTACKDIST 140
+
 #define MAX_WAYPOINTS 128
 
 bot_waypoint_t botai_waypoints[MAX_WAYPOINTS];
@@ -1892,6 +1894,10 @@ void BotSetupForMovement(bot_state_t *bs) {
 	// set the waterjump flag
 	if ((bs->cur_ps.pm_flags & PMF_TIME_WATERJUMP) && (bs->cur_ps.pm_time > 0)) {
 		initmove.or_moveflags |= MFL_WATERJUMP;
+	}
+	// set the scout flag
+	if (BotHasScout(bs)) {
+		initmove.or_moveflags |= MFL_SCOUT;
 	}
 	// set the walk flag
 	if (BotWantsToWalk(bs)) {
@@ -3979,6 +3985,21 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotHasScout
+=======================================================================================================================================
+*/
+int BotHasScout(bot_state_t *bs) {
+
+	// if no scout powerup
+	if (!bs->inventory[INVENTORY_SCOUT]) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 BotHasPersistantPowerupAndWeapon
 =======================================================================================================================================
 */
@@ -4229,13 +4250,13 @@ BotAttackMove
 =======================================================================================================================================
 */
 bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
-	int movetype, i, attackentity, attack_dist, attack_range;
-	float attack_skill, jumper, croucher, dist, selfpreservation, strafechange_time;
-	vec3_t forward, backward, sideward, start, hordir, up = {0, 0, 1}, mins = {-4, -4, -4}, maxs = {4, 4, 4};
+	int movetype, i, attackentity;
+	float attack_skill, jumper, croucher, dist, strafechange_time;
+	float attack_dist, attack_range;
+	vec3_t forward, backward, sideward, hordir, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	bot_goal_t goal;
-	bsp_trace_t bsptrace;
 
 	attackentity = bs->enemy;
 
@@ -4262,11 +4283,6 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 	jumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
 	croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
-	selfpreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_SELFPRESERVATION, 0, 1);
-	// if the bot is in the air
-	if (bs->cur_ps.groundEntityNum == ENTITYNUM_NONE) {
-		return moveresult;
-	}
 	// if the bot is really stupid
 	if (attack_skill < 0.2) {
 		return moveresult;
@@ -4285,20 +4301,6 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	VectorNegate(forward, backward);
 	// walk, crouch or jump
 	movetype = MOVE_WALK;
-	// for long range attacks the bots should crouch more often
-	if (bs->croucher > 0.1f && dist > 4096 - (2048 * bs->croucher)) {
-		croucher += 0.5f;
-	} else if (BotWantsToRetreat(bs)) {
-		croucher = 0.0f;
-	}
-	// don't jump if the enemy is quite far away
-	if (dist > 1024 + (1024 * bs->jumper)) {
-		jumper = 0.0f;
-	}
-	// don't crouch when swimming
-	if (trap_AAS_Swimming(bs->origin)) {
-		bs->crouch_time = FloatTime() - 1;
-	}
 
 	if (bs->crouch_time < FloatTime() - 1) {
 		if (random() < jumper) {
@@ -4308,18 +4310,9 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			bs->crouch_time = FloatTime() + croucher * 5;
 		}
 	}
-	// if the bot wants to crouch
+
 	if (bs->crouch_time > FloatTime()) {
-		// get the start point shooting from
-		VectorCopy(bs->origin, start);
-		// get the crouch view height
-		start[2] += CROUCH_VIEWHEIGHT;
-		// only try to crouch if the enemy remains visible
-		BotAI_Trace(&bsptrace, start, mins, maxs, entinfo.origin, bs->client, MASK_SHOT);
-		// if the enemy remains visible from the predicted position
-		if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == attackentity) {
-			movetype = MOVE_CROUCH;
-		}
+		movetype = MOVE_CROUCH;
 	}
 	// if the bot should jump
 	if (movetype == MOVE_JUMP) {
@@ -4330,38 +4323,13 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			bs->attackjump_time = FloatTime() + 1;
 		}
 	}
-	// if the bot is using a close combat weapon or if the enemy is using a weapon with splash damage, go closer
-	if ((BotUsesCloseCombatWeapon(bs) && BotAggression(bs)) || ((entinfo.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_ROCKETLAUNCHER || entinfo.weapon == WP_BFG) && dist < 200 && selfpreservation < 0.5 && movetype != MOVE_CROUCH)) {
+
+	if (bs->cur_ps.weapon == WP_GAUNTLET) {
 		attack_dist = 0;
 		attack_range = 0;
-	// if the bot is using the napalmlauncher, or the enemy is using the napalmlauncher
-	} else if (bs->cur_ps.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_NAPALMLAUNCHER) {
-		attack_dist = 4500;
-		attack_range = 250;
-	// if the bot is using the grenadelauncher, or the enemy is using the grenadelauncher
-	} else if (bs->cur_ps.weapon == WP_GRENADELAUNCHER || entinfo.weapon == WP_GRENADELAUNCHER) {
-		attack_dist = 2000;
-		attack_range = 150;
-	// if the bot is using the proxylauncher, or the enemy is using the proxylauncher
-	} else if (bs->cur_ps.weapon == WP_PROXLAUNCHER || entinfo.weapon == WP_PROXLAUNCHER) {
-		attack_dist = 700;
-		attack_range = 100;
-	// if the bot is using the beam gun
-	} else if (bs->cur_ps.weapon == WP_BEAMGUN) {
-		attack_dist = 0.75 * BEAMGUN_RANGE;
-		attack_range = 0.25 * BEAMGUN_RANGE;
-	// if the enemy is using the beam gun, stay away
-	} else if (entinfo.weapon == WP_BEAMGUN && bs->cur_ps.weapon != WP_BEAMGUN) {
-		attack_dist = BEAMGUN_RANGE + 200;
-		attack_range = 100;
-	// attacking obelisks
-	} else if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
-		attack_dist = 300;
-		attack_range = 150;
-	// use the bots individual prefered attack distances
 	} else {
-		attack_dist = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_ATTACK_DISTANCE, 0, 1000);
-		attack_range = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_ATTACK_RANGE, 0, 1000);
+		attack_dist = IDEAL_ATTACKDIST;
+		attack_range = 40;
 	}
 	// if the bot is stupid
 	if (attack_skill <= 0.4) {
@@ -4387,10 +4355,6 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 
 	if (attack_skill > 0.7) {
 		strafechange_time += crandom() * 0.2;
-	}
-	// close combat weapons
-	if (BotUsesCloseCombatWeapon(bs) && BotAggression(bs)) {
-		bs->attackstrafe_time = 0;
 	}
 	// if the strafe direction should be changed
 	if (bs->attackstrafe_time > strafechange_time) {
@@ -5889,7 +5853,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 					VectorClear(cmdmove);
 					//AAS_ClearShownDebugLines();
 					// movement prediction
-					trap_AAS_PredictClientMovement(&move, bs->enemy, origin, PRESENCE_CROUCH, qfalse, dir, cmdmove, 0, dist * 10 / wi.speed, 0.1f, 0, 0, qfalse);
+					trap_AAS_PredictClientMovement(&move, bs->enemy, origin, PRESENCE_CROUCH, qfalse, qfalse, dir, cmdmove, 0, dist * 10 / wi.speed, 0.1f, 0, 0, qfalse);
 					VectorCopy(move.endpos, bestorigin);
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Predicted speed = %f, Frames = %f.\n", netname, FloatTime(), VectorLength(dir), dist * 10 / wi.speed);
@@ -6465,7 +6429,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					VectorClear(cmdmove);
 					//AAS_ClearShownDebugLines();
 					// movement prediction
-					trap_AAS_PredictClientMovement(&move, bs->enemy, origin, PRESENCE_CROUCH, qfalse, dir, cmdmove, 0, dist * 10 / wi.speed, 0.1f, 0, 0, qfalse);
+					trap_AAS_PredictClientMovement(&move, bs->enemy, origin, PRESENCE_CROUCH, qfalse, qfalse, dir, cmdmove, 0, dist * 10 / wi.speed, 0.1f, 0, 0, qfalse);
 					VectorCopy(move.endpos, bestorigin);
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Predicted speed = %f, Frames = %f.\n", netname, FloatTime(), VectorLength(dir), dist * 10 / wi.speed);
