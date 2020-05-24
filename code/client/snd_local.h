@@ -33,7 +33,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define PAINTBUFFER_SIZE 4096 // this is in samples
 
 #define SND_CHUNK_SIZE 1024 // samples
-#define SND_CHUNK_SIZE_FLOAT (SND_CHUNK_SIZE / 2) // floats
+#define SND_CHUNK_SIZE_FLOAT (SND_CHUNK_SIZE * 0.5) // floats
 #define SND_CHUNK_SIZE_BYTE (SND_CHUNK_SIZE * 2) // floats
 
 typedef struct {

@@ -303,7 +303,7 @@ long RllDecodeStereoToMono(unsigned char *from, short *to, unsigned int size, ch
 	for (z = 0; z < size; z += 1) {
 		prevL = prevL + cin.sqrTable[from[z * 2]];
 		prevR = prevR + cin.sqrTable[from[z * 2 + 1]];
-		to[z] = (short)((prevL + prevR) / 2);
+		to[z] = (short)((prevL + prevR) * 0.5);
 	}
 
 	return size;
@@ -474,10 +474,10 @@ static void ROQ_GenYUVTables(void) {
 	float t_ub, t_vr, t_ug, t_vg;
 	long i;
 
-	t_ub = (1.77200f / 2.0f) * (float)(1 << 6) + 0.5f;
-	t_vr = (1.40200f / 2.0f) * (float)(1 << 6) + 0.5f;
-	t_ug = (0.34414f / 2.0f) * (float)(1 << 6) + 0.5f;
-	t_vg = (0.71414f / 2.0f) * (float)(1 << 6) + 0.5f;
+	t_ub = (1.77200f * 0.5f) * (float)(1 << 6) + 0.5f;
+	t_vr = (1.40200f * 0.5f) * (float)(1 << 6) + 0.5f;
+	t_ug = (0.34414f * 0.5f) * (float)(1 << 6) + 0.5f;
+	t_vg = (0.71414f * 0.5f) * (float)(1 << 6) + 0.5f;
 
 	for (i = 0; i < 256; i++) {
 		float x = (float)(2 * i - 255);

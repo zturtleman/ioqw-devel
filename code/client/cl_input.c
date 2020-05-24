@@ -164,7 +164,7 @@ void IN_KeyUp(kbutton_t *b) {
 	if (uptime) {
 		b->msec += uptime - b->downtime;
 	} else {
-		b->msec += frame_msec / 2;
+		b->msec += frame_msec * 0.5;
 	}
 
 	b->active = qfalse;

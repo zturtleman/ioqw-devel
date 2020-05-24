@@ -775,7 +775,7 @@ void UI_DrawBannerString(int x, int y, const char *str, int style, vec4_t color)
 
 	switch (style & UI_FORMATMASK) {
 		case UI_CENTER:
-			x -= width / 2;
+			x -= width * 0.5;
 			break;
 		case UI_RIGHT:
 			x -= width;
@@ -903,7 +903,7 @@ void UI_DrawProportionalString(int x, int y, const char *str, int style, vec4_t 
 	switch (style & UI_FORMATMASK) {
 		case UI_CENTER:
 			width = UI_ProportionalStringWidth(str) * sizeScale;
-			x -= width / 2;
+			x -= width * 0.5;
 			break;
 		case UI_RIGHT:
 			width = UI_ProportionalStringWidth(str) * sizeScale;

@@ -1011,7 +1011,7 @@ int InterbreedFuzzySeperator_r(fuzzyseperator_t *fs1, fuzzyseperator_t *fs2, fuz
 			return qfalse;
 		}
 
-		fsout->weight = (fs1->weight + fs2->weight) / 2;
+		fsout->weight = (fs1->weight + fs2->weight) * 0.5;
 
 		if (fsout->weight > fsout->maxweight) {
 			fsout->maxweight = fsout->weight;

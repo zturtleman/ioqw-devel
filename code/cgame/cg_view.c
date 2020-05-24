@@ -233,8 +233,8 @@ static void CG_CalcVrect(void) {
 	cg.refdef.width &= ~1;
 	cg.refdef.height = cgs.glconfig.vidHeight * size / 100;
 	cg.refdef.height &= ~1;
-	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width) / 2;
-	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height) / 2;
+	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width) * 0.5;
+	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height) * 0.5;
 }
 
 /*

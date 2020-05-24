@@ -573,7 +573,7 @@ static void SV_WriteVoipToClient(client_t *cl, msg_t *msg) {
 			if (!*cl->downloadName) {
 				totalbytes += packet->len;
 
-				if (totalbytes > (msg->maxsize - msg->cursize) / 2) {
+				if (totalbytes > (msg->maxsize - msg->cursize) * 0.5) {
 					break;
 				}
 

@@ -4643,7 +4643,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
 		} else if (i == 1) {
 			middle[2] += entinfo.maxs[2] - entinfo.mins[2];
 		} else if (i == 2) { // right side
-			middle[2] -= (entinfo.maxs[2] - entinfo.mins[2]) / 2.0;
+			middle[2] -= (entinfo.maxs[2] - entinfo.mins[2]) * 0.5;
 			VectorMA(eye, entinfo.maxs[0] - 0.5, right, eye);
 		} else if (i == 3) { // left side
 			VectorMA(eye, -2.0 * (entinfo.maxs[0] - 0.5), right, eye);

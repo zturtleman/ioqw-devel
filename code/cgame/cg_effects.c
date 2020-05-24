@@ -169,7 +169,7 @@ localEntity_t *CG_SmokePuff(const vec3_t p, const vec3_t vel, float radius, floa
 	static int seed = 0x92;
 	localEntity_t *le;
 	refEntity_t *re;
-//	int fadeInTime = startTime + duration / 2;
+//	int fadeInTime = startTime + duration * 0.5;
 
 	le = CG_AllocLocalEntity();
 	le->leFlags = leFlags;

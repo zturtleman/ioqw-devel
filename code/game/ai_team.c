@@ -4201,7 +4201,7 @@ void BotTeamOrders(bot_state_t *bs) {
 		default:
 		{
 			if (numteammates <= 10) {
-				for (i = 0; i < numteammates / 2; i++) {
+				for (i = 0; i < numteammates * 0.5; i++) {
 					BotCreateGroup(bs, &teammates[i * 2], 2); // groups of 2
 				}
 			}

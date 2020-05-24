@@ -1539,11 +1539,11 @@ void CheckVote(void) {
 		trap_SendServerCommand(-1, "print \"Vote failed.\n\"");
 	} else {
 		// ATVI Q3 1.32 Patch #9, WNF
-		if (level.voteYes > level.numVotingClients / 2) {
+		if (level.voteYes > level.numVotingClients * 0.5) {
 			// execute the command, then remove the vote
 			trap_SendServerCommand(-1, "print \"Vote passed.\n\"");
 			level.voteExecuteTime = level.time + 3000;
-		} else if (level.voteNo >= level.numVotingClients / 2) {
+		} else if (level.voteNo >= level.numVotingClients * 0.5) {
 			// same behavior as a timeout
 			trap_SendServerCommand(-1, "print \"Vote failed.\n\"");
 		} else {
@@ -1675,7 +1675,7 @@ void CheckTeamVote(int team) {
 	if (level.time - level.teamVoteTime[cs_offset] >= VOTE_TIME) {
 		trap_SendServerCommand(-1, "print \"Team vote failed.\n\"");
 	} else {
-		if (level.teamVoteYes[cs_offset] > level.numteamVotingClients[cs_offset] / 2) {
+		if (level.teamVoteYes[cs_offset] > level.numteamVotingClients[cs_offset] * 0.5) {
 			// execute the command, then remove the vote
 			trap_SendServerCommand(-1, "print \"Team vote passed.\n\"");
 
@@ -1685,7 +1685,7 @@ void CheckTeamVote(int team) {
 			} else {
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s\n", level.teamVoteString[cs_offset]));
 			}
-		} else if (level.teamVoteNo[cs_offset] >= level.numteamVotingClients[cs_offset] / 2) {
+		} else if (level.teamVoteNo[cs_offset] >= level.numteamVotingClients[cs_offset] * 0.5) {
 			// same behavior as a timeout
 			trap_SendServerCommand(-1, "print \"Team vote failed.\n\"");
 		} else {

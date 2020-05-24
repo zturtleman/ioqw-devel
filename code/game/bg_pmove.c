@@ -1158,7 +1158,7 @@ static void PM_CrashLand(void) {
 	dist = pm->ps->origin[2] - pml.previous_origin[2];
 	vel = pml.previous_velocity[2];
 	acc = -pm->ps->gravity;
-	a = acc / 2;
+	a = acc * 0.5;
 	b = vel;
 	c = -dist;
 	den = b * b - 4 * a * c;
@@ -1487,7 +1487,7 @@ static void PM_SetWaterLevel(void) {
 
 	if (cont & MASK_WATER) {
 		sample2 = pm->ps->viewheight - MINS_Z;
-		sample1 = sample2 / 2;
+		sample1 = sample2 * 0.5;
 		pm->watertype = cont;
 		pm->waterlevel = 1;
 		point[2] = pm->ps->origin[2] + MINS_Z + sample1;

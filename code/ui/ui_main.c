@@ -631,8 +631,8 @@ UI_DrawCenteredPic
 void UI_DrawCenteredPic(qhandle_t image, int w, int h) {
 	int x, y;
 
-	x = (SCREEN_WIDTH - w) / 2;
-	y = (SCREEN_HEIGHT - h) / 2;
+	x = (SCREEN_WIDTH - w) * 0.5;
+	y = (SCREEN_HEIGHT - h) * 0.5;
 
 	UI_DrawPic(x, y, w, h, image);
 }
@@ -1619,7 +1619,7 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 		updateModelColor = qfalse;
 	}
 
-	UI_DrawPlayer(rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2);
+	UI_DrawPlayer(rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime * 0.5);
 }
 
 /*
@@ -1839,7 +1839,7 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 		updateOpponentModel = qfalse;
 	}
 
-	UI_DrawPlayer(rect->x, rect->y, rect->w, rect->h, &info2, uiInfo.uiDC.realTime / 2);
+	UI_DrawPlayer(rect->x, rect->y, rect->w, rect->h, &info2, uiInfo.uiDC.realTime * 0.5);
 }
 
 /*
@@ -2458,7 +2458,7 @@ static void UI_DrawGLInfo(rectDef_t *rect, float scale, vec4_t color, int textSt
 		Text_Paint(rect->x + 2, y, scale, color, lines[i++], 0, 20, textStyle);
 
 		if (i < numLines) {
-			Text_Paint(rect->x + rect->w / 2, y, scale, color, lines[i++], 0, 20, textStyle);
+			Text_Paint(rect->x + rect->w * 0.5, y, scale, color, lines[i++], 0, 20, textStyle);
 		}
 
 		y += 10;
@@ -5084,7 +5084,7 @@ static void UI_BuildFindPlayerList(qboolean force) {
 			return;
 		}
 		// set resend time
-		resend = ui_serverStatusTimeOut.integer / 2 - 10;
+		resend = ui_serverStatusTimeOut.integer * 0.5 - 10;
 
 		if (resend < 50) {
 			resend = 50;
@@ -6570,7 +6570,7 @@ Text_PaintCenter
 void Text_PaintCenter(float x, float y, float scale, vec4_t color, const char *text, float adjust) {
 	int len = Text_Width(text, scale, 0);
 
-	Text_Paint(x - len / 2, y, scale, color, text, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+	Text_Paint(x - len * 0.5, y, scale, color, text, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 }
 
 /*

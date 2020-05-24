@@ -259,7 +259,7 @@ int S_AdpcmMemoryNeeded(const wavinfo_t *info) {
 	// calc number of samples at playback sampling rate
 	scaledSampleCount = info->samples / scale;
 	// calc memory need to store those samples using ADPCM at 4 bits per sample
-	sampleMemory = scaledSampleCount / 2;
+	sampleMemory = scaledSampleCount * 0.5;
 	// calc number of sample blocks needed of PAINTBUFFER_SIZE
 	blockCount = scaledSampleCount / PAINTBUFFER_SIZE;
 

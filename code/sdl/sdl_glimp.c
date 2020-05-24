@@ -427,8 +427,8 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	ri.Printf(PRINT_ALL, " %d %d\n", glConfig.vidWidth, glConfig.vidHeight);
 	// center window
 	if (r_centerWindow->integer && !fullscreen) {
-		x = (desktopMode.w / 2) - (glConfig.vidWidth / 2);
-		y = (desktopMode.h / 2) - (glConfig.vidHeight / 2);
+		x = (desktopMode.w * 0.5) - (glConfig.vidWidth * 0.5);
+		y = (desktopMode.h * 0.5) - (glConfig.vidHeight * 0.5);
 	}
 	// destroy existing state if it exists
 	if (SDL_glContext != NULL) {

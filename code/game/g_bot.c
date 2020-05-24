@@ -507,8 +507,8 @@ void G_CheckMinimumPlayers(void) {
 			}
 		}
 	} else if (g_gametype.integer > GT_TOURNAMENT) {
-		if (minplayers >= level.maxclients / 2) {
-			minplayers = (level.maxclients / 2) - 1;
+		if (minplayers >= level.maxclients * 0.5) {
+			minplayers = (level.maxclients * 0.5) - 1;
 		}
 
 		humanplayers = G_CountHumanPlayers(TEAM_RED);
@@ -779,7 +779,7 @@ static void G_AddBot(const char *name, float skill, const char *team, int delay,
 	s = Info_ValueForKey(botinfo, key);
 
 	if (!*s) {
-		s = /*va("%d", G_DefaultColorForName(botname + strlen(botname) / 2))*/"5";
+		s = /*va("%d", G_DefaultColorForName(botname + strlen(botname) * 0.5))*/"5";
 	}
 
 	Info_SetValueForKey(userinfo, key, s);
