@@ -214,8 +214,8 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent) {
 	if (trace.startsolid) {
 		return qfalse;
 	}
-	// if nothing hit at all
-	if (trace.fraction >= 1.0) {
+	// if nothing is hit
+	if (trace.fraction >= 1.0f) {
 		return qfalse;
 	}
 	// if too far from the hit plane
@@ -806,8 +806,8 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 			}
 			// move the entity to the trace end point
 			VectorCopy(trace.endpos, org);
-			// if there was a collision
-			if (trace.fraction < 1.0) {
+			// if something is hit
+			if (trace.fraction < 1.0f) {
 				// get the plane the bounding box collided with
 				plane = &trace.plane; //AAS_PlaneFromNum(trace.planenum);
 
@@ -938,7 +938,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 				return qfalse;
 			}
 		// while there is a plane hit
-		} while (trace.fraction < 1.0);
+		} while (trace.fraction < 1.0f);
 		// if going down
 		if (frame_test_vel[2] <= 10) {
 			// check for a liquid at the feet of the bot

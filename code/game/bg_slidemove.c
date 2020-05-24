@@ -99,8 +99,8 @@ qboolean PM_SlideMove(qboolean gravity) {
 			pm->ps->velocity[2] = 0; // don't build up falling damage, but allow sideways acceleration
 			return qtrue;
 		}
-
-		if (trace.fraction > 0) {
+		// if nothing is hit
+		if (trace.fraction > 0.0f) {
 			// actually covered some distance
 			VectorCopy(trace.endpos, pm->ps->origin);
 		}
@@ -285,7 +285,7 @@ void PM_StepSlideMove(qboolean gravity) {
 		VectorCopy(trace.endpos, pm->ps->origin);
 	}
 
-	if (trace.fraction < 1.0) {
+	if (trace.fraction < 1.0f) {
 		PM_ClipVelocity(pm->ps->velocity, trace.plane.normal, pm->ps->velocity, OVERCLIP);
 	}
 #if 0

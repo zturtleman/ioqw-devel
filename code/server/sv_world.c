@@ -473,7 +473,7 @@ void SV_ClipToEntity(trace_t *trace, const vec3_t start, const vec3_t mins, cons
 
 	CM_TransformedBoxTrace(trace, (float *)start, (float *)end, (float *)mins, (float *)maxs, clipHandle, contentmask, origin, angles, capsule);
 
-	if (trace->fraction < 1) {
+	if (trace->fraction < 1.0f) {
 		trace->entityNum = touch->s.number;
 	}
 }

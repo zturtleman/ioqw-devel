@@ -1647,7 +1647,7 @@ qboolean ValidBloodPool(vec3_t start) {
 				return qfalse;
 			}
 
-			if (!(!trace.startsolid && trace.fraction < 1)) {
+			if (!(!trace.startsolid && trace.fraction < 1.0f)) {
 				return qfalse;
 			}
 		}

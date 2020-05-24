@@ -585,7 +585,7 @@ void BotInitLevelItems(void) {
 				end[2] -= 32;
 				trace = AAS_Trace(origin, ic->iteminfo[i].mins, ic->iteminfo[i].maxs, end, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 				// if the item is not near the ground
-				if (trace.fraction >= 1) {
+				if (trace.fraction >= 1.0f) {
 					// if the item is not reachable from a jumppad
 					goalareanum = AAS_BestReachableFromJumpPadArea(origin, ic->iteminfo[i].mins, ic->iteminfo[i].maxs);
 					Log_Write("item %s reachable from jumppad area %d\r\n", ic->iteminfo[i].classname, goalareanum);
@@ -1750,7 +1750,7 @@ int BotItemGoalInVisButNotVisible(int viewer, vec3_t eye, vec3_t viewangles, bot
 
 	trace = AAS_Trace(eye, NULL, NULL, middle, viewer, CONTENTS_SOLID);
 	// if the goal middle point is visible
-	if (trace.fraction >= 1) {
+	if (trace.fraction >= 1.0f) {
 		// the goal entity number doesn't have to be valid, just assume it's valid
 		if (goal->entitynum <= 0) {
 			return qfalse;

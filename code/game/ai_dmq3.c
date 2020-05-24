@@ -2310,8 +2310,8 @@ void BotUseKamikaze(bot_state_t *bs) {
 			// don't use the kamikaze as long as it isn't really needed
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.7) && BotWantsToUseKamikaze(bs)) {
 				BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
-
-				if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
+				// if a full trace or the hitent is hit
+				if (trace.fraction >= 1.0f || trace.entityNum == goal->entitynum) {
 					trap_EA_Use(bs->client);
 					return;
 				}
@@ -4604,7 +4604,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
 		// trace from start to end
 		BotAI_Trace(&trace, start, NULL, NULL, end, passent, contents_mask);
 		// if a full trace or the hitent was hit
-		if (trace.fraction >= 1 || trace.entityNum == hitent) {
+		if (trace.fraction >= 1.0f || trace.entityNum == hitent) {
 			// check for fog, assuming there's only one fog brush where either the viewer or the entity is in or both are in
 			if (infog && otherinfog) {
 				VectorSubtract(trace.endpos, eye, dir);
@@ -4794,8 +4794,8 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		target[2] += 1;
 
 		BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
-
-		if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
+		// if a full trace or the hitent is hit
+		if (trace.fraction >= 1.0f || trace.entityNum == goal->entitynum) {
 			if (goal->entitynum == bs->enemy) {
 				return qfalse;
 			}
@@ -5963,7 +5963,7 @@ void BotAimAtEnemy_Alt(bot_state_t *bs) {
 							trace.endpos[2] += 1;
 
 							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, mask);
-
+							// if the projectile will not be blocked
 							if (trace.fraction >= 1.0f) {
 #ifdef DEBUG
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, AAS_Time());
@@ -6539,7 +6539,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 							trace.endpos[2] += 1;
 
 							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, mask);
-
+							// if the projectile will not be blocked
 							if (trace.fraction >= 1.0f) {
 #ifdef DEBUG
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, AAS_Time());
@@ -7263,7 +7263,7 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 
 		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, goalorigin, bs->entitynum, MASK_SHOT);
 		// if the button is visible from the current position
-		if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == entitynum) {
+		if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == entitynum) {
 			activategoal->goal.entitynum = entitynum; // NOTE: this is the entity number of the shootable button
 			activategoal->goal.number = 0;
 			activategoal->goal.flags = 0;
@@ -8062,7 +8062,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 			VectorMA(bs->origin, 24, dir1, end);
 			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if nothing is hit
-			if (trace.fraction >= 1.0) {
+			if (trace.fraction >= 1.0f) {
 				return;
 			}
 #ifdef OBSTACLEDEBUG
@@ -8093,7 +8093,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	//VectorSet(maxs, 16, 16, 4);
 
 	//bsptrace = AAS_Trace(start, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
-	//if (bsptrace.fraction >= 1) movetype = MOVE_CROUCH;
+	//if (bsptrace.fraction >= 1.0f) movetype = MOVE_CROUCH;
 	// get the sideward vector
 	CrossProduct(hordir, up, sideward);
 	// flip the direction

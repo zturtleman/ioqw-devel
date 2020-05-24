@@ -1668,8 +1668,8 @@ float BotNearestVisibleItem(bot_state_t *bs, char *itemname, bot_goal_t *goal) {
 		if (dist < bestdist) {
 			// trace from start to end
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, tmpgoal.origin, bs->client, CONTENTS_SOLID);
-
-			if (trace.fraction >= 1.0) {
+			// if nothing is hit
+			if (trace.fraction >= 1.0f) {
 				bestdist = dist;
 				memcpy(goal, &tmpgoal, sizeof(bot_goal_t));
 			}
