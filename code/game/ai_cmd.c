@@ -607,9 +607,7 @@ void BotMatch_HelpAccompany(bot_state_t *bs, bot_match_t *match) {
 				return;
 			}
 		}
-	}
 
-	if (bs->teamgoal.entitynum < 0) {
 		if (other) {
 			BotAI_BotInitialChat(bs, "whereis", teammate, NULL);
 		} else {

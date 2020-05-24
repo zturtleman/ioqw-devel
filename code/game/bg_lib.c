@@ -1134,7 +1134,6 @@ used in the conversion.
 */
 double strtod(const char *nptr, char **endptr) {
 	double res;
-	qboolean neg = qfalse;
 
 	// skip whitespace
 	while (isspace(*nptr)) {
@@ -1190,7 +1189,6 @@ double strtod(const char *nptr, char **endptr) {
 	// sign
 	if (*nptr == '-') {
 		nptr++;
-		neg = qtrue;
 	} else if (*nptr == '+') {
 		nptr++;
 	}
