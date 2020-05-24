@@ -4906,22 +4906,20 @@ AAS_ContinueInitReachability
 
  TRAVEL_WALK			100% equal floor height + steps
  TRAVEL_CROUCH			100%
+ TRAVEL_PRONE			100%
  TRAVEL_BARRIERJUMP		100%
  TRAVEL_SCOUTBARRIER	100%
  TRAVEL_JUMP			 80%
  TRAVEL_SCOUTJUMP		 80%
- TRAVEL_LADDER			100% + fall down from ladder + jump up to ladder
  TRAVEL_WALKOFFLEDGE	 90% walk off very steep walls?
  TRAVEL_SWIM			100%
  TRAVEL_WATERJUMP		100%
  TRAVEL_TELEPORT		100%
  TRAVEL_ELEVATOR		100%
- TRAVEL_DOUBLEJUMP		  0%
- TRAVEL_RAMPJUMP		  0%
- TRAVEL_STRAFEJUMP		  0%
- TRAVEL_ROCKETJUMP		100% (currently limited towards areas with items)
- TRAVEL_JUMPPAD			100%
  TRAVEL_FUNCBOB			100%
+ TRAVEL_JUMPPAD			100%
+ TRAVEL_LADDER			100% + fall down from ladder + jump up to ladder
+ TRAVEL_ROCKETJUMP		100% (currently limited towards areas with items)
 
 Returns: true if NOT finished.
 =======================================================================================================================================
