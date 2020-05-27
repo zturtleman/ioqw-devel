@@ -125,22 +125,31 @@ void AAS_InitTravelFlagFromType(void) {
 	aasworld.travelflagfortype[TRAVEL_INVALID] = TFL_INVALID;
 	aasworld.travelflagfortype[TRAVEL_WALK] = TFL_WALK;
 	aasworld.travelflagfortype[TRAVEL_CROUCH] = TFL_CROUCH;
-	aasworld.travelflagfortype[TRAVEL_BARRIERJUMP] = TFL_BARRIERJUMP;
-	aasworld.travelflagfortype[TRAVEL_SCOUTBARRIER] = TFL_SCOUTBARRIER;
+	aasworld.travelflagfortype[TRAVEL_PRONE] = TFL_PRONE;
 	aasworld.travelflagfortype[TRAVEL_JUMP] = TFL_JUMP;
-	aasworld.travelflagfortype[TRAVEL_SCOUTJUMP] = TFL_SCOUTJUMP;
-	aasworld.travelflagfortype[TRAVEL_LADDER] = TFL_LADDER;
+	aasworld.travelflagfortype[TRAVEL_BARRIERJUMP] = TFL_BARRIERJUMP;
 	aasworld.travelflagfortype[TRAVEL_WALKOFFLEDGE] = TFL_WALKOFFLEDGE;
 	aasworld.travelflagfortype[TRAVEL_SWIM] = TFL_SWIM;
 	aasworld.travelflagfortype[TRAVEL_WATERJUMP] = TFL_WATERJUMP;
-	aasworld.travelflagfortype[TRAVEL_TELEPORT] = TFL_TELEPORT;
-	aasworld.travelflagfortype[TRAVEL_ELEVATOR] = TFL_ELEVATOR;
+	aasworld.travelflagfortype[TRAVEL_SCOUTJUMP] = TFL_SCOUTJUMP;
+	aasworld.travelflagfortype[TRAVEL_SCOUTBARRIER] = TFL_SCOUTBARRIER;
 	aasworld.travelflagfortype[TRAVEL_ROCKETJUMP] = TFL_ROCKETJUMP;
-	aasworld.travelflagfortype[TRAVEL_DOUBLEJUMP] = TFL_DOUBLEJUMP;
-	aasworld.travelflagfortype[TRAVEL_RAMPJUMP] = TFL_RAMPJUMP;
-	aasworld.travelflagfortype[TRAVEL_STRAFEJUMP] = TFL_STRAFEJUMP;
+	aasworld.travelflagfortype[TRAVEL_BFGJUMP] = TFL_BFGJUMP;
+	aasworld.travelflagfortype[TRAVEL_TELEPORT] = TFL_TELEPORT;
 	aasworld.travelflagfortype[TRAVEL_JUMPPAD] = TFL_JUMPPAD;
 	aasworld.travelflagfortype[TRAVEL_FUNCBOB] = TFL_FUNCBOB;
+	aasworld.travelflagfortype[TRAVEL_ELEVATOR] = TFL_ELEVATOR;
+	aasworld.travelflagfortype[TRAVEL_LADDER] = TFL_LADDER;
+	aasworld.travelflagfortype[TRAVEL_BRIDGE] = TFL_BRIDGE;
+	aasworld.travelflagfortype[TRAVEL_NOTTEAM1] = TFL_NOTTEAM1;
+	aasworld.travelflagfortype[TRAVEL_NOTTEAM2] = TFL_NOTTEAM2;
+	aasworld.travelflagfortype[TRAVEL_DONOTENTER] = TFL_DONOTENTER;
+	aasworld.travelflagfortype[TRAVEL_DONOTENTER_LARGE] = TFL_DONOTENTER_LARGE;
+	aasworld.travelflagfortype[TRAVEL_WATER] = TFL_WATER;
+	aasworld.travelflagfortype[TRAVEL_LAVA] = TFL_LAVA;
+	aasworld.travelflagfortype[TRAVEL_SLIME] = TFL_SLIME;
+	aasworld.travelflagfortype[TRAVEL_AIR] = TFL_AIR;
+	aasworld.travelflagfortype[TRAVEL_FLIGHT] = TFL_FLIGHT;
 }
 
 /*

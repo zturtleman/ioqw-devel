@@ -38,27 +38,34 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // travel types
 #define MAX_TRAVELTYPES 32
 
-#define TRAVEL_INVALID		 1 // temporary not possible
-#define TRAVEL_WALK			 2 // walking
-#define TRAVEL_CROUCH		 3 // crouching
-#define TRAVEL_BARRIERJUMP	 4 // jumping onto a barrier
-#define TRAVEL_SCOUTBARRIER	 5 // the scout powerup is required for jumping onto this barrier
-#define TRAVEL_JUMP			 6 // jumping
-#define TRAVEL_SCOUTJUMP	 7 // jumping (the scout powerup is required)
-#define TRAVEL_LADDER		 8 // climbing a ladder
-#define TRAVEL_WALKOFFLEDGE	 9 // walking of a ledge
-#define TRAVEL_SWIM			10 // swimming
-#define TRAVEL_WATERJUMP	11 // jump out of the water
-#define TRAVEL_TELEPORT		12 // teleportation
-#define TRAVEL_ELEVATOR		13 // travel by elevator
-#define TRAVEL_ROCKETJUMP	14 // rocket jumping required for travel
-//#define TRAVEL_BFGJUMP		13 // bfg jumping required for travel
-#define TRAVEL_GRAPPLEHOOK	15 // grappling hook required for travel // Tobias TODO: Removing this breaks compatibility!
-#define TRAVEL_DOUBLEJUMP	16 // double jump
-#define TRAVEL_RAMPJUMP		17 // ramp jump
-#define TRAVEL_STRAFEJUMP	18 // strafe jump
-#define TRAVEL_JUMPPAD		19 // jump pad
-#define TRAVEL_FUNCBOB		20 // func bob
+#define TRAVEL_INVALID			 1 // temporary not possible
+#define TRAVEL_WALK				 2 // walking
+#define TRAVEL_CROUCH			 3 // crouching
+#define TRAVEL_PRONE			 4 // prone
+#define TRAVEL_JUMP				 5 // jumping
+#define TRAVEL_BARRIERJUMP		 6 // jumping onto a barrier
+#define TRAVEL_WALKOFFLEDGE		 7 // walking off a ledge
+#define TRAVEL_SWIM				 8 // swimming
+#define TRAVEL_WATERJUMP		 9 // jump out of the water
+#define TRAVEL_SCOUTJUMP		10 // jumping (the scout powerup is required)
+#define TRAVEL_SCOUTBARRIER		11 // the scout powerup is required to jump onto this barrier
+#define TRAVEL_ROCKETJUMP		12 // rocket jumping required for travel
+#define TRAVEL_BFGJUMP			13 // bfg jumping required for travel
+#define TRAVEL_TELEPORT			14 // teleportation
+#define TRAVEL_JUMPPAD			15 // jump pad
+#define TRAVEL_FUNCBOB			16 // func bob
+#define TRAVEL_ELEVATOR			17 // travel by elevator
+#define TRAVEL_LADDER			18 // climbing a ladder
+#define TRAVEL_BRIDGE			19 // move over a bridge
+#define TRAVEL_NOTTEAM1			20 // not team 1
+#define TRAVEL_NOTTEAM2			21 // not team 2
+#define TRAVEL_DONOTENTER		22 // travel through donotenter area
+#define TRAVEL_DONOTENTER_LARGE	23 // travel through donotenter area (for large characters)
+#define TRAVEL_WATER			24 // travel through water
+#define TRAVEL_LAVA				25 // travel through lava
+#define TRAVEL_SLIME			26 // travel through slime
+#define TRAVEL_AIR				27 // travel through air
+#define TRAVEL_FLIGHT			28 // flight
 // additional travel flags
 #define TRAVELTYPE_MASK 0xFFFFFF
 

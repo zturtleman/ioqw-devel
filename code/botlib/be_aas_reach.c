@@ -61,25 +61,23 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // area flag used for weapon jumping
 #define AREA_WEAPONJUMP 8192 // valid area to weapon jump to
 // number of reachabilities of each type
-int reach_swim;			// swim
 int reach_equalfloor;	// walk on floors with equal height
 int reach_step;			// step up
-int reach_walk;			// walk of step
-int reach_barrier;		// jump up to a barrier
-int reach_scoutbarrier;	// jump up to a barrier
-int reach_waterjump;	// jump out of water
-int reach_walkoffledge;	// walk of a ledge
+int reach_walk;			// walk off step
 int reach_jump;			// jump
-int reach_scoutjump;	// scout jump
-int reach_ladder;		// climb or descent a ladder
-int reach_teleport;		// teleport
-int reach_elevator;		// use an elevator
-int reach_funcbob;		// use a func bob
-int reach_doublejump;	// double jump
-int reach_rampjump;		// ramp jump
-int reach_strafejump;	// strafe jump (just normal jump but further)
+int reach_barrier;		// jump up to a barrier
+int reach_walkoffledge;	// walk off a ledge
+int reach_swim;			// swim
+int reach_waterjump;	// jump out of water
+int reach_scoutjump;	// jump out of water
+int reach_scoutbarrier;	// jump out of water
 int reach_rocketjump;	// rocket jump
+int reach_bfgjump;		// bfg jump
+int reach_teleport;		// teleport
 int reach_jumppad;		// jump pads
+int reach_funcbob;		// use a func bob
+int reach_elevator;		// use an elevator
+int reach_ladder;		// climb or descent a ladder
 
 int calcscoutreach; // if true scout reachabilities are calculated
 // linked reachability
@@ -4325,7 +4323,7 @@ void AAS_Reachability_JumpPad(void) {
 					if (AAS_ReachabilityExists(link->areanum, area2num)) {
 						continue;
 					}
-					// create a rocket jump reachability from area1 to area2
+					// create a rocket or bfg jump reachability from area1 to area2
 					lreach = AAS_AllocReachability();
 
 					if (!lreach) {
@@ -4971,24 +4969,24 @@ int AAS_ContinueInitReachability(float time) {
 			if (AAS_ReachabilityExists(i, j)) {
 				continue;
 			}
-			// check for a swim reachability
-			if (AAS_Reachability_Swim(i, j)) {
-				continue;
-			}
 			// check for a simple walk on equal floor height reachability
 			if (AAS_Reachability_EqualFloorHeight(i, j)) {
+				continue;
+			}
+			// check for a jump reachability
+			if (AAS_Reachability_Jump(i, j)) {
 				continue;
 			}
 			// check for step, barrier, waterjump and walk off ledge reachabilities
 			if (AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(i, j)) {
 				continue;
 			}
-			// check for ladder reachabilities
-			if (AAS_Reachability_Ladder(i, j)) {
+			// check for a swim reachability
+			if (AAS_Reachability_Swim(i, j)) {
 				continue;
 			}
-			// check for a jump reachability
-			if (AAS_Reachability_Jump(i, j)) {
+			// check for ladder reachabilities
+			if (AAS_Reachability_Ladder(i, j)) {
 				continue;
 			}
 			// check for a scout jump reachability
@@ -5011,7 +5009,7 @@ int AAS_ContinueInitReachability(float time) {
 			if (AAS_ReachabilityExists(i, j)) {
 				continue;
 			}
-			// check for a rocket jump reachability
+			// check for a weapon jump reachability
 			AAS_Reachability_WeaponJump(i, j);
 		}
 		// if the calculation took more time than the max reachability delay
@@ -5039,14 +5037,14 @@ int AAS_ContinueInitReachability(float time) {
 
 			AAS_Reachability_WalkOffLedge(i);
 		}
-		// create jump pad reachabilities
-		AAS_Reachability_JumpPad();
 		// create teleporter reachabilities
 		AAS_Reachability_Teleport();
-		// create elevator (func_plat) reachabilities
-		AAS_Reachability_Elevator();
+		// create jump pad reachabilities
+		AAS_Reachability_JumpPad();
 		// create func_bobbing reachabilities
 		AAS_Reachability_FuncBobbing();
+		// create elevator (func_plat) reachabilities
+		AAS_Reachability_Elevator();
 #ifdef DEBUG
 		botimport.Print(PRT_MESSAGE, "%6d reach swim\n", reach_swim);
 		botimport.Print(PRT_MESSAGE, "%6d reach equal floor\n", reach_equalfloor);

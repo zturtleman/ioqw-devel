@@ -91,6 +91,7 @@ libvar_t *sv_maxstep;
 libvar_t *sv_maxbarrier;
 libvar_t *sv_gravity;
 libvar_t *weapindex_rocketlauncher;
+libvar_t *weapindex_bfg10k;
 // type of model, func_plat or func_bobbing
 int modeltypes[MAX_SUBMODELS];
 
@@ -4262,6 +4263,7 @@ int BotSetupMoveAI(void) {
 	sv_maxbarrier = LibVar("sv_maxbarrier", "43");
 
 	weapindex_rocketlauncher = LibVar("weapindex_rocketlauncher", "9");
+	weapindex_bfg10k = LibVar("weapindex_bfg10k", "13");
 	return BLERR_NOERROR;
 }
 
