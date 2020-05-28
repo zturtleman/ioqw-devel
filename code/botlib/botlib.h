@@ -392,6 +392,7 @@ name:						default:	module(s):		description:
 "rs_startwalkoffledge"		"70"		be_aas_move.c
 "rs_startjump"				"300"		be_aas_move.c
 "rs_rocketjump"				"500"		be_aas_move.c
+"rs_bfgjump"				"500"		be_aas_move.c
 "rs_jumppad"				"250"		be_aas_move.c
 "rs_aircontrolledjumppad"	"300"		be_aas_move.c
 "rs_funcbob"				"300"		be_aas_move.c
@@ -414,6 +415,7 @@ name:						default:	module(s):		description:
 "ai_gametype"				"0"			be_ai_goal.c	game type
 "droppedweight"				"1000"		be_ai_goal.c	additional dropped item weight
 "weapindex_rocketlauncher"	"9"			be_ai_move.c	rl weapon index for rocket jumping
+"weapindex_bfg10k"			"13"		be_ai_move.c	bfg weapon index for bfg jumping
 "itemconfig"				"items.c"	be_ai_goal.c	item configuration file
 "weaponconfig"				"weapons.c"	be_ai_weap.c	weapon configuration file
 "synfile"					"syn.c"		be_ai_chat.c	file with synonyms

@@ -746,6 +746,9 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_ROCKETJUMP:
 			checkbetween = qfalse;
 			break;
+		case TRAVEL_BFGJUMP:
+			checkbetween = qfalse;
+			break;
 		case TRAVEL_JUMPPAD:
 			checkbetween = qfalse;
 			break;
@@ -965,6 +968,10 @@ int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, floa
 		}
 		// never look beyond the weapon jump point
 		if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_ROCKETJUMP) {
+			return qtrue;
+		}
+
+		if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_BFGJUMP) {
 			return qtrue;
 		}
 		// don't add jump pad distances
@@ -3476,6 +3483,67 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 
 /*
 =======================================================================================================================================
+BotTravel_BFGJump
+=======================================================================================================================================
+*/
+bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reach) {
+	vec3_t hordir;
+	float dist, speed;
+	bot_moveresult_t_cleared(result);
+
+	// walk straight to the reachability start
+	hordir[0] = reach->start[0] - ms->origin[0];
+	hordir[1] = reach->start[1] - ms->origin[1];
+	hordir[2] = 0;
+
+	dist = VectorNormalize(hordir);
+	// set the ideal view angles (look in the movement direction)
+	VectorToAngles(hordir, result.ideal_viewangles);
+	// look straight down
+	result.ideal_viewangles[PITCH] = 90;
+	// set the view angles directly
+	EA_View(ms->client, result.ideal_viewangles);
+
+	if (dist < 24 && fabs(AngleDifference(result.ideal_viewangles[0], ms->viewangles[0])) < 5 && fabs(AngleDifference(result.ideal_viewangles[1], ms->viewangles[1])) < 5) {
+		// move straight to the reachability end
+		hordir[0] = reach->end[0] - ms->origin[0];
+		hordir[1] = reach->end[1] - ms->origin[1];
+		hordir[2] = 0;
+
+		VectorNormalize(hordir);
+		// elementary action jump
+		EA_Jump(ms->client);
+		EA_Attack(ms->client);
+		EA_Move(ms->client, hordir, 800);
+
+		ms->jumpreach = ms->lastreachnum;
+	} else {
+		if (dist > 80) {
+			dist = 80;
+		}
+
+		speed = 400 - (400 - 5 * dist);
+		// check if blocked
+		BotCheckBlocked(ms, hordir, qtrue, &result);
+		// elementary action move in direction
+		EA_Move(ms->client, hordir, speed);
+	}
+	// save the movement direction
+	VectorCopy(hordir, result.movedir);
+	// set the movement view flag (view is important for the movement)
+	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
+	// select the rocket launcher
+	EA_SelectWeapon(ms->client, (int)weapindex_bfg10k->value);
+	// weapon is used for movement
+	result.weapon = (int)weapindex_bfg10k->value;
+	// set the movement view flag
+	result.flags |= MOVERESULT_MOVEMENTWEAPON;
+
+	return result;
+}
+
+/*
+=======================================================================================================================================
 BotFinishTravel_WeaponJump
 =======================================================================================================================================
 */
@@ -3597,6 +3665,8 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 		case TRAVEL_ELEVATOR:
 			return 10;
 		case TRAVEL_ROCKETJUMP:
+			return 6;
+		case TRAVEL_BFGJUMP:
 			return 6;
 		case TRAVEL_JUMPPAD:
 			return 10;
@@ -3971,6 +4041,9 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_ROCKETJUMP:
 					*result = BotTravel_RocketJump(ms, &reach);
 					break;
+				case TRAVEL_BFGJUMP:
+					*result = BotTravel_BFGJump(ms, &reach);
+					break;
 				case TRAVEL_JUMPPAD:
 					*result = BotTravel_JumpPad(ms, &reach);
 					break;
@@ -4095,6 +4168,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					*result = BotFinishTravel_Elevator(ms, &reach);
 					break;
 				case TRAVEL_ROCKETJUMP:
+				case TRAVEL_BFGJUMP:
 					*result = BotFinishTravel_WeaponJump(ms, &reach);
 					break;
 				case TRAVEL_JUMPPAD:

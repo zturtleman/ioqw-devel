@@ -453,24 +453,35 @@ void AAS_ShowTotals(void)
 	Log_Print("numportals = %d\r\n", aasworld.numportals);
 	Log_Print("portalindexsize = %d\r\n", aasworld.portalindexsize);
 	Log_Print("numclusters = %d\r\n", aasworld.numclusters);
+
+	AAS_ShowNumReachabilities(TRAVEL_INVALID, "invalid");
 	AAS_ShowNumReachabilities(TRAVEL_WALK, "walk");
 	AAS_ShowNumReachabilities(TRAVEL_CROUCH, "crouch");
-	AAS_ShowNumReachabilities(TRAVEL_BARRIERJUMP, "barrier jump");
-	AAS_ShowNumReachabilities(TRAVEL_SCOUTBARRIER, "scout barrier jump");
+	AAS_ShowNumReachabilities(TRAVEL_PRONE, "prone");
 	AAS_ShowNumReachabilities(TRAVEL_JUMP, "jump");
-	AAS_ShowNumReachabilities(TRAVEL_SCOUTJUMP, "scout jump");
-	AAS_ShowNumReachabilities(TRAVEL_LADDER, "ladder");
+	AAS_ShowNumReachabilities(TRAVEL_BARRIERJUMP, "barrier jump");
 	AAS_ShowNumReachabilities(TRAVEL_WALKOFFLEDGE, "walk off ledge");
 	AAS_ShowNumReachabilities(TRAVEL_SWIM, "swim");
 	AAS_ShowNumReachabilities(TRAVEL_WATERJUMP, "water jump");
-	AAS_ShowNumReachabilities(TRAVEL_TELEPORT, "teleport");
-	AAS_ShowNumReachabilities(TRAVEL_ELEVATOR, "elevator");
+	AAS_ShowNumReachabilities(TRAVEL_SCOUTJUMP, "scout jump");
+	AAS_ShowNumReachabilities(TRAVEL_SCOUTBARRIER, "scout barrier jump");
 	AAS_ShowNumReachabilities(TRAVEL_ROCKETJUMP, "rocket jump");
-	AAS_ShowNumReachabilities(TRAVEL_DOUBLEJUMP, "double jump");
-	AAS_ShowNumReachabilities(TRAVEL_RAMPJUMP, "ramp jump");
-	AAS_ShowNumReachabilities(TRAVEL_STRAFEJUMP, "strafe jump");
+	AAS_ShowNumReachabilities(TRAVEL_BFGJUMP, "bfg jump");
+	AAS_ShowNumReachabilities(TRAVEL_TELEPORT, "teleport");
 	AAS_ShowNumReachabilities(TRAVEL_JUMPPAD, "jump pad");
 	AAS_ShowNumReachabilities(TRAVEL_FUNCBOB, "func bob");
+	AAS_ShowNumReachabilities(TRAVEL_ELEVATOR, "elevator");
+	AAS_ShowNumReachabilities(TRAVEL_LADDER, "ladder");
+	AAS_ShowNumReachabilities(TRAVEL_BRIDGE, "bridge");
+	AAS_ShowNumReachabilities(TRAVEL_NOTTEAM1, "notteam1");
+	AAS_ShowNumReachabilities(TRAVEL_NOTTEAM2, "notteam2");
+	AAS_ShowNumReachabilities(TRAVEL_DONOTENTER, "do not enter");
+	AAS_ShowNumReachabilities(TRAVEL_DONOTENTER_LARGE, "do not enter large");
+	AAS_ShowNumReachabilities(TRAVEL_WATER, "water");
+	AAS_ShowNumReachabilities(TRAVEL_LAVA, "lava");
+	AAS_ShowNumReachabilities(TRAVEL_SLIME, "slime");
+	AAS_ShowNumReachabilities(TRAVEL_AIR, "air");
+	AAS_ShowNumReachabilities(TRAVEL_FLIGHT, "flight");
 } //end of the function AAS_ShowTotals
 //===========================================================================
 // aas data is useless after writing to file because it is byte swapped

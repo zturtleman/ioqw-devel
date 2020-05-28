@@ -1207,6 +1207,8 @@ void AAS_InitReachabilityAreas(void) {
 				break;
 			case TRAVEL_ROCKETJUMP:
 				break;
+			case TRAVEL_BFGJUMP:
+				break;
 			case TRAVEL_JUMPPAD:
 				break;
 			// trace from reach->start to entity center, along entity movement and from entity center to reach->end
