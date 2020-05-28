@@ -4546,7 +4546,7 @@ Check if the bot can rocketjump from area1 to area2.
 =======================================================================================================================================
 */
 int AAS_Reachability_WeaponJump(int area1num, int area2num) {
-	int face2num, i, ret, visualize;
+	int face2num, i, n, ret, visualize;
 	float speed, zvel;
 	//float hordist;
 	aas_face_t *face2;
@@ -4612,46 +4612,58 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 		if (facecenter[2] < areastart[2] + 64) {
 			continue;
 		}
+		// NOTE: set to 2 to allow bfg jump reachabilities
+		for (n = 0; n < 1/*2*/; n++) {
+			// get the rocket jump z velocity
+			if (n) {
+				zvel = AAS_BFGJumpZVelocity(areastart);
+			} else {
+				zvel = AAS_RocketJumpZVelocity(areastart);
+			}
+			// get the horizontal speed for the jump, if it isn't possible to calculate this speed (the jump is not possible) then there's no jump reachability created
+			ret = AAS_HorizontalVelocityForJump(zvel, areastart, facecenter, &speed);
 
-		// get the rocket jump z velocity
-		zvel = AAS_RocketJumpZVelocity(areastart);
-		// get the horizontal speed for the jump, if it isn't possible to calculate this speed (the jump is not possible) then there's no jump reachability created
-		ret = AAS_HorizontalVelocityForJump(zvel, areastart, facecenter, &speed);
+			if (ret && speed < 300) {
+				// direction towards the face center
+				VectorSubtract(facecenter, areastart, dir);
 
-		if (ret && speed < 300) {
-			// direction towards the face center
-			VectorSubtract(facecenter, areastart, dir);
+				dir[2] = 0;
+				// get command movement
+				VectorScale(dir, speed, cmdmove);
+				VectorSet(velocity, 0, 0, zvel);
+				// movement prediction
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUND|SE_HITGROUNDAREA, area2num, visualize);
+				// if prediction time wasn't enough to fully predict the movement, don't enter slime or lava and don't fall from too high
+				if (move.frames < 30 && !(move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) && (move.stopevent & (SE_HITGROUNDAREA|SE_TOUCHJUMPPAD))) {
+					// create a rocket or bfg jump reachability from area1 to area2
+					lreach = AAS_AllocReachability();
 
-			dir[2] = 0;
-			// get command movement
-			VectorScale(dir, speed, cmdmove);
-			VectorSet(velocity, 0, 0, zvel);
-			// movement prediction
-			AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_TOUCHJUMPPAD|SE_HITGROUND|SE_HITGROUNDAREA, area2num, visualize);
-			// if prediction time wasn't enough to fully predict the movement, don't enter slime or lava and don't fall from too high
-			if (move.frames < 30 && !(move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) && (move.stopevent & (SE_HITGROUNDAREA|SE_TOUCHJUMPPAD))) {
-				// create a rocket jump reachability from area1 to area2
-				lreach = AAS_AllocReachability();
+					if (!lreach) {
+						return qfalse;
+					}
 
-				if (!lreach) {
-					return qfalse;
+					lreach->areanum = area2num;
+					lreach->facenum = 0;
+					lreach->edgenum = 0;
+
+					VectorCopy(areastart, lreach->start);
+					VectorCopy(facecenter, lreach->end);
+
+					if (n) {
+						lreach->traveltype = TRAVEL_BFGJUMP;
+						lreach->traveltime = aassettings.rs_bfgjump;
+					} else {
+						lreach->traveltype = TRAVEL_ROCKETJUMP;
+						lreach->traveltime = aassettings.rs_rocketjump;
+					}
+
+					lreach->next = areareachability[area1num];
+
+					areareachability[area1num] = lreach;
+
+					reach_rocketjump++;
+					return qtrue;
 				}
-
-				lreach->areanum = area2num;
-				lreach->facenum = 0;
-				lreach->edgenum = 0;
-
-				VectorCopy(areastart, lreach->start);
-				VectorCopy(facecenter, lreach->end);
-
-				lreach->traveltype = TRAVEL_ROCKETJUMP;
-				lreach->traveltime = aassettings.rs_rocketjump;
-				lreach->next = areareachability[area1num];
-
-				areareachability[area1num] = lreach;
-
-				reach_rocketjump++;
-				return qtrue;
 			}
 		}
 	}
@@ -4907,19 +4919,20 @@ AAS_ContinueInitReachability
  TRAVEL_WALK			100% equal floor height + steps
  TRAVEL_CROUCH			100%
  TRAVEL_PRONE			100%
- TRAVEL_BARRIERJUMP		100%
- TRAVEL_SCOUTBARRIER	100%
  TRAVEL_JUMP			 80%
- TRAVEL_SCOUTJUMP		 80%
+ TRAVEL_BARRIERJUMP		100%
  TRAVEL_WALKOFFLEDGE	 90% walk off very steep walls?
  TRAVEL_SWIM			100%
  TRAVEL_WATERJUMP		100%
- TRAVEL_TELEPORT		100%
- TRAVEL_ELEVATOR		100%
- TRAVEL_FUNCBOB			100%
- TRAVEL_JUMPPAD			100%
- TRAVEL_LADDER			100% + fall down from ladder + jump up to ladder
+ TRAVEL_SCOUTJUMP		 80%
+ TRAVEL_SCOUTBARRIER	100%
  TRAVEL_ROCKETJUMP		100% (currently limited towards areas with items)
+ TRAVEL_BFGJUMP			  0% (currently disabled)
+ TRAVEL_TELEPORT		100%
+ TRAVEL_JUMPPAD			100%
+ TRAVEL_FUNCBOB			100%
+ TRAVEL_ELEVATOR		100%
+ TRAVEL_LADDER			100% + fall down from ladder + jump up to ladder
 
 Returns: true if NOT finished.
 =======================================================================================================================================
