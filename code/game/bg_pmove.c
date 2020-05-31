@@ -1590,7 +1590,7 @@ static void PM_Footsteps(void) {
 	// ducked
 	if (pm->ps->pm_flags & PMF_DUCKED) {
 		bobmove = 0.5; // 0.65f
-		// (auto-)walking
+
 		if (pm->ps->pm_flags & PMF_BACKWARDS_RUN) {
 			PM_ContinueLegsAnim(LEGS_BACKCR);
 		} else {
