@@ -8892,14 +8892,6 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 	// if not in the intermission and not in observer mode
 	if (!BotIntermission(bs) && !BotIsObserver(bs)) {
 		bs->tfl = TFL_DEFAULT;
-		// if in lava or slime the bot should be able to get out
-		if (BotInLavaOrSlime(bs)) {
-			bs->tfl |= TFL_LAVA|TFL_SLIME;
-		}
-		// if the bot has the scout powerup
-		if (BotHasScout(bs)) {
-			bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
-		}
 		// initialize the movement state
 		BotSetupForMovement(bs);
 		// check out the snapshot

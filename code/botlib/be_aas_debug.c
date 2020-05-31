@@ -540,14 +540,8 @@ void AAS_PrintTravelType(int traveltype) {
 		case TRAVEL_BARRIERJUMP:
 			str = "TRAVEL_BARRIERJUMP";
 			break;
-		case TRAVEL_SCOUTBARRIER:
-			str = "TRAVEL_SCOUTBARRIER";
-			break;
 		case TRAVEL_JUMP:
 			str = "TRAVEL_JUMP";
-			break;
-		case TRAVEL_SCOUTJUMP:
-			str = "TRAVEL_SCOUTJUMP";
 			break;
 		case TRAVEL_LADDER:
 			str = "TRAVEL_LADDER";
@@ -561,6 +555,12 @@ void AAS_PrintTravelType(int traveltype) {
 		case TRAVEL_WATERJUMP:
 			str = "TRAVEL_WATERJUMP";
 			break;
+		case TRAVEL_SCOUTJUMP:
+			str = "TRAVEL_SCOUTJUMP";
+			break;
+		case TRAVEL_SCOUTBARRIER:
+			str = "TRAVEL_SCOUTBARRIER";
+			break;
 		case TRAVEL_TELEPORT:
 			str = "TRAVEL_TELEPORT";
 			break;
@@ -569,6 +569,9 @@ void AAS_PrintTravelType(int traveltype) {
 			break;
 		case TRAVEL_ROCKETJUMP:
 			str = "TRAVEL_ROCKETJUMP";
+			break;
+		case TRAVEL_BFGJUMP:
+			str = "TRAVEL_BFGJUMP";
 			break;
 		case TRAVEL_JUMPPAD:
 			str = "TRAVEL_JUMPPAD";
