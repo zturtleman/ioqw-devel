@@ -1572,7 +1572,6 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 		}
 
 		if (bestmine != -1) {
-			//state->team == TEAM_RED || state->team == TEAM_BLUE
 			// deactivate prox mines in the bot's path by shooting rockets or plasma cells etc. at them
 			BotAI_GetEntityState(bs->proxmines[bestmine], &state);
 			VectorCopy(state.pos.trBase, target);
@@ -2445,6 +2444,8 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			if (bs->lastkilledplayer == bs->enemy) {
 				BotChat_Kill(bs);
 			}
+
+			bs->ltg_time = 0;
 
 			AIEnter_Seek_LTG(bs, "BATTLE FIGHT: enemy dead.");
 			return qfalse;
