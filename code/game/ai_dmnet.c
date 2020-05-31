@@ -2183,7 +2183,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "SEEK LTG: bot dead.");
 		return qfalse;
 	}
-
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
