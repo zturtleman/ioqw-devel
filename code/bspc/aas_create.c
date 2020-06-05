@@ -612,17 +612,17 @@ void AAS_CreateAreaSettings(void)
 			tmparea->settings->areaflags |= AREA_GROUNDED;
 			numgrounded++;
 		} //end if
-		if (flags & FACE_LADDER)
-		{
-			tmparea->settings->areaflags |= AREA_LADDER;
-			numladderareas++;
-		} //end if
 		if (tmparea->contents & (AREACONTENTS_WATER |
 											AREACONTENTS_SLIME |
 											AREACONTENTS_LAVA))
 		{
 			tmparea->settings->areaflags |= AREA_LIQUID;
 			numliquidareas++;
+		} //end if
+		if (flags & FACE_LADDER)
+		{
+			tmparea->settings->areaflags |= AREA_LADDER;
+			numladderareas++;
 		} //end if
 		//presence type of the area
 		tmparea->settings->presencetype = tmparea->presencetype;
@@ -732,15 +732,15 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 	//
 	tmparea->contents = 0;
 	if (node->contents & CONTENTS_CLUSTERPORTAL) tmparea->contents |= AREACONTENTS_CLUSTERPORTAL;
-	if (node->contents & CONTENTS_MOVER) tmparea->contents |= AREACONTENTS_MOVER;
 	if (node->contents & CONTENTS_TELEPORTER) tmparea->contents |= AREACONTENTS_TELEPORTER;
 	if (node->contents & CONTENTS_JUMPPAD) tmparea->contents |= AREACONTENTS_JUMPPAD;
+	if (node->contents & CONTENTS_MOVER) tmparea->contents |= AREACONTENTS_MOVER;
+	if (node->contents & CONTENTS_NOTTEAM1) tmparea->contents |= AREACONTENTS_NOTTEAM1;
+	if (node->contents & CONTENTS_NOTTEAM2) tmparea->contents |= AREACONTENTS_NOTTEAM2;
 	if (node->contents & CONTENTS_DONOTENTER) tmparea->contents |= AREACONTENTS_DONOTENTER;
 	if (node->contents & CONTENTS_WATER) tmparea->contents |= AREACONTENTS_WATER;
 	if (node->contents & CONTENTS_LAVA) tmparea->contents |= AREACONTENTS_LAVA;
 	if (node->contents & CONTENTS_SLIME) tmparea->contents |= AREACONTENTS_SLIME;
-	if (node->contents & CONTENTS_NOTTEAM1) tmparea->contents |= AREACONTENTS_NOTTEAM1;
-	if (node->contents & CONTENTS_NOTTEAM2) tmparea->contents |= AREACONTENTS_NOTTEAM2;
 
 	//store the bsp model that's inside this node
 	tmparea->modelnum = node->modelnum;

@@ -23,6 +23,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #include "g_local.h"
+#include "../botlib/aasfile.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
@@ -44,11 +45,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h" // synonyms
 #include "match.h" // string matching types and vars
 #include "../../ui/menudef.h" // for the voice chats
-// from aasfile.h
-#define AREACONTENTS_MOVER 0x00000400
-#define AREACONTENTS_MODELNUMSHIFT 24
-#define AREACONTENTS_MAXMODELNUM 0xFF
-#define AREACONTENTS_MODELNUM (AREACONTENTS_MAXMODELNUM << AREACONTENTS_MODELNUMSHIFT)
 
 #define MAX_WAYPOINTS 128
 
@@ -1889,6 +1885,10 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if (bs->cur_ps.groundEntityNum != ENTITYNUM_NONE) {
 		initmove.or_moveflags |= MFL_ONGROUND;
 	}
+	// set the walk flag
+	if (BotWantsToWalk(bs)) {
+		initmove.or_moveflags |= MFL_WALK;
+	}
 	// set the waterjump flag
 	if ((bs->cur_ps.pm_flags & PMF_TIME_WATERJUMP) && (bs->cur_ps.pm_time > 0)) {
 		initmove.or_moveflags |= MFL_WATERJUMP;
@@ -1896,10 +1896,6 @@ void BotSetupForMovement(bot_state_t *bs) {
 	// set the scout flag
 	if (BotHasScout(bs)) {
 		initmove.or_moveflags |= MFL_SCOUT;
-	}
-	// set the walk flag
-	if (BotWantsToWalk(bs)) {
-		initmove.or_moveflags |= MFL_WALK;
 	}
 	// set the teleported flag
 	if ((bs->cur_ps.pm_flags & PMF_TIME_KNOCKBACK) && (bs->cur_ps.pm_time > 0)) {

@@ -276,10 +276,10 @@ void AAS_JumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qfalse, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qfalse, vec3_origin, cmdmove, 1, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
 	VectorCopy(move.endpos, runstart);
 	// don't enter slime or lava and don't fall from too high
-	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
+	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME)) {
 		VectorCopy(start, runstart);
 	}
 }
@@ -305,10 +305,10 @@ void AAS_ScoutJumpReachRunStart(aas_reachability_t *reach, vec3_t runstart) {
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE|SE_GAP, 0, qfalse);
+	AAS_PredictClientMovement(&move, -1, start, PRESENCE_NORMAL, qtrue, qtrue, vec3_origin, cmdmove, 1, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA|SE_GAP, 0, qfalse);
 	VectorCopy(move.endpos, runstart);
 	// don't enter slime or lava and don't fall from too high
-	if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE)) {
+	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME)) {
 		VectorCopy(start, runstart);
 	}
 }
@@ -730,7 +730,7 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 				AAS_DebugLine(org, trace.endpos, LINECOLOR_RED);
 			}
 //#endif // AAS_MOVE_DEBUG
-			if (stopevent & (SE_ENTERAREA|SE_TOUCHJUMPPAD|SE_TOUCHTELEPORTER|SE_TOUCHCLUSTERPORTAL)) {
+			if (stopevent & (SE_ENTERAREA|SE_TOUCHCLUSTERPORTAL|SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD)) {
 				numareas = AAS_TraceAreas(org, trace.endpos, areas, points, 20);
 
 				for (i = 0; i < numareas; i++) {
@@ -749,15 +749,15 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 							return qtrue;
 						}
 					}
-					// NOTE: if not the first frame
-					if ((stopevent & SE_TOUCHJUMPPAD) && n) {
-						if (aasworld.areasettings[areas[i]].contents & AREACONTENTS_JUMPPAD) {
+
+					if (stopevent & SE_TOUCHCLUSTERPORTAL) {
+						if (aasworld.areasettings[areas[i]].contents & AREACONTENTS_CLUSTERPORTAL) {
 							VectorCopy(points[i], move->endpos);
 							VectorScale(frame_test_vel, 1 / frametime, move->velocity);
 
 							move->endarea = areas[i];
 							move->trace = trace;
-							move->stopevent = SE_TOUCHJUMPPAD;
+							move->stopevent = SE_TOUCHCLUSTERPORTAL;
 							move->presencetype = presencetype;
 							move->endcontents = 0;
 							move->time = n * frametime;
@@ -781,15 +781,15 @@ static int AAS_ClientMovementPrediction(aas_clientmove_t *move, int entnum, cons
 							return qtrue;
 						}
 					}
-
-					if (stopevent & SE_TOUCHCLUSTERPORTAL) {
-						if (aasworld.areasettings[areas[i]].contents & AREACONTENTS_CLUSTERPORTAL) {
+					// NOTE: if not the first frame
+					if ((stopevent & SE_TOUCHJUMPPAD) && n) {
+						if (aasworld.areasettings[areas[i]].contents & AREACONTENTS_JUMPPAD) {
 							VectorCopy(points[i], move->endpos);
 							VectorScale(frame_test_vel, 1 / frametime, move->velocity);
 
 							move->endarea = areas[i];
 							move->trace = trace;
-							move->stopevent = SE_TOUCHCLUSTERPORTAL;
+							move->stopevent = SE_TOUCHJUMPPAD;
 							move->presencetype = presencetype;
 							move->endcontents = 0;
 							move->time = n * frametime;
