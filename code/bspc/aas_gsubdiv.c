@@ -548,15 +548,19 @@ tmp_node_t *AAS_LadderSubdivideArea_r(tmp_node_t *tmpnode)
 	//must be possible to stand in the area
 	if (!(tmparea->presencetype & PRESENCE_NORMAL)) return tmpnode;
 	//
-	foundladderface = false;
 	foundgroundface = false;
+	foundladderface = false;
 	//
 	for (face1 = tmparea->tmpfaces; face1; face1 = face1->next[side1])
 	{
 		//side of the face the area is on
 		side1 = face1->frontarea != tmparea;
+		if (face1->faceflags & FACE_GROUND)
+		{
+			foundgroundface = true;
+		} //end else if
 		//if the face is a ladder face
-		if (face1->faceflags & FACE_LADDER)
+		else if (face1->faceflags & FACE_LADDER)
 		{
 			plane = &mapplanes[face1->planenum];
 			//the ladder face plane should be pretty much vertical
@@ -573,13 +577,9 @@ tmp_node_t *AAS_LadderSubdivideArea_r(tmp_node_t *tmpnode)
 				} //end for
 			} //end if
 		} //end if
-		else if (face1->faceflags & FACE_GROUND)
-		{
-			foundgroundface = true;
-		} //end else if
 	} //end for
 	//
-	if ((!foundladderface) || (!foundgroundface)) return tmpnode;
+	if ((!foundgroundface) || (!foundladderface)) return tmpnode;
 	//
 	for (face1 = tmparea->tmpfaces; face1; face1 = face1->next[side1])
 	{

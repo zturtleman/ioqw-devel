@@ -34,13 +34,13 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define MOVE_BFGJUMP	0x00000010
 // move flags
 #define MFL_ONGROUND		0x00000001 // bot is in the ground
-#define MFL_BARRIERJUMP		0x00000002 // bot is performing a barrier jump
-#define MFL_WATERJUMP		0x00000004 // bot is waterjumping
+#define MFL_WALK			0x00000002 // bot should walk slowly
+#define MFL_BARRIERJUMP		0x00000004 // bot is performing a barrier jump
 #define MFL_SWIMMING		0x00000008 // bot is swimming
-#define MFL_AGAINSTLADDER	0x00000010 // bot is against a ladder
+#define MFL_WATERJUMP		0x00000010 // bot is waterjumping
 #define MFL_SCOUT			0x00000020 // bot is using the scout powerup
-#define MFL_WALK			0x00000040 // bot should walk slowly
-#define MFL_TELEPORTED		0x00000080 // bot is being teleported
+#define MFL_TELEPORTED		0x00000040 // bot is being teleported
+#define MFL_AGAINSTLADDER	0x00000080 // bot is against a ladder
 // move result flags
 #define MOVERESULT_MOVEMENTVIEW			0x00000001 // bot uses view for movement
 #define MOVERESULT_MOVEMENTVIEWSET		0x00000002 // bot has set the view in movement code

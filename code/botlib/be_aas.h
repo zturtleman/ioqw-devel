@@ -119,9 +119,9 @@ typedef struct aas_areainfo_s {
 // client movement prediction stop events, stop as soon as:
 #define SE_NONE					0x00000001
 #define SE_ENTERAREA			0x00000002 // the given stoparea is entered
-#define SE_TOUCHJUMPPAD			0x00000004 // touching a jump pad area
+#define SE_TOUCHCLUSTERPORTAL	0x00000004 // touching a cluster portal
 #define SE_TOUCHTELEPORTER		0x00000008 // touching teleporter
-#define SE_TOUCHCLUSTERPORTAL	0x00000010 // touching a cluster portal
+#define SE_TOUCHJUMPPAD			0x00000010 // touching a jump pad area
 #define SE_HITBOUNDINGBOX		0x00000020 // hit the specified bounding box
 #define SE_HITGROUNDAREA		0x00000040 // a ground face in the area is hit
 #define SE_HITGROUNDDAMAGE		0x00000080 // the ground is hit with damage

@@ -185,6 +185,12 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove) {
 		ms->moveflags |= MFL_ONGROUND;
 	}
 
+	ms->moveflags &= ~MFL_WALK;
+
+	if (initmove->or_moveflags & MFL_WALK) {
+		ms->moveflags |= MFL_WALK;
+	}
+
 	ms->moveflags &= ~MFL_WATERJUMP;
 
 	if (initmove->or_moveflags & MFL_WATERJUMP) {
@@ -195,12 +201,6 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove) {
 
 	if (initmove->or_moveflags & MFL_SCOUT) {
 		ms->moveflags |= MFL_SCOUT;
-	}
-
-	ms->moveflags &= ~MFL_WALK;
-
-	if (initmove->or_moveflags & MFL_WALK) {
-		ms->moveflags |= MFL_WALK;
 	}
 
 	ms->moveflags &= ~MFL_TELEPORTED;
@@ -1335,7 +1335,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			cmdmove[2] = 400;
 			maxframes = PREDICTIONTIME_JUMP / 0.1;
 			cmdframes = 1;
-			//stopevent = SE_HITGROUND|SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA; // Tobias NOTE: ... simplification, by checking for gaps even if not actually jumping, here...
+			stopevent = SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP;
 		} else {
 			if (type & MOVE_CROUCH) {
 				cmdmove[2] = -400;
@@ -1343,7 +1343,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 
 			maxframes = 2;
 			cmdframes = 2;
-			//stopevent = SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA; // Tobias NOTE: ... and here...
+			stopevent = SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP;
 		}
 
 		//AAS_ClearShownDebugLines();
@@ -1352,7 +1352,6 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 
 		origin[2] += 0.5;
 		scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
-		stopevent = SE_HITGROUND|SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA; // Tobias NOTE: ... by unify/combine the stopevent, here
 		// movement prediction
 		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, scoutFlag, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
 		// check if prediction failed
@@ -1361,7 +1360,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			return qfalse;
 		}
 		// don't fall from too high, don't enter slime or lava and don't fall in gaps
-		if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERSLIME|SE_ENTERLAVA)) {
+		if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
 			//botimport.Print(PRT_MESSAGE, "client %d: predicted frame %d of %d, would be hurt\n", ms->client, move.frames, maxframes);
 			//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
 			//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, "slime\n");
