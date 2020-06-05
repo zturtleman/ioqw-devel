@@ -45,8 +45,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "be_ai_goal.h"
 #include "be_ai_move.h"
 
-//#define DEBUG_AI_MOVE
-//#define DEBUG_ELEVATOR
 // movement state
 // NOTE: the moveflags MFL_ONGROUND, MFL_WATERJUMP, MFL_SCOUT and MFL_TELEPORTED must be set outside the movement code
 typedef struct bot_movestate_s {
@@ -1103,57 +1101,6 @@ qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter) {
 	return qtrue;
 }
 // Tobias NOTE: we do not (or no longer) need a BSPC version of 'BotGapDistance' so we trace through the bsp instead of the aas world.
-//#ifdef BSPC
-/*
-=======================================================================================================================================
-BotGapDistance
-=======================================================================================================================================
-*/
-/*
-static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
-	int gapdist, checkdist;
-	vec3_t start, end;
-	aas_trace_t trace;
-
-	// get the current speed
-	checkdist = DotProduct(ms->velocity, hordir);
-
-	if (checkdist < 8) {
-		checkdist = 8;
-	}
-	// do gap checking
-	for (gapdist = 8; gapdist <= checkdist; gapdist += 8) {
-		VectorMA(origin, gapdist, hordir, start);
-
-		start[2] = origin[2] + 24;
-
-		VectorCopy(start, end);
-
-		end[2] -= 48 + sv_maxbarrier->value;
-		trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, ms->entitynum);
-		// if solid is found the bot can't walk any further and fall into a gap
-		if (!trace.startsolid) {
-			// if it is a gap
-			if (trace.endpos[2] < origin[2] - sv_maxbarrier->value) {
-				VectorCopy(trace.endpos, end);
-
-				end[2] -= 20;
-
-				if (AAS_PointContents(end) & CONTENTS_WATER) {
-					break;
-				}
-				// if a gap is found slow down
-				return gapdist;
-			}
-
-			origin[2] = trace.endpos[2];
-		}
-	}
-
-	return 0;
-}
-#else
-*/
 /*
 =======================================================================================================================================
 BotGapDistance
@@ -1204,7 +1151,7 @@ static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 
 	return 0;
 }
-//#endif // Tobias END
+// Tobias END
 /*
 =======================================================================================================================================
 BotCheckBarrierCrouch
@@ -1345,7 +1292,7 @@ BotWalkInDirection
 */
 int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 	vec3_t hordir, cmdmove, tmpdir, origin;
-	int presencetype, maxframes, cmdframes, stopevent, gapdist;
+	int presencetype, maxframes, cmdframes, stopevent, gapdist, scoutFlag;
 	aas_clientmove_t move;
 	qboolean predictSuccess;
 
@@ -1404,13 +1351,10 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		VectorCopy(ms->origin, origin);
 
 		origin[2] += 0.5;
+		scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
 		stopevent = SE_HITGROUND|SE_HITGROUNDDAMAGE|SE_GAP|SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA; // Tobias NOTE: ... by unify/combine the stopevent, here
 		// movement prediction
-		if (ms->moveflags & MFL_SCOUT) {
-			predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, qtrue, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
-		} else {
-			predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, qfalse, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
-		}
+		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, scoutFlag, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
 		// check if prediction failed
 		if (!predictSuccess) {
 			//botimport.Print(PRT_MESSAGE, "client %d: prediction was stuck in loop\n", ms->client);
@@ -1789,6 +1733,8 @@ bot_moveresult_t BotFinishTravel_Walk(bot_movestate_t *ms, aas_reachability_t *r
 	}
 
 	speed = 400 - (400 - 3 * dist);
+	// check if blocked
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	// save the movement direction
@@ -1832,6 +1778,7 @@ BotTravel_BarrierJump
 */
 bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *reach) {
 	float reachhordist, dist, jumpdist, speed, currentspeed;
+	int scoutFlag;
 	vec3_t hordir, cmdmove, end;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
@@ -1851,8 +1798,10 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	VectorScale(hordir, 400, cmdmove);
 	// start point
 	VectorCopy(reach->end, end);
+
+	scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
 	// movement prediction
-	AAS_PredictClientMovement(&move, ms->entitynum, end, PRESENCE_NORMAL, qtrue, qfalse, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	AAS_PredictClientMovement(&move, ms->entitynum, end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
 	// reduce the speed if the bot will fall into slime, lava or into a gap
 	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
 		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
@@ -2174,7 +2123,7 @@ Tobias TODO: * Add crouchig over ledges (height dependancy)
 bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach) {
 	vec3_t hordir, dir, cmdmove;
 	float dist, speed, reachhordist;
-	int gapdist;
+	int gapdist, scoutFlag;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
 
@@ -2204,12 +2153,10 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		VectorNormalize(hordir);
 		// get command movement
 		VectorScale(hordir, 400, cmdmove);
+
+		scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
 		// movement prediction
-		if (ms->moveflags & MFL_SCOUT) {
-			AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qtrue, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
-		} else {
-			AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qfalse, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
-		}
+		AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
 		// check for nearby gap behind the current ledge
 		gapdist = BotGapDistance(ms, reach->end, hordir);
 		// if there is no gap under the current ledge
