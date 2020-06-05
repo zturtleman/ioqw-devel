@@ -713,22 +713,13 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_CROUCH:
 			checkbetween = qtrue;
 			break;
-		case TRAVEL_BARRIERJUMP:
-			checkbetween = qtrue;
-			break;
-		case TRAVEL_SCOUTBARRIER:
-			checkbetween = qtrue;
-			break;
-		case TRAVEL_LADDER:
-			checkbetween = qtrue;
-			break;
-		case TRAVEL_WALKOFFLEDGE:
-			checkbetween = qfalse;
-			break;
 		case TRAVEL_JUMP:
 			checkbetween = qfalse;
 			break;
-		case TRAVEL_SCOUTJUMP:
+		case TRAVEL_BARRIERJUMP:
+			checkbetween = qtrue;
+			break;
+		case TRAVEL_WALKOFFLEDGE:
 			checkbetween = qfalse;
 			break;
 		case TRAVEL_SWIM:
@@ -737,11 +728,11 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_WATERJUMP:
 			checkbetween = qtrue;
 			break;
-		case TRAVEL_TELEPORT:
+		case TRAVEL_SCOUTJUMP:
 			checkbetween = qfalse;
 			break;
-		case TRAVEL_ELEVATOR:
-			checkbetween = qfalse;
+		case TRAVEL_SCOUTBARRIER:
+			checkbetween = qtrue;
 			break;
 		case TRAVEL_ROCKETJUMP:
 			checkbetween = qfalse;
@@ -749,11 +740,20 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_BFGJUMP:
 			checkbetween = qfalse;
 			break;
+		case TRAVEL_TELEPORT:
+			checkbetween = qfalse;
+			break;
 		case TRAVEL_JUMPPAD:
 			checkbetween = qfalse;
 			break;
 		case TRAVEL_FUNCBOB:
 			checkbetween = qfalse;
+			break;
+		case TRAVEL_ELEVATOR:
+			checkbetween = qfalse;
+			break;
+		case TRAVEL_LADDER:
+			checkbetween = qtrue;
 			break;
 		default:
 			checkbetween = qtrue;
@@ -3644,34 +3644,34 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 			return 5;
 		case TRAVEL_CROUCH:
 			return 5;
-		case TRAVEL_BARRIERJUMP:
-			return 5;
-		case TRAVEL_SCOUTBARRIER:
-			return 5;
-		case TRAVEL_LADDER:
-			return 6;
-		case TRAVEL_WALKOFFLEDGE:
-			return 5;
 		case TRAVEL_JUMP:
 			return 5;
-		case TRAVEL_SCOUTJUMP:
+		case TRAVEL_BARRIERJUMP:
+			return 5;
+		case TRAVEL_WALKOFFLEDGE:
 			return 5;
 		case TRAVEL_SWIM:
 			return 5;
 		case TRAVEL_WATERJUMP:
 			return 5;
-		case TRAVEL_TELEPORT:
+		case TRAVEL_SCOUTJUMP:
 			return 5;
-		case TRAVEL_ELEVATOR:
-			return 10;
+		case TRAVEL_SCOUTBARRIER:
+			return 5;
 		case TRAVEL_ROCKETJUMP:
 			return 6;
 		case TRAVEL_BFGJUMP:
 			return 6;
+		case TRAVEL_TELEPORT:
+			return 5;
 		case TRAVEL_JUMPPAD:
 			return 10;
 		case TRAVEL_FUNCBOB:
 			return 10;
+		case TRAVEL_ELEVATOR:
+			return 10;
+		case TRAVEL_LADDER:
+			return 6;
 		default:
 		{
 			botimport.Print(PRT_ERROR, "travel type %d not implemented yet\n", reach->traveltype);
@@ -3754,13 +3754,12 @@ BotMoveToGoal
 =======================================================================================================================================
 */
 void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, int travelflags) {
-	int reachnum, lastreachnum, foundjumppad, ent, resultflags, ftraveltime, freachnum, straveltime, ltraveltime;
+	int reachnum, lastreachnum, foundjumppad, ent, resultflags, i, ftraveltime, freachnum, straveltime, ltraveltime, numareas, areas[16];
 	aas_reachability_t reach, lastreach;
 	bot_movestate_t *ms;
-	vec3_t dir;
+	vec3_t dir, end;
 	//vec3_t mins, maxs, up = {0, 0, 1};
 	//bsp_trace_t trace;
-	//static int debugline;
 
 	result->failure = qfalse;
 	result->type = 0;
@@ -4008,23 +4007,14 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_CROUCH:
 					*result = BotTravel_Crouch(ms, &reach);
 					break;
-				case TRAVEL_BARRIERJUMP:
-					*result = BotTravel_BarrierJump(ms, &reach);
-					break;
-				case TRAVEL_SCOUTBARRIER:
-					*result = BotTravel_ScoutBarrierJump(ms, &reach);
-					break;
-				case TRAVEL_LADDER:
-					*result = BotTravel_Ladder(ms, &reach);
-					break;
-				case TRAVEL_WALKOFFLEDGE:
-					*result = BotTravel_WalkOffLedge(ms, &reach);
-					break;
 				case TRAVEL_JUMP:
 					*result = BotTravel_Jump(ms, &reach);
 					break;
-				case TRAVEL_SCOUTJUMP:
-					*result = BotTravel_ScoutJump(ms, &reach);
+				case TRAVEL_BARRIERJUMP:
+					*result = BotTravel_BarrierJump(ms, &reach);
+					break;
+				case TRAVEL_WALKOFFLEDGE:
+					*result = BotTravel_WalkOffLedge(ms, &reach);
 					break;
 				case TRAVEL_SWIM:
 					*result = BotTravel_Swim(ms, &reach);
@@ -4032,11 +4022,11 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_WATERJUMP:
 					*result = BotTravel_WaterJump(ms, &reach);
 					break;
-				case TRAVEL_TELEPORT:
-					*result = BotTravel_Teleport(ms, &reach);
+				case TRAVEL_SCOUTJUMP:
+					*result = BotTravel_ScoutJump(ms, &reach);
 					break;
-				case TRAVEL_ELEVATOR:
-					*result = BotTravel_Elevator(ms, &reach);
+				case TRAVEL_SCOUTBARRIER:
+					*result = BotTravel_ScoutBarrierJump(ms, &reach);
 					break;
 				case TRAVEL_ROCKETJUMP:
 					*result = BotTravel_RocketJump(ms, &reach);
@@ -4044,11 +4034,20 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_BFGJUMP:
 					*result = BotTravel_BFGJump(ms, &reach);
 					break;
+				case TRAVEL_TELEPORT:
+					*result = BotTravel_Teleport(ms, &reach);
+					break;
 				case TRAVEL_JUMPPAD:
 					*result = BotTravel_JumpPad(ms, &reach);
 					break;
 				case TRAVEL_FUNCBOB:
 					*result = BotTravel_FuncBobbing(ms, &reach);
+					break;
+				case TRAVEL_ELEVATOR:
+					*result = BotTravel_Elevator(ms, &reach);
+					break;
+				case TRAVEL_LADDER:
+					*result = BotTravel_Ladder(ms, &reach);
 					break;
 				default:
 #ifdef DEBUG
@@ -4075,9 +4074,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		}
 #endif // DEBUG
 	} else {
-		int i, numareas, areas[16];
-		vec3_t end;
-
 		// special handling of jump pads when the bot uses a jump pad without knowing it
 		foundjumppad = qfalse;
 
@@ -4141,19 +4137,14 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_CROUCH:
 					/*do nothing*/
 					break;
-				case TRAVEL_BARRIERJUMP:
-				case TRAVEL_SCOUTBARRIER: // Tobias NOTE: separate 'BotFinishTravel_ScoutBarrierJump' needed?
-					*result = BotFinishTravel_BarrierJump(ms, &reach);
+				case TRAVEL_JUMP:
+					*result = BotFinishTravel_Jump(ms, &reach);
 					break;
-				case TRAVEL_LADDER:
-					*result = BotTravel_Ladder(ms, &reach);
+				case TRAVEL_BARRIERJUMP:
+					*result = BotFinishTravel_BarrierJump(ms, &reach);
 					break;
 				case TRAVEL_WALKOFFLEDGE:
 					*result = BotFinishTravel_WalkOffLedge(ms, &reach);
-					break;
-				case TRAVEL_JUMP:
-				case TRAVEL_SCOUTJUMP: // Tobias NOTE: separate 'BotFinishTravel_ScoutJump' needed?
-					*result = BotFinishTravel_Jump(ms, &reach);
 					break;
 				case TRAVEL_SWIM:
 					*result = BotTravel_Swim(ms, &reach);
@@ -4161,21 +4152,30 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_WATERJUMP:
 					*result = BotFinishTravel_WaterJump(ms, &reach);
 					break;
-				case TRAVEL_TELEPORT:
-					/*do nothing*/
+				case TRAVEL_SCOUTJUMP: // Tobias NOTE: separate 'BotFinishTravel_ScoutJump' needed?
+					*result = BotFinishTravel_Jump(ms, &reach);
 					break;
-				case TRAVEL_ELEVATOR:
-					*result = BotFinishTravel_Elevator(ms, &reach);
+				case TRAVEL_SCOUTBARRIER: // Tobias NOTE: separate 'BotFinishTravel_ScoutBarrierJump' needed?
+					*result = BotFinishTravel_BarrierJump(ms, &reach);
 					break;
 				case TRAVEL_ROCKETJUMP:
 				case TRAVEL_BFGJUMP:
 					*result = BotFinishTravel_WeaponJump(ms, &reach);
+					break;
+				case TRAVEL_TELEPORT:
+					/*do nothing*/
 					break;
 				case TRAVEL_JUMPPAD:
 					*result = BotFinishTravel_JumpPad(ms, &reach);
 					break;
 				case TRAVEL_FUNCBOB:
 					*result = BotFinishTravel_FuncBobbing(ms, &reach);
+					break;
+				case TRAVEL_ELEVATOR:
+					*result = BotFinishTravel_Elevator(ms, &reach);
+					break;
+				case TRAVEL_LADDER:
+					*result = BotTravel_Ladder(ms, &reach);
 					break;
 				default:
 #ifdef DEBUG

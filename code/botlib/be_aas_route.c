@@ -358,18 +358,8 @@ int AAS_GetAreaContentsTravelFlags(int areanum) {
 	contents = aasworld.areasettings[areanum].contents;
 	tfl = 0;
 
-	if (contents & AREACONTENTS_WATER) {
-		tfl |= TFL_WATER;
-	} else if (contents & AREACONTENTS_SLIME) {
-		tfl |= TFL_SLIME;
-	} else if (contents & AREACONTENTS_LAVA) {
-		tfl |= TFL_LAVA;
-	} else {
-		tfl |= TFL_AIR;
-	}
-
-	if (contents & AREACONTENTS_DONOTENTER) {
-		tfl |= TFL_DONOTENTER;
+	if (aasworld.areasettings[areanum].areaflags & AREA_BRIDGE) {
+		tfl |= TFL_BRIDGE;
 	}
 
 	if (contents & AREACONTENTS_NOTTEAM1) {
@@ -380,8 +370,18 @@ int AAS_GetAreaContentsTravelFlags(int areanum) {
 		tfl |= TFL_NOTTEAM2;
 	}
 
-	if (aasworld.areasettings[areanum].areaflags & AREA_BRIDGE) {
-		tfl |= TFL_BRIDGE;
+	if (contents & AREACONTENTS_DONOTENTER) {
+		tfl |= TFL_DONOTENTER;
+	}
+
+	if (contents & AREACONTENTS_WATER) {
+		tfl |= TFL_WATER;
+	} else if (contents & AREACONTENTS_LAVA) {
+		tfl |= TFL_LAVA;
+	} else if (contents & AREACONTENTS_SLIME) {
+		tfl |= TFL_SLIME;
+	} else {
+		tfl |= TFL_AIR;
 	}
 
 	return tfl;
@@ -1187,10 +1187,16 @@ void AAS_InitReachabilityAreas(void) {
 		numareas = 0;
 
 		switch (reach->traveltype & TRAVELTYPE_MASK) {
+			// no areas in between
+			case TRAVEL_WALK:
+				break;
+			case TRAVEL_CROUCH:
+				break;
+			// trace arch
+			case TRAVEL_JUMP:
+				break;
 			// trace areas from start to end
 			case TRAVEL_BARRIERJUMP:
-			case TRAVEL_SCOUTBARRIER:
-			case TRAVEL_WATERJUMP:
 				VectorCopy(reach->start, end);
 				end[2] = reach->end[2];
 				numareas = AAS_TraceAreas(reach->start, end, areas, NULL, MAX_REACHABILITYPASSAREAS);
@@ -1200,32 +1206,41 @@ void AAS_InitReachabilityAreas(void) {
 				start[2] = reach->start[2];
 				numareas = AAS_TraceAreas(start, reach->end, areas, NULL, MAX_REACHABILITYPASSAREAS);
 				break;
-			// trace arch
-			case TRAVEL_JUMP:
+			// no areas in between
+			case TRAVEL_SWIM:
 				break;
+			// trace areas from start to end
+			case TRAVEL_WATERJUMP:
+				VectorCopy(reach->start, end);
+				end[2] = reach->end[2];
+				numareas = AAS_TraceAreas(reach->start, end, areas, NULL, MAX_REACHABILITYPASSAREAS);
+				break;
+			// trace arch
 			case TRAVEL_SCOUTJUMP:
 				break;
+			case TRAVEL_SCOUTBARRIER:
+				VectorCopy(reach->start, end);
+				end[2] = reach->end[2];
+				numareas = AAS_TraceAreas(reach->start, end, areas, NULL, MAX_REACHABILITYPASSAREAS);
+				break;
+			// trace arch
 			case TRAVEL_ROCKETJUMP:
 				break;
 			case TRAVEL_BFGJUMP:
 				break;
+			// no areas in between
+			case TRAVEL_TELEPORT:
+				break;
+			// trace arch
 			case TRAVEL_JUMPPAD:
 				break;
 			// trace from reach->start to entity center, along entity movement and from entity center to reach->end
-			case TRAVEL_ELEVATOR:
-				break;
 			case TRAVEL_FUNCBOB:
 				break;
+			case TRAVEL_ELEVATOR:
+				break;
 			// no areas in between
-			case TRAVEL_WALK:
-				break;
-			case TRAVEL_CROUCH:
-				break;
 			case TRAVEL_LADDER:
-				break;
-			case TRAVEL_SWIM:
-				break;
-			case TRAVEL_TELEPORT:
 				break;
 			default:
 				break;

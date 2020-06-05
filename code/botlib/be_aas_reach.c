@@ -69,8 +69,8 @@ int reach_barrier;		// jump up to a barrier
 int reach_walkoffledge;	// walk off a ledge
 int reach_swim;			// swim
 int reach_waterjump;	// jump out of water
-int reach_scoutjump;	// jump out of water
-int reach_scoutbarrier;	// jump out of water
+int reach_scoutjump;	// jump (wearing the scout powerup)
+int reach_scoutbarrier;	// barrier jump (scout powerup)
 int reach_rocketjump;	// rocket jump
 int reach_bfgjump;		// bfg jump
 int reach_teleport;		// teleport
@@ -1484,62 +1484,6 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 		}
 	}
 	//
-	// Water Jumps
-	//
-	//        ---------
-	//        |
-	//~~~~~~~~|
-	//        |
-	//        |         higher than step height and water up to waterjump height -> TRAVEL_WATERJUMP
-	//--------|
-	//
-	//~~~~~~~~~~~~~~~~~~
-	//        ---------
-	//        |
-	//        |
-	//        |
-	//        |         higher than step height and low water up to the step -> TRAVEL_WATERJUMP
-	//--------|
-	//
-	// check for a waterjump reachability
-	if (water_foundreach) {
-		// get a test point a little bit towards area1
-		VectorMA(water_bestend, -INSIDEUNITS, water_bestnormal, testpoint);
-		// go down the maximum waterjump height
-		testpoint[2] -= aassettings.phys_maxwaterjump;
-		// if there IS water the phys_maxwaterjump height below the bestend point
-		if (aasworld.areasettings[AAS_PointAreaNum(testpoint)].areaflags & AREA_LIQUID) {
-			// don't create ridiculous water jump reachabilities from areas very far below the water surface
-			if (water_bestdist < aassettings.phys_maxwaterjump + 24) {
-				// waterjumping from or towards a crouch only area is not possible
-				if ((aasworld.areasettings[area1num].presencetype & PRESENCE_NORMAL) && (aasworld.areasettings[area2num].presencetype & PRESENCE_NORMAL)) {
-					// create a water jump reachability from area1 to area2
-					lreach = AAS_AllocReachability();
-
-					if (!lreach) {
-						return qfalse;
-					}
-
-					lreach->areanum = area2num;
-					lreach->facenum = 0;
-					lreach->edgenum = water_bestarea2groundedgenum;
-
-					VectorCopy(water_beststart, lreach->start);
-					VectorMA(water_bestend, INSIDEUNITS_WATERJUMP, water_bestnormal, lreach->end);
-
-					lreach->traveltype = TRAVEL_WATERJUMP;
-					lreach->traveltime = aassettings.rs_waterjump;
-					lreach->next = areareachability[area1num];
-
-					areareachability[area1num] = lreach;
-					// we've got another waterjump reachability
-					reach_waterjump++;
-					return qtrue;
-				}
-			}
-		}
-	}
-	//
 	// Barrier Jumps
 	//
 	//        ---------
@@ -1586,61 +1530,6 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 					// we've got another barrierjump reachability
 					reach_barrier++;
 					return qtrue;
-				}
-			}
-		}
-	}
-	//
-	// Scout Barrier Jumps (the scout powerup is required for jumping onto these barriers)
-	//
-	//        ---------
-	//        |
-	//        |
-	//        |
-	//        |
-	//        |         higher than step height lower than (scout) barrier height -> TRAVEL_SCOUTBARRIER
-	//--------|
-	//
-	//        ---------
-	//        |
-	//        |
-	//        |
-	//        |
-	//~~~~~~~~|         higher than step height lower than (scout) barrier height
-	//--------|         and a thin layer of water in the area to jump from -> TRAVEL_SCOUTBARRIER
-	//
-	if (calcscoutreach) {
-		// check for a barrier jump reachability using the scout powerup
-		if (ground_foundreach) {
-			// if area2 is higher but lower than the maximum barrier jump height using the scout powerup
-			if (ground_bestdist > 0 && ground_bestdist < aassettings.phys_maxscoutbarrier) {
-				// if no water in area1 or a very thin layer of water on the ground
-				if (!water_foundreach || (ground_bestdist - water_bestdist < 16)) {
-					// cannot perform a barrier jump towards or from a crouch area in Quake2
-					if (!AAS_AreaCrouch(area1num) && !AAS_AreaCrouch(area2num)) {
-						// create a scout barrier jump reachability from area1 to area2
-						lreach = AAS_AllocReachability();
-
-						if (!lreach) {
-							return qfalse;
-						}
-
-						lreach->areanum = area2num;
-						lreach->facenum = 0;
-						lreach->edgenum = ground_bestarea2groundedgenum;
-
-						VectorMA(ground_beststart, INSIDEUNITS_WALKSTART, ground_bestnormal, lreach->start);
-						VectorMA(ground_bestend, INSIDEUNITS_WALKEND, ground_bestnormal, lreach->end);
-
-						lreach->traveltype = TRAVEL_SCOUTBARRIER;
-						lreach->traveltime = aassettings.rs_barrierjump;
-						lreach->next = areareachability[area1num];
-
-						areareachability[area1num] = lreach;
-						// we've got another barrierjump reachability when using the scout powerup
-						reach_scoutbarrier++;
-						return qtrue;
-					}
 				}
 			}
 		}
@@ -1756,6 +1645,117 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 							// like the ladder reachability
 							return qtrue;
 						}
+					}
+				}
+			}
+		}
+	}
+	//
+	// Water Jumps
+	//
+	//        ---------
+	//        |
+	//~~~~~~~~|
+	//        |
+	//        |         higher than step height and water up to waterjump height -> TRAVEL_WATERJUMP
+	//--------|
+	//
+	//~~~~~~~~~~~~~~~~~~
+	//        ---------
+	//        |
+	//        |
+	//        |
+	//        |         higher than step height and low water up to the step -> TRAVEL_WATERJUMP
+	//--------|
+	//
+	// check for a waterjump reachability
+	if (water_foundreach) {
+		// get a test point a little bit towards area1
+		VectorMA(water_bestend, -INSIDEUNITS, water_bestnormal, testpoint);
+		// go down the maximum waterjump height
+		testpoint[2] -= aassettings.phys_maxwaterjump;
+		// if there IS water the phys_maxwaterjump height below the bestend point
+		if (aasworld.areasettings[AAS_PointAreaNum(testpoint)].areaflags & AREA_LIQUID) {
+			// don't create ridiculous water jump reachabilities from areas very far below the water surface
+			if (water_bestdist < aassettings.phys_maxwaterjump + 24) {
+				// waterjumping from or towards a crouch only area is not possible
+				if ((aasworld.areasettings[area1num].presencetype & PRESENCE_NORMAL) && (aasworld.areasettings[area2num].presencetype & PRESENCE_NORMAL)) {
+					// create a water jump reachability from area1 to area2
+					lreach = AAS_AllocReachability();
+
+					if (!lreach) {
+						return qfalse;
+					}
+
+					lreach->areanum = area2num;
+					lreach->facenum = 0;
+					lreach->edgenum = water_bestarea2groundedgenum;
+
+					VectorCopy(water_beststart, lreach->start);
+					VectorMA(water_bestend, INSIDEUNITS_WATERJUMP, water_bestnormal, lreach->end);
+
+					lreach->traveltype = TRAVEL_WATERJUMP;
+					lreach->traveltime = aassettings.rs_waterjump;
+					lreach->next = areareachability[area1num];
+
+					areareachability[area1num] = lreach;
+					// we've got another waterjump reachability
+					reach_waterjump++;
+					return qtrue;
+				}
+			}
+		}
+	}
+	//
+	// Scout Barrier Jumps (the scout powerup is required for jumping onto these barriers)
+	//
+	//        ---------
+	//        |
+	//        |
+	//        |
+	//        |
+	//        |         higher than step height lower than (scout) barrier height -> TRAVEL_SCOUTBARRIER
+	//--------|
+	//
+	//        ---------
+	//        |
+	//        |
+	//        |
+	//        |
+	//~~~~~~~~|         higher than step height lower than (scout) barrier height
+	//--------|         and a thin layer of water in the area to jump from -> TRAVEL_SCOUTBARRIER
+	//
+	if (calcscoutreach) {
+		// check for a barrier jump reachability using the scout powerup
+		if (ground_foundreach) {
+			// if area2 is higher but lower than the maximum barrier jump height using the scout powerup
+			if (ground_bestdist > 0 && ground_bestdist < aassettings.phys_maxscoutbarrier) {
+				// if no water in area1 or a very thin layer of water on the ground
+				if (!water_foundreach || (ground_bestdist - water_bestdist < 16)) {
+					// cannot perform a barrier jump towards or from a crouch area in Quake2
+					if (!AAS_AreaCrouch(area1num) && !AAS_AreaCrouch(area2num)) {
+						// create a scout barrier jump reachability from area1 to area2
+						lreach = AAS_AllocReachability();
+
+						if (!lreach) {
+							return qfalse;
+						}
+
+						lreach->areanum = area2num;
+						lreach->facenum = 0;
+						lreach->edgenum = ground_bestarea2groundedgenum;
+
+						VectorMA(ground_beststart, INSIDEUNITS_WALKSTART, ground_bestnormal, lreach->start);
+						VectorMA(ground_bestend, INSIDEUNITS_WALKEND, ground_bestnormal, lreach->end);
+
+						lreach->traveltype = TRAVEL_SCOUTBARRIER;
+						lreach->traveltime = aassettings.rs_barrierjump;
+						lreach->next = areareachability[area1num];
+
+						areareachability[area1num] = lreach;
+						// we've got another barrierjump reachability when using the scout powerup
+						reach_scoutbarrier++;
+						return qtrue;
 					}
 				}
 			}
@@ -4996,15 +4996,15 @@ int AAS_ContinueInitReachability(float time) {
 			if (AAS_Reachability_Swim(i, j)) {
 				continue;
 			}
-			// check for ladder reachabilities
-			if (AAS_Reachability_Ladder(i, j)) {
-				continue;
-			}
 			// check for a scout jump reachability
 			if (calcscoutreach) {
 				if (AAS_Reachability_ScoutJump(i, j)) {
 					continue;
 				}
+			}
+			// check for ladder reachabilities
+			if (AAS_Reachability_Ladder(i, j)) {
+				continue;
 			}
 		}
 		// never create these reachabilities from teleporter or jumppad areas
