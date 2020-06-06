@@ -2450,7 +2450,7 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		VectorNormalize(dir);
 		CrossProduct(dir, up, sidewards);
 
-		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND;
+		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP;
 
 		if (!AAS_AreaClusterPortal(area1num) && !AAS_AreaClusterPortal(area2num)) {
 			stopevent |= SE_TOUCHCLUSTERPORTAL;
@@ -2477,12 +2477,8 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// don't enter slime or lava and don't fall from too high
-			if (move.stopevent & (SE_ENTERLAVA|SE_ENTERSLIME)) {
-				return qfalse;
-			}
-			// never jump or fall through a cluster portal
-			if (move.stopevent & SE_TOUCHCLUSTERPORTAL) {
+			// never jump or fall through a cluster portal, don't fall from too high, don't enter slime or lava, and don't fall in gaps
+			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
 				return qfalse;
 			}
 			// the end position should be in area2, also test a little bit back because the predicted jump could have rushed through the area
@@ -2753,7 +2749,7 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 		VectorNormalize(dir);
 		CrossProduct(dir, up, sidewards);
 
-		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND;
+		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP;
 
 		if (!AAS_AreaClusterPortal(area1num) && !AAS_AreaClusterPortal(area2num)) {
 			stopevent |= SE_TOUCHCLUSTERPORTAL;
@@ -2780,12 +2776,8 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// don't enter slime or lava and don't fall from too high
-			if (move.stopevent & (SE_ENTERLAVA|SE_ENTERSLIME)) {
-				return qfalse;
-			}
-			// never jump or fall through a cluster portal
-			if (move.stopevent & SE_TOUCHCLUSTERPORTAL) {
+			// never jump or fall through a cluster portal, don't fall from too high, don't enter slime or lava, and don't fall in gaps
+			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
 				return qfalse;
 			}
 			// the end position should be in area2, also test a little bit back because the predicted jump could have rushed through the area
@@ -3406,12 +3398,13 @@ void AAS_Reachability_Teleport(void) {
 
 				VectorClear(cmdmove);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND, 0, qfalse); //qtrue
+				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
 
 				area2num = AAS_PointAreaNum(move.endpos);
 
-				if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA)) {
+				if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
 					botimport.Print(PRT_WARNING, "teleported into slime or lava at dest %s\n", target);
+					continue;
 				}
 
 				VectorCopy(move.endpos, destorigin);
@@ -4291,7 +4284,7 @@ void AAS_Reachability_JumpPad(void) {
 
 			for (i = 0; i < 20; i++) {
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND, 0, bot_visualizejumppads);
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHJUMPPAD, 0, bot_visualizejumppads);
 
 				area2num = move.endarea;
 
@@ -4416,10 +4409,9 @@ void AAS_Reachability_JumpPad(void) {
 						// get command movement
 						VectorScale(dir, speed, cmdmove);
 						// movement prediction
-						AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME, area2num, visualize);
-						// if prediction time wasn't enough to fully predict the movement
-						// don't fall from too high and don't enter lava or slime
-						if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME))) {
+						AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
+						// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava, and don't fall in gaps
+						if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
 							// never go back to the same jumppad
 							for (link = areas; link; link = link->next_area) {
 								if (link->areanum == move.endarea) {
@@ -4630,9 +4622,9 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 				VectorScale(dir, speed, cmdmove);
 				VectorSet(velocity, 0, 0, zvel);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND, area2num, visualize);
-				// if prediction time wasn't enough to fully predict the movement, don't fall from too high and don't enter slime or lava
-				if (move.frames < 30 && (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME))) {
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
+				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava, and don't fall in gaps
+				if (move.frames < 30 && (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
 					// create a rocket or bfg jump reachability from area1 to area2
 					lreach = AAS_AllocReachability();
 
