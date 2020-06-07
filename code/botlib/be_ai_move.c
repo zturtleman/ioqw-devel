@@ -1467,19 +1467,6 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
-
-		if (BotCheckBarrierJump(ms, dir, (sv_maxbarrier->value + currentspeed * 1.1f) * 0.2f, qfalse)) {
-			result->flags |= MOVERESULT_BARRIER_JUMP;
-#ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Jump barrier dedected!\n", ms->client);
-#endif // DEBUG
-		// if there is a barrier the bot can crouch through
-		} else if (BotCheckBarrierCrouch(ms, dir, (200 + currentspeed) * 0.1f)) {
-			result->flags |= MOVERESULT_BARRIER_CROUCH;
-#ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
-#endif // DEBUG
-		}
 #ifdef DEBUG
 		botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %f.\n", ms->client, currentspeed * 1.4);
 #endif
@@ -1513,6 +1500,26 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 #endif
 				}
 			}
+		}
+	}
+
+	if (result->blocked) {
+		if (BotCheckBarrierJump(ms, dir, (sv_maxbarrier->value + currentspeed * 1.1f) * 0.2f, qfalse)) {
+			result->flags |= MOVERESULT_BARRIER_JUMP;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Jump barrier dedected!\n", ms->client);
+#endif // DEBUG
+		// if there is a barrier the bot can crouch through
+		} else if (BotCheckBarrierCrouch(ms, dir, (200 + currentspeed) * 0.1f)) {
+			result->flags |= MOVERESULT_BARRIER_CROUCH;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
+#endif // DEBUG
+		} else {
+			result->flags |= MOVERESULT_BARRIER_WALK;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Can't jump or crouch to avoid barrier!\n", ms->client);
+#endif // DEBUG
 		}
 	}
 }

@@ -53,7 +53,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define MOVERESULT_ONTOPOF_ELEVATOR		0x00000100 // bot is ontop of an elevator (func_plat)
 #define MOVERESULT_BARRIER_JUMP			0x00000200
 #define MOVERESULT_BARRIER_CROUCH		0x00000400
-#define MOVERESULT_FUTUREVIEW			0x00000800 // if we want to look ahead of time, this is a good direction
+#define MOVERESULT_BARRIER_PRONE		0x00000800
+#define MOVERESULT_BARRIER_WALK			0x00001000
+#define MOVERESULT_FUTUREVIEW			0x00002000 // if we want to look ahead of time, this is a good direction
 
 #define MAX_AVOIDREACH 1
 #define MAX_AVOIDSPOTS 32
