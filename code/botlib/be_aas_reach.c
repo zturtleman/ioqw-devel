@@ -3399,8 +3399,7 @@ void AAS_Reachability_Teleport(void) {
 
 				VectorClear(cmdmove);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
-
+				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP, 0, qfalse); //qtrue);
 				area2num = AAS_PointAreaNum(move.endpos);
 
 				if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
