@@ -1356,16 +1356,15 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, scoutFlag, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
 		// check if prediction failed
 		if (!predictSuccess) {
-			//botimport.Print(PRT_MESSAGE, "client %d: prediction was stuck in loop\n", ms->client);
+			//botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
 			return qfalse;
 		}
 		// don't fall from too high, don't enter slime or lava and don't fall in gaps
 		if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
-			//botimport.Print(PRT_MESSAGE, "client %d: predicted frame %d of %d, would be hurt\n", ms->client, move.frames, maxframes);
-			//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
-			//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, "slime\n");
-			//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, "lava\n");
-			//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, "client %d: predicted frame %d of %d, there is a gap\n", ms->client, move.frames, maxframes);
+			//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "Client %d: predicted frame %d of %d, hit ground with damage.\n", ms->client, move.frames, maxframes);
+			//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Client %d: predicted frame %d of %d, there is slime.\n", ms->client, move.frames, maxframes);
+			//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_RED "Client %d: predicted frame %d of %d, there is lava.\n", ms->client, move.frames, maxframes);
+			//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Client %d: predicted frame %d of %d, there is a gap.\n", ms->client, move.frames, maxframes);
 			return qfalse;
 		}
 		// if ground was hit
@@ -1779,6 +1778,7 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	vec3_t hordir, cmdmove;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
+	qboolean predictSuccess;
 
 	// walk straight to the reachability start
 	hordir[0] = reach->start[0] - ms->origin[0];
@@ -1794,13 +1794,18 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qfalse, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qfalse, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	// check if prediction failed
+	if (!predictSuccess) {
+		botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
+		return result;
+	}
 	// reduce the speed if the bot will fall into slime, lava or into a gap
 	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
-		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
-		//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, "lava\n");
-		//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, "slime\n");
-		//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, "gap\n");
+		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "Client %d: predicted frame %d of %d, hit ground with damage.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Client %d: predicted frame %d of %d, there is slime.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_RED "Client %d: predicted frame %d of %d, there is lava.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Client %d: predicted frame %d of %d, there is a gap.\n", ms->client, move.frames, maxframes);
 
 		if (ms->moveflags & MFL_WALK) {
 			speed = 200;
@@ -1870,6 +1875,7 @@ bot_moveresult_t BotTravel_ScoutBarrierJump(bot_movestate_t *ms, aas_reachabilit
 	vec3_t hordir, cmdmove;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
+	qboolean predictSuccess;
 
 	// walk straight to the reachability start
 	hordir[0] = reach->start[0] - ms->origin[0];
@@ -1885,13 +1891,18 @@ bot_moveresult_t BotTravel_ScoutBarrierJump(bot_movestate_t *ms, aas_reachabilit
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
 	// movement prediction
-	AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qtrue, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qtrue, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	// check if prediction failed
+	if (!predictSuccess) {
+		botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
+		return result;
+	}
 	// reduce the speed if the bot will fall into slime, lava or into a gap
 	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
-		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, "hitground\n");
-		//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, "lava\n");
-		//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, "slime\n");
-		//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, "gap\n");
+		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "Client %d: predicted frame %d of %d, hit ground with damage.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Client %d: predicted frame %d of %d, there is slime.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_RED "Client %d: predicted frame %d of %d, there is lava.\n", ms->client, move.frames, maxframes);
+		//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Client %d: predicted frame %d of %d, there is a gap.\n", ms->client, move.frames, maxframes);
 
 		if (ms->moveflags & MFL_WALK) {
 			speed = 200;
@@ -2117,6 +2128,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 	int gapdist, scoutFlag;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
+	qboolean predictSuccess;
 
 	// check if the bot is blocked by anything
 	VectorSubtract(reach->start, ms->origin, dir);
@@ -2147,7 +2159,12 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 
 		scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
 		// movement prediction
-		AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
+		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
+		// check if prediction failed
+		if (!predictSuccess) {
+			botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
+			return result;
+		}
 		// check for nearby gap behind the current ledge
 		gapdist = BotGapDistance(ms, reach->end, hordir);
 		// if there is no gap under the current ledge
@@ -2157,11 +2174,11 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 				speed = 200;
 #ifdef DEBUG
 				botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "|_x_  1A: < 20 Predict! rhdist = %1.0f, dist = %1.0f, Gap ? (%i), speed = %1.0f\n", reachhordist, dist, gapdist, DotProduct(ms->velocity, hordir));
-				if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "hitground\n");
-				if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "slime\n");
-				if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "lava\n");
-				if (move.stopevent & SE_TOUCHJUMPPAD) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "jumppad\n");
-				if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "gap\n");
+				if (move.stopevent & SE_TOUCHJUMPPAD) botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "Client %d: predicted frame %d of %d, hit jumppad.\n", ms->client, move.frames, maxframes);
+				if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "Client %d: predicted frame %d of %d, hit ground with damage.\n", ms->client, move.frames, maxframes);
+				if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Client %d: predicted frame %d of %d, there is slime.\n", ms->client, move.frames, maxframes);
+				if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_RED "Client %d: predicted frame %d of %d, there is lava.\n", ms->client, move.frames, maxframes);
+				if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Client %d: predicted frame %d of %d, there is a gap.\n", ms->client, move.frames, maxframes);
 #endif
 			// if there is a gap or a ledge behind the current ledge (like a cascade)
 			} else if (gapdist > 0) {
