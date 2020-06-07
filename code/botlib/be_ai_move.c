@@ -1644,45 +1644,44 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 		}
 	}
 */
-	gapdist = BotGapDistance(ms, ms->origin, hordir);
-
 	if (ms->moveflags & MFL_WALK) {
 		speed = 200;
 	} else {
-		if (gapdist > 0) { // Tobias NOTE: avoid gap checking twice, move this down!
-			speed = 400 - (200 - gapdist);
-		} else {
-			speed = 400;
-		}
-	}
-
-	if (gapdist > 0) {
-		VectorNormalize(hordir);
-		// get the sideward vector
-		CrossProduct(hordir, up, sideward);
-		// if there is NO gap at the right side
-		if (!BotGapDistance(ms, ms->origin, sideward)) {
-			// check if blocked
-			BotCheckBlocked(ms, sideward, qtrue, &result);
-			// elementary action move in direction
-			EA_Move(ms->client, sideward, 400);
-			//VectorCopy(sideward, result.movedir); // Tobias NOTE: no need to save the movement direction here?
-#ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
-#endif // DEBUG
-		} else {
-			VectorNegate(sideward, sideward);
-			// if there is NO gap at the left side
+		// check for nearby gap
+		gapdist = BotGapDistance(ms, ms->origin, hordir);
+		// if there is a gap
+		if (gapdist > 0) {
+			VectorNormalize(hordir);
+			// get the sideward vector
+			CrossProduct(hordir, up, sideward);
+			// if there is NO gap at the right side
 			if (!BotGapDistance(ms, ms->origin, sideward)) {
 				// check if blocked
 				BotCheckBlocked(ms, sideward, qtrue, &result);
 				// elementary action move in direction
 				EA_Move(ms->client, sideward, 400);
-				//VectorCopy(sideward, result.movedir); // Tobias NOTE: no need to save the movement direction here?
+				//VectorCopy(sideward, result.movedir); // Tobias NOTE: we don't have to look at this direction, so no need to save the movement direction here?
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
+				botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
 #endif // DEBUG
+			} else {
+				VectorNegate(sideward, sideward);
+				// if there is NO gap at the left side
+				if (!BotGapDistance(ms, ms->origin, sideward)) {
+					// check if blocked
+					BotCheckBlocked(ms, sideward, qtrue, &result);
+					// elementary action move in direction
+					EA_Move(ms->client, sideward, 400);
+					//VectorCopy(sideward, result.movedir); // Tobias NOTE: we don't have to look at this direction, so no need to save the movement direction here?
+#ifdef DEBUG
+					botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
+#endif // DEBUG
+				}
 			}
+
+			speed = 400 - (200 - gapdist);
+		} else {
+			speed = 400;
 		}
 	}
 // Tobias END
