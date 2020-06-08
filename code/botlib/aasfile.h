@@ -72,37 +72,38 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TRAVELFLAG_NOTTEAM1 (1 << 24)
 #define TRAVELFLAG_NOTTEAM2 (2 << 24)
 // face flags
-#define FACE_SOLID			0x00000001 // just solid at the other side
-#define FACE_LADDER			0x00000002 // ladder
-#define FACE_GROUND			0x00000004 // standing on ground when in this face
-#define FACE_GAP			0x00000008 // gap in the ground
-#define FACE_LIQUID			0x00000010 // face separating two areas with liquid
-#define FACE_LIQUIDSURFACE	0x00000020 // face separating liquid and air
-#define FACE_BRIDGE			0x00000040 // can walk over this face if bridge is closed
+#define FACE_GROUND			0x00000001 // standing on ground when in this face
+#define FACE_GAP			0x00000002 // gap in the ground
+#define FACE_SOLID			0x00000004 // just solid at the other side
+#define FACE_LIQUID			0x00000008 // face separating two areas with liquid
+#define FACE_LIQUIDSURFACE	0x00000010 // face separating liquid and air
+#define FACE_BRIDGE			0x00000020 // can walk over this face if bridge is closed
+#define FACE_LADDER			0x00000040 // ladder
 // area contents
-#define AREACONTENTS_WATER			0x00000001
-#define AREACONTENTS_LAVA			0x00000002
-#define AREACONTENTS_SLIME			0x00000004
-#define AREACONTENTS_CLUSTERPORTAL	0x00000008
-#define AREACONTENTS_TELEPORTAL		0x00000010
-#define AREACONTENTS_ROUTEPORTAL	0x00000020
-#define AREACONTENTS_TELEPORTER		0x00000040
-#define AREACONTENTS_JUMPPAD		0x00000080
-#define AREACONTENTS_DONOTENTER		0x00000100
-#define AREACONTENTS_VIEWPORTAL		0x00000200
-#define AREACONTENTS_MOVER			0x00000400
-#define AREACONTENTS_NOTTEAM1		0x00000800
-#define AREACONTENTS_NOTTEAM2		0x00010000
+#define AREACONTENTS_CLUSTERPORTAL		0x00000001
+#define AREACONTENTS_VIEWPORTAL			0x00000002
+#define AREACONTENTS_ROUTEPORTAL		0x00000004
+#define AREACONTENTS_TELEPORTAL			0x00000008
+#define AREACONTENTS_TELEPORTER			0x00000010
+#define AREACONTENTS_JUMPPAD			0x00000020
+#define AREACONTENTS_MOVER				0x00000040
+#define AREACONTENTS_NOTTEAM1			0x00000080
+#define AREACONTENTS_NOTTEAM2			0x00000100
+#define AREACONTENTS_DONOTENTER			0x00000200
+#define AREACONTENTS_DONOTENTER_LARGE	0x00000400
+#define AREACONTENTS_WATER				0x00000800
+#define AREACONTENTS_LAVA				0x00001000
+#define AREACONTENTS_SLIME				0x00002000
 // number of model of the mover inside this area
 #define AREACONTENTS_MODELNUMSHIFT	24
 #define AREACONTENTS_MAXMODELNUM	0xFF
 #define AREACONTENTS_MODELNUM		(AREACONTENTS_MAXMODELNUM << AREACONTENTS_MODELNUMSHIFT)
 // area flags
 #define AREA_GROUNDED	0x00000001 // bot can stand on the ground
-#define AREA_LADDER		0x00000002 // area contains one or more ladder faces
+#define AREA_DISABLED	0x00000002 // area is disabled for routing when set
 #define AREA_LIQUID		0x00000004 // area contains a liquid
-#define AREA_DISABLED	0x00000008 // area is disabled for routing when set
-#define AREA_BRIDGE		0x00000010 // area ontop of a bridge
+#define AREA_BRIDGE		0x00000008 // area ontop of a bridge
+#define AREA_LADDER		0x00000010 // area contains one or more ladder faces
 // aas file header lumps
 #define AAS_LUMPS 14
 

@@ -1600,56 +1600,7 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 			EA_Crouch(ms->client);
 		}
 	}
-// Tobias NOTE: These code changes are very map dependant (q3dm6, q3dm7, q3dm12), maybe delete all this gap checking code at all (at least for QW maps, or keep it only for obstacles?)
-/*
-	gapdist = BotGapDistance(ms, ms->origin, hordir);
 
-	if (ms->moveflags & MFL_WALK) {
-		if (gapdist > 0) {
-			speed = 200 - (180 - gapdist);
-		} else {
-			speed = 200;
-		}
-	} else {
-		if (gapdist > 0) {
-			speed = 400 - (360 - 2 * gapdist);
-		} else {
-			speed = 400;
-		}
-	}
-*/
-/*
-	gapdist = BotGapDistance(ms, ms->origin, hordir);
-
-	if (ms->moveflags & MFL_WALK) {
-		speed = 200;
-	} else {
-		if (gapdist > 0) {
-			VectorNormalize(hordir);
-			// get the sideward vector
-			CrossProduct(hordir, up, sideward);
-			// start point
-			VectorMA(ms->origin, 100, sideward, start);
-			// if there is NO gap at the right side
-			if (!BotGapDistance(ms, start, hordir)) {
-				speed = 400;
-				EA_Move(ms->client, sideward, speed);
-#ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Found a gap at %i: Moving to the right side (Speed: %f)\n", gapdist, currentspeed);
-#endif // DEBUG
-			} else {
-				VectorNegate(sideward, sideward);
-				speed = 400;
-				EA_Move(ms->client, sideward, speed);
-#ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Found a gap at %i: Moving to the left side (Speed: %f)\n", gapdist, currentspeed);
-#endif // DEBUG
-			}
-		} else {
-			speed = 400;
-		}
-	}
-*/
 	if (ms->moveflags & MFL_WALK) {
 		speed = 200;
 	} else {
@@ -1690,7 +1641,6 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 			speed = 400;
 		}
 	}
-// Tobias END
 	// check if blocked
 	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action move in direction
@@ -2317,146 +2267,6 @@ bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachabil
 	return result;
 }
 
-/*
-=======================================================================================================================================
-BotTravel_Jump
-=======================================================================================================================================
-*/
-/*
-bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	vec3_t hordir;
-	float dist, speed, horspeed, sv_jumpvel;
-	int gapdist;
-	bot_moveresult_t_cleared(result);
-
-	sv_jumpvel = botlibglobals.sv_jumpvel->value;
-	// walk straight to the reachability start
-	hordir[0] = reach->start[0] - ms->origin[0];
-	hordir[1] = reach->start[1] - ms->origin[1];
-	hordir[2] = 0;
-
-	dist = VectorNormalize(hordir);
-	speed = 350;
-	gapdist = BotGapDistance(ms, hordir);
-	// if pretty close to the start focus on the reachability end
-	if (dist < 50 || (gapdist && gapdist < 50)) {
-		// NOTE: using max speed (400) works best
-		//if (AAS_HorizontalVelocityForJump(sv_jumpvel, ms->origin, reach->end, &horspeed)) {
-		//	speed = horspeed * 400 / botlibglobals.sv_maxwalkvelocity->value;
-		//}
-
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		VectorNormalize(hordir);
-		// elementary action jump
-		EA_Jump(ms->client);
-
-		ms->jumpreach = ms->lastreachnum;
-		speed = 600;
-	} else {
-		if (AAS_HorizontalVelocityForJump(sv_jumpvel, reach->start, reach->end, &horspeed)) {
-			speed = horspeed * 400 / botlibglobals.sv_maxwalkvelocity->value;
-		}
-	}
-	// elementary action
-	EA_Move(ms->client, hordir, speed);
-	// save the movement direction
-	VectorCopy(hordir, result.movedir);
-
-	return result;
-}
-*/
-/*
-bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	vec3_t hordir, dir1, dir2, mins, maxs, start, end;
-	int gapdist;
-	float dist1, dist2, speed;
-	bot_moveresult_t_cleared(result);
-	bsp_trace_t trace;
-
-	hordir[0] = reach->start[0] - reach->end[0];
-	hordir[1] = reach->start[1] - reach->end[1];
-	hordir[2] = 0;
-
-	VectorNormalize(hordir);
-	VectorCopy(reach->start, start);
-	start[2] += 1;
-	// minus back the bouding box size plus 16
-	VectorMA(reach->start, 80, hordir, end);
-
-	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
-	// check for solids
-	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY);
-
-	if (trace.startsolid) {
-		VectorCopy(start, trace.endpos);
-	}
-	// check for a gap
-	for (gapdist = 0; gapdist < 80; gapdist += 10) {
-		VectorMA(start, gapdist + 10, hordir, end);
-		end[2] += 1;
-
-		if (AAS_PointAreaNum(end) != ms->reachareanum) {
-			break;
-		}
-	}
-
-	if (gapdist < 80) {
-		VectorMA(reach->start, gapdist, hordir, trace.endpos);
-	}
-
-//	dist1 = BotGapDistance(ms, start, hordir);
-
-//	if (dist1 && dist1 <= trace.fraction * 80) {
-//		VectorMA(reach->start, dist1 - 20, hordir, trace.endpos);
-//	}
-
-	VectorSubtract(ms->origin, reach->start, dir1);
-	dir1[2] = 0;
-	dist1 = VectorNormalize(dir1);
-	VectorSubtract(ms->origin, trace.endpos, dir2);
-	dir2[2] = 0;
-	dist2 = VectorNormalize(dir2);
-	// if just before the reachability start
-	if (DotProduct(dir1, dir2) < -0.8 || dist2 < 5) {
-		//botimport.Print(PRT_MESSAGE, "between jump start and run to point\n");
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		hordir[2] = 0;
-
-		VectorNormalize(hordir);
-		// elementary action jump
-		if (dist1 < 24) {
-			EA_Jump(ms->client);
-		} else if (dist1 < 32) {
-			EA_DelayedJump(ms->client);
-		}
-
-		EA_Move(ms->client, hordir, 600);
-
-		ms->jumpreach = ms->lastreachnum;
-	} else {
-		//botimport.Print(PRT_MESSAGE, "going towards run to point\n");
-		hordir[0] = trace.endpos[0] - ms->origin[0];
-		hordir[1] = trace.endpos[1] - ms->origin[1];
-		hordir[2] = 0;
-
-		VectorNormalize(hordir);
-
-		if (dist2 > 80) {
-			dist2 = 80;
-		}
-
-		speed = 400 - (400 - 5 * dist2);
-
-		EA_Move(ms->client, hordir, speed);
-	}
-	// save the movement direction
-	VectorCopy(hordir, result.movedir);
-
-	return result;
-}
-*/
 /*
 =======================================================================================================================================
 BotTravel_Jump
