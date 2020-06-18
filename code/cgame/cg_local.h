@@ -585,7 +585,7 @@ typedef struct {
 #ifndef BASEGAME
 	int itemPickup;
 	int itemPickupTime;
-	int itemPickupBlendTime; // the pulse around the crosshair is timed separately
+	int itemPickupBlendTime;				// the pulse around the crosshair is timed separately
 #endif
 	int weaponSelectTime;
 	int weaponAnimation;
