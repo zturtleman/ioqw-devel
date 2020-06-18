@@ -1562,7 +1562,6 @@ static void UI_DrawMapCinematic(rectDef_t *rect, float scale, vec4_t color, qboo
 static qboolean updateModel = qtrue;
 static qboolean q3Model = qfalse;
 static qboolean updateModelColor = qtrue;
-
 /*
 =======================================================================================================================================
 UI_DrawPlayerModel
@@ -2273,7 +2272,6 @@ static void UI_BuildPlayerList(void) {
 
 	uiInfo.playerNumber = cs.clientNum;
 	uiInfo.teamLeader = atoi(Info_ValueForKey(info, "tl"));
-
 	team = atoi(Info_ValueForKey(info, "t"));
 
 	trap_GetConfigString(CS_SERVERINFO, info, sizeof(info));
