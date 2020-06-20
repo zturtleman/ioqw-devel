@@ -2036,6 +2036,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	if (BotHasScout(bs)) {
 		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
+
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
@@ -2190,6 +2191,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	if (BotHasScout(bs)) {
 		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
+
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}

@@ -1352,12 +1352,12 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 			//botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "(SG 1 of 3) gs->lastreachabilityarea > 0 CASE LTG: areanum: %d\n", areanum);
 		}
 	}
+	// remember the last area with reachabilities the bot was in
+	gs->lastreachabilityarea = areanum;
 	// if still in solid
 	if (!areanum) {
 		return qfalse;
 	}
-	// remember the last area with reachabilities the bot was in
-	gs->lastreachabilityarea = areanum;
 	// the item configuration
 	ic = itemconfig;
 
@@ -1545,12 +1545,12 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 			//botimport.Print(PRT_MESSAGE, S_COLOR_CYAN "(SG 2 of 3) gs->lastreachabilityarea > 0 CASE NBG: areanum: %d\n", areanum);
 		}
 	}
+	// remember the last area with reachabilities the bot was in
+	gs->lastreachabilityarea = areanum;
 	// if still in solid
 	if (!areanum) {
 		return qfalse;
 	}
-	// remember the last area with reachabilities the bot was in
-	gs->lastreachabilityarea = areanum;
 
 	if (ltg) {
 		ltg_time = AAS_AreaTravelTimeToGoalArea(areanum, origin, ltg->areanum, travelflags);

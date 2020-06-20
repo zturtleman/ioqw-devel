@@ -467,7 +467,6 @@ qhandle_t CG_StatusHandle(int task) {
 			} else
 #endif // Tobias END
 			{
-
 				h = cgs.media.patrolShader;
 			}
 

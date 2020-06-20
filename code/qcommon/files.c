@@ -157,7 +157,6 @@ static const unsigned int pak_checksums[] = {
 	908855077u,
 	977125798u
 };
-
 // if this is defined, the executable positively won't work with any paks other
 // than the demo pak, even if productid is present. This is only used for our
 // last demo release to prevent the mac and linux users from using the demo

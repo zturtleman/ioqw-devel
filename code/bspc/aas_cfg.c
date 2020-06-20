@@ -84,6 +84,7 @@ fielddef_t cfg_fields[] =
 	{"rs_startwalkoffledge", CFG_OFS(rs_startwalkoffledge), FT_FLOAT},
 	{"rs_startjump", CFG_OFS(rs_startjump), FT_FLOAT},
 	{"rs_rocketjump", CFG_OFS(rs_rocketjump), FT_FLOAT},
+	{"rs_bfgjump", CFG_OFS(rs_bfgjump), FT_FLOAT},
 	{"rs_jumppad", CFG_OFS(rs_jumppad), FT_FLOAT},
 	{"rs_aircontrolledjumppad", CFG_OFS(rs_aircontrolledjumppad), FT_FLOAT},
 	{"rs_funcbob", CFG_OFS(rs_funcbob), FT_FLOAT},
