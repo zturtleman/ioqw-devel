@@ -7964,6 +7964,7 @@ Before the bot ends in this part of the AI it should predict which doors to open
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
+	int teamtask;
 #endif
 	int movetype, bspent, speed;
 	vec3_t dir1, dir2, mins, maxs, end, hordir, sideward, angles, up = {0, 0, 1};
@@ -7975,9 +7976,24 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
+#ifdef OBSTACLEDEBUG
+		BotSetUserInfo(bs, "teamtask", va("%d", TEAMTASK_NONE));
+#endif
 		return;
 	}
 #ifdef OBSTACLEDEBUG
+	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
+		teamtask = TEAMTASK_OFFENSE;
+	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
+		teamtask = TEAMTASK_PATROL;
+	} else if (moveresult->flags & MOVERESULT_BARRIER_WALK) {
+		teamtask = TEAMTASK_FOLLOW;
+	} else {
+		teamtask = TEAMTASK_NONE;
+	}
+
+	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
+
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	if (!BotWantsToWalk(bs)) {

@@ -1523,7 +1523,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 					VectorMA(ground_bestend, INSIDEUNITS_WALKEND, ground_bestnormal, lreach->end);
 
 					lreach->traveltype = TRAVEL_BARRIERJUMP;
-					lreach->traveltime = aassettings.rs_barrierjump; //AAS_BarrierJumpTravelTime();
+					lreach->traveltime = aassettings.rs_barrierjump;
 					lreach->next = areareachability[area1num];
 
 					areareachability[area1num] = lreach;
@@ -2450,7 +2450,7 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		VectorNormalize(dir);
 		CrossProduct(dir, up, sidewards);
 
-		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP;
+		stopevent = SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND; // Tobias NOTE: why does SE_GAP destroy q3dm6? Also, SE_HITGROUNDDAMAGE is questionable!
 
 		if (!AAS_AreaClusterPortal(area1num) && !AAS_AreaClusterPortal(area2num)) {
 			stopevent |= SE_TOUCHCLUSTERPORTAL;
@@ -2477,8 +2477,8 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// never jump or fall through a cluster portal, don't fall from too high, don't enter slime or lava, and don't fall in gaps
-			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
+			// never jump or fall through a cluster portal and don't enter slime or lava
+			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy q3dm6?
 				return qfalse;
 			}
 			// the end position should be in area2, also test a little bit back because the predicted jump could have rushed through the area
@@ -2541,6 +2541,7 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		}
 
 		lreach->next = areareachability[area1num];
+
 		areareachability[area1num] = lreach;
 
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMP) {
@@ -2776,8 +2777,8 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// never jump or fall through a cluster portal, don't fall from too high, don't enter slime or lava, and don't fall in gaps
-			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
+			// never jump or fall through a cluster portal and don't enter slime or lava
+			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy q3dm6?
 				return qfalse;
 			}
 			// the end position should be in area2, also test a little bit back because the predicted jump could have rushed through the area
@@ -2842,6 +2843,7 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 		}
 
 		lreach->next = areareachability[area1num];
+
 		areareachability[area1num] = lreach;
 /*
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_SCOUTJUMP) {
@@ -3398,12 +3400,13 @@ void AAS_Reachability_Teleport(void) {
 
 				VectorClear(cmdmove);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP, 0, qfalse); //qtrue);
+				AAS_PredictClientMovement(&move, -1, destorigin, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERWATER|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND, 0, qfalse); //qtrue);
+
 				area2num = AAS_PointAreaNum(move.endpos);
 
-				if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
+				if (move.stopevent & (SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy some maps?
 					botimport.Print(PRT_WARNING, "teleported into slime or lava at dest %s\n", target);
-					continue;
+					//continue; // Tobias NOTE: adding 'continue' destroys some badly desgned maps, like erta1
 				}
 
 				VectorCopy(move.endpos, destorigin);
@@ -4283,7 +4286,7 @@ void AAS_Reachability_JumpPad(void) {
 
 			for (i = 0; i < 20; i++) {
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHJUMPPAD, 0, bot_visualizejumppads);
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 0, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND, 0, bot_visualizejumppads);
 
 				area2num = move.endarea;
 
@@ -4408,9 +4411,9 @@ void AAS_Reachability_JumpPad(void) {
 						// get command movement
 						VectorScale(dir, speed, cmdmove);
 						// movement prediction
-						AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
-						// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava, and don't fall in gaps
-						if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
+						AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME, area2num, visualize);
+						// if prediction time wasn't enough to fully predict the movement, don't fall from too high and don't enter slime or lava
+						if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME))) { // Tobias NOTE: does SE_GAP destroy some maps?
 							// never go back to the same jumppad
 							for (link = areas; link; link = link->next_area) {
 								if (link->areanum == move.endarea) {
@@ -4621,9 +4624,9 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 				VectorScale(dir, speed, cmdmove);
 				VectorSet(velocity, 0, 0, zvel);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
-				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava, and don't fall in gaps
-				if (move.frames < 30 && (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP, area2num, visualize);
+				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava and don't fall in gaps
+				if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUND)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
 					// create a rocket or bfg jump reachability from area1 to area2
 					lreach = AAS_AllocReachability();
 
@@ -4735,13 +4738,13 @@ void AAS_Reachability_WalkOffLedge(int areanum) {
 									edge3num = aasworld.edgeindex[face3->firstedge + m];
 									// but the edge should be shared by all three faces
 									if (abs(edge3num) == abs(edge1num)) {
-										if (face3->faceflags & FACE_GROUND) {
-											gap = qfalse;
+										if (!(face3->faceflags & FACE_SOLID)) {
+											gap = qtrue;
 											break;
 										}
 
-										if (!(face3->faceflags & FACE_SOLID)) {
-											gap = qtrue;
+										if (face3->faceflags & FACE_GROUND) {
+											gap = qfalse;
 											break;
 										}
 										// FIXME: there are more situations to be handled

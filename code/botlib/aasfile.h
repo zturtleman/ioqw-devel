@@ -72,9 +72,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TRAVELFLAG_NOTTEAM1 (1 << 24)
 #define TRAVELFLAG_NOTTEAM2 (2 << 24)
 // face flags
-#define FACE_GROUND			0x00000001 // standing on ground when in this face
-#define FACE_GAP			0x00000002 // gap in the ground
-#define FACE_SOLID			0x00000004 // just solid at the other side
+#define FACE_SOLID			0x00000001 // just solid at the other side
+#define FACE_GROUND			0x00000002 // standing on ground when in this face
+#define FACE_GAP			0x00000004 // gap in the ground
 #define FACE_LIQUID			0x00000008 // face separating two areas with liquid
 #define FACE_LIQUIDSURFACE	0x00000010 // face separating liquid and air
 #define FACE_BRIDGE			0x00000020 // can walk over this face if bridge is closed

@@ -532,7 +532,7 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 			break;
 		}
 	}
-	
+
 	cs = va("l\\%s\\c\\%s\\a\\%s\\n\\%s", leader, carrying, action, bs->ainodename);
 
 	trap_SetConfigstring(CS_BOTINFO + bs->client, cs);

@@ -461,9 +461,12 @@ qhandle_t CG_StatusHandle(int task) {
 			h = cgs.media.patrolShader;
 			break;
 		default:
-			if (cg_drawDebug.integer) {
+#ifdef DEBUG // Tobias DEBUG
+			if (cg_drawDebug.integer && cg_drawStatusDebug.integer) {
 				h = cgs.media.roamShader;
-			} else {
+			} else
+#endif // Tobias END
+			{
 				h = cgs.media.patrolShader;
 			}
 
@@ -473,7 +476,33 @@ qhandle_t CG_StatusHandle(int task) {
 
 	return h;
 }
+#ifdef OBSTACLEDEBUG // Tobias DEBUG
+/*
+=======================================================================================================================================
+CG_ObstacleHandle
+=======================================================================================================================================
+*/
+qhandle_t CG_ObstacleHandle(int task) {
+	qhandle_t h;
 
+	switch (task) {
+		case TEAMTASK_OFFENSE:
+			h = cgs.media.defendShader;
+			break;
+		case TEAMTASK_PATROL:
+			h = cgs.media.patrolShader;
+			break;
+		case TEAMTASK_FOLLOW:
+			h = cgs.media.followShader;
+			break;
+		default:
+			h = cgs.media.assaultShader;
+			break;
+	}
+
+	return h;
+}
+#endif // Tobias END
 /*
 =======================================================================================================================================
 CG_DrawSelectedPlayerStatus

@@ -85,6 +85,7 @@ settings
 	rs_startwalkoffledge		70
 	rs_startjump				300
 	rs_rocketjump				500
+	rs_bfgjump					500
 	rs_jumppad					250
 	rs_aircontrolledjumppad		300
 	rs_funcbob					300
