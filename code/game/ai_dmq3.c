@@ -7906,17 +7906,17 @@ void BotEntityAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		movetype = MOVE_JUMP;
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Jump\n");
 #endif
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
 		movetype = MOVE_CROUCH;
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Crouch\n");
 #endif
 	} else {
 		movetype = MOVE_WALK;
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Walk\n");
 #endif
 	}
@@ -7962,7 +7962,7 @@ Before the bot ends in this part of the AI it should predict which doors to open
 =======================================================================================================================================
 */
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 	int teamtask;
 #endif
@@ -7976,12 +7976,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 		BotSetUserInfo(bs, "teamtask", va("%d", TEAMTASK_NONE));
 #endif
 		return;
 	}
-#ifdef OBSTACLEDEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		teamtask = TEAMTASK_OFFENSE;
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {

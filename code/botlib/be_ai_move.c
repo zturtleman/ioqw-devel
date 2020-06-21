@@ -1733,6 +1733,7 @@ BotTravel_BarrierJump
 */
 bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *reach) {
 	float reachhordist, dist, jumpdist, speed, currentspeed;
+	int scoutFlag;
 	vec3_t hordir, cmdmove;
 	bot_moveresult_t_cleared(result);
 	aas_clientmove_t move;
@@ -1751,8 +1752,10 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 	}
 	// get command movement
 	VectorScale(hordir, 400, cmdmove);
+
+	scoutFlag = ms->moveflags & MFL_SCOUT ? qtrue : qfalse;
 	// movement prediction
-	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qfalse, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
 	// check if prediction failed
 	if (!predictSuccess) {
 		botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
@@ -1819,77 +1822,6 @@ bot_moveresult_t BotFinishTravel_BarrierJump(bot_movestate_t *ms, aas_reachabili
 		// save the movement direction
 		VectorCopy(hordir, result.movedir);
 	}
-
-	return result;
-}
-
-/*
-=======================================================================================================================================
-BotTravel_ScoutBarrierJump
-=======================================================================================================================================
-*/
-bot_moveresult_t BotTravel_ScoutBarrierJump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	float reachhordist, dist, jumpdist, speed, currentspeed;
-	vec3_t hordir, cmdmove;
-	bot_moveresult_t_cleared(result);
-	aas_clientmove_t move;
-	qboolean predictSuccess;
-
-	// walk straight to the reachability start
-	hordir[0] = reach->start[0] - ms->origin[0];
-	hordir[1] = reach->start[1] - ms->origin[1];
-	hordir[2] = 0;
-
-	reachhordist = VectorNormalize(hordir);
-	dist = reachhordist;
-
-	if (dist > 100) {
-		dist = 100;
-	}
-	// get command movement
-	VectorScale(hordir, 400, cmdmove);
-	// movement prediction
-	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, qtrue, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
-	// check if prediction failed
-	if (!predictSuccess) {
-		botimport.Print(PRT_MESSAGE, S_COLOR_BLUE "Client %d: prediction was stuck in loop.\n", ms->client);
-		return result;
-	}
-	// reduce the speed if the bot will fall into slime, lava or into a gap
-	if (move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP)) {
-		//if (move.stopevent & SE_HITGROUNDDAMAGE) botimport.Print(PRT_MESSAGE, S_COLOR_MAGENTA "Client %d: predicted frame %d of %d, hit ground with damage.\n", ms->client, move.frames, maxframes);
-		//if (move.stopevent & SE_ENTERSLIME) botimport.Print(PRT_MESSAGE, S_COLOR_GREEN "Client %d: predicted frame %d of %d, there is slime.\n", ms->client, move.frames, maxframes);
-		//if (move.stopevent & SE_ENTERLAVA) botimport.Print(PRT_MESSAGE, S_COLOR_RED "Client %d: predicted frame %d of %d, there is lava.\n", ms->client, move.frames, maxframes);
-		//if (move.stopevent & SE_GAP) botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "Client %d: predicted frame %d of %d, there is a gap.\n", ms->client, move.frames, maxframes);
-
-		if (ms->moveflags & MFL_WALK) {
-			speed = 200;
-		} else {
-			speed = 400 - (200 - (2 * dist));
-		}
-
-		jumpdist = 0.01f;
-	} else {
-		if (ms->moveflags & MFL_WALK) {
-			speed = 200 + (200 - (2 * dist));
-		} else {
-			speed = 400;
-		}
-
-		jumpdist = 0.25f;
-	}
-	// get the current speed
-	currentspeed = DotProduct(ms->velocity, hordir);
-	// if pretty close to the barrier
-	if (reachhordist < (sv_maxbarrier->value + currentspeed * 1.1f) * jumpdist) { // Tobias NOTE: tweak this (replaced thinktime dependency)
-		EA_Jump(ms->client);
-	}
-	// check if blocked
-	BotCheckBlocked(ms, hordir, qtrue, &result);
-	// elementary action move in direction
-	EA_Move(ms->client, hordir, speed);
-	// save the movement direction
-	VectorCopy(hordir, result.movedir);
 
 	return result;
 }
@@ -2283,7 +2215,11 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 #endif // DEBUG
 	bot_moveresult_t_cleared(result);
 
-	AAS_JumpReachRunStart(reach, runstart);
+	if (ms->moveflags & MFL_SCOUT) {
+		AAS_ScoutJumpReachRunStart(reach, runstart);
+	} else {
+		AAS_JumpReachRunStart(reach, runstart);
+	}
 /* // Tobias NOTE: I'm pretty sure there are maps where this piece of code would make sense, anyways, this code is NOT correct and it even causes bots to NOT jump although they should (e.g.: q3dm6) (FIXME?)
 	hordir[0] = runstart[0] - reach->start[0];
 	hordir[1] = runstart[1] - reach->start[1];
@@ -2436,85 +2372,6 @@ bot_moveresult_t BotFinishTravel_Jump(bot_movestate_t *ms, aas_reachability_t *r
 	speed = 800;
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
-	// save the movement direction
-	VectorCopy(hordir, result.movedir);
-
-	return result;
-}
-
-/*
-=======================================================================================================================================
-BotTravel_ScoutJump
-=======================================================================================================================================
-*/
-bot_moveresult_t BotTravel_ScoutJump(bot_movestate_t *ms, aas_reachability_t *reach) {
-	vec3_t hordir, dir1, dir2, dir3, runstart;
-	float dist1, dist2, dist3, speed;
-	bot_moveresult_t_cleared(result);
-
-	AAS_ScoutJumpReachRunStart(reach, runstart);
-
-	VectorSubtract(ms->origin, reach->start, dir1);
-
-	dir1[2] = 0;
-	dist1 = VectorNormalize(dir1);
-
-	VectorSubtract(ms->origin, runstart, dir2);
-
-	dir2[2] = 0;
-	dist2 = VectorNormalize(dir2);
-
-	VectorSubtract(runstart, reach->start, dir3);
-
-	dir3[2] = 0;
-	dist3 = VectorNormalize(dir3);
-	// if just before the reachability start
-	if (dist1 < dist3 + 10 || dist1 + 10 >= dist2 + dist3 || DotProduct(dir1, dir2) < -0.8 || dist2 < 5) { // Tobias NOTE: why did I do: dist3 + 10? Still needed because otherwise we have a -dist2?
-		// move straight to the reachability end
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		hordir[2] = 0;
-
-		VectorNormalize(hordir);
-		// elementary action jump
-		if (dist1 < 22) { // 20 (for Railgun)
-			EA_Jump(ms->client);
-		} else if (dist1 < 32) {
-			EA_DelayedJump(ms->client);
-		}
-
-		if (ms->moveflags & MFL_WALK && dist2 > dist3) { // Tobias NOTE: reducing speed, really??
-			speed = 200;
-		} else {
-			speed = 600;
-		}
-		// check if blocked
-		BotCheckBlocked(ms, hordir, qtrue, &result);
-		// elementary action move in direction
-		EA_Move(ms->client, hordir, speed);
-
-		ms->jumpreach = ms->lastreachnum;
-	} else {
-		hordir[0] = runstart[0] - ms->origin[0];
-		hordir[1] = runstart[1] - ms->origin[1];
-		hordir[2] = 0;
-
-		VectorNormalize(hordir);
-
-		if (ms->moveflags & MFL_WALK && dist2 > dist3) {
-			speed = 200;
-		} else {
-			if (dist2 > 100) {
-				dist2 = 100;
-			}
-
-			speed = 400 - (300 - 3 * dist2);
-		}
-		// check if blocked
-		BotCheckBlocked(ms, hordir, qtrue, &result);
-		// elementary action move in direction
-		EA_Move(ms->client, hordir, speed);
-	}
 	// save the movement direction
 	VectorCopy(hordir, result.movedir);
 
@@ -3795,11 +3652,11 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_WATERJUMP:
 					*result = BotTravel_WaterJump(ms, &reach);
 					break;
-				case TRAVEL_SCOUTJUMP:
-					*result = BotTravel_ScoutJump(ms, &reach);
+				case TRAVEL_SCOUTJUMP: // Tobias NOTE: separate 'BotTravel_ScoutJump' needed?
+					*result = BotTravel_Jump(ms, &reach);
 					break;
-				case TRAVEL_SCOUTBARRIER:
-					*result = BotTravel_ScoutBarrierJump(ms, &reach);
+				case TRAVEL_SCOUTBARRIER: // Tobias NOTE: separate 'BotTravel_ScoutBarrierJump' needed?
+					*result = BotTravel_BarrierJump(ms, &reach);
 					break;
 				case TRAVEL_ROCKETJUMP:
 					*result = BotTravel_RocketJump(ms, &reach);

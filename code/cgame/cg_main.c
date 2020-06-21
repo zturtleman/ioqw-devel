@@ -124,11 +124,11 @@ vmCvar_t cg_crosshairHealth;
 vmCvar_t cg_draw2D;
 vmCvar_t cg_drawStatus;
 vmCvar_t cg_animSpeed;
-#ifdef DEBUG // Tobias DEBUG
+// Tobias DEBUG
 vmCvar_t cg_drawDebug;
 vmCvar_t cg_drawStatusDebug;
 vmCvar_t cg_drawObstacleDebug;
-#endif // Tobias END
+// Tobias END
 vmCvar_t cg_debugAnim;
 vmCvar_t cg_debugPosition;
 vmCvar_t cg_debugEvents;
@@ -271,11 +271,11 @@ static cvarTable_t cvarTable[] = {
 	{&cg_bobyaw, "cg_bobyaw", "0.0015", CVAR_ARCHIVE},
 	{&cg_swingSpeed, "cg_swingSpeed", "0.3", CVAR_CHEAT},
 	{&cg_animSpeed, "cg_animspeed", "1", CVAR_CHEAT},
-#ifdef DEBUG // Tobias DEBUG
+// Tobias DEBUG
 	{&cg_drawDebug, "cg_drawDebug", "0", CVAR_ARCHIVE},
 	{&cg_drawStatusDebug, "cg_drawStatusDebug", "0", CVAR_ARCHIVE},
 	{&cg_drawObstacleDebug, "cg_drawObstacleDebug", "0", CVAR_ARCHIVE},
-#endif // Tobias END
+// Tobias END
 	{&cg_debugAnim, "cg_debuganim", "0", CVAR_CHEAT},
 	{&cg_debugPosition, "cg_debugposition", "0", CVAR_CHEAT},
 	{&cg_debugEvents, "cg_debugevents", "0", CVAR_CHEAT},

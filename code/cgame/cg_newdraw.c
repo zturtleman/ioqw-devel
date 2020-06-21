@@ -460,23 +460,23 @@ qhandle_t CG_StatusHandle(int task) {
 		case TEAMTASK_PATROL:
 			h = cgs.media.patrolShader;
 			break;
+// Tobias END
 		default:
-#ifdef DEBUG // Tobias DEBUG
+// Tobias DEBUG
 			if (cg_drawDebug.integer && cg_drawStatusDebug.integer) {
 				h = cgs.media.roamShader;
 			} else
-#endif // Tobias END
+// Tobias END
 			{
 				h = cgs.media.patrolShader;
 			}
 
 			break;
-// Tobias END
 	}
 
 	return h;
 }
-#ifdef OBSTACLEDEBUG // Tobias DEBUG
+#ifdef TOBIAS_OBSTACLEDEBUG // Tobias DEBUG
 /*
 =======================================================================================================================================
 CG_ObstacleHandle
@@ -486,16 +486,16 @@ qhandle_t CG_ObstacleHandle(int task) {
 	qhandle_t h;
 
 	switch (task) {
-		case TEAMTASK_OFFENSE:
+		case TEAMTASK_OFFENSE: // BARRIER_JUMP (can jump over blocking barrier)
 			h = cgs.media.defendShader;
 			break;
-		case TEAMTASK_PATROL:
+		case TEAMTASK_PATROL: // BARRIER_CROUCH (can crouch through blocking barrier)
 			h = cgs.media.patrolShader;
 			break;
-		case TEAMTASK_FOLLOW:
+		case TEAMTASK_FOLLOW: // BARRIER_WALK (must walk around the blocking barrier)
 			h = cgs.media.followShader;
 			break;
-		default:
+		default: // NOT BLOCKED - no barrier at all
 			h = cgs.media.assaultShader;
 			break;
 	}
