@@ -1322,24 +1322,24 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 		}
 */
 // Tobias END
-		// get the presence type for the movement
-		if ((type & MOVE_CROUCH) && !(type & MOVE_JUMP)) {
-			presencetype = PRESENCE_CROUCH;
-		} else {
-			presencetype = PRESENCE_NORMAL;
-		}
 		// get command movement
 		VectorScale(hordir, speed, cmdmove);
 
 		if (type & MOVE_JUMP) {
 			//botimport.Print(PRT_MESSAGE, "trying jump\n");
+			presencetype = PRESENCE_NORMAL;
 			cmdmove[2] = 400;
 			maxframes = PREDICTIONTIME_JUMP / 0.1;
 			cmdframes = 1;
 			stopevent = SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP;
 		} else {
+			// get the presence type for the movement
 			if (type & MOVE_CROUCH) {
+				presencetype = PRESENCE_CROUCH;
 				cmdmove[2] = -400;
+			} else {
+				presencetype = PRESENCE_NORMAL;
+				cmdmove[2] = 0;
 			}
 
 			maxframes = 2;
@@ -1401,7 +1401,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			tmpdir[1] = move.endpos[1] - ms->origin[1];
 			tmpdir[2] = 0;
 			// the bot is blocked by something
-			if (VectorLength(tmpdir) < speed * ms->thinktime * ms->thinktime * 0.005) { // Tobias CHECK: should we remove this completely? We randomize this a bit more for now to get rid of the 'dance-with-blocker' problem...
+			if (VectorLength(tmpdir) < speed * ms->thinktime * ms->thinktime * 0.5) { // Tobias CHECK: should we remove this completely? We randomize this a bit more for now to get rid of the 'dance-with-blocker' problem...
 				return qfalse;
 			}
 		}
