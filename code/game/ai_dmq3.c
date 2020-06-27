@@ -7890,9 +7890,8 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 BotEntityAvoidanceMove
 =======================================================================================================================================
 */
-void BotEntityAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
+void BotEntityAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int movetype) {
 	vec3_t hordir, angles;
-	int movetype;
 
 	// just some basic dynamic obstacle avoidance code
 	hordir[0] = moveresult->movedir[0];
@@ -7902,23 +7901,6 @@ void BotEntityAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	if (VectorNormalize(hordir) < 0.1) {
 		VectorSet(angles, 0, 360 * random(), 0);
 		AngleVectorsForward(angles, hordir);
-	}
-
-	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
-		movetype = MOVE_JUMP;
-#ifdef TOBIAS_OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Jump\n");
-#endif
-	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
-		movetype = MOVE_CROUCH;
-#ifdef TOBIAS_OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Crouch\n");
-#endif
-	} else {
-		movetype = MOVE_WALK;
-#ifdef TOBIAS_OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Walk\n");
-#endif
 	}
 
 	trap_BotMoveInDirection(bs->ms, hordir, 400, movetype);
@@ -8017,6 +7999,23 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		return;
 	}
 
+	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
+		movetype = MOVE_JUMP;
+#ifdef TOBIAS_OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Jump\n");
+#endif
+	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
+		movetype = MOVE_CROUCH;
+#ifdef TOBIAS_OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Crouch\n");
+#endif
+	} else {
+		movetype = MOVE_WALK;
+#ifdef TOBIAS_OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Walk\n");
+#endif
+	}
+
 	ent = &g_entities[moveresult->blockentity];
 	// if blocked by a bsp model
 	if (!ent->client) {
@@ -8059,7 +8058,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 					// enable any routing areas that were disabled
 					BotEnableActivateGoalAreas(&activategoal, qtrue);
 					// try to crouch through or jump over obstacles
-					BotEntityAvoidanceMove(bs, moveresult); // Tobias NOTE: why has this to be done here, inside (bspent/activatedonefunc)?
+					BotEntityAvoidanceMove(bs, moveresult, movetype); // Tobias NOTE: why has this to be done here, inside (bspent/activatedonefunc)?
 					return;
 				}
 			}
@@ -8127,7 +8126,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		}
 	}
 */
-	movetype = MOVE_WALK;
 	// get the (right) sideward vector
 	CrossProduct(hordir, up, sideward);
 	// get the direction the blocking obstacle is moving
