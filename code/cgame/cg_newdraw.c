@@ -476,7 +476,7 @@ qhandle_t CG_StatusHandle(int task) {
 
 	return h;
 }
-#ifdef TOBIAS_OBSTACLEDEBUG // Tobias DEBUG
+// Tobias DEBUG
 /*
 =======================================================================================================================================
 CG_ObstacleHandle
@@ -502,7 +502,7 @@ qhandle_t CG_ObstacleHandle(int task) {
 
 	return h;
 }
-#endif // Tobias END
+// Tobias END
 /*
 =======================================================================================================================================
 CG_DrawSelectedPlayerStatus

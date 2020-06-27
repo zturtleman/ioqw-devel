@@ -7962,10 +7962,10 @@ Before the bot ends in this part of the AI it should predict which doors to open
 =======================================================================================================================================
 */
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
-#ifdef TOBIAS_OBSTACLEDEBUG
+// Tobias DEBUG
 	char netname[MAX_NETNAME];
 	int teamtask;
-#endif
+// Tobias END
 	int movetype, bspent, speed;
 	vec3_t dir1, dir2, mins, maxs, end, hordir, sideward, angles, up = {0, 0, 1};
 	gentity_t *ent;
@@ -7976,12 +7976,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
-#ifdef TOBIAS_OBSTACLEDEBUG
+// Tobias DEBUG
 		BotSetUserInfo(bs, "teamtask", va("%d", TEAMTASK_NONE));
-#endif
+// Tobias END
 		return;
 	}
-#ifdef TOBIAS_OBSTACLEDEBUG
+// Tobias DEBUG
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		teamtask = TEAMTASK_OFFENSE;
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
@@ -7995,7 +7995,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
 
 	ClientName(bs->client, netname, sizeof(netname));
-#endif
+// Tobias END
 	if (!BotWantsToWalk(bs)) {
 		speed = 400;
 	} else {

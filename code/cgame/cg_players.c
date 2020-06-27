@@ -2245,9 +2245,7 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 					return;
 				}
 			}
-		}
-#ifdef TOBIAS_OBSTACLEDEBUG
-		else if (cg_drawObstacleDebug.integer) {
+		} else if (cg_drawObstacleDebug.integer) {
 			if (ci) {
 				qhandle_t h;
 
@@ -2256,7 +2254,6 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 				return;
 			}
 		}
-#endif
 	}
 // Tobias END
 	if (cent->currentState.eFlags & EF_CONNECTION) {
