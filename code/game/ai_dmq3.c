@@ -7911,7 +7911,7 @@ void BotEntityAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int m
 BotRandomMove
 =======================================================================================================================================
 */
-void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed) {
+void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed, int movetype) {
 	vec3_t dir, angles;
 	int i;
 
@@ -7922,7 +7922,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed) {
 	for (i = 0; i < 8; i++) {
 		AngleVectorsForward(angles, dir);
 
-		if (trap_BotMoveInDirection(bs->ms, dir, speed, MOVE_WALK)) {
+		if (trap_BotMoveInDirection(bs->ms, dir, speed, movetype)) {
 			break;
 		}
 
@@ -7983,21 +7983,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	} else {
 		speed = 200;
 	}
-	// if stuck in a solid area
-	if (moveresult->type == RESULTTYPE_INSOLIDAREA) {
-		// move in a random direction in the hope to get out
-		BotRandomMove(bs, moveresult, speed);
-#ifdef OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: IN SOLID AREA!\n", netname);
-#endif
-		return;
-	}
-	// get info for the entity that is blocking the bot
-	BotEntityInfo(moveresult->blockentity, &entinfo);
-	// if the entity information is valid
-	if (!entinfo.valid) {
-		return;
-	}
 
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		movetype = MOVE_JUMP;
@@ -8014,6 +7999,21 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 #ifdef TOBIAS_OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Walk\n");
 #endif
+	}
+	// if stuck in a solid area
+	if (moveresult->type == RESULTTYPE_INSOLIDAREA) {
+		// move in a random direction in the hope to get out
+		BotRandomMove(bs, moveresult, speed, movetype);
+#ifdef OBSTACLEDEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: IN SOLID AREA!\n", netname);
+#endif
+		return;
+	}
+	// get info for the entity that is blocking the bot
+	BotEntityInfo(moveresult->blockentity, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
 	}
 
 	ent = &g_entities[moveresult->blockentity];
@@ -8058,7 +8058,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 					// enable any routing areas that were disabled
 					BotEnableActivateGoalAreas(&activategoal, qtrue);
 					// try to crouch through or jump over obstacles
-					BotEntityAvoidanceMove(bs, moveresult, movetype); // Tobias NOTE: why has this to be done here, inside (bspent/activatedonefunc)?
+					BotEntityAvoidanceMove(bs, moveresult, movetype);
 					return;
 				}
 			}
@@ -8152,7 +8152,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 			// move in the other direction
 			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 				// move in a random direction in the hope to get out
-				BotRandomMove(bs, moveresult, speed);
+				BotRandomMove(bs, moveresult, speed, movetype);
 #ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
 #endif
