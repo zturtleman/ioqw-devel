@@ -7944,10 +7944,10 @@ Before the bot ends in this part of the AI it should predict which doors to open
 =======================================================================================================================================
 */
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
-// Tobias DEBUG
+#ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 	int teamtask;
-// Tobias END
+#endif
 	int movetype, bspent, speed;
 	vec3_t dir1, dir2, mins, maxs, end, hordir, sideward, angles, up = {0, 0, 1};
 	gentity_t *ent;
@@ -7958,12 +7958,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
-// Tobias DEBUG
+#ifdef OBSTACLEDEBUG
 		BotSetUserInfo(bs, "teamtask", va("%d", TEAMTASK_NONE));
-// Tobias END
+#endif
 		return;
 	}
-// Tobias DEBUG
+#ifdef OBSTACLEDEBUG
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		teamtask = TEAMTASK_OFFENSE;
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
@@ -7975,9 +7975,8 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	}
 
 	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-
 	ClientName(bs->client, netname, sizeof(netname));
-// Tobias END
+#endif
 	if (!BotWantsToWalk(bs)) {
 		speed = 400;
 	} else {
@@ -7986,17 +7985,17 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
 		movetype = MOVE_JUMP;
-#ifdef TOBIAS_OBSTACLEDEBUG
+#ifdef OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Jump\n");
 #endif
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
 		movetype = MOVE_CROUCH;
-#ifdef TOBIAS_OBSTACLEDEBUG
+#ifdef OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Crouch\n");
 #endif
 	} else {
 		movetype = MOVE_WALK;
-#ifdef TOBIAS_OBSTACLEDEBUG
+#ifdef OBSTACLEDEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "BotEntityAvoidanceMove: Walk\n");
 #endif
 	}
