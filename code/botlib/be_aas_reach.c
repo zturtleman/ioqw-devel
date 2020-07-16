@@ -4624,9 +4624,9 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 				VectorScale(dir, speed, cmdmove);
 				VectorSet(velocity, 0, 0, zvel);
 				// movement prediction
-				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_HITGROUND|SE_GAP, area2num, visualize);
+				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
 				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava and don't fall in gaps
-				if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUND)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
+				if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
 					// create a rocket or bfg jump reachability from area1 to area2
 					lreach = AAS_AllocReachability();
 
