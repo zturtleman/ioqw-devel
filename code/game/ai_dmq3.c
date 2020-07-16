@@ -7915,6 +7915,74 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed, int
 
 /*
 =======================================================================================================================================
+BotObstacleAvoidanceMove
+=======================================================================================================================================
+*/
+void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed, int movetype) {
+#ifdef OBSTACLEDEBUG
+	char netname[MAX_NETNAME];
+	int teamtask;
+#endif
+	vec3_t dir2, hordir, sideward, angles, up = {0, 0, 1};
+	gentity_t *ent;
+#ifdef OBSTACLEDEBUG
+	teamtask = TEAMTASK_NONE;
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
+	// just some basic dynamic obstacle avoidance code
+	hordir[0] = moveresult->movedir[0];
+	hordir[1] = moveresult->movedir[1];
+	hordir[2] = 0;
+	// if no direction just take a random direction
+	if (VectorNormalize(hordir) < 0.1) {
+		VectorSet(angles, 0, 360 * random(), 0);
+		AngleVectorsForward(angles, hordir);
+	}
+	// try to crouch or jump over barrier
+	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
+		// get the (right) sideward vector
+		CrossProduct(hordir, up, sideward);
+		// get the direction the blocking obstacle is movin
+		ent = &g_entities[moveresult->blockentity];
+		dir2[2] = 0;
+
+		VectorCopy(ent->client->ps.velocity, dir2);
+		// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
+		if (DotProduct(dir2, sideward) > 50.0f) {
+			// flip the direction
+			VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+			teamtask = TEAMTASK_ESCORT;
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+		} else {
+			teamtask = TEAMTASK_FOLLOW;
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Keep default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+#endif
+		}
+		// move sidwards
+		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+			// flip the direction
+			VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
+#endif
+			// move in the other direction
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+				// move in a random direction in the hope to get out
+				BotRandomMove(bs, moveresult, speed, movetype);
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
+#endif
+			}
+		}
+	}
+#ifdef OBSTACLEDEBUG
+	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
+#endif
+}
+
+/*
+=======================================================================================================================================
 BotObstacleAvoidanceMoveFast
 =======================================================================================================================================
 */
@@ -7949,7 +8017,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	int teamtask;
 #endif
 	int movetype, bspent, speed;
-	vec3_t dir1, dir2, mins, maxs, end, hordir, sideward, angles, up = {0, 0, 1};
+	vec3_t dir1, dir2, mins, maxs, end;
 	gentity_t *ent;
 	aas_entityinfo_t entinfo;
 	bot_activategoal_t activategoal;
@@ -8084,87 +8152,8 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		}
 	}
 	// just some basic dynamic obstacle avoidance code
-	hordir[0] = moveresult->movedir[0];
-	hordir[1] = moveresult->movedir[1];
-	hordir[2] = 0;
-	// if no direction just take a random direction
-	if (VectorNormalize(hordir) < 0.1) {
-		VectorSet(angles, 0, 360 * random(), 0);
-		AngleVectorsForward(angles, hordir);
-	}
-/*
-	//if (moveresult->flags & MOVERESULT_ONTOPOF_OBSTACLE) movetype = MOVE_JUMP;
-	//else
-	movetype = MOVE_WALK;
-	// if there's an obstacle at the bot's feet and head then the bot might be able to crouch through
-	//VectorCopy(bs->origin, start);
-	//start[2] += 18;
-	//VectorMA(start, 5, hordir, end);
-	//VectorSet(mins, -16, -16, -24);
-	//VectorSet(maxs, 16, 16, 4);
+	BotObstacleAvoidanceMove(bs, moveresult, speed, movetype);
 
-	//bsptrace = AAS_Trace(start, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
-	//if (bsptrace.fraction >= 1) movetype = MOVE_CROUCH;
-	// get the sideward vector
-	CrossProduct(hordir, up, sideward);
-	// flip the direction
-	if (bs->flags & BFL_AVOIDRIGHT) {
-		VectorNegate(sideward, sideward);
-	}
-	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
-		// perform the movement
-		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
-			// flip the avoid direction flag
-			bs->flags ^= BFL_AVOIDRIGHT;
-			// flip the direction
-			//VectorNegate(sideward, sideward);
-			VectorMA(sideward, -1, hordir, sideward);
-			// move in the other direction
-			trap_BotMoveInDirection(bs->ms, sideward, speed, movetype);
-		}
-	}
-*/
-	// try to crouch or jump over barrier
-	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
-		// get the (right) sideward vector
-		CrossProduct(hordir, up, sideward);
-		// get the direction the blocking obstacle is moving
-		dir2[2] = 0;
-
-		VectorCopy(ent->client->ps.velocity, dir2);
-		// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
-		if (DotProduct(dir2, sideward) > 50.0f) {
-			// flip the direction
-			VectorNegate(sideward, sideward);
-#ifdef OBSTACLEDEBUG
-			teamtask = TEAMTASK_ESCORT;
-			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
-		} else {
-			teamtask = TEAMTASK_FOLLOW;
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Keep default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
-		}
-#endif
-		// move sidwards
-		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
-			// flip the direction
-			VectorNegate(sideward, sideward);
-#ifdef OBSTACLEDEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
-#endif
-			// move in the other direction
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
-				// move in a random direction in the hope to get out
-				BotRandomMove(bs, moveresult, speed, movetype);
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
-#endif
-			}
-		}
-	}
-#ifdef OBSTACLEDEBUG
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
 	if (activatedonefunc == NULL) {
 		if (bs->notblocked_time < FloatTime() - 0.4) {
 			// just reset goals and hope the bot will go into another direction?
