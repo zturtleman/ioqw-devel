@@ -495,6 +495,9 @@ qhandle_t CG_ObstacleHandle(int task) {
 		case TEAMTASK_FOLLOW: // BARRIER_WALK (must walk around the blocking barrier)
 			h = cgs.media.followShader;
 			break;
+		case TEAMTASK_ESCORT: // BARRIER_WALK (must walk around the blocking barrier, but flipped side)
+			h = cgs.media.escortShader;
+			break;
 		default: // NOT BLOCKED - no barrier at all
 			h = cgs.media.assaultShader;
 			break;

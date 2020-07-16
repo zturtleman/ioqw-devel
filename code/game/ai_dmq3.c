@@ -8125,22 +8125,26 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		}
 	}
 */
-	// get the (right) sideward vector
-	CrossProduct(hordir, up, sideward);
-	// get the direction the blocking obstacle is moving
-	dir2[2] = 0;
-
-	VectorCopy(ent->client->ps.velocity, dir2);
-	// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
-	if (DotProduct(dir2, sideward) > 50.0f) {
-		// flip the direction
-		VectorNegate(sideward, sideward);
-#ifdef OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
-#endif
-	}
 	// try to crouch or jump over barrier
 	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
+		// get the (right) sideward vector
+		CrossProduct(hordir, up, sideward);
+		// get the direction the blocking obstacle is moving
+		dir2[2] = 0;
+
+		VectorCopy(ent->client->ps.velocity, dir2);
+		// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
+		if (DotProduct(dir2, sideward) > 50.0f) {
+			// flip the direction
+			VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+			teamtask = TEAMTASK_ESCORT;
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+		} else {
+			teamtask = TEAMTASK_FOLLOW;
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Keep default side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+		}
+#endif
 		// move sidwards
 		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 			// flip the direction
@@ -8158,7 +8162,9 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 			}
 		}
 	}
-
+#ifdef OBSTACLEDEBUG
+	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
+#endif
 	if (activatedonefunc == NULL) {
 		if (bs->notblocked_time < FloatTime() - 0.4) {
 			// just reset goals and hope the bot will go into another direction?
