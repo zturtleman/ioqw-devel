@@ -7942,7 +7942,7 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
 		// get the (right) sideward vector
 		CrossProduct(hordir, up, sideward);
-		// get the direction the blocking obstacle is movin
+		// get the direction the blocking obstacle is moving
 		ent = &g_entities[moveresult->blockentity];
 		dir2[2] = 0;
 
