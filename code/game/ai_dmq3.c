@@ -7923,9 +7923,8 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 	char netname[MAX_NETNAME];
 	int teamtask;
 #endif
-	vec3_t dir2, mins, maxs, start, end, hordir, sideward, angles, up = {0, 0, 1};
+	vec3_t dir2, hordir, sideward, angles, up = {0, 0, 1};
 	gentity_t *ent;
-	bsp_trace_t trace;
 #ifdef OBSTACLEDEBUG
 	teamtask = TEAMTASK_NONE;
 
@@ -7965,13 +7964,8 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 			}
 		// if the blocking obstacle is not moving at all
 		} else {
-			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
-			VectorMA(bs->origin, 32, sideward, start);
-			VectorMA(ent->client->ps.origin, 32, sideward, end);
-
-			BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if something is hit
-			if (trace.startsolid || trace.fraction < 1.0f) {
+			if (moveresult->flags & MOVERESULT_BARRIER_WALK_LEFT) {
 				// flip the direction
 				VectorNegate(sideward, sideward);
 #ifdef OBSTACLEDEBUG
