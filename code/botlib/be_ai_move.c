@@ -1446,7 +1446,7 @@ THINKABOUTME: Is it really worth to waste CPU power for this permanent check?
 =======================================================================================================================================
 */
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
-	vec3_t mins, maxs, end, up = {0, 0, 1};
+	vec3_t mins, maxs, start, sideward, end, up = {0, 0, 1};
 	bsp_trace_t trace;
 	float currentspeed;
 
@@ -1460,7 +1460,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		maxs[2] += sv_maxstep->value;
 	}
 	// get the current speed
-	currentspeed = DotProduct(ms->velocity, dir) + 24;
+	currentspeed = DotProduct(ms->velocity, dir) + 32;
 	// do a full trace to check for distant obstacles to avoid, depending on current speed
 	VectorMA(ms->origin, currentspeed * 1.4, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
@@ -1517,7 +1517,23 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
 #endif // DEBUG
 		} else {
-			result->flags |= MOVERESULT_BARRIER_WALK;
+			// get the (right) sideward vector
+			CrossProduct(dir, up, sideward);
+			VectorMA(ms->origin, 32, sideward, start);
+			trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			// if something is hit check the other side as well
+			if (trace.startsolid || trace.fraction < 1.0f) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+				VectorMA(ms->origin, 32, sideward, start);
+				trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+				// if this side is blocked too
+				if (trace.startsolid || trace.fraction < 1.0f) {
+					result->flags |= MOVERESULT_BARRIER_LOCKED;
+				} else {
+					result->flags |= MOVERESULT_BARRIER_WALK_LEFT;
+				}
+			}
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Can't jump or crouch to avoid barrier!\n", ms->client);
 #endif // DEBUG
