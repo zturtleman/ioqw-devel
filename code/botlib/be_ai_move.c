@@ -1446,7 +1446,7 @@ THINKABOUTME: Is it really worth to waste CPU power for this permanent check?
 =======================================================================================================================================
 */
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
-	vec3_t mins, maxs, start, sideward, end, up = {0, 0, 1};
+	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
 	float currentspeed;
 
@@ -1517,23 +1517,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
 #endif // DEBUG
 		} else {
-			// get the (right) sideward vector
-			CrossProduct(dir, up, sideward);
-			VectorMA(ms->origin, 32, sideward, start);
-			trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-			// if something is hit check the other side as well
-			if (trace.startsolid || trace.fraction < 1.0f) {
-				// flip the direction
-				VectorNegate(sideward, sideward);
-				VectorMA(ms->origin, 32, sideward, start);
-				trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
-				// if this side is blocked too
-				if (trace.startsolid || trace.fraction < 1.0f) {
-					result->flags |= MOVERESULT_BARRIER_LOCKED;
-				} else {
-					result->flags |= MOVERESULT_BARRIER_WALK_LEFT;
-				}
-			}
+			result->flags |= MOVERESULT_BARRIER_WALK;
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Can't jump or crouch to avoid barrier!\n", ms->client);
 #endif // DEBUG
