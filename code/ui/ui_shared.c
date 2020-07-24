@@ -4584,7 +4584,7 @@ void Item_ListBox_Paint(itemDef_t *item) {
 
 				x += listPtr->elementWidth;
 				listPtr->endPos++;
-				// fit++;
+				//fit++;
 			}
 		} else {
 
@@ -4643,7 +4643,7 @@ void Item_ListBox_Paint(itemDef_t *item) {
 				}
 
 				y += listPtr->elementHeight;
-				// fit++;
+				//fit++;
 			}
 		} else {
 			x = item->window.rect.x + 1;

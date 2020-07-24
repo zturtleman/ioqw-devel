@@ -975,7 +975,9 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 					//if (!(AAS_PointContents(start) & (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME))) lreach->traveltime += 500;
 					// link the reachability
 					lreach->next = areareachability[area1num];
+
 					areareachability[area1num] = lreach;
+					// we've got another swim reachability
 					reach_swim++;
 					return qtrue;
 				}
@@ -1640,6 +1642,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 							lreach->next = areareachability[area1num];
 
 							areareachability[area1num] = lreach;
+							// we've got another walk off ledge reachability
 							reach_walkoffledge++;
 							// NOTE: don't create a weapon (rl, bfg) jump reachability here because it interferes with other reachabilities
 							// like the ladder reachability
@@ -2545,8 +2548,10 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		areareachability[area1num] = lreach;
 
 		if ((traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMP) {
+			// we've got another jump reachability
 			reach_jump++;
 		} else {
+			// we've got another walk off ledge reachability
 			reach_walkoffledge++;
 		}
 	}
@@ -2989,7 +2994,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 			lreach->next = areareachability[area1num];
 
 			areareachability[area1num] = lreach;
-
+			// we've got another ladder reachability
 			reach_ladder++;
 			// create a new reachability link
 			lreach = AAS_AllocReachability();
@@ -3011,7 +3016,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 			lreach->next = areareachability[area2num];
 
 			areareachability[area2num] = lreach;
-
+			// we've got another ladder reachability
 			reach_ladder++;
 			return qtrue;
 		}
@@ -3041,7 +3046,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 			lreach->next = areareachability[area1num];
 
 			areareachability[area1num] = lreach;
-
+			// we've got another ladder reachability
 			reach_ladder++;
 			// create a new reachability link
 			lreach = AAS_AllocReachability();
@@ -3062,7 +3067,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 			lreach->next = areareachability[area2num];
 
 			areareachability[area2num] = lreach;
-
+			// we've got another walk off ledge reachability
 			reach_walkoffledge++;
 			return qtrue;
 		}
@@ -3139,7 +3144,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 					lreach->next = areareachability[area1num];
 
 					areareachability[area1num] = lreach;
-
+					// we've got another ladder reachability
 					reach_ladder++;
 					// create a new reachability link
 					lreach = AAS_AllocReachability();
@@ -3160,8 +3165,9 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 					lreach->traveltype = TRAVEL_JUMP;
 					lreach->traveltime = 10;
 					lreach->next = areareachability[area2num];
-					areareachability[area2num] = lreach;
 
+					areareachability[area2num] = lreach;
+					// we've got another jump reachability
 					reach_jump++;
 					return qtrue;
 #ifdef REACH_DEBUG
@@ -3225,7 +3231,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 					lreach->next = areareachability[area2num];
 
 					areareachability[area2num] = lreach;
-
+					// we've got another jump reachability
 					reach_jump++;
 
 					Log_Write("jump far to ladder reach between %d and %d\r\n", area2num, area1num);
@@ -3458,7 +3464,7 @@ void AAS_Reachability_Teleport(void) {
 			lreach->next = areareachability[area1num];
 
 			areareachability[area1num] = lreach;
-
+			// we've got another teleporter reachability
 			reach_teleport++;
 		}
 		// unlink the invalid entity
@@ -3725,6 +3731,7 @@ void AAS_Reachability_Elevator(void) {
 #ifdef REACH_DEBUG
 						Log_Write("elevator reach from %d to %d\r\n", area1num, area2num);
 #endif // REACH_DEBUG
+						// we've got another elevator reachability
 						reach_elevator++;
 					}
 				}
@@ -4104,7 +4111,7 @@ void AAS_Reachability_FuncBobbing(void) {
 					lreach->next = areareachability[startreach->areanum];
 
 					areareachability[startreach->areanum] = lreach;
-
+					// we've got another func_bobbing reachability
 					reach_funcbob++;
 				}
 			}
@@ -4340,7 +4347,7 @@ void AAS_Reachability_JumpPad(void) {
 					lreach->next = areareachability[link->areanum];
 
 					areareachability[link->areanum] = lreach;
-
+					// we've got another jumppad reachability
 					reach_jumppad++;
 				}
 			}
@@ -4453,7 +4460,7 @@ void AAS_Reachability_JumpPad(void) {
 									lreach->next = areareachability[link->areanum];
 
 									areareachability[link->areanum] = lreach;
-
+									// we've got another jumppad reachability
 									reach_jumppad++;
 								}
 							}
@@ -4606,7 +4613,7 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 		}
 		// NOTE: set to 2 to allow bfg jump reachabilities
 		for (n = 0; n < 1/*2*/; n++) {
-			// get the rocket jump z velocity
+			// get the weapon jump z velocity
 			if (n) {
 				zvel = AAS_BFGJumpZVelocity(areastart);
 			} else {
@@ -4652,7 +4659,7 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 					lreach->next = areareachability[area1num];
 
 					areareachability[area1num] = lreach;
-
+					// we've got another rocketjump reachability
 					reach_rocketjump++;
 					return qtrue;
 				}
