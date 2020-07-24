@@ -50,7 +50,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 bot_waypoint_t botai_waypoints[MAX_WAYPOINTS];
 bot_waypoint_t *botai_freewaypoints;
-// NOTE: not using a cvars which can be updated because the game should be reloaded anyway
+// NOTE: not using a cvar which can be updated because the game should be reloaded anyway
 int gametype; // game type
 
 vmCvar_t g_spSkill;
