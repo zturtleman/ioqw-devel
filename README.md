@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/KuehnhammerTobias/ioqw-devel/master/misc/quakewars.png" width="128">
 
-# Ioid3-qw 
+# Ioid3-qw
 
 **A second breath of life for Xreal, based on Zack Middleton's ioq3ztm engine**
 
@@ -49,6 +49,35 @@ Ioid3-qw is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L62
   * Dynamic lights have smoother edges.
   * Improved Bot AI.
 
+## Main features from ioquake3:
+
+  * SDL 2 backend.
+  * OpenAL sound API support (multiple speaker support and better sound quality).
+  * Full x86_64 support on Linux.
+  * VoIP support, both in-game and external support through Mumble.
+  * MinGW compilation support on Windows and cross compilation support on Linux.
+  * AVI video capture of demos.
+  * Much improved console autocompletion.
+  * Persistent console history.
+  * Colorized terminal output.
+  * Optional Ogg Vorbis support.
+  * Much improved QVM tools.
+  * Support for various esoteric operating systems.
+  * cl_guid support.
+  * HTTP/FTP download redirection (using cURL).
+  * Multiuser support on Windows systems.
+  * HDR Rendering, and support for HDR lightmaps.
+  * Tone mapping and auto-exposure.
+  * Cascaded shadow maps.
+  * Multisample anti-aliasing.
+  * Anisotropic texture filtering.
+  * Advanced materials support.
+  * Advanced shading and specular methods.
+  * Screen-space ambient occlusion.
+  * Rendering 'Sunrays'.
+  * DDS and PNG texture support.
+  * Many, many bug fixes.
+
 ## Goals:
 
   * Ragdoll physics.
@@ -79,6 +108,7 @@ Ioid3-qw is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L62
 * Spearmint - Zack Middleton
 * RTCW SP - Gray Matter Interactive
 * RTCW MP - Nerve Software
+* Enemy Territory Fortress - Ensiform
 * Wolfenstein: Enemy Territory - Splash Damage
 * Tremulous - Dark Legion Development
 * World of Padman - Padworld Entertainment
