@@ -8148,7 +8148,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 					// enable any routing areas that were disabled
 					BotEnableActivateGoalAreas(&activategoal, qtrue);
 					// try to crouch through or jump over obstacles
-					BotObstacleAvoidanceMoveFast(bs, moveresult, movetype);
+					BotObstacleAvoidanceMoveFast(bs, moveresult, movetype); // Tobias NOTE: why has this to be done here, inside (bspent/activatedonefunc)?
 					return;
 				}
 			}
