@@ -7923,7 +7923,7 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 	char netname[MAX_NETNAME];
 	int teamtask;
 #endif
-	vec3_t dir2, mins, maxs, start, end, hordir, sideward, angles, up = {0, 0, 1};
+	vec3_t dir2, mins, maxs, hordir, sideward, rightwards, leftwards, angles, up = {0, 0, 1};
 	gentity_t *ent;
 	bsp_trace_t trace;
 #ifdef OBSTACLEDEBUG
@@ -7963,8 +7963,29 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 			}
+			// move sidwards
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
+#endif
+				// move in the other direction
+				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+					// move in a random direction in the hope to get out
+					BotRandomMove(bs, moveresult, speed, movetype);
+#ifdef OBSTACLEDEBUG
+					teamtask = TEAMTASK_DEFENSE;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
+#endif
+				}
+			}
 		// if the blocking obstacle is not moving at all
 		} else {
+// Tobias NOTE: this version was working, but was inaccurate!
+/*
+			vec3_t start, end;
+
 			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 			VectorMA(bs->origin, 32, sideward, start);
 			VectorMA(ent->client->ps.origin, 32, sideward, end);
@@ -7982,22 +8003,122 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 			}
-		}
-		// move sidwards
-		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
-			// flip the direction
-			VectorNegate(sideward, sideward);
+*/
+// Tobias FIXME: enhance/complete this!
+			vec3_t blocked_dir, avoidAngles, avoidRight_dir, avoidLeft_dir, block_pos;
+			float blocked_dist, rightSucc, leftSucc, yaw, avoidRadius, arcAngle;
+			aas_entityinfo_t entinfo;
+
+			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+
+			mins[2] += STEPSIZE;
+			// get the blocked direction
+			yaw = VectorToYaw(blocked_dir);
+			// get the avoid radius
+			avoidRadius = sqrt((ent->r.maxs[0] * ent->r.maxs[0]) + (ent->r.maxs[1] * ent->r.maxs[1])) + sqrt((maxs[0] * maxs[0]) + (maxs[1] * maxs[1]));
+			// get info for the entity that is blocking the bot
+			BotEntityInfo(moveresult->blockentity, &entinfo);
+			// see if we're inside our avoidance radius
+			VectorSubtract(entinfo.origin, bs->origin, blocked_dir);
+
+			blocked_dist = VectorNormalize(blocked_dir);
+			arcAngle = (blocked_dist <= avoidRadius) ? 135 : ((avoidRadius / blocked_dist) * 90);
+
+			VectorClear(avoidAngles);
+			// test right
+			avoidAngles[YAW] = AngleNormalize360(yaw + arcAngle);
+
+			AngleVectorsForward(avoidAngles, avoidRight_dir);
+			VectorMA(bs->origin, blocked_dist, avoidRight_dir, block_pos);
+			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+
+			if (!trace.allsolid && !trace.startsolid) {
+				if (trace.fraction >= 1.0f) {
+					// all clear, go for it (favor the right if both are equal)
+					VectorCopy(avoidRight_dir, rightwards);
+					//self->NPC->lastSideStepSide = 1;
+					//self->NPC->sideStepHoldTime = level.time + 2000;
+					//return qtrue;
 #ifdef OBSTACLEDEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
+					teamtask = TEAMTASK_FOLLOW;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
-			// move in the other direction
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
-				// move in a random direction in the hope to get out
-				BotRandomMove(bs, moveresult, speed, movetype);
+				}
+
+				rightSucc = trace.fraction;
+			} else {
+				rightSucc = 0.0f;
+			}
+			// now test left
+			arcAngle *= -1;
+
+			avoidAngles[YAW] = AngleNormalize360(yaw + arcAngle);
+
+			AngleVectorsForward(avoidAngles, avoidLeft_dir);
+			VectorMA(bs->origin, blocked_dist, avoidLeft_dir, block_pos);
+			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+
+			if (!trace.allsolid && !trace.startsolid) {
+				if (trace.fraction >= 1.0f) {
+					// all clear, go for it (right side would have already succeeded if as good as this)
+					VectorCopy(avoidLeft_dir, leftwards);
+					//self->NPC->lastSideStepSide = -1;
+					//self->NPC->sideStepHoldTime = level.time + 2000;
+					//return qtrue;
 #ifdef OBSTACLEDEBUG
-				teamtask = TEAMTASK_DEFENSE;
-				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
+					teamtask = TEAMTASK_RETRIEVE;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Forward movement failed. Flipped right side because found solid.\n", netname);
 #endif
+				}
+
+				leftSucc = trace.fraction;
+			} else {
+				leftSucc = 0.0f;
+			}
+			// both sides failed
+			if (leftSucc == 0.0f && rightSucc == 0.0f) {
+				//return qfalse;
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: **** BOTH SIDES FAILED! ****.\n", netname);
+#endif
+			}
+			// if the traces hit something, but got a relatively good distance
+			if (rightSucc * blocked_dist >= avoidRadius || leftSucc * blocked_dist >= avoidRadius) {
+				// favor the right, all things being equal
+				if (rightSucc >= leftSucc) {
+					VectorCopy(avoidRight_dir, rightwards);
+					//self->NPC->lastSideStepSide = 1;
+					//self->NPC->sideStepHoldTime = level.time + 2000;
+#ifdef OBSTACLEDEBUG
+					teamtask = TEAMTASK_FOLLOW;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
+#endif
+				} else {
+					VectorCopy(avoidLeft_dir, leftwards);
+					//self->NPC->lastSideStepSide = -1;
+					//self->NPC->sideStepHoldTime = level.time + 2000;
+#ifdef OBSTACLEDEBUG
+					teamtask = TEAMTASK_RETRIEVE;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Forward movement failed. Flipped right side because found solid.\n", netname);
+#endif
+				}
+
+				//return qtrue;
+			}
+			// move sidwards
+			if (!trap_BotMoveInDirection(bs->ms, rightwards, speed, movetype)) {
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, try left direction.\n", netname);
+#endif
+				// move in the other direction
+				if (!trap_BotMoveInDirection(bs->ms, leftwards, speed, movetype)) {
+					// move in a random direction in the hope to get out
+					BotRandomMove(bs, moveresult, speed, movetype);
+#ifdef OBSTACLEDEBUG
+					teamtask = TEAMTASK_DEFENSE;
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
+#endif
+				}
 			}
 		}
 	}
