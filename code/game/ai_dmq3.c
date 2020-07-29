@@ -8473,13 +8473,18 @@ BotCheckBlockedTeammates
 */
 static void BotCheckBlockedTeammates(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
-	int movetype, i, mindist;
+	int movetype, i, squaredist, mindist;
+	qboolean isSlowTeammate;
 	aas_entityinfo_t entinfo;
 	gentity_t *ent;
 	float speed, obtrusiveness;
-	vec3_t mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
+	vec3_t dir, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
 	bsp_trace_t trace;
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
 	if (gametype < GT_TEAM) {
 		return;
 	}
@@ -8504,13 +8509,13 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 		if (i == bs->client) {
 			continue;
 		}
-		// ignore enemies
+		// if on the same team
 		if (!BotSameTeam(bs, i)) {
 			continue;
 		}
 		// get the entity information
 		BotEntityInfo(i, &entinfo);
-		// if this player is active
+		// if the entity information is valid
 		if (!entinfo.valid) {
 			continue;
 		}
@@ -8522,13 +8527,38 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
-
-		ent = &g_entities[i];
-/*
-		if (VectorLengthSquared(ent->client->ps.velocity) <= 0) {
+		// if the team mate is not visible
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Team mate is not in FOV, ignoring!\n", netname);
+#endif
 			continue;
 		}
-*/
+		// if the team mate is far away enough
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+
+		squaredist = VectorLengthSquared(dir);
+		ent = &g_entities[i];
+		// if the team mate doesn't walk slowly
+		if (VectorLengthSquared(ent->client->ps.velocity) > 40000) {
+			isSlowTeammate = qfalse;
+
+			if (squaredist > 65536) {
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Team mate is running (%i): speed = %f, dist = %i, ignoring!\n", netname, isSlowTeammate, VectorLengthSquared(ent->client->ps.velocity), squaredist);
+#endif
+				continue;
+			}
+		} else {
+			isSlowTeammate = qtrue;
+
+			if (squaredist > 16384) {
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Team mate is walking or not moving (%i): speed = %f, dist = %i, ignoring!\n", netname, isSlowTeammate, VectorLengthSquared(ent->client->ps.velocity), squaredist);
+#endif
+				continue;
+			}
+		}
 		// set some movement parameters
 		movetype = MOVE_WALK;
 		// set minimum distance
@@ -8550,7 +8580,7 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 		// set default speed
 		speed = 200;
 
-		if (EntityCarriesFlag(&entinfo) || EntityCarriesCubes(&entinfo) || (entinfo.flags & EF_TICKING)) {
+		if (EntityCarriesFlag(&entinfo) || EntityCarriesCubes(&entinfo) || (entinfo.flags & EF_TICKING) || !isSlowTeammate) {
 			speed = 400;
 		}
 		// calculate the direction towards the teammate
