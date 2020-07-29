@@ -207,6 +207,7 @@ typedef struct bot_state_s {
 	float firethrottlewait_time;			// amount of time to wait
 	float firethrottleshoot_time;			// amount of time to shoot
 	float notblocked_time;					// last time the bot was not blocked
+	vec3_t notblocked_dir;
 	float blockedbyavoidspot_time;			// time blocked by an avoid spot
 	float predictobstacles_time;			// last time the bot predicted obstacles
 	int predictobstacles_goalareanum;		// last goal areanum the bot predicted obstacles for
