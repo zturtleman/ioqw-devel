@@ -8529,61 +8529,47 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 		if (EntityIsDead(&entinfo)) {
 			continue;
 		}
-		// if the team mate is not visible
+		// if the teammate is not visible
 		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
-#ifdef OBSTACLEDEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Team mate is not in FOV, ignoring!\n", netname);
-#endif
 			continue;
 		}
-		// calculate the distance towards the team mate
+		// calculate the distance towards the teammate
 		VectorSubtract(bs->origin, entinfo.origin, dir);
 		VectorToAngles(dir, viewangles);
 
 		squaredist = VectorLengthSquared(dir);
 		ent = &g_entities[i];
-		// if the team mate doesn't walk slowly or if the teammate carries a flag or skulls or if the teammate is dangerous
-		if (VectorLengthSquared(ent->client->ps.velocity) > 40000 || EntityCarriesFlag(&entinfo) || EntityCarriesCubes(&entinfo) || (entinfo.flags & EF_TICKING)) { // TODO: 1# we need BUTON_RUN (ACTION) instead of ent->client->ps.velocity
-			// if the team mate is far away enough
-			if (squaredist > 65536) {
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Team mate is running: speed = %i, dist = %i, ignoring!\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist);
-#endif
-				continue;
-			}
-
-			mindist = 128 + (128 * obtrusiveness);
-			// use max speed
-			speed = 400;
-		} else {
-			// if the team mate is far away enough
+		// if the teammate walks slowly and doesn't carrying a flag or skulls and if the teammate isn't dangerous
+		if (VectorLengthSquared(ent->client->ps.velocity) < 40000 && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo) && (!(entinfo.flags & EF_TICKING))) { // TODO: 1# we need BUTON_RUN (ACTION) instead of ent->client->ps.velocity
+			// if the teammate is far away enough
 			if (squaredist > 16384) {
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Team mate is walking or not moving: speed = %i, dist = %i, ignoring!\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist);
-#endif
 				continue;
 			}
 			// human players and facing teammates need more space
 			if (!(ent->r.svFlags & SVF_BOT) || (BotEntityVisible(&bs->cur_ps, 60, i) && InFieldOfVision(entinfo.angles, 60, viewangles))) {
 				mindist = 42;
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Facing a team mate, extend the mindist!\n", netname);
-#endif
 			} else {
 				// set minimum distance
 				mindist = 8;
 			}
 			// set default speed
 			speed = 200;
+		} else {
+			// if the teammate is far away enough
+			if (squaredist > 65536) {
+				continue;
+			}
+
+			mindist = 256 - (128 * obtrusiveness);
+			// use max speed
+			speed = 400;
 		}
-		// set some movement parameters
-		movetype = MOVE_WALK;
 		// safety check, don't force to reach the goal
 		if (mindist >= bs->formation_dist) {
 			bs->formation_dist = mindist;
 		}
 #ifdef OBSTACLEDEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: team mate speed = %f, dist = %i, required speed = %i, required mindist = %i\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist, speed, mindist);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: teammate speed = %f, dist = %i, required speed = %i, required mindist = %i\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist, speed, mindist);
 #endif
 		// calculate the direction towards the teammate
 		v2[2] = 0;
@@ -8598,6 +8584,7 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 		if (trace.entityNum == i && (trace.startsolid || trace.fraction < 1.0f)) {
 			// stop crouching to gain speed
 			bs->crouch_time = FloatTime() - 1;
+			movetype = MOVE_WALK;
 			// look into the direction of the blocked teammate
 			VectorToAngles(v2, bs->ideal_viewangles);
 			// get the sideward vector
