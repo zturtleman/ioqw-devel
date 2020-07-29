@@ -360,12 +360,12 @@ We could also create a separate AI node for every long term goal type. However, 
 =======================================================================================================================================
 */
 int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
-	vec3_t target, dir, dir2, start, mins = {-4, -4, -4}, maxs = {4, 4, 4};
+	vec3_t target, dir, start, mins = {-4, -4, -4}, maxs = {4, 4, 4};
 	char netname[MAX_NETNAME];
 	char buf[MAX_MESSAGE_SIZE];
 	int areanum;
 	float croucher;
-	aas_entityinfo_t entinfo, botinfo;
+	aas_entityinfo_t entinfo;
 	bot_waypoint_t *wp;
 	bsp_trace_t bsptrace;
 
@@ -456,39 +456,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// update visible time
 			bs->teammatevisible_time = FloatTime();
+
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 
 			if (VectorLengthSquared(dir) < Square(bs->formation_dist)) {
-				// if the client being followed bumps into this bot then the bot should back up
-				BotEntityInfo(bs->entitynum, &botinfo);
-				// if the entity information is valid
-				if (!entinfo.valid) {
-					return qfalse;
-				}
-				// if the followed client is not standing ontop of the bot
-				if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2]) {
-					// if the bounding boxes touch each other
-					if (botinfo.origin[0] + botinfo.maxs[0] > entinfo.origin[0] + entinfo.mins[0] - 4 && botinfo.origin[0] + botinfo.mins[0] < entinfo.origin[0] + entinfo.maxs[0] + 4) {
-						if (botinfo.origin[1] + botinfo.maxs[1] > entinfo.origin[1] + entinfo.mins[1] - 4 && botinfo.origin[1] + botinfo.mins[1] < entinfo.origin[1] + entinfo.maxs[1] + 4) {
-							if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2] - 4 && botinfo.origin[2] + botinfo.mins[2] < entinfo.origin[2] + entinfo.maxs[2] + 4) {
-								// if the followed client looks in the direction of this bot
-								AngleVectorsForward(entinfo.angles, dir);
-
-								dir[2] = 0;
-
-								VectorNormalize(dir);
-								//VectorSubtract(entinfo.origin, entinfo.lastvisorigin, dir);
-								VectorSubtract(bs->origin, entinfo.origin, dir2);
-								VectorNormalize(dir2);
-
-								if (DotProduct(dir, dir2) > 0.7) {
-									// back up
-									trap_BotMoveInDirection(bs->ms, dir2, 400, MOVE_WALK);
-								}
-							}
-						}
-					}
-				}
 				// don't crouch when swimming
 				if (trap_AAS_Swimming(bs->origin)) {
 					bs->crouch_time = FloatTime() - 1;
