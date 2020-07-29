@@ -8472,7 +8472,6 @@ BotCheckBlockedTeammates
 
 
 TODO: 1# better check for desired speed instead of actual speed :\
-      2# talking teammates
 =======================================================================================================================================
 */
 static void BotCheckBlockedTeammates(bot_state_t *bs) {
@@ -8481,7 +8480,7 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 	gentity_t *ent;
 	float obtrusiveness;
-	vec3_t dir, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
+	vec3_t dir, viewangles, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
 	bsp_trace_t trace;
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
@@ -8537,13 +8536,15 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 #endif
 			continue;
 		}
-		// if the team mate is far away enough
-		VectorSubtract(entinfo.origin, bs->origin, dir);
+		// calculate the distance towards the team mate
+		VectorSubtract(bs->origin, entinfo.origin, dir);
+		VectorToAngles(dir, viewangles);
 
 		squaredist = VectorLengthSquared(dir);
 		ent = &g_entities[i];
 		// if the team mate doesn't walk slowly or if the teammate carries a flag or skulls or if the teammate is dangerous
 		if (VectorLengthSquared(ent->client->ps.velocity) > 40000 || EntityCarriesFlag(&entinfo) || EntityCarriesCubes(&entinfo) || (entinfo.flags & EF_TICKING)) { // TODO: 1# we need BUTON_RUN (ACTION) instead of ent->client->ps.velocity
+			// if the team mate is far away enough
 			if (squaredist > 65536) {
 #ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Team mate is running: speed = %i, dist = %i, ignoring!\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist);
@@ -8555,6 +8556,7 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 			// use max speed
 			speed = 400;
 		} else {
+			// if the team mate is far away enough
 			if (squaredist > 16384) {
 #ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Team mate is walking or not moving: speed = %i, dist = %i, ignoring!\n", netname, VectorLengthSquared(ent->client->ps.velocity), squaredist);
@@ -8562,8 +8564,11 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 				continue;
 			}
 			// human players and facing teammates need more space
-			if (!(ent->r.svFlags & SVF_BOT) || BotEntityVisible(&bs->cur_ps, 60, i)) { // TODO: 2# facing teammates need && InFieldOfVision
-				mindist = 32;
+			if (!(ent->r.svFlags & SVF_BOT) || (BotEntityVisible(&bs->cur_ps, 60, i) && InFieldOfVision(entinfo.angles, 60, viewangles))) {
+				mindist = 42;
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Facing a team mate, extend the mindist!\n", netname);
+#endif
 			} else {
 				// set minimum distance
 				mindist = 8;
