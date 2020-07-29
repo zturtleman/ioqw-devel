@@ -8490,6 +8490,10 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 	if (gametype < GT_TEAM) {
 		return;
 	}
+	// if the bot is moving
+	if (VectorLengthSquared(bs->cur_ps.velocity) != 0) {
+		return;
+	}
 
 	if (BotCTFCarryingFlag(bs)) {
 		return;
