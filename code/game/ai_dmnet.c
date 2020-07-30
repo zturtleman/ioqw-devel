@@ -344,6 +344,8 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			// reset the avoid goals and the avoid reach
 			trap_BotResetAvoidGoals(bs->gs);
 			trap_BotResetAvoidReach(bs->ms);
+			// check if the bot is blocking team mates
+			BotCheckBlockedTeammates(bs);
 		}
 		// get the goal at the top of the stack
 		return trap_BotGetTopGoal(bs->gs, goal);
@@ -403,6 +405,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 
 			if (VectorLengthSquared(dir) < Square(100)) {
 				trap_BotResetAvoidReach(bs->ms);
+				// check if the bot is blocking team mates
+				BotCheckBlockedTeammates(bs);
 				return qfalse;
 			}
 		} else {
@@ -523,6 +527,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				}
 
 				trap_BotResetAvoidReach(bs->ms);
+				// check if the bot is blocking team mates
+				BotCheckBlockedTeammates(bs);
 				return qfalse;
 			}
 		}
@@ -742,6 +748,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			// FIXME: move around a bit
 			trap_BotResetAvoidReach(bs->ms);
+			// check if the bot is blocking team mates
+			BotCheckBlockedTeammates(bs);
 			return qfalse;
 		}
 
@@ -1660,6 +1668,8 @@ int AINode_Wait(bot_state_t *bs) {
 	BotAIBlocked(bs, &moveresult, AIEnter_Wait);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
+	// check if the bot is blocking team mates
+	BotCheckBlockedTeammates(bs);
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);

@@ -4284,6 +4284,8 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	}
 	// if the bot is really stupid
 	if (attack_skill < 0.2) {
+		// check if the bot is blocking team mates
+		BotCheckBlockedTeammates(bs);
 		return moveresult;
 	}
 	// get the entity information
@@ -8474,7 +8476,7 @@ BotCheckBlockedTeammates
 TODO: 1# better check for desired speed instead of actual speed :\
 =======================================================================================================================================
 */
-static void BotCheckBlockedTeammates(bot_state_t *bs) {
+void BotCheckBlockedTeammates(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	int movetype, i, squaredist, mindist, speed;
 	aas_entityinfo_t entinfo;
@@ -8488,10 +8490,6 @@ static void BotCheckBlockedTeammates(bot_state_t *bs) {
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	if (gametype < GT_TEAM) {
-		return;
-	}
-	// if the bot is moving
-	if (VectorLengthSquared(bs->cur_ps.velocity) != 0) {
 		return;
 	}
 
@@ -9213,8 +9211,6 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		BotSetupForMovement(bs);
 		// check out the snapshot
 		BotCheckSnapshot(bs);
-		// check if the bot is blocking a teammate
-		BotCheckBlockedTeammates(bs);
 		// update some inventory values
 		BotUpdateInventory(bs);
 		// choose the best weapon to fight with
