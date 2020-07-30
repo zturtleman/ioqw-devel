@@ -141,6 +141,8 @@ void BotEnableActivateGoalAreas(bot_activategoal_t *activategoal, int enable);
 int BotPopFromActivateGoalStack(bot_state_t *bs);
 // clear the activate goal stack
 void BotClearActivateGoalStack(bot_state_t *bs);
+// check if the bot is blocking a teammate
+void BotCheckBlockedTeammates(bot_state_t *bs);
 // returns the team the bot is in
 int BotTeam(bot_state_t *bs);
 // returns the opposite team of the bot
