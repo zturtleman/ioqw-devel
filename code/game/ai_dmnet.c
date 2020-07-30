@@ -3136,7 +3136,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
-			BotAimAtEnemy(bs);
 // Tobias DEBUG
 			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 

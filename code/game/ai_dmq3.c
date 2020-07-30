@@ -8659,7 +8659,7 @@ void BotCheckForProxMines(bot_state_t *bs, entityState_t *state) {
 		return;
 	}
 	// if this prox mine is from someone on our own team
-	if (state->team == BotTeam(bs)) {
+	if (gametype > GT_TOURNAMENT && state->team == BotTeam(bs)) {
 		return;
 	}
 	// if the bot doesn't have a weapon to deactivate the mine
