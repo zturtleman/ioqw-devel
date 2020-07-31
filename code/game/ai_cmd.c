@@ -1953,6 +1953,8 @@ void BotMatch_CTF(bot_state_t *bs, bot_match_t *match) {
 			trap_BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 
 			bs->flagcarrier = ClientFromName(netname);
+			bs->flagstatuschanged = 1;
+			bs->lastflagcapture_time = FloatTime();
 		}
 	}
 }

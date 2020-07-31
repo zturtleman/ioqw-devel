@@ -8835,6 +8835,13 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 						bs->flagstatuschanged = qtrue;
 						break;
 				}
+			} else if (gametype == GT_OBELISK || gametype == GT_HARVESTER) {
+				switch (state->eventParm) {
+					case GTS_RED_CAPTURE:
+					case GTS_BLUE_CAPTURE:
+						bs->lastteamscore_time = FloatTime();
+						break;
+				}
 			}
 
 			break;
