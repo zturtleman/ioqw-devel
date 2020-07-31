@@ -264,6 +264,7 @@ typedef struct bot_state_s {
 	float becometeamleader_time;			// time the bot will become the team leader
 	float teamgiveorders_time;				// time to give team orders
 	float lastflagcapture_time;				// last time a flag was captured
+	float lastteamscore_time;				// last time either the red team or the blue team was scoring
 	int numteammates;						// number of team mates
 	int redflagstatus;						// 0 = at base, 1 = not at base
 	int blueflagstatus;						// 0 = at base, 1 = not at base
