@@ -99,6 +99,7 @@ vmCvar_t bot_nowalk;
 vmCvar_t bot_shownodechanges;
 vmCvar_t bot_teambluestrategy;
 vmCvar_t bot_teamredstrategy;
+vmCvar_t bot_teamblock;
 vmCvar_t bot_alt_aggressive;
 vmCvar_t bot_alt_attack;
 vmCvar_t bot_alt_pickup;
@@ -1675,6 +1676,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_teambluestrategy);
 	trap_Cvar_Update(&bot_teamredstrategy);
+	trap_Cvar_Update(&bot_teamblock);
 	trap_Cvar_Update(&bot_alt_aggressive);
 	trap_Cvar_Update(&bot_alt_attack);
 	trap_Cvar_Update(&bot_alt_pickup);
@@ -2036,6 +2038,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", 0);
 	trap_Cvar_Register(&bot_teambluestrategy, "bot_teambluestrategy", "0", 0);
 	trap_Cvar_Register(&bot_teamredstrategy, "bot_teamredstrategy", "0", 0);
+	trap_Cvar_Register(&bot_teamblock, "bot_teamblock", "1", 0);
 	trap_Cvar_Register(&bot_alt_aggressive, "bot_alt_aggressive", "1", 0);
 	trap_Cvar_Register(&bot_alt_attack, "bot_alt_attack", "1", 0);
 	trap_Cvar_Register(&bot_alt_pickup, "bot_alt_pickup", "1", 0);
