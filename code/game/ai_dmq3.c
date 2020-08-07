@@ -1814,11 +1814,11 @@ BotWantsToWalk
 =======================================================================================================================================
 */
 qboolean BotWantsToWalk(bot_state_t *bs) {
-//#ifdef DEBUG
+
 	if (bot_nowalk.integer) {
 		return qfalse;
 	}
-//#endif
+
 	if (bs->walker < 0.1f) {
 		return qfalse;
 	}
@@ -4348,7 +4348,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		}
 	}
 	// if the bot is using a close combat weapon or if the enemy is using a weapon with splash damage, go closer
-	if ((BotUsesCloseCombatWeapon(bs) && BotAggression(bs)) || ((entinfo.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_ROCKETLAUNCHER || entinfo.weapon == WP_BFG) && dist < 200 && selfpreservation < 0.5 && movetype != MOVE_CROUCH)) {
+	if ((BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) || ((entinfo.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_ROCKETLAUNCHER || entinfo.weapon == WP_BFG) && dist < 200 && selfpreservation < 0.5 && movetype != MOVE_CROUCH)) {
 		attack_dist = 0;
 		attack_range = 0;
 	// if the bot is using the napalmlauncher, or the enemy is using the napalmlauncher
@@ -4406,7 +4406,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		strafechange_time += crandom() * 0.2;
 	}
 	// close combat weapons
-	if (BotUsesCloseCombatWeapon(bs) && BotAggression(bs)) {
+	if (BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) {
 		bs->attackstrafe_time = 0;
 	}
 	// if the strafe direction should be changed
@@ -6742,7 +6742,7 @@ Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float points, reactiontime, viewType, firethrottle;
+	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
@@ -6969,22 +6969,11 @@ void BotCheckAttack(bot_state_t *bs) {
 #endif
 	}
 
-	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
-
-	if (viewType < 0.4) {
-		if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, bs->viewhistory.real_viewangles)) { // Tobias NOTE: bs->allowHitWorld check useful?
+	if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-			return;
-		}
-	} else {
-		if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
-#endif
-			return;
-		}
+		return;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
