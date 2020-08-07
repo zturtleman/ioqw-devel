@@ -2370,7 +2370,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 // Tobias DEBUG
 	float checkcvar;
-	float battleSense;
+//	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2522,13 +2522,11 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	BotAIBlocked(bs, &moveresult, NULL);
 	// aim at the enemy
 // Tobias DEBUG
-	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+//	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-	if (battleSense < 0.5) {
+//	if (battleSense < 0.5) {
 		BotAimAtEnemy(bs);
-	} else {
-		BotAimAtEnemy_Alt(bs);
-	}
+//	}
 // DEBUG
 	// attack the enemy if possible
 	BotCheckAttack(bs);
@@ -2576,7 +2574,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	int range;
 // Tobias DEBUG
 	float checkcvar;
-	float battleSense;
+//	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2719,13 +2717,11 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (bs->chase_time > FloatTime() - 2) {
 // Tobias DEBUG
-			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+			//battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-			if (battleSense < 0.5) {
+			//if (battleSense < 0.5) {
 				BotAimAtEnemy(bs);
-			} else {
-				BotAimAtEnemy_Alt(bs);
-			}
+			//}
 // DEBUG
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
@@ -2780,7 +2776,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	int areanum, range;
 // Tobias DEBUG
 	float checkcvar;
-	float battleSense;
+//	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2962,13 +2958,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
 // Tobias DEBUG
-			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+//			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-			if (battleSense < 0.5) {
+//			if (battleSense < 0.5) {
 				BotAimAtEnemy(bs);
-			} else {
-				BotAimAtEnemy_Alt(bs);
-			}
+//			}
 // DEBUG
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
@@ -3021,7 +3015,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	float attack_skill;
 	vec3_t target, dir;
-	float battleSense;
+//	float battleSense;
 
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE NBG: joined observer.");
@@ -3137,13 +3131,11 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
 // Tobias DEBUG
-			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+//			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-			if (battleSense < 0.5) {
+//			if (battleSense < 0.5) {
 				BotAimAtEnemy(bs);
-			} else {
-				BotAimAtEnemy_Alt(bs);
-			}
+//			}
 // DEBUG
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
