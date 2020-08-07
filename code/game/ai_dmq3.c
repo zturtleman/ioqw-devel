@@ -8489,6 +8489,11 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
+// Tobias DEBUG
+	if (!bot_teamblock.integer) {
+		return;
+	}
+// Tobias END
 	if (gametype < GT_TEAM) {
 		return;
 	}
