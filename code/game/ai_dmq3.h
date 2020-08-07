@@ -128,7 +128,6 @@ void BotRoamGoal(bot_state_t *bs, vec3_t goal);
 qboolean BotEntityVisible(playerState_t *ps, float fov, int ent);
 // the bot will aim at the current enemy
 void BotAimAtEnemy(bot_state_t *bs);
-void BotAimAtEnemy_Alt(bot_state_t *bs); // Tobias DEBUG
 // check if the bot should attack
 void BotCheckAttack(bot_state_t *bs);
 // AI when the bot is blocked
