@@ -5818,7 +5818,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			f = 2.0f;
 		}
 
-		aim_accuracy += 0.2f * (f * 0.5f);
+		aim_accuracy += 0.1f * f;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Time based aim accuracy: %f.\n", netname, aim_accuracy);
 #endif
