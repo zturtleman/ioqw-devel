@@ -5081,6 +5081,90 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 
 /*
 =======================================================================================================================================
+BotTeamCubeCarrierVisible
+=======================================================================================================================================
+*/
+int BotTeamCubeCarrierVisible(bot_state_t *bs) {
+	int i;
+	aas_entityinfo_t entinfo;
+
+	for (i = 0; i < level.maxclients; i++) {
+		if (i == bs->client) {
+			continue;
+		}
+		// if the cube carrier is not on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
+		// get the entity information
+		BotEntityInfo(i, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// if this player is carrying cubes
+		if (!EntityCarriesCubes(&entinfo)) {
+			continue;
+		}
+		// if the cube carrier is not visible
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
+			continue;
+		}
+
+		return i;
+	}
+
+	return -1;
+}
+
+/*
+=======================================================================================================================================
+BotEnemyCubeCarrierVisible
+=======================================================================================================================================
+*/
+int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
+	int i;
+	aas_entityinfo_t entinfo;
+
+	for (i = 0; i < level.maxclients; i++) {
+		if (i == bs->client) {
+			continue;
+		}
+		// if the cube carrier is on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
+		// get the entity information
+		BotEntityInfo(i, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if the entity isn't the bot self
+		if (entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// if this player is carrying cubes
+		if (!EntityCarriesCubes(&entinfo)) {
+			continue;
+		}
+		// if the cube carrier is not visible
+		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
+			continue;
+		}
+
+		return i;
+	}
+
+	return -1;
+}
+
+/*
+=======================================================================================================================================
 BotTeamFlagCarrierVisible
 =======================================================================================================================================
 */
@@ -5354,90 +5438,6 @@ int BotCountAllTeamMates(bot_state_t *bs, float range) {
 	}
 
 	return teammates;
-}
-
-/*
-=======================================================================================================================================
-BotTeamCubeCarrierVisible
-=======================================================================================================================================
-*/
-int BotTeamCubeCarrierVisible(bot_state_t *bs) {
-	int i;
-	aas_entityinfo_t entinfo;
-
-	for (i = 0; i < level.maxclients; i++) {
-		if (i == bs->client) {
-			continue;
-		}
-		// if the cube carrier is not on the same team
-		if (!BotSameTeam(bs, i)) {
-			continue;
-		}
-		// get the entity information
-		BotEntityInfo(i, &entinfo);
-		// if the entity information is valid
-		if (!entinfo.valid) {
-			continue;
-		}
-		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
-			continue;
-		}
-		// if this player is carrying cubes
-		if (!EntityCarriesCubes(&entinfo)) {
-			continue;
-		}
-		// if the cube carrier is not visible
-		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
-			continue;
-		}
-
-		return i;
-	}
-
-	return -1;
-}
-
-/*
-=======================================================================================================================================
-BotEnemyCubeCarrierVisible
-=======================================================================================================================================
-*/
-int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
-	int i;
-	aas_entityinfo_t entinfo;
-
-	for (i = 0; i < level.maxclients; i++) {
-		if (i == bs->client) {
-			continue;
-		}
-		// if the cube carrier is on the same team
-		if (BotSameTeam(bs, i)) {
-			continue;
-		}
-		// get the entity information
-		BotEntityInfo(i, &entinfo);
-		// if the entity information is valid
-		if (!entinfo.valid) {
-			continue;
-		}
-		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
-			continue;
-		}
-		// if this player is carrying cubes
-		if (!EntityCarriesCubes(&entinfo)) {
-			continue;
-		}
-		// if the cube carrier is not visible
-		if (!BotEntityVisible(&bs->cur_ps, 360, i)) {
-			continue;
-		}
-
-		return i;
-	}
-
-	return -1;
 }
 // Tobias HACK
 /*
