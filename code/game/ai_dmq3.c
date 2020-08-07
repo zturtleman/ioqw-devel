@@ -6157,9 +6157,15 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 =======================================================================================================================================
 BotCheckAttack
 
-Tobias NOTE: This new version only úses one trace call instead of two!
-Tobias TODO: The trace call using 'bs->aimtarget' was merged into the existing one below.
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code is not really written well.
+Tobias NOTE: This new version only uses one trace call, instead of two!
+			 The trace call using 'bs->aimtarget' was merged into the existing one below.
+
+Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
+			  Although this is theoretically correct, it feels wrong :(
+			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
+			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
+
+Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
