@@ -783,208 +783,88 @@ float BotChangeViewAngle(float angle, float ideal_angle, float speed) {
 
 /*
 =======================================================================================================================================
-BotViewReaction
-=======================================================================================================================================
-*/
-static void BotViewReaction(bot_state_t *bs, vec3_t perceivedViewDistortion) {
-	float currenttime, reactiontime, upper_timelimit, lower_timelimit, besttime, upper_timelimit2, lower_timelimit2, t;
-	int bestentry, numentries, numentries2, i;
-	vec3_t diff, avgAngles, avgPrcvAngles, avgAngles2;
-
-	currenttime = FloatTime();
-
-	if (bs->viewhistory.lastUpdateTime <= currenttime - 0.001) {
-		bs->viewhistory.lastUpdateTime = currenttime;
-		// save viewangles
-		bs->viewhistory.entryTab[bs->viewhistory.oldestEntry].time = currenttime;
-
-		VectorCopy(bs->ideal_viewangles, bs->viewhistory.entryTab[bs->viewhistory.oldestEntry].ideal_view);
-		VectorSubtract(bs->viewangles, bs->viewhistory.lastviewcommand, diff);
-		VectorCopy(diff, bs->viewhistory.entryTab[bs->viewhistory.oldestEntry].viewdistortion);
-
-		bs->viewhistory.oldestEntry++;
-
-		if (bs->viewhistory.oldestEntry >= VIEWHISTORY_SIZE) {
-			bs->viewhistory.oldestEntry = 0;
-		}
-	}
-
-	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
-
-	upper_timelimit = currenttime;
-	lower_timelimit = upper_timelimit - 2 * reactiontime;
-
-	upper_timelimit2 = currenttime;
-	lower_timelimit2 = upper_timelimit2 - 4 * reactiontime;
-
-	besttime = 0;
-	bestentry = -1;
-
-	VectorClear(avgAngles);
-	VectorClear(avgPrcvAngles);
-	VectorClear(avgAngles2);
-
-	numentries = numentries2 = 0;
-
-	for (i = 0; i < VIEWHISTORY_SIZE; i++) {
-		t = bs->viewhistory.entryTab[i].time;
-
-		if (t <= upper_timelimit) {
-			if (t > besttime) {
-				besttime = t;
-				bestentry = i;
-			}
-
-			if (t >= lower_timelimit) {
-				numentries++;
-				AnglesSubtract(bs->viewhistory.entryTab[i].ideal_view, avgAngles, diff);
-				VectorMA(avgAngles, 1.0 / numentries, diff, avgAngles);
-				AnglesSubtract(bs->viewhistory.entryTab[i].viewdistortion, avgPrcvAngles, diff);
-				VectorMA(avgPrcvAngles, 1.0 / numentries, diff, avgPrcvAngles);
-			}
-		}
-
-		if (t <= upper_timelimit2) {
-			if (t >= lower_timelimit2) {
-				numentries2++;
-				AnglesSubtract(bs->viewhistory.entryTab[i].ideal_view, avgAngles2, diff);
-				VectorMA(avgAngles2, 1.0 / numentries2, diff, avgAngles2);
-			}
-		}
-	}
-
-	if (numentries <= 0) {
-		if (bestentry >= 0) {
-			VectorCopy(bs->viewhistory.entryTab[bestentry].ideal_view, avgAngles);
-			VectorCopy(bs->viewhistory.entryTab[bestentry].viewdistortion, avgPrcvAngles);
-		} else {
-			VectorCopy(bs->viewangles, avgAngles);
-		}
-	}
-
-	if (numentries2 > 0) {
-		// predict the ideal view angles
-		AnglesSubtract(avgAngles, avgAngles2, diff);
-		VectorMA(avgAngles, 1, diff, avgAngles);
-	}
-
-	VectorCopy(avgAngles, bs->viewhistory.real_viewangles);
-	VectorCopy(avgPrcvAngles, perceivedViewDistortion);
-}
-
-/*
-=======================================================================================================================================
 BotChangeViewAngles
 =======================================================================================================================================
 */
 void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
-	vec3_t perceivedViewDistortion, viewAnglesDest;
-	float viewType, reactiontime, diff, factor, maxchange, viewdelta, anglespeed, disired_speed;
+	float diff, factor, maxchange, viewType, anglespeed, disired_speed;
 	int i;
 
-	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
-	// history based view model
-	if (viewType < 0.4) { // Tobias NOTE: this view model uses lot of RAM
-		BotViewReaction(bs, perceivedViewDistortion);
-		VectorCopy(bs->viewhistory.real_viewangles, viewAnglesDest);
+	if (bs->ideal_viewangles[PITCH] > 180) {
+		bs->ideal_viewangles[PITCH] -= 360;
+	}
 
-		reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
-		factor = thinktime / reactiontime;
-
-		if (factor > 1) {
-			factor = 1;
-		}
-
+	if (bs->enemy >= 0) {
+		factor = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0.01f, 1);
 		maxchange = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 1800);
-		maxchange *= thinktime;
-
-		for (i = 0; i < 2; i++) {
-			viewdelta = factor * AngleSubtract(viewAnglesDest[i], bs->viewhistory.lastviewcommand[i] + perceivedViewDistortion[i]);
-
-			if (viewdelta > maxchange) {
-				viewdelta = maxchange;
-			} else if (viewdelta < -maxchange) {
-				viewdelta = -maxchange;
-			}
-
-			bs->viewangles[i] = AngleMod(bs->viewangles[i] + viewdelta);
-			bs->viewhistory.lastviewcommand[i] = AngleMod(bs->viewhistory.lastviewcommand[i] + viewdelta);
-		}
 	} else {
-		if (bs->ideal_viewangles[PITCH] > 180) {
-			bs->ideal_viewangles[PITCH] -= 360;
-		}
+		factor = 0.05f;
+		maxchange = 360;
+	}
 
-		if (bs->enemy >= 0) {
-			factor = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0.01f, 1);
-			maxchange = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 1800);
-		} else {
-			factor = 0.05f;
-			maxchange = 360;
-		}
+	if (maxchange < 240) {
+		maxchange = 240;
+	}
 
-		if (maxchange < 240) {
-			maxchange = 240;
-		}
+	maxchange *= thinktime;
 
-		maxchange *= thinktime;
+	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 
-		for (i = 0; i < 2; i++) {
-			// smooth slowdown view model
-			if (viewType > 0.8
+	for (i = 0; i < 2; i++) {
+		if (viewType > 0.8
 //#ifdef DEBUG
-				|| bot_challenge.integer
+			|| bot_challenge.integer
 //#endif
-				) {
-				diff = fabs(AngleDifference(bs->viewangles[i], bs->ideal_viewangles[i]));
-				anglespeed = diff * factor;
+			) {
+			// smooth slowdown view model
+			diff = fabs(AngleDifference(bs->viewangles[i], bs->ideal_viewangles[i]));
+			anglespeed = diff * factor;
 
-				if (anglespeed > maxchange) {
-					anglespeed = maxchange;
-				}
-
-				bs->viewangles[i] = BotChangeViewAngle(bs->viewangles[i], bs->ideal_viewangles[i], anglespeed);
-			// over reaction view model
-			} else {
-				bs->viewangles[i] = AngleMod(bs->viewangles[i]);
-				bs->ideal_viewangles[i] = AngleMod(bs->ideal_viewangles[i]);
-				diff = AngleDifference(bs->viewangles[i], bs->ideal_viewangles[i]);
-				disired_speed = diff * factor;
-				bs->viewanglespeed[i] += (bs->viewanglespeed[i] - disired_speed);
-
-				if (bs->viewanglespeed[i] > 180) {
-					bs->viewanglespeed[i] = maxchange;
-				}
-
-				if (bs->viewanglespeed[i] < -180) {
-					bs->viewanglespeed[i] = -maxchange;
-				}
-
-				anglespeed = bs->viewanglespeed[i];
-
-				if (anglespeed > maxchange) {
-					anglespeed = maxchange;
-				}
-
-				if (anglespeed < -maxchange) {
-					anglespeed = -maxchange;
-				}
-
-				bs->viewangles[i] += anglespeed;
-				bs->viewangles[i] = AngleMod(bs->viewangles[i]);
-				// demping
-				bs->viewanglespeed[i] *= 0.45 * (1 - factor);
+			if (anglespeed > maxchange) {
+				anglespeed = maxchange;
 			}
 
-			//BotAI_Print(PRT_MESSAGE, "ideal_angles %f %f\n", bs->ideal_viewangles[0], bs->ideal_viewangles[1], bs->ideal_viewangles[2]);
-			//bs->viewangles[i] = bs->ideal_viewangles[i];
+			bs->viewangles[i] = BotChangeViewAngle(bs->viewangles[i], bs->ideal_viewangles[i], anglespeed);
+		} else {
+			// over reaction view model
+			bs->viewangles[i] = AngleMod(bs->viewangles[i]);
+			bs->ideal_viewangles[i] = AngleMod(bs->ideal_viewangles[i]);
+			diff = AngleDifference(bs->viewangles[i], bs->ideal_viewangles[i]);
+			disired_speed = diff * factor;
+			bs->viewanglespeed[i] += (bs->viewanglespeed[i] - disired_speed);
+
+			if (bs->viewanglespeed[i] > 180) {
+				bs->viewanglespeed[i] = maxchange;
+			}
+
+			if (bs->viewanglespeed[i] < -180) {
+				bs->viewanglespeed[i] = -maxchange;
+			}
+
+			anglespeed = bs->viewanglespeed[i];
+
+			if (anglespeed > maxchange) {
+				anglespeed = maxchange;
+			}
+
+			if (anglespeed < -maxchange) {
+				anglespeed = -maxchange;
+			}
+
+			bs->viewangles[i] += anglespeed;
+			bs->viewangles[i] = AngleMod(bs->viewangles[i]);
+			// demping
+			bs->viewanglespeed[i] *= 0.45 * (1 - factor);
 		}
 
-		//bs->viewangles[PITCH] = 0;
+		//BotAI_Print(PRT_MESSAGE, "ideal_angles %f %f\n", bs->ideal_viewangles[0], bs->ideal_viewangles[1], bs->ideal_viewangles[2]);
+		//bs->viewangles[i] = bs->ideal_viewangles[i];
+	}
 
-		if (bs->viewangles[PITCH] > 180) {
-			bs->viewangles[PITCH] -= 360;
-		}
+	//bs->viewangles[PITCH] = 0;
+
+	if (bs->viewangles[PITCH] > 180) {
+		bs->viewangles[PITCH] -= 360;
 	}
 	// elementary action view
 	trap_EA_View(bs->client, bs->viewangles);
