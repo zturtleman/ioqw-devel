@@ -277,17 +277,17 @@ int Export_BotLibLoadMap(const char *mapname) {
 Export_BotLibUpdateEntity
 =======================================================================================================================================
 */
-static int Export_BotLibUpdateEntity(int entnum, bot_entitystate_t *state) {
+static int Export_BotLibUpdateEntity(int ent, bot_entitystate_t *state) {
 
 	if (!BotLibSetup("BotUpdateEntity")) {
 		return BLERR_LIBRARYNOTSETUP;
 	}
 
-	if (!ValidEntityNumber(entnum, "BotUpdateEntity")) {
+	if (!ValidEntityNumber(ent, "BotUpdateEntity")) {
 		return BLERR_INVALIDENTITYNUMBER;
 	}
 
-	return AAS_UpdateEntity(entnum, state);
+	return AAS_UpdateEntity(ent, state);
 }
 
 void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir);

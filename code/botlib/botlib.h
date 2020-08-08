@@ -341,7 +341,7 @@ typedef struct botlib_export_s {
 	// load a new map in the bot library
 	int (*BotLibLoadMap)(const char *mapname);
 	// entity updates
-	int (*BotLibUpdateEntity)(int entnum, bot_entitystate_t *state);
+	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	// just for testing
 	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 } botlib_export_t;

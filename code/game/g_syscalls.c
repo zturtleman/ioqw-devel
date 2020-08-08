@@ -506,8 +506,8 @@ void trap_UnlinkEntity(gentity_t *ent) {
 trap_EntitiesInBox
 =======================================================================================================================================
 */
-int trap_EntitiesInBox(const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount) {
-	return syscall(G_ENTITIES_IN_BOX, mins, maxs, entityList, maxcount);
+int trap_EntitiesInBox(const vec3_t mins, const vec3_t maxs, int *list, int maxcount) {
+	return syscall(G_ENTITIES_IN_BOX, mins, maxs, list, maxcount);
 }
 
 /*
@@ -634,8 +634,8 @@ int trap_BotLibLoadMap(const char *mapname) {
 trap_BotLibUpdateEntity
 =======================================================================================================================================
 */
-int trap_BotLibUpdateEntity(int entnum, void /*struct bot_updateentity_s*/ *bue) {
-	return syscall(BOTLIB_UPDATENTITY, entnum, bue);
+int trap_BotLibUpdateEntity(int ent, void /*struct bot_updateentity_s*/ *bue) {
+	return syscall(BOTLIB_UPDATENTITY, ent, bue);
 }
 
 /*
