@@ -2246,17 +2246,17 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 		VectorMA(reach->start, gapdist, hordir, runstart);
 	}
 */
-	VectorSubtract(ms->origin, reach->start, dir1);
+	VectorSubtract(reach->start, ms->origin, dir1);
 
 	dir1[2] = 0;
 	dist1 = VectorNormalize(dir1);
 
-	VectorSubtract(ms->origin, runstart, dir2);
+	VectorSubtract(runstart, ms->origin, dir2);
 
 	dir2[2] = 0;
 	dist2 = VectorNormalize(dir2);
 
-	VectorSubtract(runstart, reach->start, dir3);
+	VectorSubtract(reach->start, runstart, dir3);
 
 	dir3[2] = 0;
 	dist3 = VectorNormalize(dir3);

@@ -1081,7 +1081,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->attackaway_time = FloatTime() + 3 + 5 * random();
 			}
 			// or very close to the obelisk
-			VectorSubtract(bs->origin, goal->origin, dir);
+			VectorSubtract(goal->origin, bs->origin, dir);
 
 			if (VectorLengthSquared(dir) < Square(60)) {
 				bs->attackaway_time = FloatTime() + 3 + 5 * random();
@@ -1245,7 +1245,7 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 			bs->leadbackup_time = FloatTime() + 2;
 		}
 		// distance towards the team mate
-		VectorSubtract(bs->origin, bs->lead_teamgoal.origin, dir);
+		VectorSubtract(bs->lead_teamgoal.origin, bs->origin, dir);
 
 		squaredist = VectorLengthSquared(dir);
 		// if backing up towards the team mate

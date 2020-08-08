@@ -594,10 +594,10 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 
 			switch (BotTeam(bs)) {
 				case TEAM_RED:
-					VectorSubtract(bs->origin, ctf_blueflag.origin, dir);
+					VectorSubtract(ctf_blueflag.origin, bs->origin, dir);
 					break;
 				case TEAM_BLUE:
-					VectorSubtract(bs->origin, ctf_redflag.origin, dir);
+					VectorSubtract(ctf_redflag.origin, bs->origin, dir);
 					break;
 				default:
 					VectorSet(dir, 999, 999, 999);
@@ -2302,7 +2302,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 
 			target[2] += 1;
 
-			VectorSubtract(bs->origin, target, dir);
+			VectorSubtract(target, bs->origin, dir);
 			// don't use the kamikaze as long as it isn't really needed
 			if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.7) && BotWantsToUseKamikaze(bs)) {
 				BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->client, CONTENTS_SOLID);
@@ -4610,7 +4610,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
 			} else if (infog) {
 				VectorCopy(trace.endpos, start);
 				BotAI_Trace(&trace, start, NULL, NULL, eye, viewer, CONTENTS_FOG);
-				VectorSubtract(eye, trace.endpos, dir);
+				VectorSubtract(eye, trace.endpos, dir); // Tobias CHECK: VectorSubtract reversed origins
 				squaredfogdist = VectorLengthSquared(dir);
 			} else if (otherinfog) {
 				VectorCopy(trace.endpos, end);
