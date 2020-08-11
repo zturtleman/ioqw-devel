@@ -652,6 +652,7 @@ static void Init_AAS_Export(aas_export_t *aas) {
 	aas->AAS_PresenceTypeBoundingBox = AAS_PresenceTypeBoundingBox;
 	aas->AAS_BBoxAreas = AAS_BBoxAreas;
 	aas->AAS_TraceAreas = AAS_TraceAreas;
+	aas->AAS_AreaCenter = AAS_AreaCenter;
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;
 	aas->AAS_PointContents = AAS_PointContents;
 	aas->AAS_PointReachabilityAreaIndex = AAS_PointReachabilityAreaIndex;
