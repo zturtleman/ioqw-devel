@@ -175,6 +175,7 @@ typedef struct aas_export_s {
 	void (*AAS_PresenceTypeBoundingBox)(int presencetype, vec3_t mins, vec3_t maxs);
 	int (*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int (*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
+	void (*AAS_AreaCenter)(int areanum, vec3_t center);
 	int (*AAS_PointAreaNum)(vec3_t point);
 	int (*AAS_PointContents)(vec3_t point);
 	int (*AAS_PointReachabilityAreaIndex)(vec3_t point);

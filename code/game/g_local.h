@@ -578,6 +578,7 @@ void trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs
 float trap_AAS_Time(void);
 int trap_AAS_PointAreaNum(vec3_t point);
 int trap_AAS_PointReachabilityAreaIndex(vec3_t point);
+void trap_AAS_AreaCenter(int areanum, vec3_t center);
 int trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 int trap_AAS_PointContents(vec3_t point);
 int trap_AAS_NextBSPEntity(int ent);

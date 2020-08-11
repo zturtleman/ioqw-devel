@@ -52,6 +52,7 @@ int AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int max
 int AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 // return area information
 int AAS_AreaInfo(int areanum, aas_areainfo_t *info);
+void AAS_AreaCenter(int areanum, vec3_t center);
 // returns the area the point is in
 int AAS_PointAreaNum(vec3_t point);
 int AAS_PointReachabilityAreaIndex(vec3_t point);
