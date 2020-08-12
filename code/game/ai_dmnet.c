@@ -123,7 +123,7 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 	BotAI_Trace(&bsptrace, end, mins, maxs, bs->origin, bs->entitynum, CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA);
 	// if we found the water surface
 	if (bsptrace.fraction > 0) {
-		areanum = BotPointAreaNum(bsptrace.endpos);
+		areanum = BotPointAreaNum(bs->client, bsptrace.endpos); // Tobias CHECK: bs->client?
 
 		if (areanum) {
 			VectorCopy(bsptrace.endpos, goal->origin);
@@ -415,7 +415,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// if the entity information is valid
 		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.origin);
+			areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
 			if (areanum && trap_AAS_AreaReachability(areanum)) {
 				// update team goal
@@ -534,7 +534,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// if the entity information is valid
 		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.origin);
+			areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
 			if (areanum && trap_AAS_AreaReachability(areanum)) {
 				// update team goal
@@ -1224,7 +1224,7 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 		BotEntityInfo(bs->lead_teammate, &entinfo);
 		// if the entity information is valid
 		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.origin);
+			areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
 			if (areanum && trap_AAS_AreaReachability(areanum)) {
 				// update team goal
@@ -2452,7 +2452,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			}
 		}
 		// update the reachability area and origin if possible
-		areanum = BotPointAreaNum(target);
+		areanum = BotPointAreaNum(entinfo.number, target); // Tobias CHECK: entinfo.number?
 
 		if (areanum && trap_AAS_AreaReachability(areanum)) {
 			VectorCopy(target, bs->lastenemyorigin);
@@ -2864,7 +2864,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			}
 		}
 		// update the reachability area and origin if possible
-		areanum = BotPointAreaNum(target);
+		areanum = BotPointAreaNum(entinfo.number, target); // Tobias CHECK: entinfo.number?
 
 		if (areanum && trap_AAS_AreaReachability(areanum)) {
 			VectorCopy(target, bs->lastenemyorigin);
@@ -3078,7 +3078,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			}
 		}
 		// update the reachability area and origin if possible
-		areanum = BotPointAreaNum(target);
+		areanum = BotPointAreaNum(entinfo.number, target); // Tobias CHECK: entinfo.number?
 
 		if (areanum && trap_AAS_AreaReachability(areanum)) {
 			VectorCopy(target, bs->lastenemyorigin);
