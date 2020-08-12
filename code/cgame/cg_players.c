@@ -2310,7 +2310,7 @@ static qboolean CG_PlayerShadow(centity_t *cent, float *shadowPlane) {
 
 	trap_CM_BoxTrace(&trace, cent->lerpOrigin, end, mins, maxs, 0, MASK_PLAYERSOLID);
 	// no shadow if too high
-	if (trace.fraction == 1.0 || trace.startsolid || trace.allsolid) {
+	if (trace.fraction == 1.0f || trace.startsolid || trace.allsolid) {
 		return qfalse;
 	}
 
@@ -2320,7 +2320,7 @@ static qboolean CG_PlayerShadow(centity_t *cent, float *shadowPlane) {
 		return qtrue;
 	}
 	// fade the shadow out with height
-	alpha = 1.0 - trace.fraction;
+	alpha = 1.0f - trace.fraction;
 	// hack/FPE - bogus planes?
 	//assert(DotProduct(trace.plane.normal, trace.plane.normal) != 0.0f)
 	// add the mark as a temporary, so it goes directly to the renderer without taking a spot in the cg_marks array
@@ -2368,7 +2368,7 @@ static void CG_PlayerSplash(centity_t *cent) {
 	// trace down to find the surface
 	trap_CM_BoxTrace(&trace, start, end, NULL, NULL, 0, (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA));
 
-	if (trace.fraction == 1.0) {
+	if (trace.fraction == 1.0f) {
 		return;
 	}
 	// create a mark polygon

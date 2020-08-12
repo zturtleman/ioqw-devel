@@ -247,7 +247,7 @@ int BotClientTravelTimeToGoal(int client, bot_goal_t *goal) {
 	int areanum;
 
 	if (BotAI_GetClientState(client, &ps)) {
-		areanum = BotPointAreaNum(ps.origin);
+		areanum = BotPointAreaNum(client, ps.origin);
 	} else {
 		areanum = 0;
 	}

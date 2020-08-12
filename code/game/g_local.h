@@ -139,6 +139,8 @@ struct gentity_s {
 	char *dl_stylestring;
 	char *dl_shader;
 	int dl_atten;
+	int botAreaNum;				// last checked area num
+	vec3_t botAreaPos;
 };
 
 typedef enum {

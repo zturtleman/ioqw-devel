@@ -212,76 +212,124 @@ void BotInitMoveState(int movestate, bot_initmove_t *initmove) {
 
 /*
 =======================================================================================================================================
+BotFirstReachabilityArea
+=======================================================================================================================================
+*/
+int BotFirstReachabilityArea(vec3_t origin, int *areas, int numareas, qboolean distCheck) {
+	int i, best;
+	vec3_t center;
+	float bestDist, dist;
+	bsp_trace_t trace;
+
+	best = 0;
+	bestDist = 999999;
+
+	for (i = 0; i < numareas; i++) {
+		if (AAS_AreaReachability(areas[i])) {
+			// make sure this area is visible
+			//if (!AAS_AreaWaypoint(areas[i], center)) {
+				AAS_AreaCenter(areas[i], center);
+			//}
+
+			if (distCheck) {
+				dist = VectorDistance(center, origin);
+
+				if (center[2] > origin[2]) {
+					dist += 32 * (center[2] - origin[2]);
+				}
+
+				if (dist < bestDist) {
+					trace = AAS_Trace(origin, NULL, NULL, center, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
+					// if no solids were found
+					if (!trace.startsolid && !trace.allsolid && trace.fraction >= 1.0f) {
+						bestDist = dist;
+						best = areas[i];
+						break;
+					}
+				}
+			} else {
+				trace = AAS_Trace(origin, NULL, NULL, center, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
+				// if no solids were found
+				if (!trace.startsolid && !trace.allsolid && trace.fraction >= 1.0f) {
+					best = areas[i];
+					break;
+				}
+			}
+		}
+	}
+
+	return best;
+}
+
+/*
+=======================================================================================================================================
 BotFuzzyPointReachabilityArea
 =======================================================================================================================================
 */
 int BotFuzzyPointReachabilityArea(vec3_t origin) {
-	int firstareanum, j, x, y, z;
-	int areas[10], numareas, areanum, bestareanum;
-	float dist, bestdist;
-	vec3_t points[10], v, end;
+	int areanum, numareas, areas[100], bestarea;
+	vec3_t end, start, mins, maxs;
 
-	firstareanum = 0;
+	bestarea = 0;
 	areanum = AAS_PointAreaNum(origin);
 
-	if (areanum) {
-		firstareanum = areanum;
-
-		if (AAS_AreaReachability(areanum)) {
-			return areanum;
-		}
+	if (!AAS_AreaReachability(areanum)) {
+		areanum = 0;
 	}
 
+	if (areanum) {
+		return areanum;
+	}
+	// try a line trace from beneath to above
+	VectorCopy(origin, start);
 	VectorCopy(origin, end);
 
-	end[2] += 4;
-	numareas = AAS_TraceAreas(origin, end, areas, points, 10);
+	start[2] -= 30;
+	end[2] += 40;
 
-	for (j = 0; j < numareas; j++) {
-		if (AAS_AreaReachability(areas[j])) {
-			return areas[j];
-		}
+	numareas = AAS_TraceAreas(start, end, areas, NULL, 100);
+
+	if (numareas > 0) {
+		bestarea = BotFirstReachabilityArea(origin, areas, numareas, qfalse);
 	}
 
-	bestdist = 999999;
-	bestareanum = 0;
+	if (bestarea) {
+		return bestarea;
+	}
+	// try a small box around the origin
+	maxs[0] = 4;
+	maxs[1] = 4;
+	maxs[2] = 4;
 
-	for (z = 1; z >= -1; z -= 1) {
-		for (x = 1; x >= -1; x -= 1) {
-			for (y = 1; y >= -1; y -= 1) {
-				VectorCopy(origin, end);
+	VectorSubtract(origin, maxs, mins);
+	VectorAdd(origin, maxs, maxs);
 
-				end[0] += x * 8;
-				end[1] += y * 8;
-				end[2] += z * 12;
+	numareas = AAS_BBoxAreas(mins, maxs, areas, 100);
 
-				numareas = AAS_TraceAreas(origin, end, areas, points, 10);
-
-				for (j = 0; j < numareas; j++) {
-					if (AAS_AreaReachability(areas[j])) {
-						VectorSubtract(points[j], origin, v);
-
-						dist = VectorLength(v);
-
-						if (dist < bestdist) {
-							bestareanum = areas[j];
-							bestdist = dist;
-						}
-					}
-
-					if (!firstareanum) {
-						firstareanum = areas[j];
-					}
-				}
-			}
-		}
-
-		if (bestareanum) {
-			return bestareanum;
-		}
+	if (numareas > 0) {
+		bestarea = BotFirstReachabilityArea(origin, areas, numareas, qtrue);
 	}
 
-	return firstareanum;
+	if (bestarea) {
+		return bestarea;
+	}
+
+	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+
+	VectorAdd(mins, origin, mins);
+	VectorAdd(maxs, origin, maxs);
+
+	numareas = AAS_BBoxAreas(mins, maxs, areas, 100);
+
+	if (numareas > 0) {
+		bestarea = BotFirstReachabilityArea(origin, areas, numareas, qtrue);
+	}
+
+	if (bestarea) {
+		return bestarea;
+	}
+
+	return 0;
 }
 
 /*

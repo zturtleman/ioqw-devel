@@ -588,7 +588,7 @@ void SV_Trace(trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, co
 	// clip to world
 	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, capsule);
 
-	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+	clip.trace.entityNum = clip.trace.fraction != 1.0f ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 
 	if (clip.trace.fraction == 0) {
 		*results = clip.trace;

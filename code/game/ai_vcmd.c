@@ -241,7 +241,7 @@ void BotVoiceChat_Camp(bot_state_t *bs, int client, int mode) {
 	BotEntityInfo(client, &entinfo);
 	// if the entity information is valid
 	if (entinfo.valid) {
-		areanum = BotPointAreaNum(entinfo.origin);
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
 			// NOTE: just assume the bot knows where the person is
@@ -299,7 +299,7 @@ void BotVoiceChat_FollowMe(bot_state_t *bs, int client, int mode) {
 	BotEntityInfo(client, &entinfo);
 	// if the entity information is valid
 	if (entinfo.valid) {
-		areanum = BotPointAreaNum(entinfo.origin);
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
 		if (areanum) { //&& trap_AAS_AreaReachability(areanum)) {
 			bs->teamgoal.entitynum = client;

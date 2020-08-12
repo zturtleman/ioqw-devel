@@ -300,7 +300,7 @@ void BotTestAAS(vec3_t origin) {
 			return;
 		}
 
-		areanum = BotPointAreaNum(origin);
+		areanum = BotPointAreaNum(0, origin); // Tobias CHECK: 0?
 
 		if (areanum) {
 			BotAI_Print(PRT_MESSAGE, "\rEmpty area.");
@@ -312,7 +312,7 @@ void BotTestAAS(vec3_t origin) {
 			return;
 		}
 
-		areanum = BotPointAreaNum(origin);
+		areanum = BotPointAreaNum(0, origin); // Tobias CHECK: 0?
 
 		if (!areanum) {
 			BotAI_Print(PRT_MESSAGE, "\r^1Solid!");
@@ -1130,7 +1130,7 @@ int BotAI(int client, float thinktime) {
 
 	bs->eye[2] += bs->cur_ps.viewheight;
 	// get the area the bot is in
-	bs->areanum = BotPointAreaNum(bs->origin);
+	bs->areanum = BotPointAreaNum(bs->client, bs->origin);
 	// the real AI
 	BotDeathmatchAI(bs, thinktime);
 	// set the weapon selection every AI frame

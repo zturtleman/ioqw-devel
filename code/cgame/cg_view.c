@@ -304,9 +304,9 @@ static void CG_OffsetThirdPersonView(void) {
 	if (!cg_cameraMode.integer) {
 		CG_Trace(&trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID);
 
-		if (trace.fraction != 1.0) {
+		if (trace.fraction != 1.0f) {
 			VectorCopy(trace.endpos, view);
-			view[2] += (1.0 - trace.fraction) * 32;
+			view[2] += (1.0f - trace.fraction) * 32;
 			// try another trace to this position, because a tunnel may have the ceiling close enough that this is poking out
 			CG_Trace(&trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID);
 			VectorCopy(trace.endpos, view);

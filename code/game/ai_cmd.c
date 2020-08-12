@@ -585,7 +585,7 @@ void BotMatch_HelpAccompany(bot_state_t *bs, bot_match_t *match) {
 	BotEntityInfo(client, &entinfo);
 	// if the entity information is valid
 	if (entinfo.valid) {
-		areanum = BotPointAreaNum(entinfo.origin);
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin);
 
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
 			bs->teamgoal.entitynum = client;
@@ -812,7 +812,7 @@ void BotMatch_Camp(bot_state_t *bs, bot_match_t *match) {
 		BotEntityInfo(client, &entinfo);
 		// if the entity information is valid
 		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.origin);
+			areanum = BotPointAreaNum(entinfo.number, entinfo.origin);
 
 			if (areanum) {
 				// NOTE: just assume the bot knows where the person is
@@ -1300,7 +1300,7 @@ void BotMatch_CheckPoint(bot_state_t *bs, bot_match_t *match) {
 	sscanf(buf, "%f %f %f", &position[0], &position[1], &position[2]);
 
 	position[2] += 0.5;
-	areanum = BotPointAreaNum(position);
+	areanum = BotPointAreaNum(bs->client, position);
 
 	if (!areanum) {
 		if (BotAddressedToBot(bs, match)) {
@@ -1827,7 +1827,7 @@ void BotMatch_LeadTheWay(bot_state_t *bs, bot_match_t *match) {
 	BotEntityInfo(client, &entinfo);
 	// if the entity information is valid
 	if (entinfo.valid) {
-		areanum = BotPointAreaNum(entinfo.origin);
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin);
 
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
 			bs->lead_teamgoal.entitynum = client;

@@ -1358,7 +1358,7 @@ static void PM_GroundTraceMissed(void) {
 
 		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
 
-		if (trace.fraction == 1.0) {
+		if (trace.fraction == 1.0f) {
 			if (pm->cmd.forwardmove >= 0) {
 				PM_ForceLegsAnim(LEGS_JUMP);
 				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
@@ -1396,7 +1396,7 @@ static void PM_GroundTrace(void) {
 		}
 	}
 	// if the trace didn't hit anything, we are in free fall
-	if (trace.fraction == 1.0) {
+	if (trace.fraction == 1.0f) {
 		PM_GroundTraceMissed();
 		pml.groundPlane = qfalse;
 		pml.walking = qfalse;

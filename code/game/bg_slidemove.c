@@ -250,7 +250,7 @@ void PM_StepSlideMove(qboolean gravity) {
 
 	VectorSet(up, 0, 0, 1);
 	// never step up when you still have up velocity
-	if (pm->ps->velocity[2] > 0 && (trace.fraction == 1.0 || DotProduct(trace.plane.normal, up) < 0.7)) {
+	if (pm->ps->velocity[2] > 0 && (trace.fraction == 1.0f || DotProduct(trace.plane.normal, up) < 0.7)) {
 		return;
 	}
 
@@ -292,7 +292,7 @@ void PM_StepSlideMove(qboolean gravity) {
 	// if the down trace can trace back to the original position directly, don't step
 	pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, start_o, pm->ps->clientNum, pm->tracemask);
 
-	if (trace.fraction == 1.0) {
+	if (trace.fraction == 1.0f) {
 		// use the original move
 		VectorCopy(down_o, pm->ps->origin);
 		VectorCopy(down_v, pm->ps->velocity);
