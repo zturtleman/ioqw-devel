@@ -857,7 +857,7 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 			bs->viewanglespeed[i] *= 0.45 * (1 - factor);
 		}
 
-		//BotAI_Print(PRT_MESSAGE, "ideal_angles %f %f\n", bs->ideal_viewangles[0], bs->ideal_viewangles[1], bs->ideal_viewangles[2]);
+		//BotAI_Print(PRT_MESSAGE, "ideal_angles %f %f %f\n", bs->ideal_viewangles[0], bs->ideal_viewangles[1], bs->ideal_viewangles[2]);
 		//bs->viewangles[i] = bs->ideal_viewangles[i];
 	}
 
