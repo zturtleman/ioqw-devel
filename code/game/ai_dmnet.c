@@ -2932,7 +2932,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
-	} else if (!(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET) && !(bs->flags & BFL_IDEALVIEWSET)) {
+	} else if (!(bs->flags & BFL_IDEALVIEWSET) && !(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)) {
 		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
@@ -3103,7 +3103,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
-	} else if (!(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET) && !(bs->flags & BFL_IDEALVIEWSET)) {
+	} else if (!(bs->flags & BFL_IDEALVIEWSET) && !(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)) {
 		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
