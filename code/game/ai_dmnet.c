@@ -413,19 +413,17 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			// last time the bot was NOT visible
 			bs->teammatevisible_time = FloatTime();
 		}
-		// if the entity information is valid
-		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
-			if (areanum && trap_AAS_AreaReachability(areanum)) {
-				// update team goal
-				bs->teamgoal.entitynum = bs->teammate;
-				bs->teamgoal.areanum = areanum;
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
-				VectorCopy(entinfo.origin, bs->teamgoal.origin);
-				VectorSet(bs->teamgoal.mins, -8, -8, -8);
-				VectorSet(bs->teamgoal.maxs, 8, 8, 8);
-			}
+		if (areanum && trap_AAS_AreaReachability(areanum)) {
+			// update team goal
+			bs->teamgoal.entitynum = bs->teammate;
+			bs->teamgoal.areanum = areanum;
+
+			VectorCopy(entinfo.origin, bs->teamgoal.origin);
+			VectorSet(bs->teamgoal.mins, -8, -8, -8);
+			VectorSet(bs->teamgoal.maxs, 8, 8, 8);
 		}
 		// set the bot goal
 		memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
@@ -530,19 +528,17 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				return qfalse;
 			}
 		}
-		// if the entity information is valid
-		if (entinfo.valid) {
-			areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
-			if (areanum && trap_AAS_AreaReachability(areanum)) {
-				// update team goal
-				bs->teamgoal.entitynum = bs->teammate;
-				bs->teamgoal.areanum = areanum;
+		areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
 
-				VectorCopy(entinfo.origin, bs->teamgoal.origin);
-				VectorSet(bs->teamgoal.mins, -8, -8, -8);
-				VectorSet(bs->teamgoal.maxs, 8, 8, 8);
-			}
+		if (areanum && trap_AAS_AreaReachability(areanum)) {
+			// update team goal
+			bs->teamgoal.entitynum = bs->teammate;
+			bs->teamgoal.areanum = areanum;
+
+			VectorCopy(entinfo.origin, bs->teamgoal.origin);
+			VectorSet(bs->teamgoal.mins, -8, -8, -8);
+			VectorSet(bs->teamgoal.maxs, 8, 8, 8);
 		}
 		// the goal the bot should go for
 		memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
