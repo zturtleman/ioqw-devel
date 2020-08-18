@@ -344,7 +344,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			// reset the avoid goals and the avoid reach
 			trap_BotResetAvoidGoals(bs->gs);
 			trap_BotResetAvoidReach(bs->ms);
-			// check if the bot is blocking team mates
+			// check if the bot is blocking teammates
 			BotCheckBlockedTeammates(bs);
 		}
 		// get the goal at the top of the stack
@@ -379,12 +379,12 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
 		}
-		// if trying to help the team mate for more than a minute
+		// if trying to help the teammate for more than a minute
 		if (bs->teamgoal_time < FloatTime()) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
-		// if the team mate IS visible for quite some time
+		// if the teammate IS visible for quite some time
 		if (bs->teammatevisible_time < FloatTime() - 10) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
@@ -397,14 +397,14 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->ltgtype = 0;
 			return qfalse;
 		}
-		// if the team mate is visible
+		// if the teammate is visible
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
 			// if close just stand still there
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 
 			if (VectorLengthSquared(dir) < Square(100)) {
 				trap_BotResetAvoidReach(bs->ms);
-				// check if the bot is blocking team mates
+				// check if the bot is blocking teammates
 				BotCheckBlockedTeammates(bs);
 				return qfalse;
 			}
@@ -519,7 +519,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 
 			trap_BotResetAvoidReach(bs->ms);
-			// check if the bot is blocking team mates
+			// check if the bot is blocking teammates
 			BotCheckBlockedTeammates(bs);
 			return qfalse;
 		}
@@ -543,7 +543,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
-			// just to make sure the bot won't spam this message
+			// update visible time (just to make sure the bot won't spam this message)
 			bs->teammatevisible_time = FloatTime();
 		}
 
@@ -738,7 +738,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 			// FIXME: move around a bit
 			trap_BotResetAvoidReach(bs->ms);
-			// check if the bot is blocking team mates
+			// check if the bot is blocking teammates
 			BotCheckBlockedTeammates(bs);
 			return qfalse;
 		}
@@ -1226,44 +1226,44 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 				VectorSet(bs->lead_teamgoal.maxs, 8, 8, 8);
 			}
 		}
-		// if the team mate is visible
+		// if the teammate is visible
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->lead_teammate)) {
 			bs->leadvisible_time = FloatTime();
 		}
-		// if the team mate is not visible for 1 seconds
+		// if the teammate is not visible for 1 seconds
 		if (bs->leadvisible_time < FloatTime() - 1) {
 			bs->leadbackup_time = FloatTime() + 2;
 		}
-		// distance towards the team mate
+		// distance towards the teammate
 		VectorSubtract(bs->lead_teamgoal.origin, bs->origin, dir);
 
 		squaredist = VectorLengthSquared(dir);
-		// if backing up towards the team mate
+		// if backing up towards the teammate
 		if (bs->leadbackup_time > FloatTime()) {
 			if (bs->leadmessage_time < FloatTime() - 20) {
 				BotAI_BotInitialChat(bs, "followme", EasyClientName(bs->lead_teammate, teammate, sizeof(teammate)), NULL);
 				trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 				bs->leadmessage_time = FloatTime();
 			}
-			// if very close to the team mate
+			// if very close to the teammate
 			if (squaredist < Square(100)) {
 				bs->leadbackup_time = 0;
 			}
-			// the bot should go back to the team mate
+			// the bot should go back to the teammate
 			memcpy(goal, &bs->lead_teamgoal, sizeof(bot_goal_t));
 			return qtrue;
 		} else {
-			// if quite distant from the team mate
+			// if quite distant from the teammate
 			if (squaredist > Square(500)) {
 				if (bs->leadmessage_time < FloatTime() - 20) {
 					BotAI_BotInitialChat(bs, "followme", EasyClientName(bs->lead_teammate, teammate, sizeof(teammate)), NULL);
 					trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 					bs->leadmessage_time = FloatTime();
 				}
-				// look at the team mate
+				// look at the teammate
 				VectorSubtract(entinfo.origin, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
-				// just wait for the team mate
+				// just wait for the teammate
 				return qfalse;
 			}
 		}
@@ -1657,7 +1657,7 @@ int AINode_Wait(bot_state_t *bs) {
 	BotAIBlocked(bs, &moveresult, AIEnter_Wait);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
-	// check if the bot is blocking team mates
+	// check if the bot is blocking teammates
 	BotCheckBlockedTeammates(bs);
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
