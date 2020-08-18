@@ -455,6 +455,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 
 		VectorSubtract(entinfo.origin, bs->origin, dir);
+		// recalculate the formation space
+		bs->formation_dist = BotSetTeamFormationDist(bs);
 
 		if (VectorLengthSquared(dir) < Square(bs->formation_dist)) {
 			// don't crouch when swimming
@@ -684,8 +686,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// if really near the camp spot
 		VectorSubtract(goal->origin, bs->origin, dir);
+		// recalculate the space for camping teammates
+		bs->camp_dist = BotSetTeamCampDist(bs);
 
-		if (VectorLengthSquared(dir) < Square(60)) {
+		if (VectorLengthSquared(dir) < Square(bs->camp_dist)) {
 			// if not arrived yet
 			if (!bs->arrive_time) {
 				if (bs->ltgtype == LTG_CAMPORDER) {
