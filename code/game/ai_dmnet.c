@@ -469,7 +469,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					bs->crouch_time = FloatTime() + 5 + croucher * 15;
 				}
 			}
-
+			// if the bot wants to crouch
 			if (bs->crouch_time > FloatTime()) {
 				trap_EA_Crouch(bs->client);
 			}
