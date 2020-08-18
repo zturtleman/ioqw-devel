@@ -672,7 +672,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					// get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 128;
+					bs->formation_dist = BotSetTeamFormationDist(bs);
 
 					BotSetTeamStatus(bs);
 
@@ -743,7 +743,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					// get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 128;
+					bs->formation_dist = BotSetTeamFormationDist(bs);
 
 					BotSetTeamStatus(bs);
 
@@ -950,7 +950,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 					// get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 128;
+					bs->formation_dist = BotSetTeamFormationDist(bs);
 
 					BotSetTeamStatus(bs);
 
@@ -1352,7 +1352,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 			// get the team goal time
 			bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 			bs->ltgtype = LTG_TEAMACCOMPANY;
-			bs->formation_dist = 128;
+			bs->formation_dist = BotSetTeamFormationDist(bs);
 
 			BotSetTeamStatus(bs);
 			return;
