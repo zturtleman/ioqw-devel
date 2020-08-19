@@ -77,7 +77,7 @@ void BotVoiceChat_GetFlag(bot_state_t *bs, int client, int mode) {
 	// set the ltg type
 	bs->ltgtype = LTG_GETFLAG;
 	// set the team goal time
-	bs->teamgoal_time = FloatTime() + CTF_GETFLAG_TIME;
+	bs->teamgoal_time = FloatTime() + TEAM_GETFLAG_TIME;
 	// get an alternate route in ctf
 	if (gametype == GT_CTF) {
 		// get an alternative route goal towards the enemy base
@@ -383,7 +383,7 @@ void BotVoiceChat_ReturnFlag(bot_state_t *bs, int client, int mode) {
 	// set the ltg type
 	bs->ltgtype = LTG_RETURNFLAG;
 	// set the team goal time
-	bs->teamgoal_time = FloatTime() + CTF_RETURNFLAG_TIME;
+	bs->teamgoal_time = FloatTime() + TEAM_RETURNFLAG_TIME;
 	// away from rushing to base
 	bs->rushbaseaway_time = 0;
 	// set the team status (offense, defense etc.)

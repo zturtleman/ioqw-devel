@@ -596,7 +596,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 
@@ -714,7 +714,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					bs->ltgtype = LTG_RETURNFLAG;
 				}
 				// set the time the bot will stop getting the flag
-				bs->teamgoal_time = FloatTime() + CTF_GETFLAG_TIME;
+				bs->teamgoal_time = FloatTime() + TEAM_GETFLAG_TIME;
 				// get an alternative route goal towards the enemy base
 				BotGetAlternateRouteGoal(bs, BotOppositeTeam(bs));
 				// set the team status (offense, defense etc.)
@@ -768,7 +768,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					// get the flag
 					bs->ltgtype = LTG_RETURNFLAG;
 					// set the time the bot will stop returning the flag
-					bs->teamgoal_time = FloatTime() + CTF_RETURNFLAG_TIME;
+					bs->teamgoal_time = FloatTime() + TEAM_RETURNFLAG_TIME;
 					// get an alternative route goal towards the enemy base
 					BotGetAlternateRouteGoal(bs, BotOppositeTeam(bs));
 					// set the team status (offense, defense etc.)
@@ -809,7 +809,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot is roaming
-	if (bs->ctfroam_time > FloatTime()) {
+	if (bs->teamroam_time > FloatTime()) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
@@ -839,7 +839,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		// set the ltg type
 		bs->ltgtype = LTG_GETFLAG;
 		// set the time the bot will stop getting the flag
-		bs->teamgoal_time = FloatTime() + CTF_GETFLAG_TIME;
+		bs->teamgoal_time = FloatTime() + TEAM_GETFLAG_TIME;
 		// get an alternative route goal towards the enemy base
 		BotGetAlternateRouteGoal(bs, BotOppositeTeam(bs));
 		// set the team status (offense, defense etc.)
@@ -866,7 +866,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
-		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
+		bs->teamroam_time = FloatTime() + TEAM_ROAM_TIME;
 		// set the team status (offense, defense etc.)
 		BotSetTeamStatus(bs);
 	}
@@ -897,7 +897,7 @@ void BotCTFRetreatGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 			// set the team status (offense, defense etc.)
@@ -927,7 +927,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 			// get an alternative route goal towards the enemy base
@@ -1078,7 +1078,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot is roaming
-	if (bs->ctfroam_time > FloatTime()) {
+	if (bs->teamroam_time > FloatTime()) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
@@ -1108,7 +1108,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		// set the ltg type
 		bs->ltgtype = LTG_GETFLAG;
 		// set the time the bot will stop getting the flag
-		bs->teamgoal_time = FloatTime() + CTF_GETFLAG_TIME;
+		bs->teamgoal_time = FloatTime() + TEAM_GETFLAG_TIME;
 		// set the team status (offense, defense etc.)
 		BotSetTeamStatus(bs);
 	} else if (rnd < l2 && ctf_redflag.areanum && ctf_blueflag.areanum) {
@@ -1133,7 +1133,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
-		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
+		bs->teamroam_time = FloatTime() + TEAM_ROAM_TIME;
 		// set the team status (offense, defense etc.)
 		BotSetTeamStatus(bs);
 	}
@@ -1164,7 +1164,7 @@ void Bot1FCTFRetreatGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 			// get an alternative route goal towards the enemy base
@@ -1200,7 +1200,7 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot is roaming
-	if (bs->ctfroam_time > FloatTime()) {
+	if (bs->teamroam_time > FloatTime()) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
@@ -1263,7 +1263,7 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
-		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
+		bs->teamroam_time = FloatTime() + TEAM_ROAM_TIME;
 		// set the team status (offense, defense etc.)
 		BotSetTeamStatus(bs);
 	}
@@ -1323,7 +1323,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 			// get an alternative route goal towards the enemy base
@@ -1361,7 +1361,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot is roaming
-	if (bs->ctfroam_time > FloatTime()) {
+	if (bs->teamroam_time > FloatTime()) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
@@ -1448,7 +1448,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 		// set the time the bot will stop roaming
-		bs->ctfroam_time = FloatTime() + CTF_ROAM_TIME;
+		bs->teamroam_time = FloatTime() + TEAM_ROAM_TIME;
 		// set the team status (offense, defense etc.)
 		BotSetTeamStatus(bs);
 	}
@@ -1474,7 +1474,7 @@ void BotHarvesterRetreatGoals(bot_state_t *bs) {
 			// set the ltg type
 			bs->ltgtype = LTG_RUSHBASE;
 			// set the team goal time
-			bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+			bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 			// away from rushing to base
 			bs->rushbaseaway_time = 0;
 			// set the team status (offense, defense etc.)

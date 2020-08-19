@@ -53,14 +53,14 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TEAM_CAMP_TIME				600 // 10 minutes camping time
 #define TEAM_PATROL_TIME			600 // 10 minutes patrolling time
 #define TEAM_LEAD_TIME				600 // 10 minutes taking the lead
-#define TEAM_GETITEM_TIME			 60 // 1 minute
+#define TEAM_GETITEM_TIME			120 // 2 minutes
 #define TEAM_KILL_SOMEONE			180 // 3 minute to kill someone
 #define TEAM_ATTACKENEMYBASE_TIME	600 // 10 minutes
 #define TEAM_HARVEST_TIME			120 // 2 minutes
-#define CTF_GETFLAG_TIME			600 // 10 minutes ctf get flag time
-#define CTF_RUSHBASE_TIME			120 // 2 minutes ctf rush base time
-#define CTF_RETURNFLAG_TIME			180 // 3 minutes to return the flag
-#define CTF_ROAM_TIME				 60 // 1 minute ctf roam time
+#define TEAM_GETFLAG_TIME			600 // 10 minutes ctf get flag time
+#define TEAM_RUSHBASE_TIME			120 // 2 minutes ctf rush base time
+#define TEAM_RETURNFLAG_TIME		180 // 3 minutes to return the flag
+#define TEAM_ROAM_TIME				 60 // 1 minute ctf roam time
 // patrol flags
 #define PATROL_LOOP		1
 #define PATROL_REVERSE	2
@@ -186,7 +186,7 @@ typedef struct bot_state_s {
 	float rushbaseaway_time;				// time away from rushing to the base
 	float attackaway_time;					// time away from attacking the enemy base
 	float harvestaway_time;					// time away from harvesting
-	float ctfroam_time;						// time the bot is roaming in ctf
+	float teamroam_time;					// time the bot is roaming in team games
 	float killedenemy_time;					// time the bot killed the enemy
 	float arrive_time;						// time arrived (at companion)
 	float lastair_time;						// last time the bot had air
