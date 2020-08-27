@@ -377,7 +377,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (!entinfo.valid) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
-			return qfalse;
 		}
 		// check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
@@ -436,7 +435,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (!entinfo.valid) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
-			return qfalse;
 		}
 		// check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
@@ -517,7 +515,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qfalse;
 		}
 		// if accompanying the companion for 10 minutes
-		if (bs->teamgoal_time < FloatTime()) {
+		if (bs->teamgoal_time < FloatTime()) { // Tobias CHECK: heh, does this really work?
 			BotAI_BotInitialChat(bs, "accompany_stop", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 			bs->ltg_time = 0;

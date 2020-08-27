@@ -796,8 +796,8 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 	}
-	// if already a CTF or team goal
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) {
+	// if the bot already has a CTF or team goal
+	if (bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) {
 		return;
 	}
 	// if ordered to do something
@@ -985,8 +985,8 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 					return;
 				}
 			}
-			// if already a CTF or team goal
-			if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_GETITEM) {
+			// if the bot already has a CTF or team goal
+			if (bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) {
 				return;
 			}
 			// if not already attacking the enemy base
@@ -1021,7 +1021,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 			if (c >= 0) {
 				// FIXME: attack enemy flag carrier
 			}
-			// if already a CTF or team goal
+			// if the bot already has a CTF or team goal
 			if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) {
 				return;
 			}
@@ -1065,8 +1065,8 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		bs->ltg_time = 0;
 		bs->ltgtype = 0;
 	}
-	// if already a CTF or team goal
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_GETITEM) {
+	// if the bot already has a CTF or team goal
+	if (bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) { // Tobias CHECK: LTG_RETURNFLAG?
 		return;
 	}
 	// if ordered to do something
@@ -1191,8 +1191,8 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 	if (bs->lastgoal_ltgtype) {
 		bs->teamgoal_time += 60;
 	}
-	// if already a team goal
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_GETITEM) {
+	// if the bot already has a CTF or team goal
+	if (bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || /*bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || */bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) { // Tobias CHECK!
 		return;
 	}
 	// if ordered to do something
@@ -1352,8 +1352,8 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 	if (bs->lastgoal_ltgtype) {
 		bs->teamgoal_time += 60;
 	}
-	// if not yet doing something
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_HARVEST || bs->ltgtype == LTG_GETITEM) {
+	// if the bot already has a CTF or team goal
+	if (bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_HARVEST || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM) { // Tobias CHECK: also added LTG_RUSHBASE
 		return;
 	}
 	// if ordered to do something
@@ -4399,8 +4399,8 @@ int BotWantsToCamp(bot_state_t *bs) {
 	if (camper < 0.1) {
 		return qfalse;
 	}
-	// if the bot has a team goal
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_CAMP || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL) {
+	// if the bot already has a CTF or team goal
+	if (bs->ltgtype == LTG_GETFLAG || bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_HARVEST || bs->ltgtype == LTG_DEFENDKEYAREA || bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_RETURNFLAG || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_CAMP || bs->ltgtype == LTG_CAMPORDER || bs->ltgtype == LTG_PATROL || bs->ltgtype == LTG_GETITEM || bs->ltgtype == LTG_KILL) {
 		return qfalse;
 	}
 	// if camped recently

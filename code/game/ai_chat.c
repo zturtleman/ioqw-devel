@@ -1062,7 +1062,7 @@ int BotChat_Random(bot_state_t *bs) {
 		return qfalse;
 	}
 	// don't chat when doing something important :)
-	if (bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY || bs->ltgtype == LTG_RUSHBASE) {
+	if (bs->ltgtype == LTG_RUSHBASE || bs->ltgtype == LTG_TEAMHELP || bs->ltgtype == LTG_TEAMACCOMPANY) {
 		return qfalse;
 	}
 
