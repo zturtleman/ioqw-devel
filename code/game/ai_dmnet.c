@@ -395,7 +395,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (!entinfo.valid) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
-			return qfalse;
 		}
 		// if the team mate is visible
 		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
@@ -439,7 +438,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->teammessage_time = 0;
 		}
 		// if accompanying the companion for 3 minutes
-		if (bs->teamgoal_time < FloatTime()) {
+		if (bs->teamgoal_time < FloatTime()) { // Tobias CHECK: heh, does this really work?
 			BotAI_BotInitialChat(bs, "accompany_stop", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
 			trap_BotEnterChat(bs->cs, bs->teammate, CHAT_TELL);
 			bs->ltg_time = 0;
@@ -451,7 +450,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (!entinfo.valid) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
-			return qfalse;
 		}
 
 		VectorSubtract(entinfo.origin, bs->origin, dir);
