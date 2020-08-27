@@ -727,7 +727,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 		}
 
 		return;
-	// if both flags Not at their bases
+	// if both flags not at their bases
 	} else if (flagstatus == 3) {
 		if (bs->owndecision_time < FloatTime()) {
 			// if not trying to return the flag and not following the team flag carrier
@@ -916,7 +916,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 	float rnd, l1, l2;
 	int c;
 
-	// when carrying a flag in ctf the bot should rush to the base
+	// when carrying the flag in 1ctf the bot should rush to the enemy base
 	if (Bot1FCTFCarryingFlag(bs)) {
 		// if not already rushing to the base
 		if (bs->ltgtype != LTG_RUSHBASE) {
@@ -1153,7 +1153,7 @@ Bot1FCTFRetreatGoals
 */
 void Bot1FCTFRetreatGoals(bot_state_t *bs) {
 
-	// when carrying a flag in ctf the bot should rush to the enemy base
+	// when carrying the flag in 1ctf the bot should rush to the enemy base
 	if (Bot1FCTFCarryingFlag(bs)) {
 		// if not already rushing to the base
 		if (bs->ltgtype != LTG_RUSHBASE) {
@@ -1220,7 +1220,7 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 		l1 = 0.4f;
 		l2 = 0.7f;
 	}
-	// get the flag or defend the base
+	// attack the enemy base or defend the base
 	rnd = random();
 
 	if (rnd < l1 && redobelisk.areanum && blueobelisk.areanum) {
@@ -1312,7 +1312,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 	float rnd, l1, l2;
 	int c;
 
-	// when carrying cubes in harvester the bot should rush to the base
+	// when carrying cubes in harvester the bot should rush to the enemy base
 	if (BotHarvesterCarryingCubes(bs)) {
 		// if not already rushing to the base
 		if (bs->ltgtype != LTG_RUSHBASE) {
@@ -1463,7 +1463,7 @@ BotHarvesterRetreatGoals
 */
 void BotHarvesterRetreatGoals(bot_state_t *bs) {
 
-	// when carrying cubes in harvester the bot should rush to the base
+	// when carrying cubes in harvester the bot should rush to the enemy base
 	if (BotHarvesterCarryingCubes(bs)) {
 		// if not already rushing to the base
 		if (bs->ltgtype != LTG_RUSHBASE) {
