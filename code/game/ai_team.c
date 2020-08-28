@@ -1392,7 +1392,7 @@ void Bot1FCTFOrders_FlagAtCenter(bot_state_t *bs) {
 					ClientName(teammates[1], name, sizeof(name));
 					BotAI_BotInitialChat(bs, "cmd_defendbase", name, NULL);
 					BotSayTeamOrder(bs, teammates[1]);
-					BotSayVoiceTeamOrder(bs, teammates[0], VOICECHAT_DEFEND);
+					BotSayVoiceTeamOrder(bs, teammates[1], VOICECHAT_DEFEND);
 					// the other will get the flag
 					ClientName(teammates[2], name, sizeof(name));
 					BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
