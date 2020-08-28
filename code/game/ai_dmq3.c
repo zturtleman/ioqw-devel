@@ -1464,12 +1464,6 @@ void BotTeamGoals(bot_state_t *bs, int retreat) {
 	bs->order_time = 0;
 }
 
-float VectorDistance(vec3_t v1, vec3_t v2) {
-	vec3_t dir;
-
-	VectorSubtract(v2, v1, dir);
-	return VectorLength(dir);
-}
 /*
 =======================================================================================================================================
 BotFirstReachabilityArea

@@ -521,7 +521,12 @@ float NormalizeColor(const vec3_t in, vec3_t out);
 float RadiusFromBounds(const vec3_t mins, const vec3_t maxs);
 void ClearBounds(vec3_t mins, vec3_t maxs);
 void AddPointToBounds(const vec3_t v, vec3_t mins, vec3_t maxs);
-
+// Tobias NOTE: from the botlib files
+float VectorDistanceSquared(vec3_t p1, vec3_t p2);
+float VectorDistance(vec3_t v1, vec3_t v2);
+int VectorBetweenVectors(vec3_t v, vec3_t v1, vec3_t v2);
+void VectorMiddle(vec3_t v1, vec3_t v2, vec3_t middle);
+// Tobias END
 #if !defined(Q3_VM) || (defined(Q3_VM) && defined(__Q3_VM_MATH))
 /*
 =======================================================================================================================================
