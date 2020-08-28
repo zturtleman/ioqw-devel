@@ -1342,7 +1342,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 	if (bs->ltgtype == LTG_TEAMACCOMPANY && !bs->ordered) {
 		// get the entity information
 		BotEntityInfo(bs->teammate, &entinfo);
-		// if the teammate being accompanied no longer carries the flag
+		// if the teammate being accompanied no longer carries cubes
 		if (!EntityCarriesCubes(&entinfo)) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
