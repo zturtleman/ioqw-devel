@@ -867,7 +867,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					bs->ltgtype = 0;
 					return qfalse;
 			}
-			// if not carrying the flag anymore
+			// if not carrying the enemy flag anymore
 			if (!BotCTFCarryingFlag(bs)) {
 				bs->ltg_time = 0;
 				bs->ltgtype = 0;
@@ -883,7 +883,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				if (BotCTFCarryingFlag(bs)) {
 					trap_BotResetAvoidReach(bs->ms);
 					bs->rushbaseaway_time = FloatTime() + 5 + 10 * random();
-					// FIXME: add chat to tell the others to get back the flag
+					// FIXME: add chat to tell the others to get back our flag
 				} else {
 					bs->ltg_time = 0;
 					bs->ltgtype = 0;
@@ -893,7 +893,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotAlternateRoute(bs, goal);
 			return qtrue;
 		}
-		// returning flag
+		// returning our flag
 		if (bs->ltgtype == LTG_RETURNFLAG) {
 			// check for bot typing status message
 			if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
@@ -2198,9 +2198,8 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 			} else {
 				range = 150;
 			}
-
+			// if carrying a flag or skulls the bot shouldn't be distracted too much
 			if (gametype == GT_CTF) {
-				// if carrying a flag the bot shouldn't be distracted too much
 				if (BotCTFCarryingFlag(bs)) {
 					range = 50;
 				}
@@ -2872,9 +2871,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 // Tobias DEBUG
 		if (!bot_alt_pickup.integer) {
 			range = 150;
-
+			// if carrying a flag or skulls the bot shouldn't be distracted too much
 			if (gametype == GT_CTF) {
-				// if carrying a flag the bot shouldn't be distracted too much
 				if (BotCTFCarryingFlag(bs)) {
 					range = 50;
 				}
