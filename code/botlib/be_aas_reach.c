@@ -1767,49 +1767,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 
 	return qfalse;
 }
-// Tobias NOTE: please move those to qcommon!
-/*
-=======================================================================================================================================
-VectorDistance
 
-Returns the distance between the two vectors.
-=======================================================================================================================================
-*/
-float VectorDistance(vec3_t v1, vec3_t v2) {
-	vec3_t dir;
-
-	VectorSubtract(v2, v1, dir);
-	return VectorLength(dir);
-}
-
-/*
-=======================================================================================================================================
-VectorBetweenVectors
-
-Returns true if the first vector is between the last two vectors.
-=======================================================================================================================================
-*/
-int VectorBetweenVectors(vec3_t v, vec3_t v1, vec3_t v2) {
-	vec3_t dir1, dir2;
-
-	VectorSubtract(v, v1, dir1);
-	VectorSubtract(v, v2, dir2);
-	return (DotProduct(dir1, dir2) <= 0);
-}
-
-/*
-=======================================================================================================================================
-VectorMiddle
-
-Returns the mid point between the two vectors.
-=======================================================================================================================================
-*/
-void VectorMiddle(vec3_t v1, vec3_t v2, vec3_t middle) {
-
-	VectorAdd(v1, v2, middle);
-	VectorScale(middle, 0.5, middle);
-}
-// Tobias END
 /*
 =======================================================================================================================================
 AAS_ClosestEdgePoints
