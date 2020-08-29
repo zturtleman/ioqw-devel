@@ -6144,8 +6144,44 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	}
 //#endif
 	bs->allowHitWorld = qfalse;
+	// if the enemy is NOT visible
+	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+		VectorCopy(bs->lastenemyorigin, bestorigin);
+
+		bestorigin[2] += 8;
+		// if the bot is skilled enough
+		if (aim_skill > 0.5) {
+			// do prediction shots around corners
+			if (!BotUsesInstantHitWeapon(bs)) {
+				// create the chase goal
+				goal.entitynum = bs->client;
+				goal.areanum = bs->areanum;
+
+				VectorCopy(bs->eye, goal.origin);
+				VectorSet(goal.mins, -8, -8, -8);
+				VectorSet(goal.maxs, 8, 8, 8);
+
+				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
+					VectorSubtract(target, bs->eye, dir);
+					// if the hitpoint is far enough from the bot
+					if (VectorLengthSquared(dir) > Square(100)) {
+						VectorCopy(target, bestorigin);
+						// if the projectile does large radial damage try to aim at the ground in front of the enemy
+						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+							bestorigin[2] -= 20;
+							// allow the bot to shoot at the ground
+							bs->allowHitWorld = qtrue;
+						}
+					}
+
+					aim_accuracy = 1.0f;
+				}
+			}
+		}
+
+		VectorCopy(bestorigin, bs->aimtarget);
 	// if the enemy is visible
-	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+	} else {
 		// get the start point shooting from
 		// NOTE: the x and y projectile start offsets are ignored
 		VectorCopy(bs->origin, start);
@@ -6282,42 +6318,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 //#endif
 		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, mask);
 		VectorCopy(trace.endpos, bs->aimtarget);
-	// if the enemy is NOT visible
-	} else {
-		VectorCopy(bs->lastenemyorigin, bestorigin);
-
-		bestorigin[2] += 8;
-		// if the bot is skilled enough
-		if (aim_skill > 0.5) {
-			// do prediction shots around corners
-			if (!BotUsesInstantHitWeapon(bs)) {
-				// create the chase goal
-				goal.entitynum = bs->client;
-				goal.areanum = bs->areanum;
-
-				VectorCopy(bs->eye, goal.origin);
-				VectorSet(goal.mins, -8, -8, -8);
-				VectorSet(goal.maxs, 8, 8, 8);
-
-				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
-					VectorSubtract(target, bs->eye, dir);
-					// if the hitpoint is far enough from the bot
-					if (VectorLengthSquared(dir) > Square(100)) {
-						VectorCopy(target, bestorigin);
-						// if the projectile does large radial damage try to aim at the ground in front of the enemy
-						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-							bestorigin[2] -= 20;
-							// allow the bot to shoot at the ground
-							bs->allowHitWorld = qtrue;
-						}
-					}
-
-					aim_accuracy = 1.0f;
-				}
-			}
-		}
-
-		VectorCopy(bestorigin, bs->aimtarget);
 	}
 // Tobias NOTE: for developers...
 /*
