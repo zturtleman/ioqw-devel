@@ -6412,7 +6412,7 @@ Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
-void BotCheckAttack_Default(bot_state_t *bs) {
+qboolean BotCheckAttack_Default(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
@@ -6432,27 +6432,27 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
-		return;
+		return qfalse;
 	}
 
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
-		return;
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
-		return;
+		return qfalse;
 	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
-		return;
+		return qfalse;
 	}
 	// if attacking an obelisk
 	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
 		// if the obelisk is respawning
 		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-			return;
+			return qfalse;
 		}
 	}
 
@@ -6488,24 +6488,24 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
 		if (VectorLengthSquared(dir) > Square(60)) {
-			return;
+			return qfalse;
 		}
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
-		return;
+		return qfalse;
 	}
 /*
 	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
@@ -6514,12 +6514,12 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 */
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
-		return;
+		return qfalse;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
@@ -6644,7 +6644,7 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
@@ -6668,14 +6668,14 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 		if (trace.entityNum != attackentity) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
-				return;
+				return qfalse;
 			}
 		}
 	}
@@ -6687,7 +6687,7 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
-					return;
+					return qfalse;
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
@@ -6695,7 +6695,7 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 	}
 // Tobias DEBUG
 	if (bot_noshoot.integer) {
-		return;
+		return qfalse;
 	}
 #ifdef DEBUG
 	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
@@ -6711,6 +6711,8 @@ void BotCheckAttack_Default(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
+
+	return qtrue;
 }
 
 /*
@@ -6730,7 +6732,7 @@ Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
-void BotCheckAttack_Alt1(bot_state_t *bs) {
+qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
@@ -6750,27 +6752,27 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
-		return;
+		return qfalse;
 	}
 
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
-		return;
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
-		return;
+		return qfalse;
 	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
-		return;
+		return qfalse;
 	}
 	// if attacking an obelisk
 	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
 		// if the obelisk is respawning
 		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-			return;
+			return qfalse;
 		}
 	}
 
@@ -6806,24 +6808,24 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
 		if (VectorLengthSquared(dir) > Square(60)) {
-			return;
+			return qfalse;
 		}
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
-		return;
+		return qfalse;
 	}
 /*
 	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
@@ -6832,12 +6834,12 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 */
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
-		return;
+		return qfalse;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
@@ -6962,7 +6964,7 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
@@ -6986,14 +6988,14 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 		if (trace.entityNum != attackentity) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
-				return;
+				return qfalse;
 			}
 		}
 	}
@@ -7005,7 +7007,7 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
-					return;
+					return qfalse;
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
@@ -7013,7 +7015,7 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 	}
 // Tobias DEBUG
 	if (bot_noshoot.integer) {
-		return;
+		return qfalse;
 	}
 #ifdef DEBUG
 	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
@@ -7029,6 +7031,8 @@ void BotCheckAttack_Alt1(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
+
+	return qtrue;
 }
 
 /*
@@ -7048,7 +7052,7 @@ Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
-void BotCheckAttack_Alt2(bot_state_t *bs) {
+qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
@@ -7068,27 +7072,27 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
-		return;
+		return qfalse;
 	}
 
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
-		return;
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
-		return;
+		return qfalse;
 	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
-		return;
+		return qfalse;
 	}
 	// if attacking an obelisk
 	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
 		// if the obelisk is respawning
 		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-			return;
+			return qfalse;
 		}
 	}
 
@@ -7124,24 +7128,24 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
 		if (VectorLengthSquared(dir) > Square(60)) {
-			return;
+			return qfalse;
 		}
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
-		return;
+		return qfalse;
 	}
 /*
 	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
@@ -7150,12 +7154,12 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 */
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
-		return;
+		return qfalse;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
@@ -7280,7 +7284,7 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
@@ -7304,14 +7308,14 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 		if (trace.entityNum != attackentity) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
-				return;
+				return qfalse;
 			}
 		}
 	}
@@ -7323,7 +7327,7 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
-					return;
+					return qfalse;
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
@@ -7331,7 +7335,7 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 	}
 // Tobias DEBUG
 	if (bot_noshoot.integer) {
-		return;
+		return qfalse;
 	}
 #ifdef DEBUG
 	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
@@ -7347,6 +7351,8 @@ void BotCheckAttack_Alt2(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
+
+	return qtrue;
 }
 
 /*
@@ -7366,7 +7372,7 @@ Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
-void BotCheckAttack_Alt3(bot_state_t *bs) {
+qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
@@ -7386,27 +7392,27 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
-		return;
+		return qfalse;
 	}
 
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
-		return;
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
-		return;
+		return qfalse;
 	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
-		return;
+		return qfalse;
 	}
 	// if attacking an obelisk
 	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
 		// if the obelisk is respawning
 		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-			return;
+			return qfalse;
 		}
 	}
 
@@ -7442,24 +7448,24 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
 		if (VectorLengthSquared(dir) > Square(60)) {
-			return;
+			return qfalse;
 		}
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
-		return;
+		return qfalse;
 	}
 /*
 	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
@@ -7468,12 +7474,12 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 */
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
-		return;
+		return qfalse;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
@@ -7598,7 +7604,7 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
@@ -7622,14 +7628,14 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return;
+		return qfalse;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 		if (trace.entityNum != attackentity) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
-				return;
+				return qfalse;
 			}
 		}
 	}
@@ -7641,7 +7647,7 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
-					return;
+					return qfalse;
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
@@ -7649,7 +7655,7 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 	}
 // Tobias DEBUG
 	if (bot_noshoot.integer) {
-		return;
+		return qfalse;
 	}
 #ifdef DEBUG
 	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
@@ -7665,6 +7671,8 @@ void BotCheckAttack_Alt3(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
+
+	return qtrue;
 }
 // DEBUG
 /*
