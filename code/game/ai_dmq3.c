@@ -5360,10 +5360,11 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			bs->enemysight_time = FloatTime();
 		}
 
-		bs->enemysuicide = qfalse;
-		bs->enemydeath_time = 0;
 		bs->enemy = curenemy;
+		bs->aimnotperfect_time = FloatTime();
 		bs->enemyvisible_time = FloatTime();
+		bs->enemydeath_time = 0;
+		bs->enemysuicide = qfalse;
 
 		VectorCopy(entinfo.origin, bs->lastenemyorigin);
 
@@ -6849,15 +6850,9 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 		}
 #endif
 	}
-
-	VectorSubtract(bs->aimtarget, bs->eye, dir);
-	VectorToAngles(dir, angles);
-	// don't shoot too early with some weapons
-	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
-		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
-	}
 	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
+		bs->aimnotperfect_time = FloatTime();
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
@@ -6870,6 +6865,8 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
+
+	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
 		return qfalse;
@@ -6970,7 +6967,7 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
-			weaponfov = 6;
+			weaponfov = 20;
 			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
@@ -7011,9 +7008,22 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 #endif
 	}
 
-	if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
+	VectorToAngles(dir, angles);
+	// some weapons don't accept inprecision (could be dangerous for ourself etc.)
+	if (!InFieldOfVision(bs->viewangles, 0.5 * fov, angles)) {
+		bs->aimnotperfect_time = FloatTime();
+	}
+	// so don't shoot too early with those weapons
+	if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: aimnotperfect_time!\n", netname);
+#endif
+		return qfalse;
+	}
+
+	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -7037,7 +7047,7 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
 #endif
 		return qfalse;
 	}
