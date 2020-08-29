@@ -396,8 +396,11 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
-		// if the team mate is visible
-		if (BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
+		// if the teammate is visible
+		if (!BotEntityVisible(&bs->cur_ps, 360, bs->teammate)) {
+			// last time the bot was NOT visible
+			bs->teammatevisible_time = FloatTime();
+		} else {
 			// if close just stand still there
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 
@@ -407,9 +410,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				BotCheckBlockedTeammates(bs);
 				return qfalse;
 			}
-		} else {
-			// last time the bot was NOT visible
-			bs->teammatevisible_time = FloatTime();
 		}
 
 		areanum = BotPointAreaNum(entinfo.number, entinfo.origin); // Tobias CHECK: entinfo.number?
