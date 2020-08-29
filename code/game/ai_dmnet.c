@@ -2342,7 +2342,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 // Tobias DEBUG
 	float checkcvar;
-//	float battleSense;
+	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2493,15 +2493,21 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, NULL);
 	// aim at the enemy
-// Tobias DEBUG
-//	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-//	if (battleSense < 0.5) {
-		BotAimAtEnemy(bs);
-//	}
-// DEBUG
+	BotAimAtEnemy(bs);
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+
+	if (battleSense > 0.75 || bot_alt_aim.integer == 3) {
+		BotCheckAttack_Alt3(bs);
+	} else if (battleSense > 0.5 || bot_alt_aim.integer == 2) {
+		BotCheckAttack_Alt2(bs);
+	} else if (battleSense > 0.25 || bot_alt_aim.integer == 1) {
+		BotCheckAttack_Alt1(bs);
+	} else {
+		BotCheckAttack_Default(bs);
+	}
+// DEBUG
 	// if the bot wants to retreat
 	if (!(bs->flags & BFL_FIGHTSUICIDAL)) {
 		if (BotWantsToRetreat(bs)) {
@@ -2546,7 +2552,6 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	int range;
 // Tobias DEBUG
 	float checkcvar;
-//	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2688,13 +2693,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (bs->chase_time > FloatTime() - 2) {
-// Tobias DEBUG
-			//battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-			//if (battleSense < 0.5) {
-				BotAimAtEnemy(bs);
-			//}
-// DEBUG
+			BotAimAtEnemy(bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
@@ -2746,7 +2745,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	int areanum, range;
 // Tobias DEBUG
 	float checkcvar;
-//	float battleSense;
+	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2926,13 +2925,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
-// Tobias DEBUG
-//			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-//			if (battleSense < 0.5) {
-				BotAimAtEnemy(bs);
-//			}
-// DEBUG
+			BotAimAtEnemy(bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
@@ -2947,7 +2940,19 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+
+	if (battleSense > 0.75 || bot_alt_aim.integer == 3) {
+		BotCheckAttack_Alt3(bs);
+	} else if (battleSense > 0.5 || bot_alt_aim.integer == 2) {
+		BotCheckAttack_Alt2(bs);
+	} else if (battleSense > 0.25 || bot_alt_aim.integer == 1) {
+		BotCheckAttack_Alt1(bs);
+	} else {
+		BotCheckAttack_Default(bs);
+	}
+// DEBUG
 	return qtrue;
 }
 
@@ -2982,7 +2987,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	float attack_skill;
 	vec3_t target, dir;
-//	float battleSense;
+	float battleSense;
 
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE NBG: joined observer.");
@@ -3097,13 +3102,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(&bs->cur_ps, 360, bs->enemy)
-// Tobias DEBUG
-//			battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-//			if (battleSense < 0.5) {
-				BotAimAtEnemy(bs);
-//			}
-// DEBUG
+			BotAimAtEnemy(bs);
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
@@ -3118,7 +3117,19 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-	BotCheckAttack(bs);
+// Tobias DEBUG
+	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+
+	if (battleSense > 0.75 || bot_alt_aim.integer == 3) {
+		BotCheckAttack_Alt3(bs);
+	} else if (battleSense > 0.5 || bot_alt_aim.integer == 2) {
+		BotCheckAttack_Alt2(bs);
+	} else if (battleSense > 0.25 || bot_alt_aim.integer == 1) {
+		BotCheckAttack_Alt1(bs);
+	} else {
+		BotCheckAttack_Default(bs);
+	}
+// DEBUG
 	// if there is an enemy
 	if (BotFindEnemy(bs, -1)) {
 #ifdef DEBUG

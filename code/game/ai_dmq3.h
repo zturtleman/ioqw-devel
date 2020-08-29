@@ -129,7 +129,10 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent);
 // the bot will aim at the current enemy
 void BotAimAtEnemy(bot_state_t *bs);
 // check if the bot should attack
-void BotCheckAttack(bot_state_t *bs);
+void BotCheckAttack_Default(bot_state_t *bs);
+void BotCheckAttack_Alt1(bot_state_t *bs);
+void BotCheckAttack_Alt2(bot_state_t *bs);
+void BotCheckAttack_Alt3(bot_state_t *bs);
 // AI when the bot is blocked
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc);
 // AI to predict obstacles
