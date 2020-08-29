@@ -6307,12 +6307,13 @@ void BotAimAtEnemy(bot_state_t *bs) {
 						// if the projectile does large radial damage try to aim at the ground in front of the enemy
 						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
 							bestorigin[2] -= 20;
+							// allow the bot to shoot at the ground
+							bs->allowHitWorld = qtrue;
 						}
 					}
+
+					aim_accuracy = 1.0f;
 				}
-				// allow the bot to shoot at the ground
-				bs->allowHitWorld = qtrue;
-				aim_accuracy = 1.0f;
 			}
 		}
 
