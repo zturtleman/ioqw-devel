@@ -6538,7 +6538,7 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
 		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
 	}
-
+	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
@@ -6552,11 +6552,9 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
-		if (VectorLengthSquared(dir) > Square(60)) {
-			return qfalse;
-		}
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return qfalse;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
@@ -6858,7 +6856,7 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
 		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
 	}
-
+	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
@@ -6872,11 +6870,9 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
-		if (VectorLengthSquared(dir) > Square(60)) {
-			return qfalse;
-		}
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return qfalse;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
@@ -7178,7 +7174,7 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
 		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
 	}
-
+	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
@@ -7192,11 +7188,9 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
-		if (VectorLengthSquared(dir) > Square(60)) {
-			return qfalse;
-		}
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return qfalse;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
@@ -7498,7 +7492,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
 		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
 	}
-
+	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
@@ -7512,11 +7506,9 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs)) {
-		if (VectorLengthSquared(dir) > Square(60)) {
-			return qfalse;
-		}
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return qfalse;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
