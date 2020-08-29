@@ -6414,17 +6414,15 @@ Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
 qboolean BotCheckAttack_Default(bot_state_t *bs) {
-	float points, reactiontime, firethrottle;
-	int attackentity, fov, weaponfov, weaponrange, mask;
+	float points, reactiontime, fov, firethrottle;
+	int attackentity;
+	bsp_trace_t bsptrace;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
-	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
-//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
-//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
-	float *mins, *maxs;
+	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -6536,96 +6534,6 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 			bs->firethrottlewait_time = 0;
 		}
 	}
-	// get some weapon specific attack values
-	switch (bs->weaponnum) {
-		case WP_GAUNTLET:
-			weaponfov = 90;
-			weaponrange = 42;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_MACHINEGUN:
-			weaponfov = 20;
-			weaponrange = 100000;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_CHAINGUN:
-			weaponfov = 80;
-			weaponrange = 100000;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_SHOTGUN:
-			weaponfov = 20;
-			weaponrange = 500;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_NAILGUN:
-			weaponfov = 40; // 30 (pre-aiming?)
-			weaponrange = 500;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_PROXLAUNCHER:
-		case WP_GRENADELAUNCHER:
-			weaponfov = 120;
-			weaponrange = 2000;
-			mins = rmins;
-			maxs = rmaxs;
-			//mask = MASK_MISSILESHOT;
-			mask = MASK_SHOT;
-			break;
-		case WP_NAPALMLAUNCHER:
-		case WP_ROCKETLAUNCHER:
-			weaponfov = 60;
-			weaponrange = 1000;
-			mins = rmins;
-			maxs = rmaxs;
-			mask = MASK_SHOT;
-			break;
-		case WP_BEAMGUN:
-			weaponfov = 80;
-			weaponrange = BEAMGUN_RANGE;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_RAILGUN:
-			weaponfov = 6;
-			weaponrange = 100000;
-			mins = NULL;
-			maxs = NULL;
-			mask = MASK_SHOT;
-			break;
-		case WP_PLASMAGUN:
-			weaponfov = 20;
-			weaponrange = 1000;
-			mins = rmins;
-			maxs = rmaxs;
-			mask = MASK_SHOT;
-			break;
-		case WP_BFG:
-			weaponfov = 20;
-			weaponrange = 1000;
-			mins = rmins;
-			maxs = rmaxs;
-			mask = MASK_SHOT;
-			break;
-		default:
-			weaponfov = 50;
-			weaponrange = 1000;
-			mins = rmins;
-			maxs = rmaxs;
-			mask = MASK_SHOT;
-			break;
-	}
 
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
@@ -6633,47 +6541,52 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
-		fov = weaponfov;
+		fov = 50;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
-	if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
+	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
+
+	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+
+	if (bsptrace.fraction < 1 && bsptrace.entityNum != attackentity) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
+#endif
+		return qfalse;
+	}
+	// get the weapon info
+	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
 
 	start[2] += bs->cur_ps.viewheight;
 
 	AngleVectorsForwardRight(bs->viewangles, forward, right);
-	// get the weapon info
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 
 	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// end point aiming at
-	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
+	VectorMA(start, 1000, forward, end);
 	// a little back to make sure not inside a very close enemy
-	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
-
-	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
-#endif
-		return qfalse;
-	}
+	VectorMA(start, -12, forward, start);
+	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, MASK_SHOT);
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 		if (trace.entityNum != attackentity) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace won't hit: TEAM!\n", netname);
+#endif
 				return qfalse;
 			}
 		}
@@ -6686,6 +6599,9 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: trace won't hit: points > 0!\n", netname);
+#endif
 					return qfalse;
 				}
 			}
@@ -6820,26 +6736,12 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
 		return qfalse;
 	}
-/*
-	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
-
-	if (!bs->allowHitWorld && bsptrace.fraction < 1.0f && bsptrace.entityNum != attackentity) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
-#endif
-		return qfalse;
-	}
-*/
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
 		return qfalse;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
-	// if attacking an obelisk or if the bot wants to retreat and using the grenadelauncher
-	if ((bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) || (bs->weaponnum == WP_GRENADELAUNCHER && BotWantsToRetreat(bs))) {
-		firethrottle = 0;
-	}
 
 	if (bs->firethrottleshoot_time < FloatTime()) {
 		if (random() > firethrottle) {
