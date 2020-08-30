@@ -7574,12 +7574,12 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 
 		BotAI_Trace(&trace, start, mins, maxs, targetpoint, bs->entitynum, mask);
 
-		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+			if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (< 0.5 New) No attack: trace won't hit!\n", netname);
 #endif
-			return qfalse;
-		}
+				return qfalse;
+			}
 		// if the entity is a client
 		if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 			if (trace.entityNum != attackentity) {
@@ -7646,12 +7646,16 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 
 			BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
 
-			if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
-#endif
-				return qfalse;
+			if (attack_accuracy > 0.6) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.6 Fixed) No attack: trace won't hit!\n", netname);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Default) No attack: trace won't hit!\n", netname);
 			}
+#endif
+			return qfalse;
+		}
 			// if the entity is a client
 			if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
 				if (trace.entityNum != attackentity) {
@@ -7737,8 +7741,8 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
-	// will successfully hit enemy
-	return qtrue;
+
+	return qfalse;
 }
 // DEBUG
 /*
