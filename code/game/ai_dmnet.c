@@ -2498,14 +2498,14 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 // Tobias DEBUG
 	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-	if (battleSense > 0.75/* || bot_alt_aim.integer == 3*/) {
+	if (battleSense > 0.75) {
 		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5/* || bot_alt_aim.integer == 2*/) {
+	} else if (battleSense > 0.5) {
 		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25/* || bot_alt_aim.integer == 1*/) {
+	} else if (battleSense > 0.25) {
 		BotCheckAttack_Alt1(bs);
 	} else {
-		BotCheckAttack_Default(bs);
+		BotCheckAttack(bs);
 	}
 // DEBUG
 	// if the bot wants to retreat
@@ -2943,14 +2943,14 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 // Tobias DEBUG
 	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-	if (battleSense > 0.75/* || bot_alt_aim.integer == 3*/) {
+	if (battleSense > 0.75) {
 		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5/* || bot_alt_aim.integer == 2*/) {
+	} else if (battleSense > 0.5) {
 		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25/* || bot_alt_aim.integer == 1*/) {
+	} else if (battleSense > 0.25) {
 		BotCheckAttack_Alt1(bs);
 	} else {
-		BotCheckAttack_Default(bs);
+		BotCheckAttack(bs);
 	}
 // DEBUG
 	return qtrue;
@@ -3120,14 +3120,14 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 // Tobias DEBUG
 	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-	if (battleSense > 0.75/* || bot_alt_aim.integer == 3*/) {
+	if (battleSense > 0.75) {
 		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5/* || bot_alt_aim.integer == 2*/) {
+	} else if (battleSense > 0.5) {
 		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25/* || bot_alt_aim.integer == 1*/) {
+	} else if (battleSense > 0.25) {
 		BotCheckAttack_Alt1(bs);
 	} else {
-		BotCheckAttack_Default(bs);
+		BotCheckAttack(bs);
 	}
 // DEBUG
 	// if there is an enemy

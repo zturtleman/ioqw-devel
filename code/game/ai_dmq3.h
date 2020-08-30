@@ -129,7 +129,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent);
 // the bot will aim at the current enemy
 void BotAimAtEnemy(bot_state_t *bs);
 // check if the bot should attack
-qboolean BotCheckAttack_Default(bot_state_t *bs);
+qboolean BotCheckAttack(bot_state_t *bs);
 qboolean BotCheckAttack_Alt1(bot_state_t *bs);
 qboolean BotCheckAttack_Alt2(bot_state_t *bs);
 qboolean BotCheckAttack_Alt3(bot_state_t *bs);
