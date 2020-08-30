@@ -6455,17 +6455,9 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 =======================================================================================================================================
 BotCheckAttack_Default
 
-Tobias NOTE: This new version only uses one trace call, instead of two!
-			 The trace call using 'bs->aimtarget' was merged into the existing one below.
+Tobias NOTE: This is more or less a unmodified version of BotCheckAttack.
 
-Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
-			  Although this is theoretically correct, it feels wrong :(
-			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
-			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
-
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
-Tobias TODO: Make use of self/team preservation.
-Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
+USED BY Testbot1 and all other default bots.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack_Default(bot_state_t *bs) {
@@ -6524,9 +6516,9 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
 #ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (DEF) Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (DEF) Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		}
 #endif
 	}
@@ -6540,14 +6532,14 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (DEF) No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (DEF) No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6579,18 +6571,18 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (DEF) Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
 		fov = 50;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (DEF) Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
 	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: (DEF) No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6599,7 +6591,7 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 
 	if (bsptrace.fraction < 1 && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (DEF) No attack: trace won't hit!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6626,7 +6618,7 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace won't hit: TEAM!\n", netname);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: (DEF) No attack: trace won't hit: TEAM!\n", netname);
 #endif
 				return qfalse;
 			}
@@ -6641,7 +6633,7 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 
 				if (points > 0) {
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: trace won't hit: points > 0!\n", netname);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (DEF) No attack: trace won't hit: points > 0!\n", netname);
 #endif
 					return qfalse;
 				}
@@ -6654,7 +6646,7 @@ qboolean BotCheckAttack_Default(bot_state_t *bs) {
 		return qfalse;
 	}
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (DEF) Final Reactiontime = %f.\n", netname, reactiontime);
 #endif
 // DEBUG
 	// if fire has to be release to activate weapon
@@ -6682,10 +6674,13 @@ Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the
 			  Although this is theoretically correct, it feels wrong :(
 			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
 			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
+			  Anyways this was always a bug, but by default the bug wasn't so likely to happen.
 
 Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
+
+USED BY Testbot2.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
@@ -6746,9 +6741,9 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
 #ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT1) Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT1) Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		}
 #endif
 	}
@@ -6756,14 +6751,14 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 		bs->aimnotperfect_time = FloatTime();
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT1) No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT1) No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6901,12 +6896,12 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT1) Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
 		fov = weaponfov;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT1) Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
@@ -6918,14 +6913,14 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	// so don't shoot too early with those weapons
 	if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: aimnotperfect_time!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT1) No attack: aimnotperfect_time!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: (ALT1) No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6945,11 +6940,11 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
+	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask); // Tobias CHECK: I think using bs->aimtarget' instead of 'end' was causing bots to shoot at walls!
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT1) No attack: trace won't hit!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6981,7 +6976,7 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 		return qfalse;
 	}
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT1) Final Reactiontime = %f.\n", netname, reactiontime);
 #endif
 // DEBUG
 	// if fire has to be release to activate weapon
@@ -7013,13 +7008,15 @@ Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the
 Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
+
+USED BY Testbot3.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, end, dir, angles;
+	vec3_t forward, right, start, dir, angles; // Tobias NOTE: <--------------- DIFF to 2
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -7073,33 +7070,29 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
 #ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT2) Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT2) Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		}
 #endif
 	}
-
-	VectorSubtract(bs->aimtarget, bs->eye, dir);
-	VectorToAngles(dir, angles);
-	// don't shoot too early with some weapons
-	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
-		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
-	}
 	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
+		bs->aimnotperfect_time = FloatTime();
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT2) No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT2) No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
+
+	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
 		return qfalse;
@@ -7200,7 +7193,7 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
-			weaponfov = 6;
+			weaponfov = 20;
 			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
@@ -7232,18 +7225,31 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT2) Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
 		fov = weaponfov;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT2) Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
-	if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
+	VectorToAngles(dir, angles);
+	// some weapons don't accept inprecision (could be dangerous for ourself etc.)
+	if (!InFieldOfVision(bs->viewangles, 0.5 * fov, angles)) {
+		bs->aimnotperfect_time = FloatTime();
+	}
+	// so don't shoot too early with those weapons
+	if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT2) No attack: aimnotperfect_time!\n", netname);
+#endif
+		return qfalse;
+	}
+
+	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: (ALT2) No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -7260,14 +7266,14 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// end point aiming at
-	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
+	VectorMA(start, weaponrange, forward, start); // Tobias NOTE: <--------------- DIFF to 2
 	// a little back to make sure not inside a very close enemy
-	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
+	VectorMA(start, -8, forward, bs->aimtarget);
+	BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->entitynum, mask); // Tobias NOTE: using bs->aimtarget' instead of 'end' will restore (wrong) old behaviour (causing bots to shoot at walls)! <--------------- DIFF to 2
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT2) No attack: trace won't hit!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -7299,7 +7305,7 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 		return qfalse;
 	}
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT2) Final Reactiontime = %f.\n", netname, reactiontime);
 #endif
 // DEBUG
 	// if fire has to be release to activate weapon
@@ -7331,6 +7337,8 @@ Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the
 Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
+
+USED BY Testbot4.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
@@ -7391,33 +7399,29 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
 #ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT3) Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		}
 #endif
 	}
-
-	VectorSubtract(bs->aimtarget, bs->eye, dir);
-	VectorToAngles(dir, angles);
-	// don't shoot too early with some weapons
-	if (bs->weaponnum == WP_RAILGUN && !InFieldOfVision(bs->viewangles, 40, angles) && reactiontime < 0.7) {
-		reactiontime = 0.7; // Tobias NOTE: good values are between 0.5 - 0.8
-	}
 	// wait until we have had time to react
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
+		bs->aimnotperfect_time = FloatTime();
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
+
+	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
 		return qfalse;
@@ -7518,7 +7522,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
-			weaponfov = 6;
+			weaponfov = 20;
 			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
@@ -7550,18 +7554,31 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
 		fov = weaponfov;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT3) Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
-	if (/*!bs->allowHitWorld && */!InFieldOfVision(bs->viewangles, fov, angles)) { // Tobias NOTE: bs->allowHitWorld check useful?
+	VectorToAngles(dir, angles);
+	// some weapons don't accept inprecision (could be dangerous for ourself etc.)
+	if (!InFieldOfVision(bs->viewangles, 0.5 * fov, angles)) {
+		bs->aimnotperfect_time = FloatTime();
+	}
+	// so don't shoot too early with those weapons
+	if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT3) No attack: aimnotperfect_time!\n", netname);
+#endif
+		return qfalse;
+	}
+
+	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: (ALT3) No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -7581,11 +7598,11 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
+	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask); // Tobias CHECK: I think using bs->aimtarget' instead of 'end' was causing bots to shoot at walls!
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -7617,7 +7634,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 		return qfalse;
 	}
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT3) Final Reactiontime = %f.\n", netname, reactiontime);
 #endif
 // DEBUG
 	// if fire has to be release to activate weapon
