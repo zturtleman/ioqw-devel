@@ -6417,8 +6417,8 @@ USED BY Testbot1 and all other default bots.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float points, attack_accuracy, reactiontime, firethrottle, *mins, *maxs, halfHeight, dist;
-	int attackentity, fov, weaponfov, weaponrange, mask, fuzzyCount, i;
+	float points, fov, weaponfov, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs, halfHeight, dist;
+	int attackentity, weaponrange, mask, fuzzyCount, i;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, targetpoint, dir, up, angles;
 	playerState_t ps;
@@ -6641,6 +6641,9 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 		}
+
+		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+		weaponfov += 30 - (30 * aim_accuracy);
 	}
 
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
