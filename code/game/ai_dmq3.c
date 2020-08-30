@@ -7631,7 +7631,11 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 
 		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
+			if (attack_accuracy > 0.6) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.6 Fixed) No attack: trace won't hit!\n", netname);
+			} else {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Default) No attack: trace won't hit!\n", netname);
+			}
 #endif
 			return qfalse;
 		}
@@ -7703,7 +7707,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 
 			if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (< 0.5 New) No attack: trace won't hit!\n", netname);
 #endif
 				return qfalse;
 			}
@@ -7792,8 +7796,8 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
-	// will successfully hit enemy
-	return qtrue;
+
+	return qfalse;
 }
 // DEBUG
 /*
