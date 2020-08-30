@@ -6668,6 +6668,12 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
 		return qfalse;
 	}
+/*
+	// don't attack with the flamethrower if moving faster than normal
+	if (bs->weaponnum == WP_FLAMETHROWER && VectorLengthSquared(bs->cur_ps.velocity) > 160000) {
+		return qfalse;
+	}
+*/
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
@@ -6685,7 +6691,7 @@ qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-
+	// get the reaction time
 	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 	// if the enemy is invisible
 	if (EntityIsInvisible(&entinfo)) {
@@ -6961,7 +6967,7 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, dir, angles; // Tobias NOTE: <--------------- DIFF to 2
+	vec3_t forward, right, start, dir, angles; // Tobias NOTE: <--------------- DIFF to 1
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -6983,6 +6989,12 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
 		return qfalse;
 	}
+/*
+	// don't attack with the flamethrower if moving faster than normal
+	if (bs->weaponnum == WP_FLAMETHROWER && VectorLengthSquared(bs->cur_ps.velocity) > 160000) {
+		return qfalse;
+	}
+*/
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
@@ -7000,7 +7012,7 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-
+	// get the reaction time
 	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 	// if the enemy is invisible
 	if (EntityIsInvisible(&entinfo)) {
@@ -7211,10 +7223,10 @@ qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// end point aiming at
-	VectorMA(start, weaponrange, forward, start); // Tobias NOTE: <--------------- DIFF to 2
+	VectorMA(start, weaponrange, forward, start); // Tobias NOTE: <--------------- DIFF to 1
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, bs->aimtarget);
-	BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->entitynum, mask); // Tobias NOTE: using bs->aimtarget' instead of 'end' will restore (wrong) old behaviour (causing bots to shoot at walls)! <--------------- DIFF to 2
+	BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->entitynum, mask); // Tobias NOTE: using bs->aimtarget' instead of 'end' will restore (wrong) old behaviour (causing bots to shoot at walls)! <--------------- DIFF to 1
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
@@ -7290,7 +7302,8 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	float points, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, end, dir, angles;
+	vec3_t forward, right, start, end, dir, up, angles;
+	playerState_t ps;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -7298,6 +7311,10 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
 //	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
 	float *mins, *maxs;
+	float halfHeight;
+	float battleSense;
+	float dist;
+	int fuzzyCount, i;
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -7312,6 +7329,12 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
 		return qfalse;
 	}
+/*
+	// don't attack with the flamethrower if moving faster than normal
+	if (bs->weaponnum == WP_FLAMETHROWER && VectorLengthSquared(bs->cur_ps.velocity) > 160000) {
+		return qfalse;
+	}
+*/
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
@@ -7329,7 +7352,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-
+	// get the reaction time
 	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
 	// if the enemy is invisible
 	if (EntityIsInvisible(&entinfo)) {
@@ -7527,51 +7550,171 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-	// get the start point shooting from
-	VectorCopy(bs->origin, start);
 
-	start[2] += bs->cur_ps.viewheight;
+	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
 
-	AngleVectorsForwardRight(bs->viewangles, forward, right);
-	// get the weapon info
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+	if (battleSense > 0.05) { // 0.95
+		// get the start point shooting from
+		VectorCopy(entinfo.origin, start);
+		// try to aim at the head
+		if (BotAI_GetClientState(bs->enemy, &ps)) {
+			start[2] += ps.viewheight;
+		}
+		// end point aiming at
+		VectorCopy(bs->origin, end);
 
-	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
-	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
-	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
-	// end point aiming at
-	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
-	// a little back to make sure not inside a very close enemy
-	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask); // Tobias CHECK: I think using bs->aimtarget' instead of 'end' was causing bots to shoot at walls!
+		end[2] += bs->cur_ps.viewheight;
 
-	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
-#endif
-		return qfalse;
-	}
-	// if the entity is a client
-	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-		if (trace.entityNum != attackentity) {
-			// if a teammate is hit
-			if (BotSameTeam(bs, trace.entityNum)) {
+		VectorSubtract(start, end, dir);
+		VectorToAngles(dir, angles);
+		AngleVectors(angles, forward, right, up);
+		//CalcMuzzlePoint(&g_entities[cs->entityNum], weapnum, forward, right, up, start); // Tobias FIXME: (up vector) using default method instead (weaponinfo)?
+
+		// don't try too far
+		dist = VectorDistance(start, entinfo.origin);
+		fuzzyCount = 6;
+
+		if (weaponrange > dist) {
+			weaponrange = dist;
+		} else {
+			dist -= entinfo.maxs[0]; // subtract distance to edge of bounding box edge
+
+			if (weaponrange < dist) {
 				return qfalse;
 			}
 		}
-	}
-	// if won't hit the enemy or not attacking a player (obelisk)
-	if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
-		// if the projectile does radial damage
-		if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-			if (trace.fraction * 1000 < wi.proj.radius) {
-				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
-				if (points > 0) {
+		for (i = 0; i <= fuzzyCount; i++) {
+			VectorMA(start, weaponrange, forward, end);
+			// fuzzy end point
+			if (i > 0) {
+				VectorMA(end, entinfo.maxs[0] * 0.9 * (float)((i % 2) * 2 - 1), right, end);
+				halfHeight = (entinfo.maxs[2] - entinfo.mins[2]) / 2.0;
+				end[2] = (entinfo.origin[2] + entinfo.mins[2]) + halfHeight;
+				VectorMA(end, halfHeight * 0.9 * (((float)((i - 1) - ((i - 1) % 2)) / 2 - 1.0)), up, end); // Tobias FIXME: (up vector) using default method instead (weaponinfo)?
+			}
+
+			BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
+
+			if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
+#endif
+				return qfalse;
+			}
+			// if the entity is a client
+			if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
+				if (trace.entityNum != attackentity) {
+					// if a teammate is hit
+					if (BotSameTeam(bs, trace.entityNum)) {
+						return qfalse;
+					}
+				}
+			}
+			// if won't hit the enemy or not attacking a player (obelisk)
+			if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
+				// if the projectile does radial damage
+				if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+					if (trace.fraction * 1000 < wi.proj.radius) {
+						points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
+
+						if (points > 0) {
+							return qfalse;
+						}
+					}
+					// FIXME: check if a teammate gets radial damage
+				}
+			}
+/*
+			trap_Trace(&trace, start, mins, maxs, end, passEnt, traceMask);
+
+			if (trace.fraction == 1.0) {
+				if (!trace.startsolid) {
+					return qtrue; // not sure why, but this fixes blackguards in chateau shooting through glass ceiling
+				}
+
+				continue;
+			}
+			// if won't hit the enemy
+			if (trace.entityNum != enemy) {
+				// assume we can shoot through props (chairs, etc.)
+				if (g_entities[trace.entityNum].takedamage && g_entities[trace.entityNum].health > 0 && !Q_strncmp(g_entities[trace.entityNum].classname, "props_", 6)) {
+					return qtrue;
+				}
+
+				if (!allowHitWorld) {
+					continue;
+				}
+
+				if (trace.startsolid) {
+					continue;
+				}
+				//if the entity is a client
+				if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
+					//if a teammate is hit
+					if (AICast_SameTeam(cs, trace.entityNum)) {
+						return qfalse;
+					}
+				}
+				// if the projectile does a radial damage
+				if (cs->weaponNum == WP_PANZERFAUST) {
+					if (VectorDistance(trace.endpos, g_entities[enemy].s.pos.trBase) > 120) {
+						continue;
+					}
+					// FIXME: check if a teammate gets radial damage
+				}
+			}
+			// will successfully hit enemy
+			return qtrue;
+*/
+		}
+	} else {
+		// get the start point shooting from
+		VectorCopy(bs->origin, start);
+
+		start[2] += bs->cur_ps.viewheight;
+
+		AngleVectorsForwardRight(bs->viewangles, forward, right);
+		// get the weapon info
+		trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+
+		start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
+		start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
+		start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
+		// end point aiming at
+		VectorMA(start, weaponrange, forward, start);
+		// a little back to make sure not inside a very close enemy
+		VectorMA(start, -8, forward, bs->aimtarget); // Tobias NOTE: using 'bs->aimtarget' instead of 'end' will restore (wrong) old behaviour (causing bots to shoot at walls)!
+		BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->entitynum, mask); // Tobias NOTE: using 'bs->aimtarget' instead of 'end' will restore (wrong) old behaviour (causing bots to shoot at walls)!
+
+		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) No attack: trace won't hit!\n", netname);
+#endif
+			return qfalse;
+		}
+		// if the entity is a client
+		if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
+			if (trace.entityNum != attackentity) {
+				// if a teammate is hit
+				if (BotSameTeam(bs, trace.entityNum)) {
 					return qfalse;
 				}
 			}
-			// FIXME: check if a teammate gets radial damage
+		}
+		// if won't hit the enemy or not attacking a player (obelisk)
+		if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
+			// if the projectile does radial damage
+			if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+				if (trace.fraction * 1000 < wi.proj.radius) {
+					points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
+
+					if (points > 0) {
+						return qfalse;
+					}
+				}
+				// FIXME: check if a teammate gets radial damage
+			}
 		}
 	}
 // Tobias DEBUG
@@ -7593,7 +7736,7 @@ qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
 
 	bs->flags ^= BFL_ATTACKED;
 
-	return qtrue;
+	return qfalse;
 }
 // DEBUG
 /*
