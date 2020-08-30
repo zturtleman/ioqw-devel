@@ -6403,9 +6403,9 @@ BotCheckAttack
 Tobias NOTE: This new version only uses one trace call, instead of two!
 			 The trace call using 'bs->aimtarget' was merged into the existing one below.
 
-Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
+Tobias FIXME: Due to fixing an old idtech3 bug 'weaponfov' contradicts 'aim_accuracy' now -> the bot isn't firing the gun because of 'bs->aimtarget' isn't used anymore.
 			  Although this is theoretically correct, it feels wrong :(
-			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
+			  The goal of the bugfix was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
 			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
 			  Anyways this was always a bug, but by default the bug wasn't so likely to happen.
 
@@ -6417,8 +6417,8 @@ USED BY Testbot1 and all other default bots.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float points, fov, weaponfov, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs, halfHeight, dist;
-	int attackentity, weaponrange, mask, fuzzyCount, i;
+	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs, halfHeight, dist;
+	int attackentity, fov, weaponfov, weaponrange, mask, fuzzyCount, i;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, targetpoint, dir, up, angles;
 	playerState_t ps;
@@ -6641,7 +6641,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 		}
-
+		// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
 		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 		weaponfov += 30 - (30 * aim_accuracy);
 	}
@@ -6700,7 +6700,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
 		// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
 		if (attack_accuracy == 0.55) {
-			VectorCopy(bs->aimtarget, targetpoint);
+			VectorCopy(bs->aimtarget, targetpoint);// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
 		} else {
 			VectorCopy(end, targetpoint);
 		}
