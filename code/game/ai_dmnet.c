@@ -2336,7 +2336,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 // Tobias DEBUG
 	float checkcvar;
-	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2489,19 +2488,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// aim at the enemy
 	BotAimAtEnemy(bs);
 	// attack the enemy if possible
-// Tobias DEBUG
-	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-	if (battleSense > 0.75) {
-		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5) {
-		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25) {
-		BotCheckAttack_Alt1(bs);
-	} else {
-		BotCheckAttack(bs);
-	}
-// DEBUG
+	BotCheckAttack(bs);
 	// if the bot wants to retreat
 	if (!(bs->flags & BFL_FIGHTSUICIDAL)) {
 		if (BotWantsToRetreat(bs)) {
@@ -2739,7 +2726,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	int areanum, range;
 // Tobias DEBUG
 	float checkcvar;
-	float battleSense;
 #ifdef DEBUG
 	int tt_nbg;
 	char netname[MAX_NETNAME];
@@ -2934,19 +2920,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-// Tobias DEBUG
-	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-	if (battleSense > 0.75) {
-		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5) {
-		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25) {
-		BotCheckAttack_Alt1(bs);
-	} else {
-		BotCheckAttack(bs);
-	}
-// DEBUG
+	BotCheckAttack(bs);
 	return qtrue;
 }
 
@@ -2981,7 +2955,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	float attack_skill;
 	vec3_t target, dir;
-	float battleSense;
 
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE NBG: joined observer.");
@@ -3111,19 +3084,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->weaponnum = moveresult.weapon;
 	}
 	// attack the enemy if possible
-// Tobias DEBUG
-	battleSense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
-
-	if (battleSense > 0.75) {
-		BotCheckAttack_Alt3(bs);
-	} else if (battleSense > 0.5) {
-		BotCheckAttack_Alt2(bs);
-	} else if (battleSense > 0.25) {
-		BotCheckAttack_Alt1(bs);
-	} else {
-		BotCheckAttack(bs);
-	}
-// DEBUG
+	BotCheckAttack(bs);
 	// if there is an enemy
 	if (BotFindEnemy(bs, -1)) {
 #ifdef DEBUG

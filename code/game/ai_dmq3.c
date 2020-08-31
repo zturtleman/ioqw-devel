@@ -6457,7 +6457,6 @@ BotCheckAttack
 
 Tobias NOTE: This new version only uses one trace call, instead of two!
 			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-
 Tobias FIXME: Due to fixing an old idtech3 bug 'weaponfov' contradicts 'aim_accuracy' now -> the bot isn't firing the gun because of 'bs->aimtarget' isn't used anymore.
 			  Although this is theoretically correct, it feels wrong :(
 			  The goal of the bugfix was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
@@ -6467,16 +6466,13 @@ Tobias FIXME: Due to fixing an old idtech3 bug 'weaponfov' contradicts 'aim_accu
 Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
-
-USED BY Testbot1 and all other default bots.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs, halfHeight, dist;
-	int attackentity, fov, weaponfov, weaponrange, mask, fuzzyCount, i;
+	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, end, targetpoint, dir, up, angles;
-	playerState_t ps;
+	vec3_t forward, right, start, end, targetpoint, dir, angles;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -6537,9 +6533,9 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
 #ifdef DEBUG
 		if (BotTeam(bs) == TEAM_RED) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (ALT3) Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
 		}
 #endif
 	}
@@ -6547,14 +6543,14 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	if (bs->enemysight_time > FloatTime() - reactiontime) {
 		bs->aimnotperfect_time = FloatTime();
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) No attack: bs->enemysight_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (ALT3) No attack: bs->teleport_time > FloatTime!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
 		return qfalse;
 	}
@@ -6715,12 +6711,12 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (ALT3) Dist < 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
 		fov = weaponfov;
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT3) Dist > 100, FOV: %i.\n", netname, fov);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
 #endif
 	}
 
@@ -6742,184 +6738,66 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 
 	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: (ALT3) No attack: not in fov!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
 #endif
 		return qfalse;
 	}
+	// get the start point shooting from
+	VectorCopy(bs->origin, start);
 
-	if (attack_accuracy > 0.5) {
-		// get the start point shooting from
-		VectorCopy(bs->origin, start);
+	start[2] += bs->cur_ps.viewheight;
 
-		start[2] += bs->cur_ps.viewheight;
+	AngleVectorsForwardRight(bs->viewangles, forward, right);
+	// get the weapon info
+	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 
-		AngleVectorsForwardRight(bs->viewangles, forward, right);
-		// get the weapon info
-		trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
+	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
+	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
+	// a little back to make sure not inside a very close enemy
+	VectorMA(start, -8, forward, start);
+	// end point aiming at
+	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
+	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
+	if (attack_accuracy == 0.55) {
+		VectorCopy(bs->aimtarget, targetpoint); // Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
+	} else {
+		VectorCopy(end, targetpoint);
+	}
 
-		start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
-		start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
-		start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
-		// a little back to make sure not inside a very close enemy
-		VectorMA(start, -8, forward, start);
-		// end point aiming at
-		VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
-		// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-		if (attack_accuracy == 0.55) {
-			VectorCopy(bs->aimtarget, targetpoint);// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
-		} else {
-			VectorCopy(end, targetpoint);
-		}
+	BotAI_Trace(&trace, start, mins, maxs, targetpoint, bs->entitynum, mask);
 
-		BotAI_Trace(&trace, start, mins, maxs, targetpoint, bs->entitynum, mask);
-
-		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-			if (attack_accuracy == 0.55) {
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (== 0.55 Default) No attack: trace won't hit!\n", netname);
-			} else {
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Fixed) No attack: trace won't hit!\n", netname);
-			}
-#endif
-			return qfalse;
+		if (attack_accuracy == 0.55) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (== 0.55 Default) No attack: trace won't hit!\n", netname);
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Fixed) No attack: trace won't hit!\n", netname);
 		}
-		// if the entity is a client
-		if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-			if (trace.entityNum != attackentity) {
-				// if a teammate is hit
-				if (BotSameTeam(bs, trace.entityNum)) {
+#endif
+		return qfalse;
+	}
+	// if the entity is a client
+	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
+		if (trace.entityNum != attackentity) {
+			// if a teammate is hit
+			if (BotSameTeam(bs, trace.entityNum)) {
+				return qfalse;
+			}
+		}
+	}
+	// if won't hit the enemy or not attacking a player (obelisk)
+	if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
+		// if the projectile does radial damage
+		if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+			if (trace.fraction * 1000 < wi.proj.radius) {
+				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
+
+				if (points > 0) {
 					return qfalse;
 				}
 			}
-		}
-		// if won't hit the enemy or not attacking a player (obelisk)
-		if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
-			// if the projectile does radial damage
-			if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-				if (trace.fraction * 1000 < wi.proj.radius) {
-					points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
-
-					if (points > 0) {
-						return qfalse;
-					}
-				}
-				// FIXME: check if a teammate gets radial damage
-			}
-		}
-	} else {
-		// get the start point shooting from
-		VectorCopy(entinfo.origin, start);
-		// try to aim at the head
-		if (BotAI_GetClientState(bs->enemy, &ps)) {
-			start[2] += ps.viewheight;
-		}
-		// end point aiming at
-		VectorCopy(bs->origin, end);
-
-		end[2] += bs->cur_ps.viewheight;
-
-		VectorSubtract(start, end, dir);
-		VectorToAngles(dir, angles);
-		AngleVectors(angles, forward, right, up);
-		//CalcMuzzlePoint(&g_entities[cs->entityNum], weapnum, forward, right, up, start); // Tobias FIXME: (up vector) using default method instead (weaponinfo)?
-
-		// don't try too far
-		dist = VectorDistance(start, entinfo.origin);
-		fuzzyCount = 6;
-
-		if (weaponrange > dist) {
-			weaponrange = dist;
-		} else {
-			dist -= entinfo.maxs[0]; // subtract distance to edge of bounding box edge
-
-			if (weaponrange < dist) {
-				return qfalse;
-			}
-		}
-
-		for (i = 0; i <= fuzzyCount; i++) {
-			VectorMA(start, weaponrange, forward, end);
-			// fuzzy end point
-			if (i > 0) {
-				VectorMA(end, entinfo.maxs[0] * 0.9 * (float)((i % 2) * 2 - 1), right, end);
-				halfHeight = (entinfo.maxs[2] - entinfo.mins[2]) / 2.0;
-				end[2] = (entinfo.origin[2] + entinfo.mins[2]) + halfHeight;
-				VectorMA(end, halfHeight * 0.9 * (((float)((i - 1) - ((i - 1) % 2)) / 2 - 1.0)), up, end); // Tobias FIXME: (up vector) using default method instead (weaponinfo)?
-			}
-
-			BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
-
-			if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
-#ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (< 0.5 New) No attack: trace won't hit!\n", netname);
-#endif
-				return qfalse;
-			}
-			// if the entity is a client
-			if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-				if (trace.entityNum != attackentity) {
-					// if a teammate is hit
-					if (BotSameTeam(bs, trace.entityNum)) {
-						return qfalse;
-					}
-				}
-			}
-			// if won't hit the enemy or not attacking a player (obelisk)
-			if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
-				// if the projectile does radial damage
-				if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-					if (trace.fraction * 1000 < wi.proj.radius) {
-						points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
-
-						if (points > 0) {
-							return qfalse;
-						}
-					}
-					// FIXME: check if a teammate gets radial damage
-				}
-			}
-/*
-			trap_Trace(&trace, start, mins, maxs, end, passEnt, traceMask);
-
-			if (trace.fraction == 1.0) {
-				if (!trace.startsolid) {
-					return qtrue; // not sure why, but this fixes blackguards in chateau shooting through glass ceiling
-				}
-
-				continue;
-			}
-			// if won't hit the enemy
-			if (trace.entityNum != enemy) {
-				// assume we can shoot through props (chairs, etc.)
-				if (g_entities[trace.entityNum].takedamage && g_entities[trace.entityNum].health > 0 && !Q_strncmp(g_entities[trace.entityNum].classname, "props_", 6)) {
-					return qtrue;
-				}
-
-				if (!allowHitWorld) {
-					continue;
-				}
-
-				if (trace.startsolid) {
-					continue;
-				}
-				//if the entity is a client
-				if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-					//if a teammate is hit
-					if (AICast_SameTeam(cs, trace.entityNum)) {
-						return qfalse;
-					}
-				}
-				// if the projectile does a radial damage
-				if (cs->weaponNum == WP_PANZERFAUST) {
-					if (VectorDistance(trace.endpos, g_entities[enemy].s.pos.trBase) > 120) {
-						continue;
-					}
-					// FIXME: check if a teammate gets radial damage
-				}
-			}
-			// will successfully hit enemy
-			return qtrue;
-*/
+			// FIXME: check if a teammate gets radial damage
 		}
 	}
 // Tobias DEBUG
@@ -6927,7 +6805,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		return qfalse;
 	}
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: (ALT3) Final Reactiontime = %f.\n", netname, reactiontime);
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
 #endif
 // DEBUG
 	// if fire has to be release to activate weapon
@@ -6944,79 +6822,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	return qfalse;
 }
 
-/*
-=======================================================================================================================================
-BotCheckAttack_Alt1
-
-Tobias NOTE: This new version only uses one trace call, instead of two!
-			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-
-Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
-			  Although this is theoretically correct, it feels wrong :(
-			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
-			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
-			  Anyways this was always a bug, but by default the bug wasn't so likely to happen.
-
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
-Tobias TODO: Make use of self/team preservation.
-Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
-
-USED BY Testbot2.
-=======================================================================================================================================
-*/
-qboolean BotCheckAttack_Alt1(bot_state_t *bs) {
-	BotCheckAttack(bs);
-	return qfalse;
-}
-
-/*
-=======================================================================================================================================
-BotCheckAttack_Alt2
-
-Tobias NOTE: This new version only uses one trace call, instead of two!
-			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-
-Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
-			  Although this is theoretically correct, it feels wrong :(
-			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
-			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
-
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
-Tobias TODO: Make use of self/team preservation.
-Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
-
-USED BY Testbot3.
-=======================================================================================================================================
-*/
-qboolean BotCheckAttack_Alt2(bot_state_t *bs) {
-	BotCheckAttack(bs);
-	return qfalse;
-}
-
-/*
-=======================================================================================================================================
-BotCheckAttack_Alt3
-
-Tobias NOTE: This new version only uses one trace call, instead of two!
-			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-
-Tobias FIXME: 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of 'enemy-not-in-fov'.
-			  Although this is theoretically correct, it feels wrong :(
-			  The goal was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
-			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
-
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
-Tobias TODO: Make use of self/team preservation.
-Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
-
-USED BY Testbot4.
-=======================================================================================================================================
-*/
-qboolean BotCheckAttack_Alt3(bot_state_t *bs) {
-	BotCheckAttack(bs);
-	return qfalse;
-}
-// DEBUG
 /*
 =======================================================================================================================================
 BotMapScripts
