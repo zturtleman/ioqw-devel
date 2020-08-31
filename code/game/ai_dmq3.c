@@ -6554,6 +6554,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		// get some weapon specific attack values
 		switch (bs->weaponnum) {
 			case WP_GAUNTLET:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 				weaponfov = 90;
 				weaponrange = 42;
 				mins = NULL;
@@ -6561,6 +6562,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_MACHINEGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
 				weaponfov = 20;
 				weaponrange = 100000;
 				mins = NULL;
@@ -6568,6 +6570,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_CHAINGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
 				weaponfov = 80;
 				weaponrange = 100000;
 				mins = NULL;
@@ -6575,6 +6578,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_SHOTGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
 				weaponfov = 20;
 				weaponrange = 500;
 				mins = NULL;
@@ -6582,6 +6586,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_NAILGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
 				weaponfov = 40; // 30 (pre-aiming?)
 				weaponrange = 500;
 				mins = NULL;
@@ -6590,6 +6595,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				break;
 			case WP_PROXLAUNCHER:
 			case WP_GRENADELAUNCHER:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
 				weaponfov = 120;
 				weaponrange = 2000;
 				mins = rmins;
@@ -6599,6 +6605,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				break;
 			case WP_NAPALMLAUNCHER:
 			case WP_ROCKETLAUNCHER:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
 				weaponfov = 60;
 				weaponrange = 1000;
 				mins = rmins;
@@ -6606,6 +6613,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_BEAMGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
 				weaponfov = 80;
 				weaponrange = BEAMGUN_RANGE;
 				mins = NULL;
@@ -6613,6 +6621,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_RAILGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
 				weaponfov = 20;
 				weaponrange = 100000;
 				mins = NULL;
@@ -6620,6 +6629,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_PLASMAGUN:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
 				weaponfov = 20;
 				weaponrange = 1000;
 				mins = rmins;
@@ -6627,6 +6637,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			case WP_BFG:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
 				weaponfov = 20;
 				weaponrange = 1000;
 				mins = rmins;
@@ -6634,6 +6645,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				mask = MASK_SHOT;
 				break;
 			default:
+				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 				weaponfov = 50;
 				weaponrange = 1000;
 				mins = rmins;
@@ -6642,7 +6654,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				break;
 		}
 		// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 		weaponfov += 30 - (30 * aim_accuracy);
 	}
 
