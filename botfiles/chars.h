@@ -89,12 +89,18 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // attack range (added/substracted to/from attack distance)
 #define CHARACTERISTIC_ATTACK_RANGE					25 // int [1, 1000]
 // attack skill
-// >  0.0 && < 0.2 = don't move
-// >  0.3 && < 1.0 = aim at enemy during retreat
-// >  0.0 && < 0.4 = only move forward/backward
-// >= 0.4 && < 1.0 = circle strafing
-// >  0.7 && < 1.0 = random strafe direction change
+// >  0.0 && <  0.2 = don't move
+// >  0.3 && <  1.0 = aim at enemy during retreat
+// >  0.0 && <  0.4 = only move forward/backward
+// >= 0.4 && <= 1.0 = circle strafing
+// >  0.7 && <= 1.0 = random strafe direction change
 #define CHARACTERISTIC_ATTACK_SKILL					26 // float [0, 1]
+// accuracy when attacking
+// > 0.0 && <  0.5 = shoot as soon as the enemy is in fov
+//          == 0.5 = use a fixed fov of 50 for all weapons (simulates Q3A Gladiator bot behaviour)
+// > 0.5 && <= 1.0 = the bot uses the correct endpoint shooting at (0.5 simulates Q3A Gladiator bot behaviour)
+// > 0.6 && <= 1.0 = some weapons don't accept inprecision (e.g. the Railgun), so don't shoot too early with those weapons
+// > 0.8 && <= 1.0 = take reaction-time delays on changes of line-of-fire blocked/not blocked into account
 #define CHARACTERISTIC_ATTACK_ACCURACY				27 // float [0, 1]
 //=====================================================================================================================================
 // WEAPON

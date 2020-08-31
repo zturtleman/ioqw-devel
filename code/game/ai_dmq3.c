@@ -6594,14 +6594,8 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 			bs->firethrottlewait_time = 0;
 		}
 	}
-	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-	if (attack_accuracy == 0.55) {
-		weaponfov = 50;
-		weaponrange = 1000;
-		mins = NULL;
-		maxs = NULL;
-		mask = MASK_SHOT;
-	} else {
+	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.5 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
+	if (attack_accuracy != 0.5) {
 		// get some weapon specific attack values
 		switch (bs->weaponnum) {
 			case WP_GAUNTLET:
@@ -6706,6 +6700,13 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		}
 		// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
 		weaponfov += 30 - (30 * aim_accuracy);
+	// simulate old style Q3A Gladiator bot behaviour
+	} else {
+		weaponfov = 50;
+		weaponrange = 1000;
+		mins = NULL;
+		maxs = NULL;
+		mask = MASK_SHOT;
 	}
 
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
@@ -6721,8 +6722,8 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	}
 
 	VectorToAngles(dir, angles);
-	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-	if (attack_accuracy != 0.55) {
+
+	if (attack_accuracy > 0.6) {
 		// some weapons don't accept inprecision (could be dangerous for ourself etc.)
 		if (!InFieldOfVision(bs->viewangles, 0.5 * fov, angles)) {
 			bs->aimnotperfect_time = FloatTime();
@@ -6730,7 +6731,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		// so don't shoot too early with those weapons
 		if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (!= 0.55) No attack: aimnotperfect_time!\n", netname);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (> 0.6) No attack: aimnotperfect_time!\n", netname);
 #endif
 			return qfalse;
 		}
@@ -6758,21 +6759,22 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	VectorMA(start, -8, forward, start);
 	// end point aiming at
 	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
-	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.55 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-	if (attack_accuracy == 0.55) {
-		VectorCopy(bs->aimtarget, targetpoint); // Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
+	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.5 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
+	if (attack_accuracy > 0.5) {
+		VectorCopy(end, targetpoint); // Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
+	// simulate old style Q3A Gladiator bot behaviour
 	} else {
-		VectorCopy(end, targetpoint);
+		VectorCopy(bs->aimtarget, targetpoint);
 	}
 
 	BotAI_Trace(&trace, start, mins, maxs, targetpoint, bs->entitynum, mask);
 
 	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		if (attack_accuracy == 0.55) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (== 0.55 Default) No attack: trace won't hit!\n", netname);
-		} else {
+		if (attack_accuracy != 0.5) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Fixed) No attack: trace won't hit!\n", netname);
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (== 0.5 Default) No attack: trace won't hit!\n", netname);
 		}
 #endif
 		return qfalse;
