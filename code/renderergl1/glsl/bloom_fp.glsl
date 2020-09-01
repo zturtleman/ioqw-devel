@@ -1,5 +1,3 @@
-// bloom colour thresholding
-
 uniform sampler2D	u_TextureMap;
 uniform float		u_BloomAlpha;
 uniform float		u_BloomRamp;
