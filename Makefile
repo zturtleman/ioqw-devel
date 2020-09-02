@@ -1209,7 +1209,7 @@ $(echo_cmd) "REF_STR $<"
 #$(Q)todos "$<.dos"
 echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
 #$(Q)cat "$<.dos" | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
-cat $< | tr -d '\r' | sed -e 's/^\(.*\)$$/\"\1\\n\"/' >> $@
+cat $< | sed -e 's/^\(.*\)$$/\"\1\\\n\"/' | tr -d '\r' >> $@
 echo ";" >> $@
 cat $@
 endef
