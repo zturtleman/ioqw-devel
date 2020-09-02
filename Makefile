@@ -1205,10 +1205,12 @@ endef
 
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"
-$(Q)rm -f $@
-$(Q)echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-$(Q)cat $< | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
-$(Q)echo ";" >> $@
+#$(Q)cp "$<" "$<.dos"
+#$(Q)todos "$<.dos"
+echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
+#$(Q)cat "$<.dos" | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
+cat "$< | sed -e 's/^\(.*\)$$/\"\1\\n\"/' | tr -d '\r' >> $@
+echo ";" >> $@
 endef
 
 define DO_BOT_CC
