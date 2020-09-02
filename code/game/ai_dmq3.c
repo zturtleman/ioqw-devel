@@ -6398,23 +6398,114 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 
 /*
 =======================================================================================================================================
+BotMayRadiusDamageTeamMate
+=======================================================================================================================================
+*/
+static qboolean BotMayRadiusDamageTeamMate(bot_state_t *bs, vec3_t origin, float radius) {
+	gentity_t *ent;
+	int i, e, numListedEntities, entityList[MAX_GENTITIES];
+	float teampreservation, dist;
+	vec3_t mins, maxs, v;
+	team_t team;
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
+
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
+	if (g_gametype.integer < GT_TEAM) {
+		return qfalse;
+	}
+
+	if (!g_friendlyFire.integer) {
+		return qfalse;
+	}
+
+	if (radius < 1) {
+		radius = 1;
+	}
+
+	for (i = 0; i < 3; i++) {
+		mins[i] = origin[i] - radius;
+		maxs[i] = origin[i] + radius;
+	}
+
+	numListedEntities = trap_EntitiesInBox(mins, maxs, entityList, MAX_GENTITIES);
+	team = g_entities[bs->entitynum].client->sess.sessionTeam;
+	teampreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_TEAMPRESERVATION, 0, 1);
+
+	for (e = 0; e < numListedEntities; e++) {
+		// if this is the bot self
+		if (e == bs->client) {
+			continue;
+		}
+
+		ent = &g_entities[entityList[e]];
+
+		if (!ent->takedamage) {
+			continue;
+		}
+
+		if (!ent->client) {
+			continue;
+		}
+
+		if (ent->client->sess.sessionTeam != team) {
+			continue;
+		}
+
+		if (ent->client->ps.stats[STAT_HEALTH] <= 0) {
+			continue;
+		}
+		// find the distance from the edge of the bounding box
+		for (i = 0; i < 3; i++) {
+			if (origin[i] < ent->r.absmin[i]) {
+				v[i] = ent->r.absmin[i] - origin[i];
+			} else if (origin[i] > ent->r.absmax[i]) {
+				v[i] = origin[i] - ent->r.absmax[i];
+			} else {
+				v[i] = 0;
+			}
+		}
+
+		dist = VectorLength(v);
+
+		if (dist >= radius * 2 * teampreservation) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Team Damage: ignoring teammate, not inside radius.\n", netname);
+#endif
+			continue;
+#ifdef DEBUG
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Team Damage: NO ATTACK, teammate will be hit!\n", netname);
+#endif
+		}
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
 BotCheckAttack
 
 Tobias NOTE: This new version only uses one trace call, instead of two!
 			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-Tobias FIXME: Due to fixing an old idtech3 bug 'weaponfov' contradicts 'aim_accuracy' now -> the bot isn't firing the gun because of 'bs->aimtarget' isn't used anymore.
+Tobias FIXME: Due to fixing an old idtech3 bug now 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of
+			  'bs->aimtarget' isn't used anymore.
 			  Although this is theoretically correct, it feels wrong :(
 			  The goal of the bugfix was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
 			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
 			  Anyways this was always a bug, but by default the bug wasn't so likely to happen.
 
-Tobias TODO: The teammate radial damage check is missing, and many other pieces of this code aren't really written well.
+Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, obelisk splash dmg, low 'attack_accuracy' value etc.).
 Tobias TODO: Make use of self/team preservation.
 Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
 	int attackentity, fov, weaponfov, weaponrange, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, targetpoint, dir, angles;
@@ -6726,13 +6817,14 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-		if (trace.entityNum != attackentity) {
+		if (trace.entityNum != attackentity) { // Tobias CHECK: isn't this already checke above? Remove this twice?
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
 				return qfalse;
 			}
 		}
 	}
+/*
 	// if won't hit the enemy or not attacking a player (obelisk)
 	if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
 		// if the projectile does radial damage
@@ -6745,6 +6837,13 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
+		}
+	}
+*/
+	// check if a teammate gets radial damage
+	if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+		if (BotMayRadiusDamageTeamMate(bs, trace.endpos, wi.proj.radius)) {
+			return qfalse;
 		}
 	}
 // Tobias DEBUG
