@@ -1,9 +1,9 @@
-uniform sampler2D	u_TextureMap;
-uniform float		u_BloomAlpha;
-uniform float		u_BloomRamp;
-varying vec2		var_TexCoords;
+uniform sampler2D u_TextureMap;
+uniform float     u_BloomAlpha;
+uniform float     u_BloomRamp;
+varying vec2      var_TexCoords;
 
-#define LUMAVEC	vec3(0.2126, 0.7152, 0.0722)
+#define LUMAVEC vec3(0.2126, 0.7152, 0.0722)
 
 void main()
 {
