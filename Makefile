@@ -1206,6 +1206,7 @@ endef
 ifeq ($(MINGW32_MAKE),1)
 # mingw32-make.exe uses Windows command prompt as the shell which is incompatible with Unix shell character escape. Or maybe sed (from ??) is to blame? I'm not entirely sure.
 # There is no good way to detect this? so use mingw32-make.exe MINGW32_MAKE=1
+# ~zturtleman
 
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"

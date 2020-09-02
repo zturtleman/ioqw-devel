@@ -25,7 +25,7 @@ jobs:
     - name: Compile
       run: |
         choco install zip
-        mingw32-make release MINGW32_MAKE=1
+        C:\msys2\make.exe release
       env:
         ARCHIVE: 1
     - uses: actions/upload-artifact@v2
