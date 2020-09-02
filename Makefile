@@ -1203,16 +1203,30 @@ $(echo_cmd) "REF_CC $<"
 $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) $(ALTIVEC_CFLAGS) -o $@ -c $<
 endef
 
+ifdef MINGW32_MAKE
+# mingw32-make.exe uses Windows command prompt as the shell which is incompatible with Unix shell character escape. Or maybe sed is to blame? I'm not entirely sure.
+# There is no good way to detect this? so use mingw32-make.exe MINGW32_MAKE=1
+# mingw32-make.exe is implicitly used by Github Actions on Windows for make. Otherwise, it's trash. Don't use it.
+
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"
-#$(Q)cp "$<" "$<.dos"
-#$(Q)todos "$<.dos"
 echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-#$(Q)cat "$<.dos" | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
-cat $< | tr -d '\r' | sed -e "s/^\(.*\)$$/\"\1\\\\n\"/" >> $@
+cat $< | tr -d '\r' | sed -e 's/^\(.*\)$$/\"\1\\\n\"/' >> $@
 echo ";" >> $@
 cat $@
 endef
+
+else
+
+define DO_REF_STR
+$(echo_cmd) "REF_STR $<"
+echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
+cat $< | tr -d '\r' | sed -e 's/^\(.*\)$$/\"\1\\n\"/' >> $@
+echo ";" >> $@
+cat $@
+endef
+
+endif
 
 define DO_BOT_CC
 $(echo_cmd) "BOT_CC $<"
