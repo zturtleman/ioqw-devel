@@ -25,7 +25,7 @@ jobs:
     - name: Compile
       run: |
         choco install zip
-        C:\msys64\make.exe release
+        C:\msys64\bin\make.exe release
       env:
         ARCHIVE: 1
     - uses: actions/upload-artifact@v2
