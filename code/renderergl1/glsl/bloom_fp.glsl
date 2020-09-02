@@ -3,7 +3,7 @@ uniform float     u_BloomAlpha;
 uniform float     u_BloomRamp;
 varying vec2      var_TexCoords;
 
-#define LUMAVEC vec3(0.2126, 0.7152, 0.0722)
+const vec3 LUMAVEC = vec3(0.2126, 0.7152, 0.0722);
 
 void main()
 {
