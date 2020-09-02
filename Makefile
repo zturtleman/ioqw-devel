@@ -1209,8 +1209,9 @@ $(echo_cmd) "REF_STR $<"
 #$(Q)todos "$<.dos"
 echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
 #$(Q)cat "$<.dos" | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
-cat "$< | sed -e 's/^\(.*\)$$/\"\1\\n\"/' | tr -d '\r' >> $@
+cat $< | sed -e 's/^\(.*\)$$/\"\1\\n\"/' | tr -d '\r' >> $@
 echo ";" >> $@
+cat $@
 endef
 
 define DO_BOT_CC
