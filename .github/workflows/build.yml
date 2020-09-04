@@ -29,6 +29,8 @@ jobs:
     - name: Compile
       run: |
         echo "::add-path::c:\msys64\usr\bin\"
+        where.exe make.exe
+        where.exe sed.exe
         make release
       env:
         ARCHIVE: 1
