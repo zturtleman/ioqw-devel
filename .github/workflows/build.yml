@@ -25,14 +25,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: choco install zip sed sh
+      run: choco install zip
     - name: Compile
-      shell: cmd
       run: |
-        #echo "::add-path::c:\msys64\usr\bin\"
         where.exe make.exe
         where.exe sed.exe
         where.exe sh.exe
+        where.exe gcc.exe
         make release
       env:
         ARCHIVE: 1
