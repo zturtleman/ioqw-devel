@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: choco install zip
+      run: choco install zip sed
     - name: Compile
       run: |
         echo "::add-path::c:\msys64\usr\bin\"
