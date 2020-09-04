@@ -103,6 +103,7 @@ vmCvar_t bot_teamredstrategy;
 vmCvar_t bot_teamblock;
 vmCvar_t bot_alt_aggressive;
 vmCvar_t bot_alt_pickup;
+vmCvar_t bot_alt_aim;
 // Tobias END
 void ExitLevel(void);
 
@@ -1560,6 +1561,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_teamblock);
 	trap_Cvar_Update(&bot_alt_aggressive);
 	trap_Cvar_Update(&bot_alt_pickup);
+	trap_Cvar_Update(&bot_alt_aim);
 
 	if (bot_report.integer) {
 		BotUpdateInfoConfigStrings();
@@ -1819,6 +1821,12 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) {
 		trap_BotLibVarSet("bot_alt_pickup", buf);
 	}
+	// alternate aiming code
+	trap_Cvar_VariableStringBuffer("bot_alt_aim", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_alt_aim", buf);
+	}
 // Tobias END
 	// visualize jump pads
 	trap_Cvar_VariableStringBuffer("bot_visualizejumppads", buf, sizeof(buf));
@@ -1922,6 +1930,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_teamblock, "bot_teamblock", "1", 0);
 	trap_Cvar_Register(&bot_alt_aggressive, "bot_alt_aggressive", "1", 0);
 	trap_Cvar_Register(&bot_alt_pickup, "bot_alt_pickup", "1", 0);
+	trap_Cvar_Register(&bot_alt_aim, "bot_alt_aim", "1", 0);
 
 	level.botReportModificationCount = bot_report.modificationCount;
 // Tobias END
