@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: choco install zip sed
+      run: choco install zip sed sh
     - name: Compile
       shell: cmd
       run: |
