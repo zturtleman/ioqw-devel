@@ -24,14 +24,9 @@ jobs:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
-    - name: Install Dependencies
-      run: choco install zip
     - name: Compile
       run: |
-        where.exe make.exe
-        where.exe sed.exe
-        where.exe sh.exe
-        where.exe gcc.exe
+        choco install zip
         make release
       env:
         ARCHIVE: 1
