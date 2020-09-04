@@ -554,6 +554,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_equalizer_teambon", "5", 0); //10
 	Cvar_Get("bot_noshoot", "0", 0);
 	Cvar_Get("bot_nowalk", "1", 0);
+	Cvar_Get("bot_noaccerror", "0", 0);
 	Cvar_Get("bot_shownodechanges", "0", 0);
 	Cvar_Get("bot_teambluestrategy", "0", 0);
 	Cvar_Get("bot_teamredstrategy", "0", 0);

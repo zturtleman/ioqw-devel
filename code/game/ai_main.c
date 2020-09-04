@@ -96,6 +96,7 @@ vmCvar_t bot_equalizer_fembon;
 vmCvar_t bot_equalizer_teambon;
 vmCvar_t bot_noshoot;
 vmCvar_t bot_nowalk;
+vmCvar_t bot_noaccerror;
 vmCvar_t bot_shownodechanges;
 vmCvar_t bot_teambluestrategy;
 vmCvar_t bot_teamredstrategy;
@@ -1552,6 +1553,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_equalizer_teambon);
 	trap_Cvar_Update(&bot_noshoot);
 	trap_Cvar_Update(&bot_nowalk);
+	trap_Cvar_Update(&bot_noaccerror);
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_teambluestrategy);
 	trap_Cvar_Update(&bot_teamredstrategy);
@@ -1799,6 +1801,12 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) {
 		trap_BotLibVarSet("bot_nowalk", buf);
 	}
+	// no additional weapon shaking to simulate aim-inaccuracy
+	trap_Cvar_VariableStringBuffer("bot_noaccerror", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_noaccerror", buf);
+	}
 	// aggression
 	trap_Cvar_VariableStringBuffer("bot_alt_aggressive", buf, sizeof(buf));
 
@@ -1907,6 +1915,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_equalizer_teambon, "bot_equalizer_teambon", "5", 0); //10
 	trap_Cvar_Register(&bot_noshoot, "bot_noshoot", "0", 0);
 	trap_Cvar_Register(&bot_nowalk, "bot_nowalk", "1", 0);
+	trap_Cvar_Register(&bot_noaccerror, "bot_noaccerror", "0", 0);
 	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", 0);
 	trap_Cvar_Register(&bot_teambluestrategy, "bot_teambluestrategy", "0", 0);
 	trap_Cvar_Register(&bot_teamredstrategy, "bot_teamredstrategy", "0", 0);

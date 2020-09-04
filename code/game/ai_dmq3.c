@@ -6084,11 +6084,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	if (aim_accuracy > 1.0f) {
 		aim_accuracy = 1.0f;
 	}
-//#ifdef DEBUG
-	if (bot_challenge.integer) {
-		aim_accuracy = 1.0f;
-	}
-//#endif
+
 	bs->allowHitWorld = qfalse;
 	// if the enemy is NOT visible
 	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
@@ -6253,7 +6249,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			}
 		}
 //#ifdef DEBUG
-		if (!bot_challenge.integer) {
+		if (!bot_noaccerror.integer) {
 //#endif
 			bestorigin[0] += 20 * crandom() * (1 - aim_accuracy);
 			bestorigin[1] += 20 * crandom() * (1 - aim_accuracy);
@@ -6340,7 +6336,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 	// get aim direction
 	VectorSubtract(bestorigin, bs->eye, dir);
 //#ifdef DEBUG
-	if (!bot_challenge.integer) {
+	if (!bot_noaccerror.integer) {
 //#endif
 		if (BotUsesInstantHitWeapon(bs)) {
 			// distance towards the enemy
