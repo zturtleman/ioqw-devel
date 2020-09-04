@@ -27,11 +27,13 @@ jobs:
     - name: Install Dependencies
       run: choco install zip sed
     - name: Compile
+      shell: cmd
       run: |
-        echo "::add-path::c:\msys64\usr\bin\"
+        #echo "::add-path::c:\msys64\usr\bin\"
         where.exe make.exe
         where.exe sed.exe
-        cmd make release
+        where.exe sh.exe
+        make release
       env:
         ARCHIVE: 1
     - uses: actions/upload-artifact@v2
