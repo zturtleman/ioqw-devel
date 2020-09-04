@@ -6115,11 +6115,10 @@ void BotAimAtEnemy(bot_state_t *bs) {
 						// if the projectile does large radial damage try to aim at the ground in front of the enemy
 						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
 							bestorigin[2] -= 20;
-							// allow the bot to shoot at the ground
-							bs->allowHitWorld = qtrue;
 						}
 					}
-
+					// allow the bot to hit the world
+					bs->allowHitWorld = qtrue;
 					aim_accuracy = 1.0f;
 				}
 			}
@@ -6201,7 +6200,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					dir[2] = 0;
 					speed = VectorNormalize(dir) / entinfo.update_time;
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, "%s: Speed = %f, wi->speed = %f.\n", netname, speed, wi->speed);
+					BotAI_Print(PRT_MESSAGE, "%s: Speed = %f, wi->speed = %f.\n", netname, speed, wi.speed);
 #endif
 					// best spot to aim at
 					VectorMA(entinfo.origin, (dist / wi.speed) * speed, dir, bestorigin);
@@ -6242,10 +6241,10 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 							if (trace.fraction >= 1.0f) {
 #ifdef DEBUG
-								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, AAS_Time());
+								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, FloatTime());
 #endif
 								VectorCopy(groundtarget, bestorigin);
-								// allow the bot to shoot at the ground
+								// allow the bot to hit the world (shooting at the ground)
 								bs->allowHitWorld = qtrue;
 							}
 						}
