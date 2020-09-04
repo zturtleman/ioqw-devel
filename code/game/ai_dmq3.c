@@ -2296,12 +2296,12 @@ void BotUpdateInventory(bot_state_t *bs) {
 	bs->inventory[INVENTORY_BLUEFLAG] = bs->cur_ps.powerups[PW_BLUEFLAG] != 0;
 	bs->inventory[INVENTORY_NEUTRALFLAG] = bs->cur_ps.powerups[PW_NEUTRALFLAG] != 0;
 
-	if (BotTeam(bs) == TEAM_RED) {
-		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
+	if (BotTeam(bs) != TEAM_RED) {
+		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.tokens;
 		bs->inventory[INVENTORY_BLUECUBE] = 0;
 	} else {
 		bs->inventory[INVENTORY_REDCUBE] = 0;
-		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens; // Tobias CHECK: aren't they reversed, everywhere?
+		bs->inventory[INVENTORY_BLUECUBE] = bs->cur_ps.tokens;
 	}
 
 	bs->inventory[BOT_IS_IN_HURRY] = BotOnlyPickupImportantItems(bs);

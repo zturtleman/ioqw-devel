@@ -435,10 +435,10 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		}
 	} else if (gametype == GT_HARVESTER) {
 		if (BotHarvesterCarryingCubes(bs)) {
-			if (BotTeam(bs) == TEAM_RED) {
-				Com_sprintf(carrying, sizeof(carrying), "%2d Skull(s)", bs->inventory[INVENTORY_REDCUBE]);
+			if (BotTeam(bs) != TEAM_RED) {
+				Com_sprintf(carrying, sizeof(carrying), "%2d %s", bs->inventory[INVENTORY_REDCUBE], (bs->inventory[INVENTORY_REDCUBE] > 1) ? "Skulls" : "Skull");
 			} else {
-				Com_sprintf(carrying, sizeof(carrying), "%2d Skull(s)", bs->inventory[INVENTORY_BLUECUBE]);
+				Com_sprintf(carrying, sizeof(carrying), "%2d %s", bs->inventory[INVENTORY_BLUECUBE], (bs->inventory[INVENTORY_BLUECUBE] > 1) ? "Skulls" : "Skull");
 			}
 		}
 	}
