@@ -1203,30 +1203,23 @@ $(echo_cmd) "REF_CC $<"
 $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) $(ALTIVEC_CFLAGS) -o $@ -c $<
 endef
 
-ifeq ($(MINGW32_MAKE),1)
-# mingw32-make.exe uses Windows command prompt as the shell which is incompatible with Unix shell character escape. Or maybe sed (from ??) is to blame? I'm not entirely sure.
-# There is no good way to detect this? so use mingw32-make.exe MINGW32_MAKE=1
-# ~zturtleman
-
-define DO_REF_STR
-$(echo_cmd) "REF_STR $<"
-echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-cat $< | sed -e 's/^\(.*\)$$/\"\1\\\x6e\"/' | tr -d '\r' >> $@
-echo ";" >> $@
-cat $@
-endef
-
+# How to print literal \ followed by n?
+SED_TEST=$(shell echo a | sed 's/a/\\n')
+ifeq ($(SED_TEST),\n)
+	LITERAL_LF='\\n'
 else
+	# wtf sed in git-for-windows and chocolatey converts "\\n" to <LF>.
+	# source seems to be https://github.com/mbuilov/sed-windows ?
+	LITERAL_LF='\\\n'
+endif
 
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"
 echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-cat $< | sed -e 's/^\(.*\)$$/\"\1\\''n\"/' | tr -d '\r' >> $@
+cat $< | sed -e "s/^\(.*\)$$/\"\1$LITERAL_LF\"/" | tr -d '\r' >> $@
 echo ";" >> $@
 cat $@
 endef
-
-endif
 
 define DO_BOT_CC
 $(echo_cmd) "BOT_CC $<"
