@@ -1204,7 +1204,7 @@ $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) $(ALTIVEC_CFLAGS
 endef
 
 # How to print literal \ followed by n?
-SED_TEST=$(shell echo a | sed 's/a/\\n')
+SED_TEST=$(shell echo a | sed -e 's/a/\\n/')
 ifeq ($(SED_TEST),\n)
 	LITERAL_LF=\\n
 else
