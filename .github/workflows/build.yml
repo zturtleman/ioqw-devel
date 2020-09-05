@@ -24,10 +24,14 @@ jobs:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: git zip mingw-w64-x86_64-toolchain
     - name: Compile
-      run: |
-        choco install sed zip
-        make release
+      shell: msys2 {0}
+      run: make release
       env:
         ARCHIVE: 1
     - uses: actions/upload-artifact@v2
