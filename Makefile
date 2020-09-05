@@ -1206,17 +1206,17 @@ endef
 # How to print literal \ followed by n?
 SED_TEST=$(shell echo a | sed 's/a/\\n')
 ifeq ($(SED_TEST),\n)
-	LITERAL_LF='\\n'
+	LITERAL_LF=\\n
 else
 	# wtf sed in git-for-windows and chocolatey converts "\\n" to <LF>.
 	# source seems to be https://github.com/mbuilov/sed-windows ?
-	LITERAL_LF='\\\n'
+	LITERAL_LF=\\\n
 endif
 
 define DO_REF_STR
 $(echo_cmd) "REF_STR $<"
 echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
-cat $< | sed -e "s/^\(.*\)$$/\"\1$LITERAL_LF\"/" | tr -d '\r' >> $@
+cat $< | sed -e "s/^\(.*\)$$/\"\1$(LITERAL_LF)\"/" | tr -d '\r' >> $@
 echo ";" >> $@
 cat $@
 endef
