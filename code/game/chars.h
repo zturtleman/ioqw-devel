@@ -145,7 +145,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // how much a bot likes to pick up items (time/range)
 #define CHARACTERISTIC_GOAL_MULTIPLIER				51 // float [0, 100]
 // what team strategy a bot prefers most by default
-#define CHARACTERISTIC_LEADER_STRATEGY				52 // int [0, 4]
+#define CHARACTERISTIC_LEADER_STRATEGY				52 // int [1, 6]
 //=====================================================================================================================================
 // CHAT
 //=====================================================================================================================================
