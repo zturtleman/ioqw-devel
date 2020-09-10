@@ -796,15 +796,11 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 	}
 
 	if (bs->enemy >= 0) {
-		factor = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0.01f, 1);
-		maxchange = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 1800);
+		factor = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0, 1);
+		maxchange = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 360);
 	} else {
 		factor = 0.05f;
 		maxchange = 360;
-	}
-
-	if (maxchange < 240) {
-		maxchange = 240;
 	}
 
 	maxchange *= thinktime;
@@ -812,7 +808,7 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 
 	for (i = 0; i < 2; i++) {
-		if (viewType > 0.8
+		if (viewType > 0.5
 //#ifdef DEBUG
 			|| bot_challenge.integer
 //#endif

@@ -51,7 +51,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // view angle difference to angle change factor
 #define CHARACTERISTIC_VIEW_FACTOR					 9 // float [0, 1]
 // maximum view angle change
-#define CHARACTERISTIC_VIEW_MAXCHANGE				10 // float [1, 360]
+#define CHARACTERISTIC_VIEW_MAXCHANGE				10 // int [1, 360]
 // the aggression of the bot
 // > 0.0 && <  0.2 = don't shoot at dead bodies
 // > 0.0 && <= 0.9 = retreat if feeling bad
