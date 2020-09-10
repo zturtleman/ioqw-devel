@@ -28,8 +28,8 @@ Ioid3-qw is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L62
     *  `cg_drawDebug` (0/1) - Disable/enable drawing some elements that are only useful while debugging bots (e.g.: team task sprites).
     *  `bot_report` (0/1) - Prints what the bot is doing and shows the node the bot is in (2). 0 = off, 1 = report if a bot is being followed (as in Mint-Arena).
     *  `bot_shownodechanges` (0/1) - Shows the node the bots are in. 0 = off, 1 = console report.
-    *  `bot_teambluestrategy` (0/1/2/3/4) - The strategy the blue team will choose in team gametypes (WIP).
-    *  `bot_teamredstrategy` (0/1/2/3/4) - The strategy the red team will choose in team gametypes (WIP).
+    *  `bot_teambluestrategy` (0/1/2/3/4/5/6) - The strategy the blue team will choose in team gametypes.
+    *  `bot_teamredstrategy` (0/1/2/3/4/5/6) - The strategy the red team will choose in team gametypes.
     *  `bot_noshoot` (0/1) - Bots will act as usual, but they suppress fire. They react and aim unaffected but they won't hit the trigger (added for various development benefits).
     *  `bot_nowalk` (0/1) - Bots are forced to run instead of walking slowly.
     *  `bot_equalize` (0/1) - (unknown/obsolet?)

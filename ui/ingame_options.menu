@@ -206,13 +206,17 @@
 			name options
 			group grpOptions
 			type ITEM_TYPE_MULTI
-			text "Ejecting Brass:"
-			cvar "cg_brassTime"
+			text "Red Team Strategy"
+			cvar "bot_teamredstrategy"
 
 			cvarFloatList {
-				"High" 2500
-				"Med" 1250
-				"Off" 0
+				"Default" 0
+				"Max. Defenders" 1
+				"Extra Defensive" 2
+				"Defensive" 3
+				"Offensive" 4
+				"Extra Offensive" 5
+				"Max. Offenders" 6
 			}
 
 			rect 0 71 200 20
