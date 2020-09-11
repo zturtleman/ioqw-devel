@@ -1256,7 +1256,7 @@ void CG_FireWeapon(centity_t *cent) {
 	weap = &cg_weapons[ent->weapon];
 	// mark the entity as muzzle flashing, so when it is added it will append the flash to the weapon model
 	cent->muzzleFlashTime = cg.time;
-	// beam gun only does this this on initial press
+	// beam gun only does this on initial press
 	if (ent->weapon == WP_BEAMGUN) {
 		if (cent->pe.beamgunFiring) {
 			return;

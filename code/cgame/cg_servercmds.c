@@ -1146,7 +1146,7 @@ static void CG_ServerCommand(void) {
 =======================================================================================================================================
 CG_ExecuteNewServerCommands
 
-Execute all of the server commands that were received along with this this snapshot.
+Execute all of the server commands that were received along with this snapshot.
 =======================================================================================================================================
 */
 void CG_ExecuteNewServerCommands(int latestSequence) {

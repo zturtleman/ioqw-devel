@@ -136,7 +136,7 @@ chat "Xaero"
 
 	type "death_drown" //initiated when the bot drowns
 	{
-		"The irony: that that which gave me life, now gives me death.";
+		"The irony: that which gave me life, now gives me death.";
 		"Every creature finds its niche, where its form is perfection. ~Would that I was a fish.";
 		"I know a thousand ways to kill, and yet, I could not spare a day to learn to swim.";
 		"Remember little ~one: he who is the best armored ... sinks.";
@@ -232,7 +232,7 @@ chat "Xaero"
 		"Loose the dragon. Unchain the thunderclap. Let chaos rule!";
 		"Waste not, the providence of Heaven. ~It may not come again.";
 		"A warrior knows that victory may not come til his own life is spilled out.";
-		"The fire of my soul reaches out to caress the the spirits of my foes.";
+		"The fire of my soul reaches out to caress the spirits of my foes.";
 		"Such power should not be wasted upon lesser beings.";
 		"I am selling death and destruction at wholesale prices!";
 		"None shall pass!";

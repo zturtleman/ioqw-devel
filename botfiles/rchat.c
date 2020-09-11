@@ -1393,7 +1393,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 {
 	"~You want to talk about divorce in the arena?";
 	"I'm about to divorce you from reality.";
-	"So the the scum left you. ~Should I care?";
+	"So the scum left you. ~Should I care?";
 	"Frag now. Whimper later.";
 	response_insult;
 }
