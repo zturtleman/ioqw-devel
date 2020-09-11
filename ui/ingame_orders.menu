@@ -458,75 +458,28 @@
 		itemDef {
 			name orders
 			group grporders
+			text "I'M RETRIEVING"
 			type 1
-			text "I'M PATROLLING"
-			rect 0 120 200 20
+			rect 0 200 200 20
 			textalign 1
 			textalignx 100
 			textaligny 17
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
+			cvarTest "g_gametype"
+
+			hideCvar {
+				"5"; "6"; "7"
+			}
 
 			mouseenter {
 				hide grpicon;
-				show patrol
+				show escort
 			}
 
 			action {
-				exec "teamtask 3; cmd vsay_team onpatrol";
-				uiScript closeingame
-			}
-
-			ownerdrawflag UI_SHOW_NOTLEADER
-		}
-
-		itemDef {
-			name orders
-			group grporders
-			text "I'M FOLLOWING"
-			type 1
-			rect 0 140 200 20
-			textalign 1
-			textalignx 100
-			textaligny 17
-			textscale .25
-			forecolor 1 1 1 1
-			visible 1
-
-			mouseenter {
-				hide grpicon;
-				show follow
-			}
-
-			action {
-				exec "teamtask 4; cmd vsay_team onfollow";
-				uiScript closeingame
-			}
-
-			ownerdrawflag UI_SHOW_NOTLEADER
-		}
-
-		itemDef {
-			name orders
-			group grporders
-			text "I'M CAMPING"
-			rect 0 160 200 20
-			type 1
-			textalign 1
-			textalignx 100
-			textaligny 17
-			textscale .25
-			forecolor 1 1 1 1
-			visible 1
-
-			mouseenter {
-				hide grpicon;
-				show camp
-			}
-
-			action {
-				exec "teamtask 7; cmd vsay_team oncamp";
+				exec "teamtask 3; cmd vsay_team onreturnflag";
 				uiScript closeingame
 			}
 
@@ -558,7 +511,7 @@
 			}
 
 			action {
-				exec "teamtask 6; cmd vsay_team onfollowcarrier";
+				exec "teamtask 4; cmd vsay_team onfollowcarrier";
 				uiScript closeingame
 			}
 
@@ -568,28 +521,75 @@
 		itemDef {
 			name orders
 			group grporders
-			text "I'M RETRIEVING"
+			text "I'M FOLLOWING"
 			type 1
-			rect 0 200 200 20
+			rect 0 140 200 20
 			textalign 1
 			textalignx 100
 			textaligny 17
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
-			cvarTest "g_gametype"
-
-			hideCvar {
-				"5"; "6"; "7"
-			}
 
 			mouseenter {
 				hide grpicon;
-				show escort
+				show follow
 			}
 
 			action {
-				exec "teamtask 5; cmd vsay_team onreturnflag";
+				exec "teamtask 5; cmd vsay_team onfollow";
+				uiScript closeingame
+			}
+
+			ownerdrawflag UI_SHOW_NOTLEADER
+		}
+
+		itemDef {
+			name orders
+			group grporders
+			text "I'M CAMPING"
+			rect 0 160 200 20
+			type 1
+			textalign 1
+			textalignx 100
+			textaligny 17
+			textscale .25
+			forecolor 1 1 1 1
+			visible 1
+
+			mouseenter {
+				hide grpicon;
+				show camp
+			}
+
+			action {
+				exec "teamtask 6; cmd vsay_team oncamp";
+				uiScript closeingame
+			}
+
+			ownerdrawflag UI_SHOW_NOTLEADER
+		}
+
+		itemDef {
+			name orders
+			group grporders
+			type 1
+			text "I'M PATROLLING"
+			rect 0 120 200 20
+			textalign 1
+			textalignx 100
+			textaligny 17
+			textscale .25
+			forecolor 1 1 1 1
+			visible 1
+
+			mouseenter {
+				hide grpicon;
+				show patrol
+			}
+
+			action {
+				exec "teamtask 7; cmd vsay_team onpatrol";
 				uiScript closeingame
 			}
 
