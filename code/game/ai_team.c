@@ -2026,10 +2026,9 @@ void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 							BotAI_BotInitialChat(bs, "cmd_accompany", name, carriername, NULL);
 							BotSayVoiceTeamOrder(bs, other, VOICECHAT_FOLLOWFLAGCARRIER);
 						}
-					} else { // Tobias CHECK: accompany without a flag carrier?
-						BotAI_BotInitialChat(bs, "cmd_accompany", name, carriername, NULL);
-						BotSayVoiceTeamOrder(bs, other, VOICECHAT_FOLLOWFLAGCARRIER);
-						//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (Bot1FCTFOrders_TeamHasFlag, case 3: passive)\n", ClientName(other, name, sizeof(name))); // Tobias DEBUG
+					} else {
+						BotAI_BotInitialChat(bs, "cmd_defendbase", name, NULL);
+						BotSayVoiceTeamOrder(bs, other, VOICECHAT_DEFEND);
 					}
 
 					BotSayTeamOrder(bs, other);
@@ -2092,7 +2091,6 @@ void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 							BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 							BotSayTeamOrder(bs, teammates[numteammates - i - 1]);
 							BotSayVoiceTeamOrder(bs, teammates[numteammates - i - 1], VOICECHAT_GETFLAG);
-							//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (Bot1FCTFOrders_TeamHasFlag, case default: passive)\n", ClientName(teammates[numteammates - i - 1], name, sizeof(name))); // Tobias DEBUG
 						}
 					}
 
@@ -2164,7 +2162,6 @@ void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 					} else {
 						BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 						BotSayVoiceTeamOrder(bs, other, VOICECHAT_GETFLAG);
-						//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (Bot1FCTFOrders_TeamHasFlag, case 3: aggressive)\n", ClientName(other, name, sizeof(name))); // Tobias DEBUG
 					}
 
 					BotSayTeamOrder(bs, other);
@@ -2227,7 +2224,6 @@ void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 							BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 							BotSayTeamOrder(bs, teammates[numteammates - i - 1]);
 							BotSayVoiceTeamOrder(bs, teammates[numteammates - i - 1], VOICECHAT_GETFLAG);
-							//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (Bot1FCTFOrders_TeamHasFlag, case default: aggressive)\n", ClientName(teammates[numteammates - i - 1], name, sizeof(name))); // Tobias DEBUG
 						}
 					}
 
@@ -3348,7 +3344,6 @@ void BotCTFOrders_BothFlagsNotAtBase(bot_state_t *bs) {
 					} else {
 						BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 						BotSayVoiceTeamOrder(bs, other, VOICECHAT_GETFLAG);
-						//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (BotCTFOrders_BothFlagsNotAtBase, case 3: passive)\n", ClientName(other, name, sizeof(name))); // Tobias DEBUG
 					}
 
 					BotSayTeamOrder(bs, other);
@@ -3411,7 +3406,6 @@ void BotCTFOrders_BothFlagsNotAtBase(bot_state_t *bs) {
 							BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 							BotSayTeamOrder(bs, teammates[i]);
 							BotSayVoiceTeamOrder(bs, teammates[i], VOICECHAT_GETFLAG);
-							//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (BotCTFOrders_BothFlagsNotAtBase, case default: passive)\n", ClientName(teammates[i], name, sizeof(name))); // Tobias DEBUG
 						}
 					}
 
@@ -4275,7 +4269,6 @@ void BotCTFOrders_EnemyFlagNotAtBase(bot_state_t *bs) {
 							BotAI_BotInitialChat(bs, "cmd_getflag", name, NULL);
 							BotSayTeamOrder(bs, teammates[numteammates - i - 1]);
 							BotSayVoiceTeamOrder(bs, teammates[numteammates - i - 1], VOICECHAT_GETFLAG);
-							//BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "(%s): No flag carrier! (BotCTFOrders_EnemyFlagNotAtBase, case default: passive)\n", ClientName(teammates[numteammates - i - 1], name, sizeof(name))); // Tobias DEBUG
 						}
 					}
 
