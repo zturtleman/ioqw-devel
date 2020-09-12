@@ -5163,15 +5163,15 @@ void BotTeamAI(bot_state_t *bs) {
 
 	bs->askteamleader_time = 0;
 	bs->becometeamleader_time = 0;
+	bs->ctfstrategy = 0; // Tobias CHECK: initialize to 0? Does this prevent a "AAS_EntityInfo: entnum %d out of range" error message?
 
 	ClientName(bs->client, netname, sizeof(netname));
 	// return if this bot is NOT the team leader
 	if (Q_stricmp(netname, bs->teamleader) != 0) {
-		bs->ctfstrategy = 0;
 		return;
 	}
 
-	bs->ctfstrategy = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_LEADER_STRATEGY, 0, 6);
+	//bs->ctfstrategy = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_LEADER_STRATEGY, 1, 6); // Tobias FIXME: why doesn't this work after a map change? The ctfstrategy changes to a higher vale after a map chane :(
 
 	numteammates = BotNumTeamMates(bs);
 	// give orders
@@ -5200,20 +5200,18 @@ void BotTeamAI(bot_state_t *bs) {
 				bs->ctfstrategy = bot_teamredstrategy.integer;
 			} else if (BotTeam(bs) == TEAM_BLUE && bot_teambluestrategy.integer > 0) {
 				bs->ctfstrategy = bot_teambluestrategy.integer;
-			} else {
 // Tobias END
 			// if there were no flag captures the last 4 minutes
-			if (bs->lastflagcapture_time < FloatTime() - 240) {
+			} else if (bs->lastflagcapture_time < FloatTime() - 240) {
 				bs->lastflagcapture_time = FloatTime();
 				// randomly change the CTF strategy
 				if (random() < 0.4) {
 					bs->ctfstrategy = 4;
 					bs->teamgiveorders_time = FloatTime();
 				}
+			} else {
+				bs->ctfstrategy = 3;
 			}
-// Tobias DEBUG
-			}
-// Tobias END
 			// if the flag status changed or someone wants to know what to do or if the number of teammates changed
 			if (bs->flagstatuschanged || bs->forceorders || bs->numteammates != numteammates) {
 				bs->flagstatuschanged = qfalse;
@@ -5225,10 +5223,10 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
 				BotCTFOrders(bs);
 // Tobias DEBUG
-				if (BotTeam(bs) == TEAM_BLUE) {
-					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
-				} else if (BotTeam(bs) == TEAM_RED) {
+				if (BotTeam(bs) == TEAM_RED) {
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "Red Team Strategy = %i\n", bs->ctfstrategy);
+				} else {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
 				}
 // Tobias END
 				bs->teamgiveorders_time = 0;
@@ -5243,20 +5241,18 @@ void BotTeamAI(bot_state_t *bs) {
 				bs->ctfstrategy = bot_teamredstrategy.integer;
 			} else if (BotTeam(bs) == TEAM_BLUE && bot_teambluestrategy.integer > 0) {
 				bs->ctfstrategy = bot_teambluestrategy.integer;
-			} else {
 // Tobias END
 			// if there were no flag captures the last 4 minutes
-			if (bs->lastflagcapture_time < FloatTime() - 240) {
+			} else if (bs->lastflagcapture_time < FloatTime() - 240) {
 				bs->lastflagcapture_time = FloatTime();
 				// randomly change the CTF strategy
 				if (random() < 0.4) {
 					bs->ctfstrategy = 4;
 					bs->teamgiveorders_time = FloatTime();
 				}
+			} else {
+				bs->ctfstrategy = 3;
 			}
-// Tobias DEBUG
-			}
-// Tobias END
 			// if the flag status changed or someone wants to know what to do or if the number of teammates changed
 			if (bs->flagstatuschanged || bs->forceorders || bs->numteammates != numteammates) {
 				bs->flagstatuschanged = qfalse;
@@ -5268,10 +5264,10 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
 				Bot1FCTFOrders(bs);
 // Tobias DEBUG
-				if (BotTeam(bs) == TEAM_BLUE) {
-					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
-				} else if (BotTeam(bs) == TEAM_RED) {
+				if (BotTeam(bs) == TEAM_RED) {
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "Red Team Strategy = %i\n", bs->ctfstrategy);
+				} else {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
 				}
 // Tobias END
 				bs->teamgiveorders_time = 0;
@@ -5287,9 +5283,7 @@ void BotTeamAI(bot_state_t *bs) {
 			} else if (BotTeam(bs) == TEAM_BLUE && bot_teambluestrategy.integer > 0) {
 				bs->ctfstrategy = bot_teambluestrategy.integer;
 			} else {
-// Tobias END
-
-// Tobias DEBUG
+				bs->ctfstrategy = 3;
 			}
 // Tobias END
 			// if someone wants to know what to do or if the number of teammates changed
@@ -5302,10 +5296,10 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
 				BotObeliskOrders(bs);
 // Tobias DEBUG
-				if (BotTeam(bs) == TEAM_BLUE) {
-					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
-				} else if (BotTeam(bs) == TEAM_RED) {
+				if (BotTeam(bs) == TEAM_RED) {
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "Red Team Strategy = %i\n", bs->ctfstrategy);
+				} else {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
 				}
 // Tobias END
 				// give orders again after 30 seconds
@@ -5322,9 +5316,7 @@ void BotTeamAI(bot_state_t *bs) {
 			} else if (BotTeam(bs) == TEAM_BLUE && bot_teambluestrategy.integer > 0) {
 				bs->ctfstrategy = bot_teambluestrategy.integer;
 			} else {
-// Tobias END
-
-// Tobias DEBUG
+				bs->ctfstrategy = 3;
 			}
 // Tobias END
 			// if someone wants to know what to do or if the number of teammates changed
@@ -5337,10 +5329,10 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
 				BotHarvesterOrders(bs);
 // Tobias DEBUG
-				if (BotTeam(bs) == TEAM_BLUE) {
-					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
-				} else if (BotTeam(bs) == TEAM_RED) {
+				if (BotTeam(bs) == TEAM_RED) {
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "Red Team Strategy = %i\n", bs->ctfstrategy);
+				} else {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
 				}
 // Tobias END
 				// give orders again after 30 seconds
