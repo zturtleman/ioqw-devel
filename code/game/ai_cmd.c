@@ -124,8 +124,8 @@ void BotPrintTeamGoal(bot_state_t *bs) {
 		}
 		default:
 		{
-			if (bs->ctfroam_time > FloatTime()) {
-				t = bs->ctfroam_time - FloatTime();
+			if (bs->teamroam_time > FloatTime()) {
+				t = bs->teamroam_time - FloatTime();
 				BotAI_Print(PRT_MESSAGE, "%s: I'm gonna roam for %1.0f secs\n", netname, t);
 			} else {
 				BotAI_Print(PRT_MESSAGE, "%s: I've got a regular goal\n", netname);
@@ -951,7 +951,7 @@ void BotMatch_GetFlag(bot_state_t *bs, bot_match_t *match) {
 	// set the ltg type
 	bs->ltgtype = LTG_GETFLAG;
 	// set the team goal time
-	bs->teamgoal_time = FloatTime() + CTF_GETFLAG_TIME;
+	bs->teamgoal_time = FloatTime() + TEAM_GETFLAG_TIME;
 	// get an alternate route in ctf
 	if (gametype == GT_CTF) {
 		// get an alternative route goal towards the enemy base
@@ -1095,7 +1095,7 @@ void BotMatch_RushBase(bot_state_t *bs, bot_match_t *match) {
 	// set the ltg type
 	bs->ltgtype = LTG_RUSHBASE;
 	// set the team goal time
-	bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
+	bs->teamgoal_time = FloatTime() + TEAM_RUSHBASE_TIME;
 	// away from rushing to base
 	bs->rushbaseaway_time = 0;
 	// set the team status (offense, defense etc.)
@@ -1189,7 +1189,7 @@ void BotMatch_ReturnFlag(bot_state_t *bs, bot_match_t *match) {
 	// set the ltg type
 	bs->ltgtype = LTG_RETURNFLAG;
 	// set the team goal time
-	bs->teamgoal_time = FloatTime() + CTF_RETURNFLAG_TIME;
+	bs->teamgoal_time = FloatTime() + TEAM_RETURNFLAG_TIME;
 	// away from rushing to base
 	bs->rushbaseaway_time = 0;
 	// set the team status (offense, defense etc.)

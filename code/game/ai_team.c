@@ -5163,15 +5163,13 @@ void BotTeamAI(bot_state_t *bs) {
 
 	bs->askteamleader_time = 0;
 	bs->becometeamleader_time = 0;
-	// set default strategy
-	bs->ctfstrategy = CTFS_DEFENSIVE;
 
 	ClientName(bs->client, netname, sizeof(netname));
 	// return if this bot is NOT the team leader
 	if (Q_stricmp(netname, bs->teamleader) != 0) {
 		return;
 	}
-
+	// set default strategy
 	//bs->ctfstrategy = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_LEADER_STRATEGY, 1, 6); // Tobias FIXME: why doesn't this work after a map change? The ctfstrategy changes to a higher vale after a map chane :(
 
 	numteammates = BotNumTeamMates(bs);
@@ -5181,15 +5179,22 @@ void BotTeamAI(bot_state_t *bs) {
 		{
 			// if someone wants to know what to do or if the number of teammates changed
 			if (bs->forceorders || bs->numteammates != numteammates) {
+				bs->teamgiveorders_time = FloatTime();
 				bs->forceorders = qfalse;
 				bs->numteammates = numteammates;
-				bs->teamgiveorders_time = FloatTime();
 			}
 			// if it's time to give orders
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
 				BotTeamOrders(bs);
 				// give orders again after 120 seconds
 				bs->teamgiveorders_time = FloatTime() + 120;
+// Tobias DEBUG
+				if (BotTeam(bs) == TEAM_RED) {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "Red Team Strategy = %i\n", bs->ctfstrategy);
+				} else {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "Blue Team Strategy = %i\n", bs->ctfstrategy);
+				}
+// Tobias END
 			}
 
 			break;
@@ -5226,10 +5231,10 @@ void BotTeamAI(bot_state_t *bs) {
 			}
 			// if the flag status changed or someone wants to know what to do or if the number of teammates changed
 			if (bs->flagstatuschanged || bs->forceorders || bs->numteammates != numteammates) {
+				bs->teamgiveorders_time = FloatTime();
 				bs->flagstatuschanged = qfalse;
 				bs->forceorders = qfalse;
 				bs->numteammates = numteammates;
-				bs->teamgiveorders_time = FloatTime();
 			}
 			// if it's time to give orders
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
@@ -5278,10 +5283,10 @@ void BotTeamAI(bot_state_t *bs) {
 			}
 			// if the flag status changed or someone wants to know what to do or if the number of teammates changed
 			if (bs->flagstatuschanged || bs->forceorders || bs->numteammates != numteammates) {
+				bs->teamgiveorders_time = FloatTime();
 				bs->flagstatuschanged = qfalse;
 				bs->forceorders = qfalse;
 				bs->numteammates = numteammates;
-				bs->teamgiveorders_time = FloatTime();
 			}
 			// if it's time to give orders
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
@@ -5330,9 +5335,9 @@ void BotTeamAI(bot_state_t *bs) {
 			}
 			// if someone wants to know what to do or if the number of teammates changed
 			if (bs->forceorders || bs->numteammates != numteammates) {
+				bs->teamgiveorders_time = FloatTime();
 				bs->forceorders = qfalse;
 				bs->numteammates = numteammates;
-				bs->teamgiveorders_time = FloatTime();
 			}
 			// if it's time to give orders
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
@@ -5382,9 +5387,9 @@ void BotTeamAI(bot_state_t *bs) {
 			}
 			// if someone wants to know what to do or if the number of teammates changed
 			if (bs->forceorders || bs->numteammates != numteammates) {
+				bs->teamgiveorders_time = FloatTime();
 				bs->forceorders = qfalse;
 				bs->numteammates = numteammates;
-				bs->teamgiveorders_time = FloatTime();
 			}
 			// if it's time to give orders
 			if (bs->teamgiveorders_time && bs->teamgiveorders_time < FloatTime() - 5) {
