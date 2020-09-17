@@ -3380,9 +3380,12 @@ BotTeammateNeedsNBG
 
 NOTE: This function takes information into account a human player can't derive from his display. I justify this by assuming that an
 endangered player screams for help and tells the needed information.
+
+Tobias FIXME: we can't return to qtrue, because this will cause an "AAS_EntityInfo: entnum %d out of range\n" error message.
+			  So the checks for ammo/weapon is obsolet...
 =======================================================================================================================================
 */
-static qboolean BotTeammateNeedsNBG(const playerState_t *ps) {
+static qboolean BotTeammateNeedsNBG(int clientNum, const playerState_t *ps) {
 
 	// a teammate carrying a flag should be preferred
 	if (ps->powerups[PW_REDFLAG] || ps->powerups[PW_BLUEFLAG] || ps->powerups[PW_NEUTRALFLAG]) { // Tobias NOTE: add skulls!
@@ -3413,7 +3416,7 @@ static qboolean BotTeammateNeedsNBG(const playerState_t *ps) {
 		return qfalse;
 	}
 
-	return qtrue;
+	return qfalse; // Tobias FIXME: we can't return to qtrue, because this will cause an "AAS_EntityInfo: entnum %d out of range\n" error message, ...but why?
 }
 
 /*
@@ -3456,6 +3459,10 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 
 	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client) {
+			continue;
+		}
+
+		if (!BotAI_GetClientState(i, &ps)) {
 			continue;
 		}
 		// if on the same team
@@ -3545,8 +3552,9 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 				continue;
 			}
 		}
-		// if the teammate is in danger
-		if (BotAI_GetClientState(i, &ps) && BotTeammateNeedsNBG(&ps)) {
+		// if the teammate is in danger, or needs this item
+		if (BotTeammateNeedsNBG(i, &ps)) {
+			//BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Avoid picking up item, a teammate needs this NBG!\n", netname);
 			return qtrue;
 		}
 	}
