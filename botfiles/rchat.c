@@ -630,7 +630,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 	"Most likely, it's your own fault.";
 	"~Do you always try to blame others?";
 	"No ~one takes responsibility these days.";
-	" So, is it my fault?";
+	"So, is it my fault?";
 	"~It's obviously ",botnames,"'s fault.";
 	"~Don't blame me.";
 }

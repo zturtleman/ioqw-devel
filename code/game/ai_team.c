@@ -216,7 +216,7 @@ int BotGetNextPlayerOrMonster(bot_state_t *bs, int lastPlayer, playerState_t *ps
 =======================================================================================================================================
 BotGetNextTeamMate
 
-Returns -1 if there are no more team mates. Does not return the bot itself. Use lastTeamMate = -1 for first call.
+Returns -1 if there are no more teammates. Does not return the bot itself. Use lastTeamMate = -1 for first call.
 =======================================================================================================================================
 */
 int BotGetNextTeamMate(bot_state_t *bs, int lastTeamMate, playerState_t *ps) {
@@ -538,9 +538,9 @@ void BotHarvesterOrders(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -961,9 +961,9 @@ void BotObeliskOrders(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -1384,9 +1384,9 @@ void Bot1FCTFOrders_FlagAtCenter(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -1799,9 +1799,9 @@ void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -2422,9 +2422,9 @@ void Bot1FCTFOrders_EnemyHasFlag(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -2679,9 +2679,9 @@ void Bot1FCTFOrders_FlagDropped(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -3125,9 +3125,9 @@ void BotCTFOrders_BothFlagsNotAtBase(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -3748,9 +3748,9 @@ void BotCTFOrders_TeamFlagNotAtBase(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -4005,9 +4005,9 @@ void BotCTFOrders_EnemyFlagNotAtBase(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
@@ -4550,9 +4550,9 @@ void BotCTFOrders_BothFlagsAtBase(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
-	// sort team mates by travel time to base
+	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
-	// sort team mates by CTF preference
+	// sort teammates by CTF preference
 	BotSortTeamMatesByTaskPreference(bs, teammates, numteammates);
 
 	switch (bs->ctfstrategy) {
