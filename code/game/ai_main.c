@@ -1823,6 +1823,24 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) {
 		trap_BotLibVarSet("bot_alt_aim", buf);
 	}
+	// red team strategy
+	trap_Cvar_VariableStringBuffer("bot_teamredstrategy", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_teamredstrategy", buf);
+	}
+	// blue team strategy
+	trap_Cvar_VariableStringBuffer("bot_teambluestrategy", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_teambluestrategy", buf);
+	}
+	// team blocking
+	trap_Cvar_VariableStringBuffer("bot_teamblock", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_teamblock", buf);
+	}
 // Tobias END
 	// visualize jump pads
 	trap_Cvar_VariableStringBuffer("bot_visualizejumppads", buf, sizeof(buf));
