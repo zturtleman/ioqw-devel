@@ -3564,7 +3564,7 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 BotAIWaiting
 =======================================================================================================================================
 */
-qboolean BotAIWaiting(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc) {
+qboolean BotAIWaiting(bot_state_t *bs, bot_goal_t *goal) {
 
 	// never wait if there is an enemy
 	if (bs->enemy >= 0) {

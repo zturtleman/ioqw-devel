@@ -1651,8 +1651,6 @@ int AINode_Wait(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-	// check if the bot is blocked
-	//BotAIBlocked(bs, &moveresult, AIEnter_Wait);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
 	// check if the bot is blocking teammates
@@ -1985,7 +1983,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		return qfalse;
 	}
 	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal, AIEnter_Seek_NBG)) {
+	if (BotAIWaiting(bs, &goal)) {
 		AIEnter_Wait(bs, "SEEK NBG: waiting.");
 		return qfalse;
 	}
@@ -2154,7 +2152,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
 	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal, AIEnter_Seek_LTG)) {
+	if (BotAIWaiting(bs, &goal)) {
 		AIEnter_Wait(bs, "SEEK LTG: waiting.");
 		return qfalse;
 	}
@@ -2615,7 +2613,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
 	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Chase)) {
+	if (BotAIWaiting(bs, &goal)) {
 		AIEnter_Wait(bs, "BATTLE CHASE: waiting.");
 		return qfalse;
 	}
@@ -2794,7 +2792,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		return qtrue;
 	}
 	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal, AIEnter_Battle_Retreat)) {
+	if (BotAIWaiting(bs, &goal)) {
 		AIEnter_Wait(bs, "BATTLE RETREAT: waiting.");
 		return qfalse;
 	}
