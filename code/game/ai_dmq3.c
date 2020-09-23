@@ -3380,15 +3380,12 @@ BotTeammateNeedsNBG
 
 NOTE: This function takes information into account a human player can't derive from his display. I justify this by assuming that an
 endangered player screams for help and tells the needed information.
-
-Tobias FIXME: we can't return to qtrue, because this will cause an "AAS_EntityInfo: entnum %d out of range\n" error message.
-			  So the checks for ammo/weapon is obsolet...
 =======================================================================================================================================
 */
 static qboolean BotTeammateNeedsNBG(int clientNum, const playerState_t *ps) {
 
 	// a teammate carrying a flag should be preferred
-	if (ps->powerups[PW_REDFLAG] || ps->powerups[PW_BLUEFLAG] || ps->powerups[PW_NEUTRALFLAG]) { // Tobias NOTE: add skulls!
+	if (ps->powerups[PW_REDFLAG] || ps->powerups[PW_BLUEFLAG] || ps->powerups[PW_NEUTRALFLAG]) { // Tobias FIXME: add skulls!
 		return qtrue;
 	}
 	// if the teammate has the chaingun with some ammo
@@ -3416,7 +3413,7 @@ static qboolean BotTeammateNeedsNBG(int clientNum, const playerState_t *ps) {
 		return qfalse;
 	}
 
-	return qfalse; // Tobias FIXME: we can't return to qtrue, because this will cause an "AAS_EntityInfo: entnum %d out of range\n" error message, ...but why?
+	return qtrue;
 }
 
 /*

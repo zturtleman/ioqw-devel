@@ -1652,7 +1652,7 @@ int AINode_Wait(bot_state_t *bs) {
 		}
 	}
 	// check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, AIEnter_Wait);
+	//BotAIBlocked(bs, &moveresult, AIEnter_Wait);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
 	// check if the bot is blocking teammates
