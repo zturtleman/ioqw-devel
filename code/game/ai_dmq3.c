@@ -437,6 +437,7 @@ BotSetTeamStatus
 =======================================================================================================================================
 */
 void BotSetTeamStatus(bot_state_t *bs) {
+//#if 0 // Tobias DEBUG
 	int teamtask;
 	aas_entityinfo_t entinfo;
 
@@ -495,6 +496,7 @@ void BotSetTeamStatus(bot_state_t *bs) {
 	}
 
 	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
+//#endif // Tobias DEBUG
 }
 
 /*

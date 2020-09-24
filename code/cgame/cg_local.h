@@ -1018,11 +1018,7 @@ extern vmCvar_t cg_crosshairHealth;
 extern vmCvar_t cg_drawStatus;
 extern vmCvar_t cg_draw2D;
 extern vmCvar_t cg_animSpeed;
-// Tobias DEBUG
-extern vmCvar_t cg_drawDebug;
-extern vmCvar_t cg_drawStatusDebug;
-extern vmCvar_t cg_drawObstacleDebug;
-// Tobias END
+extern vmCvar_t cg_drawDebug; // Tobias DEBUG
 extern vmCvar_t cg_debugAnim;
 extern vmCvar_t cg_debugPosition;
 extern vmCvar_t cg_debugEvents;
@@ -1221,6 +1217,7 @@ qboolean CG_YourTeamHasFlag(void);
 qboolean CG_OtherTeamHasFlag(void);
 qhandle_t CG_StatusHandle(int task);
 // Tobias DEBUG
+qhandle_t CG_NodeHandle(int task);
 qhandle_t CG_ObstacleHandle(int task);
 // Tobias END
 // cg_particles.c

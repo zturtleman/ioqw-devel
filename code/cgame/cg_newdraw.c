@@ -457,11 +457,6 @@ qhandle_t CG_StatusHandle(int task) {
 			h = cgs.media.campShader;
 			break;
 		default:
-// Tobias DEBUG
-			if (cg_drawDebug.integer && cg_drawStatusDebug.integer) {
-				h = cgs.media.roamShader;
-			} else
-// Tobias END
 			h = cgs.media.patrolShader;
 			break;
 	}
@@ -469,6 +464,45 @@ qhandle_t CG_StatusHandle(int task) {
 	return h;
 }
 // Tobias DEBUG
+/*
+=======================================================================================================================================
+CG_NodeHandle
+=======================================================================================================================================
+*/
+qhandle_t CG_NodeHandle(int task) {
+	qhandle_t h;
+
+	switch (task) {
+		case TEAMTASK_OFFENSE: // AINode_Seek_LTG
+			h = cgs.media.assaultShader;
+			break;
+		case TEAMTASK_RETRIEVE: // AINode_Seek_NBG
+			h = cgs.media.retrieveShader;
+			break;
+		// --------------------------------------------------------------------------------------
+		case TEAMTASK_DEFENSE: // AINode_Battle_Retreat
+			h = cgs.media.defendShader;
+			break;
+		case TEAMTASK_PATROL: // AINode_Battle_NBG
+			h = cgs.media.patrolShader;
+			break;
+		case TEAMTASK_FOLLOW: // AINode_Battle_Chase
+			h = cgs.media.followShader;
+			break;
+		case TEAMTASK_ESCORT: // AINode_Battle_Fight
+			h = cgs.media.escortShader;
+			break;
+		// --------------------------------------------------------------------------------------
+		case TEAMTASK_CAMP: // AINode_Wait
+			h = cgs.media.campShader;
+			break;
+		default: // AINode_Seek_ActivateEntity etc.
+			h = cgs.media.roamShader;
+			break;
+	}
+
+	return h;
+}
 /*
 =======================================================================================================================================
 CG_ObstacleHandle
