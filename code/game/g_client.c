@@ -671,6 +671,9 @@ The game can override any of the settings and call trap_SetUserinfo if desired.
 void ClientUserinfoChanged(int clientNum) {
 	gentity_t *ent;
 	int teamTask, teamLeader;
+// Tobias DEBUG
+	int obstacleMove, aiNode;
+// Tobias END
 	char *s;
 	char model[MAX_QPATH];
 	char headModel[MAX_QPATH];
@@ -749,13 +752,21 @@ void ClientUserinfoChanged(int clientNum) {
 	teamTask = atoi(Info_ValueForKey(userinfo, "teamtask"));
 	// team leader (1 = leader, 0 is normal player)
 	teamLeader = client->sess.teamLeader;
+// Tobias DEBUG
+	obstacleMove = atoi(Info_ValueForKey(userinfo, "obstacleMove"));
+	aiNode = atoi(Info_ValueForKey(userinfo, "aiNode"));
+// Tobias END
 	// colors
 	Q_strncpyz(c1, Info_ValueForKey(userinfo, "color1"), sizeof(c1));
 	Q_strncpyz(c2, Info_ValueForKey(userinfo, "color2"), sizeof(c2));
 	// send over a subset of the userinfo keys so other clients can print scoreboards, display models, and play custom sounds
 	if (ent->r.svFlags & SVF_BOT) {
-		s = va("n\\%s\\t\\%i\\tt\\%d\\tl\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\w\\%i\\l\\%i\\skill\\%s",
-			client->pers.netname, client->sess.sessionTeam, teamTask, teamLeader, model, headModel, c1, c2, client->sess.wins, client->sess.losses, Info_ValueForKey(userinfo, "skill"));
+		s = va("n\\%s\\t\\%i\\tt\\%d\\tl\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\w\\%i\\l\\%i\\skill\\%s\\om\\%d\\an\\%d", // Tobias DEBUG: \\om\\%d\\an\\%d
+			client->pers.netname, client->sess.sessionTeam, teamTask, teamLeader, model, headModel, c1, c2, client->sess.wins, client->sess.losses, Info_ValueForKey(userinfo, "skill")
+// Tobias DEBUG
+			, obstacleMove, aiNode
+// Tobias END
+			);
 	} else {
 		s = va("n\\%s\\t\\%i\\tt\\%d\\tl\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\w\\%i\\l\\%i",
 			client->pers.netname, client->sess.sessionTeam, teamTask, teamLeader, model, headModel, c1, c2, client->sess.wins, client->sess.losses);

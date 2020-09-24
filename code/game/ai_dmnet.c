@@ -1276,12 +1276,12 @@ AIEnter_Intermission
 =======================================================================================================================================
 */
 void AIEnter_Intermission(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_DEFAULT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, "INTERMISION", "", s);
 	// reset the bot state
 	BotResetState(bs);
@@ -1319,12 +1319,12 @@ AIEnter_Observer
 =======================================================================================================================================
 */
 void AIEnter_Observer(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_DEFAULT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, "OBSERVER", "", s);
 	// reset the bot state
 	BotResetState(bs);
@@ -1354,12 +1354,12 @@ AIEnter_Stand
 =======================================================================================================================================
 */
 void AIEnter_Stand(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_DEFAULT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, "STAND", "", s);
 
 	bs->standfindenemy_time = FloatTime() + 0.5;
@@ -1397,12 +1397,12 @@ AIEnter_Respawn
 =======================================================================================================================================
 */
 void AIEnter_Respawn(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_DEFAULT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, "RESPAWN", "", s);
 	// reset some states
 	trap_BotResetMoveState(bs->ms);
@@ -1604,12 +1604,12 @@ AIEnter_Wait
 void AIEnter_Wait(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_CAMP;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_WAIT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, S_COLOR_BLUE "WAIT", buf, s);
@@ -1722,12 +1722,12 @@ AIEnter_Seek_ActivateEntity
 =======================================================================================================================================
 */
 void AIEnter_Seek_ActivateEntity(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_ACTIVATE;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, S_COLOR_BLUE "ACTIVATE ENTITY", "", s);
 	bs->ainode = AINode_Seek_ActivateEntity;
 }
@@ -1973,12 +1973,12 @@ AIEnter_Seek_NBG
 void AIEnter_Seek_NBG(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_RETRIEVE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_SEEK_NBG;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK NBG", buf, s);
@@ -2127,12 +2127,12 @@ AIEnter_Seek_LTG
 void AIEnter_Seek_LTG(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_OFFENSE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_SEEK_LTG;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, S_COLOR_GREEN "SEEK LTG", buf, s);
@@ -2345,12 +2345,12 @@ AIEnter_Battle_Fight
 =======================================================================================================================================
 */
 void AIEnter_Battle_Fight(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_ESCORT;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_BATTLE_FIGHT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, S_COLOR_RED "BATTLE FIGHT", "", s);
 	trap_BotResetLastAvoidReach(bs->ms);
 
@@ -2364,12 +2364,12 @@ AIEnter_Battle_SuicidalFight
 =======================================================================================================================================
 */
 void AIEnter_Battle_SuicidalFight(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_NONE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_BATTLE_SUICIDAL_FIGHT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, S_COLOR_RED "BATTLE FIGHT", "", s);
 	trap_BotResetLastAvoidReach(bs->ms);
 
@@ -2574,12 +2574,12 @@ AIEnter_Battle_Chase
 =======================================================================================================================================
 */
 void AIEnter_Battle_Chase(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_FOLLOW;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_BATTLE_CHASE;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, S_COLOR_CYAN "BATTLE CHASE", "", s);
 	bs->chase_time = FloatTime();
 	bs->ainode = AINode_Battle_Chase;
@@ -2778,12 +2778,12 @@ AIEnter_Battle_Retreat
 =======================================================================================================================================
 */
 void AIEnter_Battle_Retreat(bot_state_t *bs, char *s) {
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_DEFENSE;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_BATTLE_RETREAT;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	BotRecordNodeSwitch(bs, S_COLOR_YELLOW "BATTLE RETREAT", "", s);
 	bs->ainode = AINode_Battle_Retreat;
 }
@@ -3014,12 +3014,12 @@ AIEnter_Battle_NBG
 void AIEnter_Battle_NBG(bot_state_t *bs, char *s) {
 	bot_goal_t goal;
 	char buf[144];
-#ifdef NODEDEBUG
-	int teamtask;
+// Tobias DEBUG
+	int aiNode;
 
-	teamtask = TEAMTASK_PATROL;
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+	aiNode = AINODE_BATTLE_NBG;
+	BotSetUserInfo(bs, "aiNode", va("%d", aiNode));
+// Tobias END
 	if (trap_BotGetTopGoal(bs->gs, &goal)) {
 		trap_BotGoalName(goal.number, buf, 144);
 		BotRecordNodeSwitch(bs, S_COLOR_MAGENTA "BATTLE NBG", buf, s);

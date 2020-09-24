@@ -1214,7 +1214,12 @@ void CG_NewClientInfo(int clientNum) {
 	// team leader
 	v = Info_ValueForKey(configstring, "tl");
 	newInfo.teamLeader = atoi(v);
-
+// Tobias DEBUG
+	v = Info_ValueForKey(configstring, "om");
+	newInfo.obstacleMove = atoi(v);
+	v = Info_ValueForKey(configstring, "an");
+	newInfo.aiNode = atoi(v);
+// Tobias END
 	Q_strncpyz(newInfo.redTeam, cg_redTeamName.string, MAX_TEAMNAME);
 	Q_strncpyz(newInfo.blueTeam, cg_blueTeamName.string, MAX_TEAMNAME);
 	// model
@@ -2238,7 +2243,7 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 		if (ci) {
 			qhandle_t h;
 
-			h = CG_ObstacleHandle(ci->teamTask);
+			h = CG_ObstacleHandle(ci->obstacleMove);
 			CG_PlayerFloatSprite(origin, thirdPersonFlags, h);
 			return;
 		}
@@ -2246,7 +2251,7 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 		if (ci) {
 			qhandle_t h;
 
-			h = CG_NodeHandle(ci->teamTask);
+			h = CG_NodeHandle(ci->aiNode);
 			CG_PlayerFloatSprite(origin, thirdPersonFlags, h);
 			return;
 		}

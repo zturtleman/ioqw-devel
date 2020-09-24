@@ -473,36 +473,43 @@ qhandle_t CG_NodeHandle(int task) {
 	qhandle_t h;
 
 	switch (task) {
-		case TEAMTASK_OFFENSE: // AINode_Seek_LTG
+		case AINODE_SEEK_LTG:
 			h = cgs.media.assaultShader;
 			break;
-		case TEAMTASK_RETRIEVE: // AINode_Seek_NBG
+		case AINODE_SEEK_NBG:
 			h = cgs.media.retrieveShader;
 			break;
 		// --------------------------------------------------------------------------------------
-		case TEAMTASK_DEFENSE: // AINode_Battle_Retreat
+		case AINODE_BATTLE_RETREAT:
 			h = cgs.media.defendShader;
 			break;
-		case TEAMTASK_PATROL: // AINode_Battle_NBG
+		case AINODE_BATTLE_NBG:
 			h = cgs.media.patrolShader;
 			break;
-		case TEAMTASK_FOLLOW: // AINode_Battle_Chase
+		case AINODE_BATTLE_CHASE:
 			h = cgs.media.followShader;
 			break;
-		case TEAMTASK_ESCORT: // AINode_Battle_Fight
+		case AINODE_BATTLE_FIGHT:
+			h = cgs.media.escortShader;
+			break;
+		case AINODE_BATTLE_SUICIDAL_FIGHT:
 			h = cgs.media.escortShader;
 			break;
 		// --------------------------------------------------------------------------------------
-		case TEAMTASK_CAMP: // AINode_Wait
+		case AINODE_WAIT:
 			h = cgs.media.campShader;
 			break;
-		default: // AINode_Seek_ActivateEntity etc.
+		case AINODE_ACTIVATE:
+			h = cgs.media.campShader;
+			break;
+		default:
 			h = cgs.media.roamShader;
 			break;
 	}
 
 	return h;
 }
+
 /*
 =======================================================================================================================================
 CG_ObstacleHandle
@@ -512,26 +519,26 @@ qhandle_t CG_ObstacleHandle(int task) {
 	qhandle_t h;
 
 	switch (task) {
-		case TEAMTASK_OFFENSE: // BARRIER_JUMP (can jump over blocking barrier)
+		case MOVEMENT_BARRIER_JUMP: // can jump over blocking barrier
 			h = cgs.media.assaultShader;
 			break;
-		case TEAMTASK_PATROL: // BARRIER_CROUCH (can crouch through blocking barrier)
+		case MOVEMENT_BARRIER_CROUCH: // can crouch through blocking barrier
 			h = cgs.media.patrolShader;
 			break;
 		// --------------------------------------------------------------------------------------
-		case TEAMTASK_FOLLOW: // BARRIER_WALK (must walk around the blocking barrier)
+		case MOVEMENT_BARRIER_WALK: // must walk around the blocking barrier
 			h = cgs.media.followShader;
 			break;
-		case TEAMTASK_ESCORT: // BARRIER_WALK (must walk around the blocking barrier, but flipped side because moving obstacle is moving to our right side)
+		case MOVEMENT_BARRIER_WALK_LEFT: // must walk around the blocking barrier, but flipped side because moving obstacle is moving to our right side
 			h = cgs.media.escortShader;
 			break;
-		case TEAMTASK_RETRIEVE: // BARRIER_WALK (must walk around the blocking barrier, but flipped side because right side is blocked by something)
+		case MOVEMENT_BARRIER_WALK_RIGHT: // must walk around the blocking barrier, but flipped side because right side is blocked by something
 			h = cgs.media.retrieveShader;
 			break;
-		case TEAMTASK_DEFENSE: // BARRIER_WALK (random movement)
+		case MOVEMENT_RANDOM: // random movement
 			h = cgs.media.defendShader;
 			break;
-		case TEAMTASK_CAMP: // BARRIER_WALK (WAIT)
+		case MOVEMENT_WAIT: // BARRIER_WALK
 			h = cgs.media.campShader;
 			break;
 		default: // NOT BLOCKED - no barrier at all

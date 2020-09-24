@@ -437,7 +437,6 @@ BotSetTeamStatus
 =======================================================================================================================================
 */
 void BotSetTeamStatus(bot_state_t *bs) {
-//#if 0 // Tobias DEBUG
 	int teamtask;
 	aas_entityinfo_t entinfo;
 
@@ -496,7 +495,6 @@ void BotSetTeamStatus(bot_state_t *bs) {
 	}
 
 	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-//#endif // Tobias DEBUG
 }
 
 /*
@@ -8366,14 +8364,17 @@ BotObstacleAvoidanceMove
 void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int speed, int movetype) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
-	int teamtask;
 #endif
+// Tobias DEBUG
+	int obstacleMove;
+// Tobias END
 	vec3_t dir2, mins, maxs, hordir, sideward, rightwards, leftwards, angles, up = {0, 0, 1};
 	gentity_t *ent;
 	bsp_trace_t trace;
+// Tobias DEBUG
+	obstacleMove = MOVEMENT_DEFAULT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-	teamtask = TEAMTASK_NONE;
-
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	// just some basic dynamic obstacle avoidance code
@@ -8400,11 +8401,17 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 			if (DotProduct(dir2, sideward) > 50.0f) {
 				// flip the direction
 				VectorNegate(sideward, sideward);
+// Tobias DEBUG
+				obstacleMove = MOVEMENT_BARRIER_WALK_LEFT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-				teamtask = TEAMTASK_ESCORT;
 				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Forward movement failed. Flipped right side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+#endif
 			} else {
-				teamtask = TEAMTASK_FOLLOW;
+// Tobias DEBUG
+				obstacleMove = MOVEMENT_BARRIER_WALK_RIGHT;
+// Tobias END
+#ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 			}
@@ -8419,8 +8426,10 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 					// move in a random direction in the hope to get out
 					BotRandomMove(bs, moveresult, speed, movetype);
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_RANDOM;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_DEFENSE;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
 #endif
 				}
@@ -8440,11 +8449,17 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 			if (trace.startsolid || trace.fraction < 1.0f) {
 				// flip the direction
 				VectorNegate(sideward, sideward);
+// Tobias DEBUG
+				obstacleMove = MOVEMENT_BARRIER_WALK_LEFT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-				teamtask = TEAMTASK_RETRIEVE;
 				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Forward movement failed. Flipped right side because found solid.\n", netname);
+#endif
 			} else {
-				teamtask = TEAMTASK_FOLLOW;
+// Tobias DEBUG
+				obstacleMove = MOVEMENT_BARRIER_WALK_RIGHT;
+// Tobias END
+#ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 			}
@@ -8484,8 +8499,10 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 					//self->NPC->lastSideStepSide = 1;
 					//self->NPC->sideStepHoldTime = level.time + 2000;
 					//return qtrue;
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_BARRIER_WALK_RIGHT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_FOLLOW;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 				}
@@ -8510,8 +8527,10 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 					//self->NPC->lastSideStepSide = -1;
 					//self->NPC->sideStepHoldTime = level.time + 2000;
 					//return qtrue;
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_BARRIER_WALK_LEFT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_RETRIEVE;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Forward movement failed. Flipped right side because found solid.\n", netname);
 #endif
 				}
@@ -8534,16 +8553,20 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 					VectorCopy(avoidRight_dir, rightwards);
 					//self->NPC->lastSideStepSide = 1;
 					//self->NPC->sideStepHoldTime = level.time + 2000;
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_BARRIER_WALK_RIGHT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_FOLLOW;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Forward movement failed. Keep right side.\n", netname);
 #endif
 				} else {
 					VectorCopy(avoidLeft_dir, leftwards);
 					//self->NPC->lastSideStepSide = -1;
 					//self->NPC->sideStepHoldTime = level.time + 2000;
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_BARRIER_WALK_LEFT;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_RETRIEVE;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Forward movement failed. Flipped right side because found solid.\n", netname);
 #endif
 				}
@@ -8559,17 +8582,19 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 				if (!trap_BotMoveInDirection(bs->ms, leftwards, speed, movetype)) {
 					// move in a random direction in the hope to get out
 					BotRandomMove(bs, moveresult, speed, movetype);
+// Tobias DEBUG
+					obstacleMove = MOVEMENT_RANDOM;
+// Tobias END
 #ifdef OBSTACLEDEBUG
-					teamtask = TEAMTASK_DEFENSE;
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: 2nd sidewards movement failed, ending up using random move.\n", netname);
 #endif
 				}
 			}
 		}
 	}
-#ifdef OBSTACLEDEBUG
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
-#endif
+// Tobias DEBUG
+	BotSetUserInfo(bs, "obstacleMove", va("%d", obstacleMove));
+// Tobias END
 }
 
 /*
@@ -8605,8 +8630,10 @@ Before the bot ends in this part of the AI it should predict which doors to open
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
-	int teamtask;
 #endif
+// Tobias DEBUG
+	int obstacleMove;
+// Tobias END
 	int movetype, bspent, speed;
 	vec3_t dir1, dir2, mins, maxs, end;
 	gentity_t *ent;
@@ -8617,21 +8644,23 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
-#ifdef OBSTACLEDEBUG
-		BotSetUserInfo(bs, "teamtask", va("%d", TEAMTASK_NONE));
-#endif
+// Tobias DEBUG
+		BotSetUserInfo(bs, "obstacleMove", va("%d", TEAMTASK_NONE));
+// Tobias END
 		return;
 	}
-#ifdef OBSTACLEDEBUG
+// Tobias DEBUG
 	if (moveresult->flags & MOVERESULT_BARRIER_JUMP) {
-		teamtask = TEAMTASK_OFFENSE;
+		obstacleMove = MOVEMENT_BARRIER_JUMP;
 	} else if (moveresult->flags & MOVERESULT_BARRIER_CROUCH) {
-		teamtask = TEAMTASK_PATROL;
+		obstacleMove = MOVEMENT_BARRIER_CROUCH;
 	} else {
-		teamtask = TEAMTASK_NONE;
+		obstacleMove = MOVEMENT_DEFAULT;
 	}
 
-	BotSetUserInfo(bs, "teamtask", va("%d", teamtask));
+	BotSetUserInfo(bs, "obstacleMove", va("%d", obstacleMove));
+// Tobias END
+#ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	if (!BotWantsToWalk(bs)) {

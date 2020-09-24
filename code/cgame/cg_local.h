@@ -371,6 +371,10 @@ typedef struct {
 	int curWeapon;
 	int wins, losses;		// in tourney mode
 	int teamTask;			// task in teamplay (offence/defence)
+// Tobias DEBUG
+	int obstacleMove;
+	int aiNode;
+// Tobias END
 	qboolean teamLeader;	// true when this is a team leader
 	int powerups;			// so can display quad/flag status
 	int medkitUsageTime;
