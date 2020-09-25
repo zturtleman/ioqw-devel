@@ -101,6 +101,7 @@ vmCvar_t bot_shownodechanges;
 vmCvar_t bot_teambluestrategy;
 vmCvar_t bot_teamredstrategy;
 vmCvar_t bot_teamblock;
+vmCvar_t bot_teamavoidpickup;
 vmCvar_t bot_alt_aggressive;
 vmCvar_t bot_alt_pickup;
 vmCvar_t bot_alt_aim;
@@ -1555,6 +1556,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_teambluestrategy);
 	trap_Cvar_Update(&bot_teamredstrategy);
 	trap_Cvar_Update(&bot_teamblock);
+	trap_Cvar_Update(&bot_teamavoidpickup);
 	trap_Cvar_Update(&bot_alt_aggressive);
 	trap_Cvar_Update(&bot_alt_pickup);
 	trap_Cvar_Update(&bot_alt_aim);
@@ -1841,6 +1843,13 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) {
 		trap_BotLibVarSet("bot_teamblock", buf);
 	}
+	// avoid sharing items with teammates
+	trap_Cvar_VariableStringBuffer("bot_teamavoidpickup", buf, sizeof(buf));
+
+	if (strlen(buf)) {
+		trap_BotLibVarSet("bot_teamavoidpickup", buf);
+	}
+
 // Tobias END
 	// visualize jump pads
 	trap_Cvar_VariableStringBuffer("bot_visualizejumppads", buf, sizeof(buf));
@@ -1942,6 +1951,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_teambluestrategy, "bot_teambluestrategy", "0", 0);
 	trap_Cvar_Register(&bot_teamredstrategy, "bot_teamredstrategy", "0", 0);
 	trap_Cvar_Register(&bot_teamblock, "bot_teamblock", "1", 0);
+	trap_Cvar_Register(&bot_teamavoidpickup, "bot_teamavoidpickup", "1", 0);
 	trap_Cvar_Register(&bot_alt_aggressive, "bot_alt_aggressive", "1", 0);
 	trap_Cvar_Register(&bot_alt_pickup, "bot_alt_pickup", "1", 0);
 	trap_Cvar_Register(&bot_alt_aim, "bot_alt_aim", "1", 0);

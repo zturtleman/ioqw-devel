@@ -559,6 +559,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_teambluestrategy", "0", 0);
 	Cvar_Get("bot_teamredstrategy", "0", 0);
 	Cvar_Get("bot_teamblock", "1", 0);
+	Cvar_Get("bot_teamavoidpickup", "1", 0);
 	// try alternate variants
 	Cvar_Get("bot_alt_aggressive", "1", 0);
 	Cvar_Get("bot_alt_pickup", "1", 0);

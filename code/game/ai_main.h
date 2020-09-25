@@ -336,6 +336,7 @@ extern vmCvar_t bot_shownodechanges;
 extern vmCvar_t bot_teambluestrategy;
 extern vmCvar_t bot_teamredstrategy;
 extern vmCvar_t bot_teamblock;
+extern vmCvar_t bot_teamavoidpickup;
 extern vmCvar_t bot_alt_aggressive;
 extern vmCvar_t bot_alt_pickup;
 extern vmCvar_t bot_alt_aim;

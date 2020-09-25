@@ -3430,11 +3430,16 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 	playerState_t ps;
 	vec3_t dir, angles, v1;
 	aas_entityinfo_t entinfo;
+// Tobias DEBUG
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
+	if (!bot_teamavoidpickup.integer) {
+		return qfalse;
+	}
+// Tobias END
 	if (gametype < GT_TEAM) {
 		return qfalse;
 	}
