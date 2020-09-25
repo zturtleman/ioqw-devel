@@ -1910,7 +1910,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_forcewrite, "bot_forcewrite", "0", 0);
 	trap_Cvar_Register(&bot_aasoptimize, "bot_aasoptimize", "0", 0);
 	trap_Cvar_Register(&bot_saveroutingcache, "bot_saveroutingcache", "0", 0);
-	trap_Cvar_Register(&bot_thinktime, "bot_thinktime", "100", 0);
+	trap_Cvar_Register(&bot_thinktime, "bot_thinktime", "10", 0);
 	trap_Cvar_Register(&bot_reloadcharacters, "bot_reloadcharacters", "0", 0);
 	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
