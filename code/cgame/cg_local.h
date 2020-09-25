@@ -771,6 +771,25 @@ typedef struct {
 	qhandle_t teamLeaderShader;
 	qhandle_t retrieveShader;
 	qhandle_t escortShader;
+// Tobias DEBUG
+	qhandle_t seekLtgShader;
+	qhandle_t seekNbgShader;
+	qhandle_t battleRetreatShader;
+	qhandle_t battleNbgShader;
+	qhandle_t battleChaseShader;
+	qhandle_t battleFightShader;
+	qhandle_t battleSuicidalFightShader;
+	qhandle_t waitShader;
+	qhandle_t activateShader;
+
+	qhandle_t barrierJumpShader;
+	qhandle_t barrierCrouchShader;
+	qhandle_t barrierProneShader;
+	qhandle_t barrierWalkLeftShader;
+	qhandle_t barrierWalkRightShader;
+	qhandle_t barrierWalkRandomShader;
+	qhandle_t debugInvisShader;
+// Tobias END
 	// sounds
 	sfxHandle_t talkSound;
 	sfxHandle_t killSound;

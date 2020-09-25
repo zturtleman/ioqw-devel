@@ -474,36 +474,36 @@ qhandle_t CG_NodeHandle(int task) {
 
 	switch (task) {
 		case AINODE_SEEK_LTG:
-			h = cgs.media.assaultShader;
+			h = cgs.media.seekLtgShader;
 			break;
 		case AINODE_SEEK_NBG:
-			h = cgs.media.retrieveShader;
+			h = cgs.media.seekNbgShader;
 			break;
 		// --------------------------------------------------------------------------------------
 		case AINODE_BATTLE_RETREAT:
-			h = cgs.media.defendShader;
+			h = cgs.media.battleRetreatShader;
 			break;
 		case AINODE_BATTLE_NBG:
-			h = cgs.media.patrolShader;
+			h = cgs.media.battleNbgShader;
 			break;
 		case AINODE_BATTLE_CHASE:
-			h = cgs.media.followShader;
+			h = cgs.media.battleChaseShader;
 			break;
 		case AINODE_BATTLE_FIGHT:
-			h = cgs.media.escortShader;
+			h = cgs.media.battleFightShader;
 			break;
 		case AINODE_BATTLE_SUICIDAL_FIGHT:
-			h = cgs.media.escortShader;
+			h = cgs.media.battleSuicidalFightShader;
 			break;
 		// --------------------------------------------------------------------------------------
 		case AINODE_WAIT:
-			h = cgs.media.campShader;
+			h = cgs.media.waitShader;
 			break;
 		case AINODE_ACTIVATE:
-			h = cgs.media.campShader;
+			h = cgs.media.activateShader;
 			break;
 		default:
-			h = cgs.media.roamShader;
+			h = cgs.media.debugInvisShader;
 			break;
 	}
 
@@ -520,29 +520,26 @@ qhandle_t CG_ObstacleHandle(int task) {
 
 	switch (task) {
 		case MOVEMENT_BARRIER_JUMP: // can jump over blocking barrier
-			h = cgs.media.assaultShader;
+			h = cgs.media.barrierJumpShader;
 			break;
-		case MOVEMENT_BARRIER_CROUCH: // can crouch through blocking barrier
-			h = cgs.media.patrolShader;
+		case MOVEMENT_BARRIER_CROUCH: // must crouch through blocking barrier
+			h = cgs.media.barrierCrouchShader;
+			break;
+		case MOVEMENT_BARRIER_PRONE: // must prone through blocking barrier
+			h = cgs.media.barrierProneShader;
 			break;
 		// --------------------------------------------------------------------------------------
-		case MOVEMENT_BARRIER_WALK: // must walk around the blocking barrier
-			h = cgs.media.followShader;
-			break;
 		case MOVEMENT_BARRIER_WALK_LEFT: // must walk around the blocking barrier, but flipped side because moving obstacle is moving to our right side
-			h = cgs.media.escortShader;
+			h = cgs.media.barrierWalkLeftShader;
 			break;
 		case MOVEMENT_BARRIER_WALK_RIGHT: // must walk around the blocking barrier, but flipped side because right side is blocked by something
-			h = cgs.media.retrieveShader;
+			h = cgs.media.barrierWalkRightShader;
 			break;
 		case MOVEMENT_RANDOM: // random movement
-			h = cgs.media.defendShader;
-			break;
-		case MOVEMENT_WAIT: // BARRIER_WALK
-			h = cgs.media.campShader;
+			h = cgs.media.barrierWalkRandomShader;
 			break;
 		default: // NOT BLOCKED - no barrier at all
-			h = cgs.media.invisShader;
+			h = cgs.media.debugInvisShader;
 			break;
 	}
 

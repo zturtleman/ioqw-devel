@@ -2255,7 +2255,7 @@ static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
 			CG_PlayerFloatSprite(origin, thirdPersonFlags, h);
 			return;
 		}
-	} else {
+	} else if (cg_drawDebug.integer == 3) {
 		if (cgs.gametype > GT_TOURNAMENT) {
 			if (ci) {
 				qhandle_t h;

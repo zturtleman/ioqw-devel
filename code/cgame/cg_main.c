@@ -1210,7 +1210,25 @@ static void CG_RegisterGraphics(void) {
 	cgs.media.teamLeaderShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/team_leader.tga");
 	cgs.media.retrieveShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/retrieve.tga");
 	cgs.media.escortShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/escort.tga");
+// Tobias DEBUG
+	cgs.media.seekLtgShader = trap_R_RegisterShaderNoMip("debug/assets/seekLtg.tga");
+	cgs.media.seekNbgShader = trap_R_RegisterShaderNoMip("debug/assets/seekNbg.tga");
+	cgs.media.battleRetreatShader = trap_R_RegisterShaderNoMip("debug/assets/battleRetreat.tga");
+	cgs.media.battleNbgShader = trap_R_RegisterShaderNoMip("debug/assets/battleNbg.tga");
+	cgs.media.battleChaseShader = trap_R_RegisterShaderNoMip("debug/assets/battleChase.tga");
+	cgs.media.battleFightShader = trap_R_RegisterShaderNoMip("debug/assets/battleFight.tga");
+	cgs.media.battleSuicidalFightShader = trap_R_RegisterShaderNoMip("debug/assets/battleSuicidalFight.tga");
+	cgs.media.waitShader = trap_R_RegisterShaderNoMip("debug/assets/wait.tga");
+	cgs.media.activateShader = trap_R_RegisterShaderNoMip("debug/assets/activate.tga");
 
+	cgs.media.barrierJumpShader = trap_R_RegisterShaderNoMip("debug/assets/barrierJump.tga");
+	cgs.media.barrierCrouchShader = trap_R_RegisterShaderNoMip("debug/assets/barrierCrouch.tga");
+	cgs.media.barrierProneShader = trap_R_RegisterShaderNoMip("debug/assets/barrierProne.tga");
+	cgs.media.barrierWalkLeftShader = trap_R_RegisterShaderNoMip("debug/assets/barrierWalkLeft.tga");
+	cgs.media.barrierWalkRightShader = trap_R_RegisterShaderNoMip("debug/assets/barrierWalkRight.tga");
+	cgs.media.barrierWalkRandomShader = trap_R_RegisterShaderNoMip("debug/assets/barrierWalkRandom.tga");
+	cgs.media.debugInvisShader = trap_R_RegisterShaderNoMip("debug/assets/debugInvis.tga");
+// Tobias END
 	if (cgs.gametype > GT_TOURNAMENT || cg_buildScript.integer) {
 		CG_CachePlayerModels(DEFAULT_TEAM_MODEL_MALE, DEFAULT_TEAM_HEAD_MALE);
 		CG_CachePlayerModels(DEFAULT_TEAM_MODEL_FEMALE, DEFAULT_TEAM_HEAD_FEMALE);
