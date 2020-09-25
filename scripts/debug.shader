@@ -153,6 +153,7 @@ debug/assets/debugInvis
 	nopicmip
 	{
 		map debug/assets/debugInvis.tga
-		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		blendFunc GL_ONE GL_ONE
+		rgbgen identity
 	}
 }
