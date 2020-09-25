@@ -8645,7 +8645,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
 // Tobias DEBUG
-		BotSetUserInfo(bs, "obstacleMove", va("%d", TEAMTASK_NONE));
+		BotSetUserInfo(bs, "obstacleMove", va("%d", MOVEMENT_DEFAULT));
 // Tobias END
 		return;
 	}
