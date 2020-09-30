@@ -8261,7 +8261,6 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 		} else if (!strcmp(classname, "target_relay") || !strcmp(classname, "target_delay")) {
 			if (trap_AAS_ValueForBSPEpairKey(ent, "targetname", targetname[i + 1], sizeof(targetname[0]))) {
 				i++;
-
 				cur_entities[i] = trap_AAS_NextBSPEntity(0);
 			}
 		}
