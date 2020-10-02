@@ -950,7 +950,7 @@ static qboolean UnfilterImage(uint8_t  *DecompressedData,
 
 					case PNG_FilterType_Average :
 					{
-						DecompPtr[p] += ((uint8_t) ((((uint16_t) PixelLeft[p]) + ((uint16_t) PixelUp[p])) / 2));
+						DecompPtr[p] += ((uint8_t) ((((uint16_t) PixelLeft[p]) + ((uint16_t) PixelUp[p])) * 0.5));
 
 						break;
 					}

@@ -222,7 +222,7 @@ static void CG_DrawPlayerArmorIcon(rectDef_t *rect, qboolean draw2D) {
 	}
 
 	if (draw2D || (!cg_draw3dIcons.integer && cg_drawIcons.integer)) {
-		CG_DrawPic(rect->x, rect->y + rect->h / 2 + 1, rect->w, rect->h, cgs.media.armorIcon);
+		CG_DrawPic(rect->x, rect->y + rect->h * 0.5 + 1, rect->w, rect->h, cgs.media.armorIcon);
 	} else if (cg_draw3dIcons.integer) {
 		VectorClear(angles);
 
@@ -257,7 +257,7 @@ static void CG_DrawPlayerArmorValue(rectDef_t *rect, float scale, vec4_t color, 
 
 		value = CG_Text_Width(num, scale, 0);
 
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+		CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
 
@@ -320,7 +320,7 @@ static void CG_DrawPlayerAmmoValue(rectDef_t *rect, float scale, vec4_t color, q
 			} else {
 				Com_sprintf(num, sizeof(num), "%i", value);
 				value = CG_Text_Width(num, scale, 0);
-				CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+				CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 			}
 		}
 	}
@@ -397,7 +397,7 @@ static void CG_DrawSelectedPlayerHealth(rectDef_t *rect, float scale, vec4_t col
 
 			value = CG_Text_Width(num, scale, 0);
 
-			CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+			CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 		}
 	}
 }
@@ -423,7 +423,7 @@ static void CG_DrawSelectedPlayerArmor(rectDef_t *rect, float scale, vec4_t colo
 			} else {
 				Com_sprintf(num, sizeof(num), "%i", ci->armor);
 				value = CG_Text_Width(num, scale, 0);
-				CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+				CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 			}
 		}
 	}
@@ -677,7 +677,7 @@ static void CG_DrawPlayerScore(rectDef_t *rect, float scale, vec4_t color, qhand
 	} else {
 		Com_sprintf(num, sizeof(num), "%i", value);
 		value = CG_Text_Width(num, scale, 0);
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+		CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
 
@@ -809,7 +809,7 @@ static void CG_DrawPlayerHealth(rectDef_t *rect, float scale, vec4_t color, qhan
 	} else {
 		Com_sprintf(num, sizeof(num), "%i", value);
 		value = CG_Text_Width(num, scale, 0);
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+		CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
 
@@ -1534,9 +1534,9 @@ static void CG_DrawKiller(rectDef_t *rect, float scale, vec4_t color, qhandle_t 
 
 	// fragged by ... line
 	if (cg.killerName[0]) {
-		int x = rect->x + rect->w / 2;
+		int x = rect->x + rect->w * 0.5;
 
-		CG_Text_Paint(x - CG_Text_Width(CG_GetKillerText(), scale, 0) / 2, rect->y + rect->h, scale, color, CG_GetKillerText(), 0, 0, textStyle);
+		CG_Text_Paint(x - CG_Text_Width(CG_GetKillerText(), scale, 0) * 0.5, rect->y + rect->h, scale, color, CG_GetKillerText(), 0, 0, textStyle);
 	}
 }
 
@@ -1937,7 +1937,7 @@ void CG_DrawMedal(int ownerDraw, rectDef_t *rect, float scale, vec4_t color, qha
 		color[3] = 1.0;
 		value = CG_Text_Width(text, scale, 0);
 
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h + 10, scale, color, text, 0, 0, 0);
+		CG_Text_Paint(rect->x + (rect->w - value) * 0.5, rect->y + rect->h + 10, scale, color, text, 0, 0, 0);
 	}
 
 	trap_R_SetColor(NULL);

@@ -385,7 +385,7 @@ SNDDMA_AvailableCaptureSamples
 int SNDDMA_AvailableCaptureSamples(void) {
 #ifdef USE_SDL_AUDIO_CAPTURE
 	// divided by 2 to convert from bytes to (mono16) samples
-	return sdlCaptureDevice ? (SDL_GetQueuedAudioSize(sdlCaptureDevice) / 2) : 0;
+	return sdlCaptureDevice ? (SDL_GetQueuedAudioSize(sdlCaptureDevice) * 0.5) : 0;
 #else
 	return 0;
 #endif

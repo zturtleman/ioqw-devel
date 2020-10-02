@@ -1597,7 +1597,7 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 				end[2] += 4;
 				trace = AAS_TraceClientBBox(start, end, PRESENCE_NORMAL, -1);
 				// if no solids were found
-				if (!trace.startsolid && trace.fraction >= 1.0) {
+				if (!trace.startsolid && trace.fraction >= 1.0f) {
 					// the trace end point must be in the goal area
 					trace.endpos[2] += 1;
 
@@ -2359,8 +2359,8 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		if (trace.startsolid) {
 			return qfalse;
 		}
-
-		if (trace.fraction < 1) {
+		// if something is hit
+		if (trace.fraction < 1.0f) {
 			plane = &aasworld.planes[trace.planenum];
 			// if the bot can stand on the surface
 			if (DotProduct(plane->normal, up) >= 0.7) {
@@ -2382,8 +2382,8 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 		if (trace.startsolid) {
 			return qfalse;
 		}
-
-		if (trace.fraction < 1) {
+		// if something is hit
+		if (trace.fraction < 1.0f) {
 			plane = &aasworld.planes[trace.planenum];
 			// if the bot can stand on the surface
 			if (DotProduct(plane->normal, up) >= 0.7) {
@@ -3619,8 +3619,8 @@ void AAS_Reachability_Elevator(void) {
 									VectorCopy(toporg, end);
 									end[2] += 1;
 									trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
-
-									if (trace.fraction >= 1) {
+									// if nothing is hit
+									if (trace.fraction >= 1.0f) {
 										break;
 									}
 								}
@@ -3996,13 +3996,13 @@ void AAS_Reachability_FuncBobbing(void) {
 				nextstartreach = startreach->next;
 				//trace = AAS_TraceClientBBox(startreach->start, move_start_top, PRESENCE_NORMAL, -1);
 
-				//if (trace.fraction < 1) continue;
+				//if (trace.fraction < 1.0f) continue;
 
 				for (endreach = firstendreach; endreach; endreach = nextendreach) {
 					nextendreach = endreach->next;
 					//trace = AAS_TraceClientBBox(endreach->end, move_end_top, PRESENCE_NORMAL, -1);
 
-					//if (trace.fraction < 1) continue;
+					//if (trace.fraction < 1.0f) continue;
 
 					Log_Write("funcbob reach from area %d to %d\n", startreach->areanum, endreach->areanum);
 

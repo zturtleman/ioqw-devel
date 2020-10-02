@@ -768,7 +768,7 @@ int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 
 		if (player->client->sess.sessionTeam != cl->sess.sessionTeam) {
 			player->client->pers.teamState.lasthurtcarrier = -5;
-		} else if (player->client->sess.sessionTeam == cl->sess.sessionTeam) {
+		} else/* if (player->client->sess.sessionTeam == cl->sess.sessionTeam)*/ {
 			AddScore(player, ent->r.currentOrigin, CTF_TEAM_BONUS);
 			// award extra points for capture assists
 			if (player->client->pers.teamState.lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time) {

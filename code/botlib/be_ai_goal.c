@@ -163,19 +163,19 @@ libvar_t *droppedweight = NULL;
 BotGoalStateFromHandle
 =======================================================================================================================================
 */
-bot_goalstate_t *BotGoalStateFromHandle(int handle) {
+bot_goalstate_t *BotGoalStateFromHandle(int goalstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
+	if (goalstate <= 0 || goalstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", goalstate);
 		return NULL;
 	}
 
-	if (!botgoalstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid goal state %d\n", handle);
+	if (!botgoalstates[goalstate]) {
+		botimport.Print(PRT_FATAL, "invalid goal state %d\n", goalstate);
 		return NULL;
 	}
 
-	return botgoalstates[handle];
+	return botgoalstates[goalstate];
 }
 
 /*
@@ -585,7 +585,7 @@ void BotInitLevelItems(void) {
 				end[2] -= 32;
 				trace = AAS_Trace(origin, ic->iteminfo[i].mins, ic->iteminfo[i].maxs, end, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 				// if the item is not near the ground
-				if (trace.fraction >= 1) {
+				if (trace.fraction >= 1.0f) {
 					// if the item is not reachable from a jumppad
 					goalareanum = AAS_BestReachableFromJumpPadArea(origin, ic->iteminfo[i].mins, ic->iteminfo[i].maxs);
 					Log_Write("item %s reachable from jumppad area %d\r\n", ic->iteminfo[i].classname, goalareanum);
@@ -1750,7 +1750,7 @@ int BotItemGoalInVisButNotVisible(int viewer, vec3_t eye, vec3_t viewangles, bot
 
 	trace = AAS_Trace(eye, NULL, NULL, middle, viewer, CONTENTS_SOLID);
 	// if the goal middle point is visible
-	if (trace.fraction >= 1) {
+	if (trace.fraction >= 1.0f) {
 		// the goal entity number doesn't have to be valid, just assume it's valid
 		if (goal->entitynum <= 0) {
 			return qfalse;
@@ -1869,22 +1869,22 @@ int BotAllocGoalState(int client) {
 BotFreeGoalState
 =======================================================================================================================================
 */
-void BotFreeGoalState(int handle) {
+void BotFreeGoalState(int goalstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
+	if (goalstate <= 0 || goalstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", goalstate);
 		return;
 	}
 
-	if (!botgoalstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid goal state handle %d\n", handle);
+	if (!botgoalstates[goalstate]) {
+		botimport.Print(PRT_FATAL, "invalid goal state handle %d\n", goalstate);
 		return;
 	}
 
-	BotFreeItemWeights(handle);
-	FreeMemory(botgoalstates[handle]);
+	BotFreeItemWeights(goalstate);
+	FreeMemory(botgoalstates[goalstate]);
 
-	botgoalstates[handle] = NULL;
+	botgoalstates[goalstate] = NULL;
 }
 
 /*

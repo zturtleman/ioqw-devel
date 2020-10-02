@@ -1735,8 +1735,7 @@ static int CG_FeederCount(float feederID) {
 CG_SetScoreSelection
 =======================================================================================================================================
 */
-void CG_SetScoreSelection(void *p) {
-	menuDef_t *menu = (menuDef_t *)p;
+void CG_SetScoreSelection(void *menu) {
 	playerState_t *ps = &cg.snap->ps;
 	int i, red, blue;
 
@@ -2213,21 +2212,19 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum) {
 	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0 / 480.0);
 
 	if (cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640) {
-		cgs.screenXScale = cgs.screenXScaleStretch;
 		cgs.screenYScale = cgs.screenYScaleStretch;
-		// wide screen
-		cgs.screenXBias = 0.5 * (cgs.glconfig.vidWidth - (cgs.glconfig.vidHeight * (640.0 / 480.0)));
-		cgs.screenXScale = cgs.screenYScale;
 		// no narrow screen
 		cgs.screenYBias = 0;
+		// wide screen
+		cgs.screenXScale = cgs.screenYScale;
+		cgs.screenXBias = 0.5 * (cgs.glconfig.vidWidth - (cgs.glconfig.vidHeight * (640.0 / 480.0)));
 	} else {
 		cgs.screenXScale = cgs.screenXScaleStretch;
-		cgs.screenYScale = cgs.screenYScaleStretch;
-		// narrow screen
-		cgs.screenYBias = 0.5 * (cgs.glconfig.vidHeight - (cgs.glconfig.vidWidth * (480.0 / 640.0)));
-		cgs.screenYScale = cgs.screenXScale;
 		// no wide screen
 		cgs.screenXBias = 0;
+		// narrow screen
+		cgs.screenYScale = cgs.screenXScale;
+		cgs.screenYBias = 0.5 * (cgs.glconfig.vidHeight - (cgs.glconfig.vidWidth * (480.0 / 640.0)));
 	}
 	// get the gamestate from the client system
 	trap_GetGameState(&cgs.gameState);

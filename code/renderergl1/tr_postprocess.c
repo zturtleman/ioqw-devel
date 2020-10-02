@@ -175,7 +175,7 @@ void RB_BokehBlur(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, float 
 				vec2_t blurTexScale;
 				float subblur;
 
-				subblur = ((blur - 2.0f) / 2.0f) / 3.0f * (float)(i + 1);
+				subblur = ((blur - 2.0f) * 0.5f) / 3.0f * (float)(i + 1);
 
 				blurTexScale[0] =
 				blurTexScale[1] = subblur;
@@ -209,7 +209,7 @@ void RB_BokehBlur(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, float 
 				vec2_t blurTexScale;
 				float subblur;
 
-				subblur = (blur - 1.0f) / 2.0f * (float)(i + 1);
+				subblur = (blur - 1.0f) * 0.5f * (float)(i + 1);
 
 				blurTexScale[0] =
 				blurTexScale[1] = subblur;
@@ -513,7 +513,7 @@ static void RB_BloomBlur(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox,
 		vec2_t blurTexScale;
 		float subblur;
 
-		subblur = (blur - 1.0f) / 2.0f * (float)(i + 1);
+		subblur = (blur - 1.0f) * 0.5f * (float)(i + 1);
 
 		blurTexScale[0] =
 		blurTexScale[1] = subblur;

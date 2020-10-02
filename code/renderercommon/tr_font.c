@@ -365,9 +365,9 @@ FT_Bitmap *R_RenderGlyph(FT_GlyphSlot glyph, glyphInfo_t* glyphOut, float border
 			glyphOut->height = bit2->rows;
 			glyphOut->pitch = bit2->pitch;
 
-			glyphOut->top = _TRUNC(glyph->metrics.horiBearingY) + borderSizeY / 2;// + 1;
-			glyphOut->left = _TRUNC(glyph->metrics.horiBearingX) - borderSizeX / 2;// + 1;
-			glyphOut->xSkip = _TRUNC(glyph->metrics.horiAdvance) + borderSizeX / 2;// + 1;
+			glyphOut->top = _TRUNC(glyph->metrics.horiBearingY) + borderSizeY * 0.5;// + 1;
+			glyphOut->left = _TRUNC(glyph->metrics.horiBearingX) - borderSizeX * 0.5;// + 1;
+			glyphOut->xSkip = _TRUNC(glyph->metrics.horiAdvance) + borderSizeX * 0.5;// + 1;
 
 			return bit2;
 		}

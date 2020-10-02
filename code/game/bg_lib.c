@@ -475,7 +475,7 @@ double sqrt(double x) {
 		return 0;
 	}
 	// initial guess
-	y = x / 2;
+	y = x * 0.5;
 	// refine
 	maxError = x * 0.001;
 
@@ -868,7 +868,7 @@ double atan2(double y, double x) {
 	if (x < 0) {
 		if (y >= 0) {
 			// quad 1
-			base = M_PI / 2;
+			base = M_PI * 0.5;
 			temp = x;
 			x = y;
 			y = -temp;
@@ -881,7 +881,7 @@ double atan2(double y, double x) {
 	} else {
 		if (y < 0) {
 			// quad 3
-			base = 3 * M_PI / 2;
+			base = 3 * M_PI * 0.5;
 			temp = x;
 			x = -y;
 			y = temp;
@@ -889,7 +889,7 @@ double atan2(double y, double x) {
 	}
 
 	if (y > x) {
-		base += M_PI / 2;
+		base += M_PI * 0.5;
 		temp = x;
 		x = y;
 		y = temp;
@@ -1135,7 +1135,6 @@ used in the conversion.
 */
 double strtod(const char *nptr, char **endptr) {
 	double res;
-	qboolean neg = qfalse;
 
 	// skip whitespace
 	while (isspace(*nptr)) {
@@ -1191,7 +1190,6 @@ double strtod(const char *nptr, char **endptr) {
 	// sign
 	if (*nptr == '-') {
 		nptr++;
-		neg = qtrue;
 	} else if (*nptr == '+') {
 		nptr++;
 	}
@@ -2386,7 +2384,7 @@ void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, cmp_
 	void *ptr;
 
 	while (low < high) {
-		mid = low + (high - low) / 2;
+		mid = low + (high - low) * 0.5;
 		ptr = (void *)((char *)base + (mid * size));
 		comp = compar(key, ptr);
 

@@ -1307,7 +1307,7 @@ void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t min
 	// if allsolid is set (was entirely inside something solid), the plane is not valid
 	// if fraction == 1.0, we never hit anything, and thus the plane is not valid
 	// otherwise, the normal on the plane should have unit length
-	assert(tw.trace.allsolid || tw.trace.fraction == 1.0 || VectorLengthSquared(tw.trace.plane.normal) > 0.9999);
+	assert(tw.trace.allsolid || tw.trace.fraction == 1.0f || VectorLengthSquared(tw.trace.plane.normal) > 0.9999);
 	*results = tw.trace;
 }
 
@@ -1392,7 +1392,7 @@ void CM_TransformedBoxTrace(trace_t *results, const vec3_t start, const vec3_t e
 	// sweep the box through the model
 	CM_Trace(&trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere);
 	// if the bmodel was rotated and there was a collision
-	if (rotated && trace.fraction != 1.0) {
+	if (rotated && trace.fraction != 1.0f) {
 		// rotation of bmodel collision plane
 		TransposeMatrix(matrix, transpose);
 		RotatePoint(trace.plane.normal, transpose);

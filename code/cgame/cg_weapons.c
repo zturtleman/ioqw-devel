@@ -478,7 +478,7 @@ static void CG_BeamgunTrail(centity_t *cent, vec3_t origin) {
 
 	trap_R_AddRefEntityToScene(&beam);
 	// add the impact flare if it hit something
-	if (trace.fraction < 1.0) {
+	if (trace.fraction < 1.0f) {
 		vec3_t angles;
 		vec3_t dir;
 
@@ -531,7 +531,7 @@ static void CG_BeamgunTrail(centity_t *cent, vec3_t origin) {
 	beam.customShader = cgs.media.lightningShader;
 	trap_R_AddRefEntityToScene(&beam);
 	// add the impact flare if it hit something
-	if (trace.fraction < 1.0) {
+	if (trace.fraction < 1.0f) {
 		vec3_t angles;
 		vec3_t dir;
 
@@ -1603,10 +1603,10 @@ static void CG_CalculateWeaponPosition(vec3_t origin, vec3_t angles) {
 	// drop the weapon when stair climbing
 	delta = cg.time - cg.stepTime;
 
-	if (delta < STEP_TIME / 2) {
-		origin[2] -= cg.stepChange * 0.25 * delta / (STEP_TIME / 2);
+	if (delta < STEP_TIME * 0.5) {
+		origin[2] -= cg.stepChange * 0.25 * delta / (STEP_TIME * 0.5);
 	} else if (delta < STEP_TIME) {
-		origin[2] -= cg.stepChange * 0.25 * (STEP_TIME - delta) / (STEP_TIME / 2);
+		origin[2] -= cg.stepChange * 0.25 * (STEP_TIME - delta) / (STEP_TIME * 0.5);
 	}
 #endif
 	// idle drift
@@ -2006,7 +2006,7 @@ void CG_DrawWeaponSelect(void) {
 
 		if (name) {
 			w = CG_DrawStrlen(name) * charWidth;
-			x = (SCREEN_WIDTH - w) / 2;
+			x = (SCREEN_WIDTH - w) * 0.5;
 			CG_DrawStringExt(x, y - 22 * cg_drawWeaponBar.value, name, color, qfalse, qtrue, charWidth, charHeight, 0);
 		}
 	}

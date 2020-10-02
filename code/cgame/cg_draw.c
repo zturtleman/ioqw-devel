@@ -1439,7 +1439,7 @@ static float CG_DrawPowerups(float y) {
 				size = ICON_SIZE;
 			}
 
-			CG_DrawPic(640 - size, y + ICON_SIZE / 2 - size / 2, size, size, trap_R_RegisterShader(item->icon));
+			CG_DrawPic(640 - size, y + ICON_SIZE * 0.5 - size * 0.5, size, size, trap_R_RegisterShader(item->icon));
 		}
 	}
 
@@ -1498,7 +1498,7 @@ static int CG_DrawPickupItem(int y) {
 			CG_RegisterItemVisuals(value);
 			trap_R_SetColor(fadeColor);
 			CG_DrawPic(8, y, iconSize, iconSize, cg_items[value].icon);
-			CG_DrawStringExt(iconSize + 16, y + (iconSize / 2 - charHeight / 2), bg_itemlist[value].pickup_name, fadeColor, qfalse, qtrue, charWidth, charHeight, 0);
+			CG_DrawStringExt(iconSize + 16, y + (iconSize * 0.5 - charHeight * 0.5), bg_itemlist[value].pickup_name, fadeColor, qfalse, qtrue, charWidth, charHeight, 0);
 			trap_R_SetColor(NULL);
 		}
 	}
@@ -1580,7 +1580,7 @@ static void CG_DrawBottomLineRight(void) {
 	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
 	if (cg_drawClock.integer) {
-		y = CG_DrawRealTimeClock(y);
+		CG_DrawRealTimeClock(y);
 	}
 }
 #ifndef BASEGAME
@@ -1661,7 +1661,7 @@ static void CG_DrawHoldableItem(void) {
 
 	if (value) {
 		CG_RegisterItemVisuals(value);
-		CG_DrawPic(640 - ICON_SIZE, (SCREEN_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE, cg_items[value].icon);
+		CG_DrawPic(640 - ICON_SIZE, (SCREEN_HEIGHT - ICON_SIZE) * 0.5, ICON_SIZE, ICON_SIZE, cg_items[value].icon);
 	}
 }
 
@@ -1680,7 +1680,7 @@ static void CG_DrawPersistantPowerup(void) {
 
 	if (value) {
 		CG_RegisterItemVisuals(value);
-		CG_DrawPic(640 - ICON_SIZE, (SCREEN_HEIGHT - ICON_SIZE) / 2 - ICON_SIZE, ICON_SIZE, ICON_SIZE, cg_items[value].icon);
+		CG_DrawPic(640 - ICON_SIZE, (SCREEN_HEIGHT - ICON_SIZE) * 0.5 - ICON_SIZE, ICON_SIZE, ICON_SIZE, cg_items[value].icon);
 	}
 }
 #endif
@@ -1770,7 +1770,7 @@ static void CG_DrawDisconnect(void) {
 	s = "Connection Interrupted!";
 	w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 
-	CG_DrawBigString(320 - w / 2, 100, s, 1.0f);
+	CG_DrawBigString(320 - w * 0.5, 100, s, 1.0f);
 	// blink the icon
 	if ((cg.time >> 9) & 1) {
 		return;
@@ -1855,7 +1855,7 @@ static void CG_DrawLagometer(void) {
 		}
 	}
 	// draw the snapshot latency/drop graph
-	range = ah / 2;
+	range = ah * 0.5;
 	vscale = range / MAX_LAGOMETER_PING;
 
 	for (a = 0; a < aw; a++) {
@@ -1963,7 +1963,7 @@ static void CG_DrawCenterString(void) {
 	trap_R_SetColor(color);
 
 	start = cg.centerPrint;
-	y = cg.centerPrintY - cg.centerPrintLines * BIGCHAR_HEIGHT / 2;
+	y = cg.centerPrintY - cg.centerPrintLines * BIGCHAR_HEIGHT * 0.5;
 
 	while (1) {
 		char linebuffer[1024];
@@ -1979,7 +1979,7 @@ static void CG_DrawCenterString(void) {
 		linebuffer[l] = 0;
 		w = CG_Text_Width(linebuffer, 0.5, 0);
 		h = CG_Text_Height(linebuffer, 0.5, 0);
-		x = (SCREEN_WIDTH - w) / 2;
+		x = (SCREEN_WIDTH - w) * 0.5;
 
 		CG_Text_Paint(x, y + h, 0.5, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 
@@ -2189,7 +2189,7 @@ static void CG_DrawCrosshairNames(void) {
 	color[3] *= 0.5f;
 	w = CG_Text_Width(name, 0.3f, 0);
 
-	CG_Text_Paint(320 - w / 2, 190, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
+	CG_Text_Paint(320 - w * 0.5, 190, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
 	trap_R_SetColor(NULL);
 }
 
@@ -2388,7 +2388,7 @@ static qboolean CG_DrawBotInfo(void) {
 	if (*leader) {
 		str = "Bot is Leader";
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 174, str, 1.0f);
+		CG_DrawBigString(320 - w * 0.5, 174, str, 1.0f);
 	}
 
 	node = Info_ValueForKey(info, "n");
@@ -2396,7 +2396,7 @@ static qboolean CG_DrawBotInfo(void) {
 	if (*node) {
 		str = va("AI Node: %s", node);
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 192, str, 1.0f);
+		CG_DrawBigString(320 - w * 0.5, 192, str, 1.0f);
 	}
 
 	action = Info_ValueForKey(info, "a");
@@ -2404,7 +2404,7 @@ static qboolean CG_DrawBotInfo(void) {
 	if (*action) {
 		str = va("LTG: %s", action);
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 210, str, 1.0f);
+		CG_DrawBigString(320 - w * 0.5, 210, str, 1.0f);
 	}
 
 	carrying = Info_ValueForKey(info, "c");
@@ -2412,7 +2412,7 @@ static qboolean CG_DrawBotInfo(void) {
 	if (*carrying) {
 		str = va("Bot carrying: %s", carrying);
 		w = CG_DrawStrlen(str) * BIGCHAR_WIDTH;
-		CG_DrawBigString(320 - w / 2, 228, str, 1.0f);
+		CG_DrawBigString(320 - w * 0.5, 228, str, 1.0f);
 	}
 
 	return qtrue;
@@ -2476,7 +2476,7 @@ static void CG_DrawAmmoWarning(void) {
 
 	w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 
-	CG_DrawBigString(320 - w / 2, 64, s, 1.0f);
+	CG_DrawBigString(320 - w * 0.5, 64, s, 1.0f);
 }
 
 /*
@@ -2511,7 +2511,7 @@ static void CG_DrawProxWarning(void) {
 
 	w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 
-	CG_DrawBigStringColor(320 - w / 2, 64 + BIGCHAR_HEIGHT, s, g_color_table[ColorIndex(COLOR_RED)]);
+	CG_DrawBigStringColor(320 - w * 0.5, 64 + BIGCHAR_HEIGHT, s, g_color_table[ColorIndex(COLOR_RED)]);
 }
 
 /*
@@ -2541,7 +2541,7 @@ static void CG_DrawWarmup(void) {
 		s = "Waiting for players";
 		w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 
-		CG_DrawBigString(320 - w / 2, 24, s, 1.0f);
+		CG_DrawBigString(320 - w * 0.5, 24, s, 1.0f);
 
 		cg.warmupCount = 0;
 		return;
@@ -2566,7 +2566,7 @@ static void CG_DrawWarmup(void) {
 			s = va("%s vs %s", ci1->name, ci2->name);
 			w = CG_Text_Width(s, 0.6f, 0);
 
-			CG_Text_Paint(320 - w / 2, 60, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+			CG_Text_Paint(320 - w * 0.5, 60, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 		}
 	} else {
 		if (cgs.gametype == GT_FFA) {
@@ -2587,7 +2587,7 @@ static void CG_DrawWarmup(void) {
 
 		w = CG_Text_Width(s, 0.6f, 0);
 
-		CG_Text_Paint(320 - w / 2, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+		CG_Text_Paint(320 - w * 0.5, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 	}
 
 	sec = (sec - cg.time) / 1000;
@@ -2646,7 +2646,7 @@ static void CG_DrawWarmup(void) {
 
 	w = CG_Text_Width(s, scale, 0);
 
-	CG_Text_Paint(320 - w / 2, 125, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+	CG_Text_Paint(320 - w * 0.5, 125, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 }
 
 /*

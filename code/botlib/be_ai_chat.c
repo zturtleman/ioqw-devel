@@ -185,19 +185,19 @@ bot_replychat_t *replychats = NULL;
 BotChatStateFromHandle
 =======================================================================================================================================
 */
-bot_chatstate_t *BotChatStateFromHandle(int handle) {
+bot_chatstate_t *BotChatStateFromHandle(int chatstate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "chat state handle %d out of range\n", handle);
+	if (chatstate <= 0 || chatstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "chat state handle %d out of range\n", chatstate);
 		return NULL;
 	}
 
-	if (!botchatstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid chat state %d\n", handle);
+	if (!botchatstates[chatstate]) {
+		botimport.Print(PRT_FATAL, "invalid chat state %d\n", chatstate);
 		return NULL;
 	}
 
-	return botchatstates[handle];
+	return botchatstates[chatstate];
 }
 
 /*
@@ -3085,32 +3085,32 @@ int BotAllocChatState(void) {
 BotFreeChatState
 =======================================================================================================================================
 */
-void BotFreeChatState(int handle) {
+void BotFreeChatState(int chatstate) {
 	bot_consolemessage_t m;
 	int h;
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "chat state handle %d out of range\n", handle);
+	if (chatstate <= 0 || chatstate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "chat state handle %d out of range\n", chatstate);
 		return;
 	}
 
-	if (!botchatstates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid chat state %d\n", handle);
+	if (!botchatstates[chatstate]) {
+		botimport.Print(PRT_FATAL, "invalid chat state %d\n", chatstate);
 		return;
 	}
 
 	if (LibVarGetValue("bot_reloadcharacters")) {
-		BotFreeChatFile(handle);
+		BotFreeChatFile(chatstate);
 	}
 	// free all the console messages left in the chat state
-	for (h = BotNextConsoleMessage(handle, &m); h; h = BotNextConsoleMessage(handle, &m)) {
+	for (h = BotNextConsoleMessage(chatstate, &m); h; h = BotNextConsoleMessage(chatstate, &m)) {
 		// remove the console message
-		BotRemoveConsoleMessage(handle, h);
+		BotRemoveConsoleMessage(chatstate, h);
 	}
 
-	FreeMemory(botchatstates[handle]);
+	FreeMemory(botchatstates[chatstate]);
 
-	botchatstates[handle] = NULL;
+	botchatstates[chatstate] = NULL;
 }
 
 /*

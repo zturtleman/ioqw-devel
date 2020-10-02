@@ -64,7 +64,7 @@ void BotShutdownChatAI(void);
 // returns the handle to a newly allocated chat state
 int BotAllocChatState(void);
 // frees the chatstate
-void BotFreeChatState(int handle);
+void BotFreeChatState(int chatstate);
 // adds a console message to the chat state
 void BotQueueConsoleMessage(int chatstate, int type, char *message);
 // removes the console message from the chat state

@@ -118,21 +118,21 @@ int BotAllocMoveState(void) {
 BotFreeMoveState
 =======================================================================================================================================
 */
-void BotFreeMoveState(int handle) {
+void BotFreeMoveState(int movestate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
+	if (movestate <= 0 || movestate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", movestate);
 		return;
 	}
 
-	if (!botmovestates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
+	if (!botmovestates[movestate]) {
+		botimport.Print(PRT_FATAL, "invalid move state %d\n", movestate);
 		return;
 	}
 
-	FreeMemory(botmovestates[handle]);
+	FreeMemory(botmovestates[movestate]);
 
-	botmovestates[handle] = NULL;
+	botmovestates[movestate] = NULL;
 }
 
 /*
@@ -140,19 +140,19 @@ void BotFreeMoveState(int handle) {
 BotMoveStateFromHandle
 =======================================================================================================================================
 */
-bot_movestate_t *BotMoveStateFromHandle(int handle) {
+bot_movestate_t *BotMoveStateFromHandle(int movestate) {
 
-	if (handle <= 0 || handle > MAX_CLIENTS) {
-		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
+	if (movestate <= 0 || movestate > MAX_CLIENTS) {
+		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", movestate);
 		return NULL;
 	}
 
-	if (!botmovestates[handle]) {
-		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
+	if (!botmovestates[movestate]) {
+		botimport.Print(PRT_FATAL, "invalid move state %d\n", movestate);
 		return NULL;
 	}
 
-	return botmovestates[handle];
+	return botmovestates[movestate];
 }
 
 /*
@@ -160,10 +160,10 @@ bot_movestate_t *BotMoveStateFromHandle(int handle) {
 BotInitMoveState
 =======================================================================================================================================
 */
-void BotInitMoveState(int handle, bot_initmove_t *initmove) {
+void BotInitMoveState(int movestate, bot_initmove_t *initmove) {
 	bot_movestate_t *ms;
 
-	ms = BotMoveStateFromHandle(handle);
+	ms = BotMoveStateFromHandle(movestate);
 
 	if (!ms) {
 		return;
@@ -351,7 +351,7 @@ int BotReachabilityArea(vec3_t origin, int client) {
 	VectorMA(origin, -4, up, end);
 	bsptrace = AAS_Trace(origin, mins, maxs, end, client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 
-	if (!bsptrace.startsolid && bsptrace.fraction < 1 && bsptrace.entityNum != ENTITYNUM_NONE) {
+	if (!bsptrace.startsolid && bsptrace.fraction < 1.0f && bsptrace.entityNum != ENTITYNUM_NONE) {
 		// if standing on the world the bot should be in a valid area
 		if (bsptrace.entityNum == ENTITYNUM_WORLD) {
 			return BotFuzzyPointReachabilityArea(origin);
@@ -1040,8 +1040,8 @@ int BotVisible(int ent, vec3_t eye, vec3_t target) {
 	bsp_trace_t trace;
 
 	trace = AAS_Trace(eye, NULL, NULL, target, ent, CONTENTS_SOLID);
-
-	if (trace.fraction >= 1) {
+	// if nothing is hit
+	if (trace.fraction >= 1.0f) {
 		return qtrue;
 	}
 
@@ -1214,7 +1214,7 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 		return qfalse;
 	}
 	// if no obstacle at all
-	if (trace.fraction >= 1.0) {
+	if (trace.fraction >= 1.0f) {
 		return qfalse;
 	}
 
@@ -1228,7 +1228,7 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 		return qfalse;
 	}
 	// if something is hit
-	if (trace.fraction < 1.0) {
+	if (trace.fraction < 1.0f) {
 		return qfalse;
 	}
 	// there is a barrier
@@ -1289,7 +1289,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 		return qfalse;
 	}
 	// if no obstacle at all
-	if (trace.fraction >= 1.0) {
+	if (trace.fraction >= 1.0f) {
 		return qfalse;
 	}
 	// if less than the maximum step height
@@ -2301,17 +2301,17 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach) 
 		VectorMA(reach->start, gapdist, hordir, runstart);
 	}
 */
-	VectorSubtract(ms->origin, reach->start, dir1);
+	VectorSubtract(reach->start, ms->origin, dir1);
 
 	dir1[2] = 0;
 	dist1 = VectorNormalize(dir1);
 
-	VectorSubtract(ms->origin, runstart, dir2);
+	VectorSubtract(runstart, ms->origin, dir2);
 
 	dir2[2] = 0;
 	dist2 = VectorNormalize(dir2);
 
-	VectorSubtract(runstart, reach->start, dir3);
+	VectorSubtract(reach->start, runstart, dir3);
 
 	dir3[2] = 0;
 	dist3 = VectorNormalize(dir3);

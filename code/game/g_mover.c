@@ -222,7 +222,7 @@ qboolean G_CheckProxMinePosition(gentity_t *check) {
 	VectorMA(check->s.pos.trBase, 2, check->movedir, end);
 	trap_Trace(&tr, start, NULL, NULL, end, check->s.number, MASK_SOLID);
 
-	if (tr.startsolid || tr.fraction < 1) {
+	if (tr.startsolid || tr.fraction < 1.0f) {
 		return qfalse;
 	}
 

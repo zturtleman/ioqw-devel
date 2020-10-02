@@ -273,7 +273,7 @@ void CG_AddFragment(localEntity_t *le) {
 	// trace a line from previous position to new position
 	CG_Trace(&trace, le->refEntity.origin, NULL, NULL, newOrigin, -1, CONTENTS_SOLID);
 
-	if (trace.fraction == 1.0) {
+	if (trace.fraction == 1.0f) {
 		// still in free fall
 		VectorCopy(newOrigin, le->refEntity.origin);
 		VectorClear(angles);
@@ -819,7 +819,7 @@ void CG_AddScorePlum(localEntity_t *le) {
 		re->shaderRGBA[3] = 0xff;
 	}
 
-	re->radius = NUMBER_SIZE / 2;
+	re->radius = NUMBER_SIZE * 0.5;
 
 	VectorCopy(le->pos.trBase, origin);
 
@@ -857,7 +857,7 @@ void CG_AddScorePlum(localEntity_t *le) {
 	}
 
 	for (i = 0; i < numdigits; i++) {
-		VectorMA(origin, (float)(((float)numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
+		VectorMA(origin, (float)(((float)numdigits * 0.5) - i) * NUMBER_SIZE, vec, re->origin);
 
 		re->customShader = cgs.media.numberShaders[digits[numdigits - 1 - i]];
 

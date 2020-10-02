@@ -2179,7 +2179,7 @@ int AAS_RandomGoalArea(int areanum, int travelflags, int *goalareanum, vec3_t go
 				end[2] -= 300;
 				trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
 
-				if (!trace.startsolid && trace.fraction < 1 && AAS_PointAreaNum(trace.endpos) == n) {
+				if (!trace.startsolid && trace.fraction < 1.0f && AAS_PointAreaNum(trace.endpos) == n) {
 					if (AAS_AreaGroundFaceArea(n) > 300) {
 						*goalareanum = n;
 

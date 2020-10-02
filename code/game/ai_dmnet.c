@@ -122,7 +122,7 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 	VectorCopy(bsptrace.endpos, end);
 	BotAI_Trace(&bsptrace, end, mins, maxs, bs->origin, bs->entitynum, CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA);
 	// if we found the water surface
-	if (bsptrace.fraction > 0) {
+	if (bsptrace.fraction > 0.0f) {
 		areanum = BotPointAreaNum(bs->client, bsptrace.endpos); // Tobias CHECK: bs->client?
 
 		if (areanum) {
@@ -371,6 +371,13 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 	bot_waypoint_t *wp;
 
 	if (bs->ltgtype == LTG_TEAMHELP && !retreat) {
+		// get the entity information
+		BotEntityInfo(bs->teammate, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			bs->ltg_time = 0;
+			bs->ltgtype = 0;
+		}
 		// check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
 			BotAI_BotInitialChat(bs, "help_start", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
@@ -386,13 +393,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		// if the companion is NOT visible for too long
 		if (bs->teammatevisible_time < FloatTime() - 10) {
-			bs->ltg_time = 0;
-			bs->ltgtype = 0;
-		}
-		// get the entity information
-		BotEntityInfo(bs->teammate, &entinfo);
-		// if the entity information is valid
-		if (!entinfo.valid) {
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
@@ -429,6 +429,13 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 	}
 	// if the bot accompanies someone
 	if (bs->ltgtype == LTG_TEAMACCOMPANY && !retreat) {
+		// get the entity information
+		BotEntityInfo(bs->teammate, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			bs->ltg_time = 0;
+			bs->ltgtype = 0;
+		}
 		// check for bot typing status message
 		if (bs->teammessage_time && bs->teammessage_time < FloatTime()) {
 			BotAI_BotInitialChat(bs, "accompany_start", EasyClientName(bs->teammate, netname, sizeof(netname)), NULL);
@@ -436,13 +443,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			BotVoiceChatOnly(bs, bs->decisionmaker, VOICECHAT_YES);
 			trap_EA_Action(bs->client, ACTION_AFFIRMATIVE);
 			bs->teammessage_time = 0;
-		}
-		// get the entity information
-		BotEntityInfo(bs->teammate, &entinfo);
-		// if the entity information is valid
-		if (!entinfo.valid) {
-			bs->ltg_time = 0;
-			bs->ltgtype = 0;
 		}
 
 		VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -797,12 +797,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->ltg_time = 0;
 			bs->ltgtype = 0;
 		}
-
-		if (!bs->curpatrolpoint) {
-			bs->ltg_time = 0;
-			bs->ltgtype = 0;
-			return qfalse;
-		}
 		// set the bot goal
 		memcpy(goal, &bs->curpatrolpoint->goal, sizeof(bot_goal_t));
 		return qtrue;
@@ -1072,7 +1066,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->attackaway_time = FloatTime() + 3 + 5 * random();
 			}
 			// or very close to the obelisk
-			VectorSubtract(bs->origin, goal->origin, dir);
+			VectorSubtract(goal->origin, bs->origin, dir);
 
 			if (VectorLengthSquared(dir) < Square(60)) {
 				bs->attackaway_time = FloatTime() + 3 + 5 * random();
@@ -1236,7 +1230,7 @@ int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 			bs->leadbackup_time = FloatTime() + 2;
 		}
 		// distance towards the teammate
-		VectorSubtract(bs->origin, bs->lead_teamgoal.origin, dir);
+		VectorSubtract(bs->lead_teamgoal.origin, bs->origin, dir);
 
 		squaredist = VectorLengthSquared(dir);
 		// if backing up towards the teammate
@@ -1532,7 +1526,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 					if (InFieldOfVision(bs->viewangles, 20, moveresult->ideal_viewangles)) {
 						BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, target, bs->entitynum, MASK_SHOT);
 						// if the corpse is visible from the current position
-						if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == state.number) {
+						if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == state.number) {
 							// shoot at the kamikaze corpse
 							trap_EA_Attack(bs->client);
 						}
@@ -1589,7 +1583,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 					if (InFieldOfVision(bs->viewangles, 20, moveresult->ideal_viewangles)) {
 						BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, target, bs->entitynum, MASK_SHOT);
 						// if the mine is visible from the current position
-						if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == state.number) {
+						if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == state.number) {
 							// shoot at the mine
 							trap_EA_Attack(bs->client);
 						}
@@ -1801,7 +1795,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	if (bs->activatestack->shoot) {
 		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->activatestack->target, bs->entitynum, MASK_SHOT);
 		// if the shootable entity is visible from the current position
-		if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == goal->entitynum) {
+		if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == goal->entitynum) {
 			targetvisible = qtrue;
 			// if holding the right weapon
 			if (bs->cur_ps.weapon == bs->activatestack->weapon) {

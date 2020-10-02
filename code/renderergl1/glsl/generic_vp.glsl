@@ -231,7 +231,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	else if (u_AlphaGen == AGEN_NORMALZFADE)
 	{
 		float nDot = dot(normal, u_FireRiseDir);
-		float halfRange = (u_ZFadeHighest - u_ZFadeLowest) / 2.0;
+		float halfRange = (u_ZFadeHighest - u_ZFadeLowest) * 0.5;
 
 		if (nDot < u_ZFadeHighest) {
 			if (nDot > u_ZFadeLowest) {

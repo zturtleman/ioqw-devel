@@ -502,7 +502,7 @@ static void UI_SwingAngles(float destination, float swingTolerance, float clampT
 		}
 
 		*angle = AngleMod(*angle + move);
-	} else if (swing < 0) {
+	} else/* if (swing < 0)*/ {
 		move = uiInfo.uiDC.frameTime * scale * -speed;
 
 		if (move <= swing) {
@@ -1524,9 +1524,9 @@ void UI_PlayerInfo_UpdateColor(playerInfo_t *pi) {
 UI_PlayerInfo_SetInfo
 =======================================================================================================================================
 */
-void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat) {
+void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat) {
 	int currentAnim;
-	weapon_t weaponNum;
+	//weapon_t weaponNum;
 
 	pi->chat = chat;
 
@@ -1552,10 +1552,10 @@ void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t
 		pi->torso.yawAngle = viewAngles[YAW];
 		pi->torso.yawing = qfalse;
 
-		if (weaponNumber != WP_NUM_WEAPONS) {
-			pi->weapon = weaponNumber;
-			pi->currentWeapon = weaponNumber;
-			pi->lastWeapon = weaponNumber;
+		if (weaponNum != WP_NUM_WEAPONS) {
+			pi->weapon = weaponNum;
+			pi->currentWeapon = weaponNum;
+			pi->lastWeapon = weaponNum;
 			pi->pendingWeapon = WP_NUM_WEAPONS;
 			pi->weaponTimer = 0;
 
@@ -1565,11 +1565,11 @@ void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t
 		return;
 	}
 	// weapon
-	if (weaponNumber == WP_NUM_WEAPONS) {
+	if (weaponNum == WP_NUM_WEAPONS) {
 		pi->pendingWeapon = WP_NUM_WEAPONS;
 		pi->weaponTimer = 0;
-	} else if (weaponNumber != WP_NONE) {
-		pi->pendingWeapon = weaponNumber;
+	} else if (weaponNum != WP_NONE) {
+		pi->pendingWeapon = weaponNum;
 		pi->weaponTimer = dp_realtime + UI_TIMER_WEAPON_DELAY;
 	}
 

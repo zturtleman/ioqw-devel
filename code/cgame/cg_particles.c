@@ -1161,7 +1161,7 @@ void CG_ParticleBulletDebris(vec3_t org, vec3_t vel, int duration) {
 
 	p->time = cg.time;
 	p->endtime = cg.time + duration;
-	p->startfade = cg.time + duration / 2;
+	p->startfade = cg.time + duration * 0.5;
 	p->color = EMISIVEFADE;
 	p->alpha = 1.0;
 	p->alphavel = 0;
@@ -1635,10 +1635,10 @@ qboolean ValidBloodPool(vec3_t start) {
 	AngleVectorsRightUp(angles, right, up);
 	VectorMA(start, EXTRUDE_DIST, normal, center_pos);
 
-	for (x = -fwidth / 2; x < fwidth; x += fwidth) {
+	for (x = -fwidth * 0.5; x < fwidth; x += fwidth) {
 		VectorMA(center_pos, x, right, x_pos);
 
-		for (y = -fheight / 2; y < fheight; y += fheight) {
+		for (y = -fheight * 0.5; y < fheight; y += fheight) {
 			VectorMA(x_pos, y, up, this_pos);
 			VectorMA(this_pos, -EXTRUDE_DIST * 2, normal, end_pos);
 			CG_Trace(&trace, this_pos, NULL, NULL, end_pos, -1, CONTENTS_SOLID);
@@ -1647,7 +1647,7 @@ qboolean ValidBloodPool(vec3_t start) {
 				return qfalse;
 			}
 
-			if (!(!trace.startsolid && trace.fraction < 1)) {
+			if (!(!trace.startsolid && trace.fraction < 1.0f)) {
 				return qfalse;
 			}
 		}
@@ -1820,7 +1820,7 @@ void CG_ParticleSparks(vec3_t org, vec3_t vel, int duration, float x, float y, f
 
 	p->time = cg.time;
 	p->endtime = cg.time + duration;
-	p->startfade = cg.time + duration / 2;
+	p->startfade = cg.time + duration * 0.5;
 	p->color = EMISIVEFADE;
 	p->alpha = 0.4f;
 	p->alphavel = 0;

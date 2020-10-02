@@ -443,7 +443,7 @@ int CG_WaterLevel(centity_t *cent) {
 
 	if (contents & MASK_WATER) {
 		sample2 = viewheight - MINS_Z;
-		sample1 = sample2 / 2;
+		sample1 = sample2 * 0.5;
 		waterlevel = 1;
 		point[2] = cent->lerpOrigin[2] + MINS_Z + sample1;
 		contents = CG_PointContents(point, -1);

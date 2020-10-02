@@ -233,8 +233,8 @@ static void CG_CalcVrect(void) {
 	cg.refdef.width &= ~1;
 	cg.refdef.height = cgs.glconfig.vidHeight * size / 100;
 	cg.refdef.height &= ~1;
-	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width) / 2;
-	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height) / 2;
+	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width) * 0.5;
+	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height) * 0.5;
 }
 
 /*
@@ -304,9 +304,9 @@ static void CG_OffsetThirdPersonView(void) {
 	if (!cg_cameraMode.integer) {
 		CG_Trace(&trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID);
 
-		if (trace.fraction != 1.0) {
+		if (trace.fraction != 1.0f) {
 			VectorCopy(trace.endpos, view);
-			view[2] += (1.0 - trace.fraction) * 32;
+			view[2] += (1.0f - trace.fraction) * 32;
 			// try another trace to this position, because a tunnel may have the ceiling close enough that this is poking out
 			CG_Trace(&trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID);
 			VectorCopy(trace.endpos, view);

@@ -1855,8 +1855,8 @@ int Item_ListBox_ThumbDrawPosition(itemDef_t *item) {
 			min = item->window.rect.x + SCROLLBAR_SIZE + 1;
 			max = item->window.rect.x + item->window.rect.w - 2 * SCROLLBAR_SIZE - 1;
 
-			if (DC->cursorx >= min + SCROLLBAR_SIZE / 2 && DC->cursorx <= max + SCROLLBAR_SIZE / 2) {
-				return DC->cursorx - SCROLLBAR_SIZE / 2;
+			if (DC->cursorx >= min + SCROLLBAR_SIZE * 0.5 && DC->cursorx <= max + SCROLLBAR_SIZE * 0.5) {
+				return DC->cursorx - SCROLLBAR_SIZE * 0.5;
 			} else {
 				return Item_ListBox_ThumbPosition(item);
 			}
@@ -1864,8 +1864,8 @@ int Item_ListBox_ThumbDrawPosition(itemDef_t *item) {
 			min = item->window.rect.y + SCROLLBAR_SIZE + 1;
 			max = item->window.rect.y + item->window.rect.h - 2 * SCROLLBAR_SIZE - 1;
 
-			if (DC->cursory >= min + SCROLLBAR_SIZE / 2 && DC->cursory <= max + SCROLLBAR_SIZE / 2) {
-				return DC->cursory - SCROLLBAR_SIZE / 2;
+			if (DC->cursory >= min + SCROLLBAR_SIZE * 0.5 && DC->cursory <= max + SCROLLBAR_SIZE * 0.5) {
+				return DC->cursory - SCROLLBAR_SIZE * 0.5;
 			} else {
 				return Item_ListBox_ThumbPosition(item);
 			}
@@ -1921,7 +1921,7 @@ Item_Slider_OverSlider
 int Item_Slider_OverSlider(itemDef_t *item, float x, float y) {
 	rectDef_t r;
 
-	r.x = Item_Slider_ThumbPosition(item) - (SLIDER_THUMB_WIDTH / 2);
+	r.x = Item_Slider_ThumbPosition(item) - (SLIDER_THUMB_WIDTH * 0.5);
 	r.y = item->window.rect.y - 2;
 	r.w = SLIDER_THUMB_WIDTH;
 	r.h = SLIDER_THUMB_HEIGHT;
@@ -2856,12 +2856,12 @@ static void Scroll_ListBox_ThumbFunc(void *p) {
 		}
 
 		r.x = si->item->window.rect.x + SCROLLBAR_SIZE + 1;
-		r.y = si->item->window.rect.y + si->item->window.rect.h - SCROLLBAR_SIZE - 1;
-		r.h = SCROLLBAR_SIZE;
+		//r.y = si->item->window.rect.y + si->item->window.rect.h - SCROLLBAR_SIZE - 1;
+		//r.h = SCROLLBAR_SIZE;
 		r.w = si->item->window.rect.w - (SCROLLBAR_SIZE * 2) - 2;
 
 		max = Item_ListBox_MaxScroll(si->item);
-		pos = (DC->cursorx - r.x - SCROLLBAR_SIZE / 2) * max / (r.w - SCROLLBAR_SIZE);
+		pos = (DC->cursorx - r.x - SCROLLBAR_SIZE * 0.5) * max / (r.w - SCROLLBAR_SIZE);
 
 		if (pos < 0) {
 			pos = 0;
@@ -2872,13 +2872,13 @@ static void Scroll_ListBox_ThumbFunc(void *p) {
 		listPtr->startPos = pos;
 		si->xStart = DC->cursorx;
 	} else if (DC->cursory != si->yStart) {
-		r.x = si->item->window.rect.x + si->item->window.rect.w - SCROLLBAR_SIZE - 1;
+		//r.x = si->item->window.rect.x + si->item->window.rect.w - SCROLLBAR_SIZE - 1;
 		r.y = si->item->window.rect.y + SCROLLBAR_SIZE + 1;
 		r.h = si->item->window.rect.h - (SCROLLBAR_SIZE * 2) - 2;
-		r.w = SCROLLBAR_SIZE;
+		//r.w = SCROLLBAR_SIZE;
 
 		max = Item_ListBox_MaxScroll(si->item);
-		pos = (DC->cursory - r.y - SCROLLBAR_SIZE / 2) * max / (r.h - SCROLLBAR_SIZE);
+		pos = (DC->cursory - r.y - SCROLLBAR_SIZE * 0.5) * max / (r.h - SCROLLBAR_SIZE);
 
 		if (pos < 0) {
 			pos = 0;
@@ -3031,10 +3031,10 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 
 				testRect = item->window.rect;
 				testRect.x = x;
-				value = (float)SLIDER_THUMB_WIDTH / 2;
+				value = (float)SLIDER_THUMB_WIDTH * 0.5;
 				testRect.x -= value;
 				//DC->Print("slider x: %f\n", testRect.x);
-				testRect.w = (SLIDER_WIDTH + (float)SLIDER_THUMB_WIDTH / 2);
+				testRect.w = (SLIDER_WIDTH + (float)SLIDER_THUMB_WIDTH * 0.5);
 				//DC->Print("slider w: %f\n", testRect.w);
 
 				if (Rect_ContainsPoint(&testRect, DC->cursorx, DC->cursory)) {
@@ -3612,7 +3612,7 @@ void Item_SetTextExtents(itemDef_t *item, int *width, int *height, const char *t
 		if (item->textalignment == ITEM_ALIGN_RIGHT) {
 			item->textRect.x = item->textalignx - originalWidth;
 		} else if (item->textalignment == ITEM_ALIGN_CENTER) {
-			item->textRect.x = item->textalignx - originalWidth / 2;
+			item->textRect.x = item->textalignx - originalWidth * 0.5;
 		}
 
 		ToWindowCoords(&item->textRect.x, &item->textRect.y, &item->window);
@@ -3711,7 +3711,7 @@ void Item_Text_AutoWrapped_Paint(itemDef_t *item) {
 				} else if (item->textalignment == ITEM_ALIGN_RIGHT) {
 					item->textRect.x = item->textalignx - newLineWidth;
 				} else if (item->textalignment == ITEM_ALIGN_CENTER) {
-					item->textRect.x = item->textalignx - newLineWidth / 2;
+					item->textRect.x = item->textalignx - newLineWidth * 0.5;
 				}
 
 				item->textRect.y = y;
@@ -3974,8 +3974,7 @@ typedef struct {
 
 typedef struct {
 	char *name;
-	float defaultvalue;
-	float value;
+	//float value;
 } configcvar_t;
 
 static bind_t g_bindings[] = {
@@ -4251,7 +4250,7 @@ void Item_Slider_Paint(itemDef_t *item) {
 
 	x = Item_Slider_ThumbPosition(item);
 
-	DC->drawHandlePic(x - (SLIDER_THUMB_WIDTH / 2), y - 2, SLIDER_THUMB_WIDTH, SLIDER_THUMB_HEIGHT, DC->Assets.sliderThumb);
+	DC->drawHandlePic(x - (SLIDER_THUMB_WIDTH * 0.5), y - 2, SLIDER_THUMB_WIDTH, SLIDER_THUMB_HEIGHT, DC->Assets.sliderThumb);
 }
 
 /*
@@ -4662,7 +4661,7 @@ void Item_ListBox_Paint(itemDef_t *item) {
 						text = DC->feederItemText(item->special, i, j, &optionalImage);
 
 						if (optionalImage >= 0) {
-							DC->drawHandlePic(x + 4 + listPtr->columnInfo[j].pos, y - 1 + listPtr->elementHeight / 2, listPtr->columnInfo[j].width, listPtr->columnInfo[j].width, optionalImage);
+							DC->drawHandlePic(x + 4 + listPtr->columnInfo[j].pos, y - 1 + listPtr->elementHeight * 0.5, listPtr->columnInfo[j].width, listPtr->columnInfo[j].width, optionalImage);
 						} else if (text) {
 							DC->drawText(x + 4 + listPtr->columnInfo[j].pos, y + listPtr->elementHeight, item->textscale, item->window.foreColor, text, 0, listPtr->columnInfo[j].maxChars, item->textStyle);
 						}
@@ -4785,8 +4784,8 @@ void Item_Paint(itemDef_t *item) {
 
 			item->window.nextTime = DC->realTime + item->window.offsetTime;
 			// translate
-			w = item->window.rectClient.w / 2;
-			h = item->window.rectClient.h / 2;
+			w = item->window.rectClient.w * 0.5;
+			h = item->window.rectClient.h * 0.5;
 
 			rx = item->window.rectClient.x + w - item->window.rectEffects.x;
 			ry = item->window.rectClient.y + h - item->window.rectEffects.y;

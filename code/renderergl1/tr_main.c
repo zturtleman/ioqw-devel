@@ -2529,7 +2529,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 static float CalcSplit(float n, float f, float i, float m)
 {
-	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
+	return (n * pow(f / n, i / m) + (f - n) * i / m) * 0.5f;
 }
 
 

@@ -248,7 +248,7 @@ gentity_t *SelectRandomFurthestSpawnPoint(vec3_t avoidPoint, vec3_t origin, vec3
 		return spot;
 	}
 	// select a random spot from the spawn points furthest away
-	rnd = random() * (numSpots / 2);
+	rnd = random() * (numSpots * 0.5);
 
 	VectorCopy(list_spot[rnd]->s.origin, origin);
 
@@ -1068,7 +1068,7 @@ void ClientSpawn(gentity_t *ent) {
 		if (ent->client->sess.sessionTeam != TEAM_SPECTATOR) {
 			G_KillBox(ent);
 			// force the base weapon up
-			client->ps.weapon = WP_MACHINEGUN;
+			//client->ps.weapon = WP_MACHINEGUN;
 			client->ps.weaponstate = WEAPON_READY;
 			// fire the targets of the spawn point
 			G_UseTargets(spawnPoint, ent);

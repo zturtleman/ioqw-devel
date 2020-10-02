@@ -118,9 +118,9 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 // returns the handle of a newly allocated movestate
 int BotAllocMoveState(void);
 // frees the movestate with the given handle
-void BotFreeMoveState(int handle);
+void BotFreeMoveState(int movestate);
 // initialize movement state before performing any movement
-void BotInitMoveState(int handle, bot_initmove_t *initmove);
+void BotInitMoveState(int movestate, bot_initmove_t *initmove);
 // add a spot to avoid (if type == AVOID_CLEAR all spots are removed)
 void BotAddAvoidSpot(int movestate, vec3_t origin, float radius, int type);
 // must be called every map change

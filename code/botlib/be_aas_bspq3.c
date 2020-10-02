@@ -40,11 +40,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #define MAX_BSPENTITIES 2048
 
-typedef struct rgb_s {
-	int red;
-	int green;
-	int blue;
-} rgb_t;
 // bsp entity epair
 typedef struct bsp_epair_s {
 	char *key;

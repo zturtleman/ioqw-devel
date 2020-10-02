@@ -43,7 +43,7 @@ int AAS_AreaCluster(int areanum);
 // returns the presence type(s) of the area
 int AAS_AreaPresenceType(int areanum);
 // returns the presence type(s) at the given point
-int AAS_PointPresenceType(vec3_t point);
+int AAS_PointPresenceType(vec3_t origin);
 // returns the result of the trace of a client bbox
 aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype, int passent);
 // stores the areas the trace went through and returns the number of passed areas
@@ -54,7 +54,7 @@ int AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 int AAS_AreaInfo(int areanum, aas_areainfo_t *info);
 void AAS_AreaCenter(int areanum, vec3_t center);
 // returns the area the point is in
-int AAS_PointAreaNum(vec3_t point);
-int AAS_PointReachabilityAreaIndex(vec3_t point);
+int AAS_PointAreaNum(vec3_t origin);
+int AAS_PointReachabilityAreaIndex(vec3_t origin);
 // returns the plane the given face is in
 void AAS_FacePlane(int facenum, vec3_t normal, float *dist);

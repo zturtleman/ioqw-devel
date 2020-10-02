@@ -176,9 +176,9 @@ typedef struct aas_export_s {
 	int (*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int (*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 	void (*AAS_AreaCenter)(int areanum, vec3_t center);
-	int (*AAS_PointAreaNum)(vec3_t point);
+	int (*AAS_PointAreaNum)(vec3_t origin);
 	int (*AAS_PointContents)(vec3_t point);
-	int (*AAS_PointReachabilityAreaIndex)(vec3_t point);
+	int (*AAS_PointReachabilityAreaIndex)(vec3_t origin);
 	int (*AAS_AreaReachability)(int areanum);
 	int (*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
 	int (*AAS_EnableRoutingArea)(int areanum, int enable);
@@ -236,7 +236,7 @@ typedef struct ai_export_s {
 	// be_ai_chat.h
 	//-----------------------------------
 	int (*BotAllocChatState)(void);
-	void (*BotFreeChatState)(int handle);
+	void (*BotFreeChatState)(int chatstate);
 	void (*BotQueueConsoleMessage)(int chatstate, int type, char *message);
 	void (*BotRemoveConsoleMessage)(int chatstate, int handle);
 	int (*BotNextConsoleMessage)(int chatstate, struct bot_consolemessage_s *cm);
@@ -285,7 +285,7 @@ typedef struct ai_export_s {
 	void (*BotSaveGoalFuzzyLogic)(int goalstate, char *filename);
 	void (*BotMutateGoalFuzzyLogic)(int goalstate, float range);
 	int (*BotAllocGoalState)(int client);
-	void (*BotFreeGoalState)(int handle);
+	void (*BotFreeGoalState)(int goalstate);
 	//-----------------------------------
 	// be_ai_move.h
 	//-----------------------------------
@@ -299,8 +299,8 @@ typedef struct ai_export_s {
 	int (*BotMovementViewTarget)(int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target);
 	int (*BotPredictVisiblePosition)(vec3_t origin, int areanum, struct bot_goal_s *goal, int travelflags, vec3_t target);
 	int (*BotAllocMoveState)(void);
-	void (*BotFreeMoveState)(int handle);
-	void (*BotInitMoveState)(int handle, struct bot_initmove_s *initmove);
+	void (*BotFreeMoveState)(int movestate);
+	void (*BotInitMoveState)(int movestate, struct bot_initmove_s *initmove);
 	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------

@@ -605,8 +605,8 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 	}
 
 	botimport.DebugLineShow(line[0], eye, bsptrace.endpos, LINECOLOR_YELLOW);
-
-	if (bsptrace.fraction < 1.0) {
+	// if something is hit
+	if (bsptrace.fraction < 1.0f) {
 		face = AAS_TraceEndFace(&trace);
 
 		if (face) {
@@ -624,8 +624,8 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 	//bsptrace = AAS_Trace2(eye, NULL, NULL, end, 1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 	bsptrace = AAS_Trace2(eye, mins, maxs, end, 1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 	botimport.DebugLineShow(line[1], eye, bsptrace.endpos, LINECOLOR_BLUE);
-
-	if (bsptrace.fraction < 1.0) {
+	// if something is hit
+	if (bsptrace.fraction < 1.0f) {
 		AAS_DrawPlaneCross(bsptrace.endpos, bsptrace.plane.normal, bsptrace.plane.dist, bsptrace.plane.type, LINECOLOR_RED);
 
 		if (bsptrace.entityNum) {

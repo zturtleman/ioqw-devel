@@ -433,6 +433,7 @@ PlayerDie
 */
 void PlayerDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath) {
 	gentity_t *ent;
+	static int deathanim;
 	int anim;
 	int contents;
 	int killer;
@@ -592,9 +593,7 @@ void PlayerDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 		GibEntity(self, killer);
 	} else {
 		// normal death
-		static int i;
-
-		switch (i) {
+		switch (deathanim) {
 			case 0:
 				anim = BOTH_DEATH1;
 				break;
@@ -614,11 +613,11 @@ void PlayerDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 		self->client->ps.legsAnim = ((self->client->ps.legsAnim & ANIM_TOGGLEBIT) ^ ANIM_TOGGLEBIT)|anim;
 		self->client->ps.torsoAnim = ((self->client->ps.torsoAnim & ANIM_TOGGLEBIT) ^ ANIM_TOGGLEBIT)|anim;
 
-		G_AddEvent(self, EV_DEATH1 + i, killer);
+		G_AddEvent(self, EV_DEATH1 + deathanim, killer);
 		// the body can still be gibbed
 		self->die = BodyDie;
 		// globally cycle through the different death animations
-		i = (i + 1) % 3;
+		deathanim = (deathanim + 1) % 3;
 
 		if (self->s.eFlags & EF_KAMIKAZE) {
 			Kamikaze_DeathTimer(self);
@@ -692,7 +691,7 @@ dflags		These flags are used to control how G_Damage works.
  DAMAGE_NO_PROTECTION	Kills godmode, armor, everything.
 =======================================================================================================================================
 */
-void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod) {
+void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int meansOfDeath) {
 	gclient_t *client;
 	int take;
 	int asave;
@@ -789,7 +788,7 @@ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t
 			}
 		}
 
-		if (mod == MOD_PROXIMITY_MINE) {
+		if (meansOfDeath == MOD_PROXIMITY_MINE) {
 			if (inflictor && inflictor->parent && OnSameTeam(targ, inflictor->parent)) {
 				if (!g_friendlyFire.integer) {
 					return;
@@ -849,7 +848,7 @@ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t
 		// set the last client who damaged the target
 		targ->client->lasthurt_client = attacker->s.number;
 		targ->client->lasthurt_time = level.time;
-		targ->client->lasthurt_mod = mod;
+		targ->client->lasthurt_mod = meansOfDeath;
 	}
 	// do the damage
 	if (take) {
@@ -869,7 +868,7 @@ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t
 			}
 
 			targ->enemy = attacker;
-			targ->die(targ, inflictor, attacker, take, mod);
+			targ->die(targ, inflictor, attacker, take, meansOfDeath);
 			return;
 		} else if (targ->pain) {
 			targ->pain(targ, attacker, take);
@@ -989,7 +988,7 @@ qboolean CanDamage(gentity_t *targ, vec3_t origin) {
 G_RadiusDamage
 =======================================================================================================================================
 */
-qboolean G_RadiusDamage(vec3_t origin, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int mod) {
+qboolean G_RadiusDamage(vec3_t origin, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int meansOfDeath) {
 	float points, dist;
 	gentity_t *ent;
 	int entityList[MAX_GENTITIES];
@@ -1049,7 +1048,7 @@ qboolean G_RadiusDamage(vec3_t origin, gentity_t *attacker, float damage, float 
 			// push the center of mass higher than the origin so players get knocked into the air more
 			dir[2] += 24;
 
-			G_Damage(ent, NULL, attacker, dir, origin, (int)points, DAMAGE_RADIUS, mod);
+			G_Damage(ent, NULL, attacker, dir, origin, (int)points, DAMAGE_RADIUS, meansOfDeath);
 		}
 	}
 

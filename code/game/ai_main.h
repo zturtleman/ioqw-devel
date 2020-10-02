@@ -53,7 +53,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define TEAM_CAMP_TIME				600 // 10 minutes camping time
 #define TEAM_PATROL_TIME			600 // 10 minutes patrolling time
 #define TEAM_LEAD_TIME				600 // 10 minutes taking the lead
-#define TEAM_GETITEM_TIME			 60 // 1 minute
+#define TEAM_GETITEM_TIME			120 // 2 minutes
 #define TEAM_KILL_SOMEONE			180 // 3 minute to kill someone
 #define TEAM_ATTACKENEMYBASE_TIME	600 // 10 minutes
 #define TEAM_HARVEST_TIME			120 // 2 minutes

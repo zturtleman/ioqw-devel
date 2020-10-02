@@ -171,7 +171,7 @@ typedef struct client_s {
 #define MAX_CHALLENGES 2048
 // Allow a certain amount of challenges to have the same IP address to make it a bit harder to DOS one single IP address from connecting
 // while not allowing a single ip to grab all challenge resources
-#define MAX_CHALLENGES_MULTI (MAX_CHALLENGES / 2)
+#define MAX_CHALLENGES_MULTI (MAX_CHALLENGES * 0.5)
 
 typedef struct {
 	netadr_t adr;
@@ -316,7 +316,7 @@ void SV_BotFreeClient(int clientNum);
 void SV_BotInitCvars(void);
 int SV_BotLibSetup(void);
 int SV_BotLibShutdown(void);
-int SV_BotGetSnapshotEntity(int client, int ent);
+int SV_BotGetSnapshotEntity(int client, int sequence);
 int SV_BotGetConsoleMessage(int client, char *buf, int size);
 int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void BotImport_DebugPolygonDelete(int id);
