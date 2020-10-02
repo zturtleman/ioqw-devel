@@ -88,6 +88,7 @@ vmCvar_t bot_interbreedwrite;
 vmCvar_t bot_memorydump;
 vmCvar_t bot_visualrange;
 vmCvar_t bot_checktime;
+vmCvar_t bot_blocktime;
 vmCvar_t bot_predictobstacles;
 vmCvar_t bot_equalize;
 vmCvar_t bot_equalizer_aim;
@@ -1543,6 +1544,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_memorydump);
 	trap_Cvar_Update(&bot_visualrange);
 	trap_Cvar_Update(&bot_checktime);
+	trap_Cvar_Update(&bot_blocktime);
 	trap_Cvar_Update(&bot_predictobstacles);
 	trap_Cvar_Update(&bot_equalize);
 	trap_Cvar_Update(&bot_equalizer_aim);
@@ -1938,6 +1940,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_memorydump, "bot_memorydump", "0", 0);
 	trap_Cvar_Register(&bot_visualrange, "bot_visualrange", "100000", 0);
 	trap_Cvar_Register(&bot_checktime, "bot_checktime", "0.00001", 0);
+	trap_Cvar_Register(&bot_blocktime, "bot_blocktime", "0.5", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
 	trap_Cvar_Register(&bot_equalize, "bot_equalize", "1", 0);
 	trap_Cvar_Register(&bot_equalizer_aim, "bot_equalizer_aim", "0.75", 0);

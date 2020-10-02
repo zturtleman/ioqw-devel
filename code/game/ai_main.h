@@ -323,6 +323,7 @@ extern vmCvar_t bot_interbreedwrite;
 extern vmCvar_t bot_memorydump;
 extern vmCvar_t bot_visualrange;
 extern vmCvar_t bot_checktime;
+extern vmCvar_t bot_blocktime;
 extern vmCvar_t bot_predictobstacles;
 extern vmCvar_t bot_equalize;
 extern vmCvar_t bot_equalizer_aim;

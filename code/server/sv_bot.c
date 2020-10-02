@@ -546,6 +546,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_memorydump", "0", 0);
 	Cvar_Get("bot_visualrange", "100000", 0);
 	Cvar_Get("bot_checktime", "0.00001", 0);
+	Cvar_Get("bot_blocktime", "0.5", 0);
 	Cvar_Get("bot_predictobstacles", "1", 0);
 	Cvar_Get("bot_equalize", "1", 0);
 	Cvar_Get("bot_equalizer_aim", "0.75", 0);
