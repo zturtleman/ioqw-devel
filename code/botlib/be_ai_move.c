@@ -3369,13 +3369,15 @@ int BotReachabilityTime(aas_reachability_t *reach) {
 =======================================================================================================================================
 BotMoveInGoalArea
 
+Tobias TODO: * speed/GFL_NOSLOWAPPROACH
 Tobias TODO: * Usual wall check?
 =======================================================================================================================================
 */
 bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	bot_moveresult_t_cleared(result);
 	vec3_t dir;
-	float dist, speed;
+	//float dist, speed;
+	int speed;
 #ifdef DEBUG
 	//botimport.Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->entitynum - 1));
 	//AAS_ClearShownDebugLines();
@@ -3392,7 +3394,8 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 		dir[2] = 0;
 		result.traveltype = TRAVEL_WALK;
 	}
-
+// Tobias TODO: currently disabled
+/*
 	dist = VectorNormalize(dir);
 
 	if (dist > 100 || (goal->flags & GFL_NOSLOWAPPROACH)) {
@@ -3408,6 +3411,9 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	if (speed < 10) {
 		speed = 0;
 	}
+*/
+	speed = 400;
+// Tobias END
 	// check if blocked
 	BotCheckBlocked(ms, dir, qtrue, &result);
 	// elementary action move in direction
