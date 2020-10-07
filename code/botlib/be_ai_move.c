@@ -1237,6 +1237,41 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 
 /*
 =======================================================================================================================================
+BotCheckBarrierWalkLeft
+=======================================================================================================================================
+*/
+int BotCheckBarrierWalkLeft(bot_movestate_t *ms, vec3_t dir, float speed) {
+	vec3_t start, hordir, sideward, mins, maxs, end, up = {0, 0, 1};
+	bsp_trace_t trace;
+
+	hordir[0] = dir[0];
+	hordir[1] = dir[1];
+	hordir[2] = 0;
+	
+	VectorNormalize(hordir);
+	// get the (right) sideward vector
+	CrossProduct(hordir, up, sideward);
+	VectorMA(ms->origin, 32, sideward, start);
+	VectorMA(start, speed, hordir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
+	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+	// a stepheight higher to avoid low ceiling
+	maxs[2] += sv_maxstep->value;
+	// trace horizontally in the move direction
+	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	// this shouldn't happen... but we check anyway
+	if (trace.startsolid) {
+		return qtrue;
+	}
+	// if no obstacle at all
+	if (trace.fraction >= 1.0f) {
+		return qfalse;
+	}
+	// there is a barrier
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 BotCheckBarrierJump
 
 Tobias NOTE: Currently the Scout is not handled here... e.g.: sv_maxbarrier->value + 30.
@@ -1512,14 +1547,14 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, dir) + 32;
 	// do a full trace to check for distant obstacles to avoid, depending on current speed
-	VectorMA(ms->origin, currentspeed * 1.4, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
+	VectorMA(ms->origin, currentspeed * 1.4f, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and NOT hitting the world entity
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
 #ifdef DEBUG
-		botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %f.\n", ms->client, currentspeed * 1.4);
+		botimport.Print(PRT_MESSAGE, S_COLOR_YELLOW "%d: BotCheckBlocked: I will get blocked soon! Check distance: %f.\n", ms->client, currentspeed * 1.4f);
 #endif
 	// if no blocking obstacle was found, check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
 	} else {
@@ -1566,10 +1601,15 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
 #endif // DEBUG
-		} else {
-			result->flags |= MOVERESULT_BARRIER_WALK;
+		} else if (BotCheckBarrierWalkLeft(ms, dir, currentspeed * 1.4f)) {
+			result->flags |= MOVERESULT_BARRIER_WALK_LEFT;
 #ifdef DEBUG
-			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Can't jump or crouch to avoid barrier!\n", ms->client);
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Barrier dedected, right side is blocked!\n", ms->client);
+#endif // DEBUG
+		} else {
+			result->flags |= MOVERESULT_BARRIER_WALK_RIGHT;
+#ifdef DEBUG
+			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Barrier dedected!\n", ms->client);
 #endif // DEBUG
 		}
 	}
