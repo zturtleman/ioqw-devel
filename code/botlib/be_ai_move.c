@@ -1601,7 +1601,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Crouch barrier dedected!\n", ms->client);
 #endif // DEBUG
-		} else if (BotCheckBarrierWalkLeft(ms, dir, currentspeed * 1.4f)) {
+		} else if (BotCheckBarrierWalkLeft(ms, dir, 64)) {
 			result->flags |= MOVERESULT_BARRIER_WALK_LEFT;
 #ifdef DEBUG
 			botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: Barrier dedected, right side is blocked!\n", ms->client);

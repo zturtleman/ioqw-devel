@@ -8615,11 +8615,7 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 // Tobias DEBUG
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
-#endif
-	float blockcvar;
 
-	blockcvar = bot_blocktime.value;
-#ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 // Tobias END
@@ -8632,75 +8628,66 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 		VectorSet(angles, 0, 360 * random(), 0);
 		AngleVectorsForward(angles, hordir);
 	}
-	// try to crouch or jump over barrier
-	if (!trap_BotMoveInDirection(bs->ms, hordir, speed, movetype)) { // Tobias CHECK: really needed?
-		// get the (right) sideward vector
-		CrossProduct(hordir, up, sideward);
-		// get the direction the blocking obstacle is moving
-		ent = &g_entities[moveresult->blockentity];
-		dir2[2] = 0;
+	// get the (right) sideward vector
+	CrossProduct(hordir, up, sideward);
+	// get the direction the blocking obstacle is moving
+	ent = &g_entities[moveresult->blockentity];
+	dir2[2] = 0;
 
-		VectorCopy(ent->client->ps.velocity, dir2);
-		// if the blocking obstacle is moving
-		if (VectorLengthSquared(dir2) > 0) {
-			// we start moving to our right side, but if the blocking entity is also moving towards our right side flip the direction and move to the left side
-			if (DotProduct(dir2, sideward) > 50.0f) {
-				// flip the direction
-				VectorNegate(sideward, sideward);
+	VectorCopy(ent->client->ps.velocity, dir2);
+	// we start moving to our right side, but if the blocking entity is also moving towards our right side or if the right side is blocked move to the left side
+	if (DotProduct(dir2, sideward) > 50.0f || moveresult->flags & MOVERESULT_BARRIER_WALK_LEFT) {
+		// flip the direction
+		VectorNegate(sideward, sideward);
 #ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: (Moving obstacle) Flipped right side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
-#endif
-			} else {
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (Moving obstacle) Keep right side.\n", netname);
-#endif
-			}
-			// move sidwards
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - blockcvar) { // 0.5
-				// flip the direction
-				VectorNegate(sideward, sideward); // Tobias CHECK: really needed?
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (Moving obstacle) 1st sidewards movement failed, flipped direction.\n", netname);
-#endif
-				// move in the other direction
-				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - (blockcvar * 2)) { // 1.0 // Tobias CHECK: really needed?
-					// move in a random direction in the hope to get out
-					BotRandomMove(bs, moveresult, speed, movetype);
-#ifdef OBSTACLEDEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (Moving obstacle) 2nd sidewards movement failed, ending up using random move.\n", netname);
-#endif
-				}
-			}
-		// if the blocking obstacle is not moving at all
+		if (moveresult->flags & MOVERESULT_BARRIER_WALK_LEFT) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Flipped right side because right side is blocked.\n", netname);
 		} else {
-			if (moveresult->flags & MOVERESULT_BARRIER_WALK_LEFT) {
-				VectorNegate(sideward, sideward);
-#ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: (Static obstacle) Flipped right side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Flipped right side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
+		}
+	} else {
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Keep right side.\n", netname);
 #endif
-			} else {
+	}
+	// move sidwards
+	if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+		// move in a random direction in the hope to get out
+		BotRandomMove(bs, moveresult, speed, movetype);
 #ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (Static obstacle) Keep right side.\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Sidewards movement failed, ending up using random move.\n", netname);
 #endif
-			}
-			// move sidwards
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - blockcvar) { // 0.5
-				// flip the direction
-				VectorNegate(sideward, sideward); // Tobias CHECK: really needed?
+	}
+/*
+	// if the blocking obstacle is not moving at all
+	} else {
+		if (moveresult->flags & MOVERESULT_BARRIER_WALK_LEFT) {
+			VectorNegate(sideward, sideward);
 #ifdef OBSTACLEDEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (Static obstacle) 1st sidewards movement failed, flipped direction.\n", netname);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: (Static obstacle) Flipped right side because dir2 = %1.1f.\n", netname, DotProduct(dir2, sideward));
 #endif
-				// move in the other direction
-				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - (blockcvar * 2)) { // 1.0 // Tobias CHECK: really needed?
-					// move in a random direction in the hope to get out
-					BotRandomMove(bs, moveresult, speed, movetype); // Tobias CHECK: only if NOT teammate?
+		} else {
 #ifdef OBSTACLEDEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (Static obstacle) 2nd sidewards movement failed, ending up using random move.\n", netname);
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: (Static obstacle) Keep right side.\n", netname);
 #endif
-				}
+		}
+		// move sidwards
+		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - blockcvar) { // 0.5
+			// flip the direction
+			VectorNegate(sideward, sideward); // Tobias CHECK: really needed?
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (Static obstacle) 1st sidewards movement failed, flipped direction.\n", netname);
+#endif
+			// move in the other direction
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - (blockcvar * 2)) { // 1.0 // Tobias CHECK: really needed?
+				// move in a random direction in the hope to get out
+				BotRandomMove(bs, moveresult, speed, movetype); // Tobias CHECK: only if NOT teammate?
+#ifdef OBSTACLEDEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (Static obstacle) 2nd sidewards movement failed, ending up using random move.\n", netname);
+#endif
 			}
 		}
 	}
+*/
 }
 
 /*
