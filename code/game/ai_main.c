@@ -805,7 +805,7 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 		maxchange = 360;
 	}
 
-	maxchange *= thinktime;
+	maxchange *= thinktime * 10;
 
 	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 

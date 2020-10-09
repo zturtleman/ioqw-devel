@@ -1486,7 +1486,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			tmpdir[1] = move.endpos[1] - ms->origin[1];
 			tmpdir[2] = 0;
 			// the bot is blocked by something
-			if (VectorLength(tmpdir) < speed * ms->thinktime * ms->thinktime * 0.5) { // Tobias CHECK: should we remove this completely? We randomize this a bit more for now to get rid of the 'dance-with-blocker' problem...
+			if (VectorLength(tmpdir) < speed * ms->thinktime * 5) {
 				return qfalse;
 			}
 		}
@@ -3808,7 +3808,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		// special handling of jump pads when the bot uses a jump pad without knowing it
 		foundjumppad = qfalse;
 
-		VectorMA(ms->origin, -2 * ms->thinktime, ms->velocity, end);
+		VectorMA(ms->origin, -20 * ms->thinktime, ms->velocity, end);
 
 		numareas = AAS_TraceAreas(ms->origin, end, areas, NULL, 16);
 
@@ -3929,7 +3929,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	}
 	// FIXME: is it right to do this here?
 	if (result->blocked) {
-		ms->reachability_time -= 10 * ms->thinktime;
+		ms->reachability_time -= 100 * ms->thinktime;
 	}
 	// copy the last origin
 	VectorCopy(ms->origin, ms->lastorigin);

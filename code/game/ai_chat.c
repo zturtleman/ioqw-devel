@@ -1068,7 +1068,7 @@ int BotChat_Random(bot_state_t *bs) {
 
 	rnd = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_RANDOM, 0, 1);
 
-	if (random() > bs->thinktime * 0.1) {
+	if (random() > bs->thinktime) {
 		return qfalse;
 	}
 
