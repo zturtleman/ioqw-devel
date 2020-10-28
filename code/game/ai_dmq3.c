@@ -8371,14 +8371,12 @@ void BotObstacleAvoidanceMoveExt(bot_state_t *bs, bot_moveresult_t *moveresult, 
 	char netname[MAX_NETNAME];
 #endif
 // Tobias DEBUG
-	float blockcvar;
 	int obstacleMove;
 // Tobias END
 	vec3_t dir2, mins, maxs, hordir, sideward, rightwards, leftwards, angles, up = {0, 0, 1};
 	gentity_t *ent;
 	bsp_trace_t trace;
 // Tobias DEBUG
-	blockcvar = bot_blocktime.value;
 	obstacleMove = MOVEMENT_DEFAULT;
 // Tobias END
 #ifdef OBSTACLEDEBUG
@@ -8423,14 +8421,14 @@ void BotObstacleAvoidanceMoveExt(bot_state_t *bs, bot_moveresult_t *moveresult, 
 #endif
 			}
 			// move sidwards
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - blockcvar) { // 0.5
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 				// flip the direction
 				VectorNegate(sideward, sideward);
 #ifdef OBSTACLEDEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: 1st sidewards movement failed, flipped direction.\n", netname);
 #endif
 				// move in the other direction
-				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - (blockcvar * 2)) { // 1.0
+				if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 					// move in a random direction in the hope to get out
 					BotRandomMove(bs, moveresult, speed, movetype);
 // Tobias DEBUG
@@ -8671,14 +8669,14 @@ void BotObstacleAvoidanceMove(bot_state_t *bs, bot_moveresult_t *moveresult, int
 #endif
 		}
 		// move sidwards
-		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - blockcvar) { // 0.5
+		if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 			// flip the direction
 			VectorNegate(sideward, sideward); // Tobias CHECK: really needed?
 #ifdef OBSTACLEDEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (Static obstacle) 1st sidewards movement failed, flipped direction.\n", netname);
 #endif
 			// move in the other direction
-			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype) && bs->notblocked_time < FloatTime() - (blockcvar * 2)) { // 1.0 // Tobias CHECK: really needed?
+			if (!trap_BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 				// move in a random direction in the hope to get out
 				BotRandomMove(bs, moveresult, speed, movetype); // Tobias CHECK: only if NOT teammate?
 #ifdef OBSTACLEDEBUG
@@ -8874,7 +8872,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	BotObstacleAvoidanceMove(bs, moveresult, speed, movetype);
 
 	if (activatedonefunc == NULL) {
-		if (bs->notblocked_time < FloatTime() - (blockcvar * 3)) { // 1.5
+		if (bs->notblocked_time < FloatTime() - blockcvar) {
 			// just reset goals and hope the bot will go into another direction?
 			// is this still needed??
 			if (bs->ainode == AINode_Seek_NBG) {
