@@ -805,7 +805,7 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 		maxchange = 360; // Tobias FIXME: this was always wrong, I think. It doesn't make sense to increase the maxchange value without an enemy, the opposite is true! Probably they confused the if/else conditions here?
 	}
 
-	maxchange *= thinktime/* * 10*/; // Tobias CHECK: don't compensate the thinktime here because of the issue from above?
+	maxchange *= thinktime;
 
 	viewType = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_TYPE, 0, 1);
 

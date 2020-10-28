@@ -4704,7 +4704,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		return moveresult;
 	}
 	// increase the strafe time
-	bs->attackstrafe_time += bs->thinktime * 10;
+	bs->attackstrafe_time += bs->thinktime;
 	// get the strafe change time
 	strafechange_time = 0.4 + (1 - attack_skill) * 0.2;
 

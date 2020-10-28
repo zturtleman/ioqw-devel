@@ -1486,7 +1486,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 			tmpdir[1] = move.endpos[1] - ms->origin[1];
 			tmpdir[2] = 0;
 			// the bot is blocked by something
-			if (VectorLength(tmpdir) < speed * ms->thinktime * 5) {
+			if (VectorLength(tmpdir) < speed * ms->thinktime * 0.5) { // Tobias CHECK: should we remove this completely? We can also randomize this a bit more (ms->thinktime * ms->thinktime * 0.005) to get rid of the 'dance-with-blocker' problem...
 				return qfalse;
 			}
 		}
@@ -1547,7 +1547,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	// get the current speed
 	currentspeed = DotProduct(ms->velocity, dir) + 32;
 	// do a full trace to check for distant obstacles to avoid, depending on current speed
-	VectorMA(ms->origin, currentspeed * 1.4f, dir, end); // Tobias NOTE: tweak this, because this depends on bot_thinktime
+	VectorMA(ms->origin, currentspeed * 1.4f, dir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and NOT hitting the world entity
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
@@ -3808,7 +3808,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		// special handling of jump pads when the bot uses a jump pad without knowing it
 		foundjumppad = qfalse;
 
-		VectorMA(ms->origin, -20 * ms->thinktime, ms->velocity, end);
+		VectorMA(ms->origin, -2 * ms->thinktime, ms->velocity, end);
 
 		numareas = AAS_TraceAreas(ms->origin, end, areas, NULL, 16);
 
@@ -3928,7 +3928,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	}
 	// FIXME: is it right to do this here?
 	if (result->blocked) {
-		ms->reachability_time -= 100 * ms->thinktime;
+		ms->reachability_time -= 10 * ms->thinktime;
 	}
 	// copy the last origin
 	VectorCopy(ms->origin, ms->lastorigin);
