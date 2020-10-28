@@ -25,6 +25,8 @@
 /* Define int64_t and uint64_t types */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #include <inttypes.h>
+#elif defined(__cplusplus) && __cplusplus >= 201103L
+#include <cinttypes>
 #elif defined(_WIN32) && defined(__GNUC__)
 #include <stdint.h>
 #elif defined(_WIN32)
@@ -528,6 +530,52 @@ ALC_API void ALC_APIENTRY alcGetInteger64vSOFT(ALCdevice *device, ALCenum pname,
 /*#define AL_FUMA_SOFT*/
 #define AL_SN3D_SOFT                             0x0001
 #define AL_N3D_SOFT                              0x0002
+#endif
+
+#ifndef ALC_SOFT_loopback_bformat
+#define ALC_SOFT_loopback_bformat 1
+#define ALC_AMBISONIC_LAYOUT_SOFT                0x1997
+#define ALC_AMBISONIC_SCALING_SOFT               0x1998
+#define ALC_AMBISONIC_ORDER_SOFT                 0x1999
+#define ALC_MAX_AMBISONIC_ORDER_SOFT             0x199B
+
+#define ALC_BFORMAT3D_SOFT                       0x1507
+
+/* Ambisonic layouts */
+#define ALC_FUMA_SOFT                            0x0000
+#define ALC_ACN_SOFT                             0x0001
+
+/* Ambisonic scalings (normalization) */
+/*#define ALC_FUMA_SOFT*/
+#define ALC_SN3D_SOFT                            0x0001
+#define ALC_N3D_SOFT                             0x0002
+#endif
+
+#ifndef AL_SOFT_effect_target
+#define AL_SOFT_effect_target
+#define AL_EFFECTSLOT_TARGET_SOFT                0x199C
+#endif
+
+#ifndef AL_SOFT_events
+#define AL_SOFT_events 1
+#define AL_EVENT_CALLBACK_FUNCTION_SOFT          0x19A2
+#define AL_EVENT_CALLBACK_USER_PARAM_SOFT        0x19A3
+#define AL_EVENT_TYPE_BUFFER_COMPLETED_SOFT      0x19A4
+#define AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT  0x19A5
+#define AL_EVENT_TYPE_DISCONNECTED_SOFT          0x19A6
+typedef void (AL_APIENTRY*ALEVENTPROCSOFT)(ALenum eventType, ALuint object, ALuint param,
+                                           ALsizei length, const ALchar *message,
+                                           void *userParam);
+typedef void (AL_APIENTRY*LPALEVENTCONTROLSOFT)(ALsizei count, const ALenum *types, ALboolean enable);
+typedef void (AL_APIENTRY*LPALEVENTCALLBACKSOFT)(ALEVENTPROCSOFT callback, void *userParam);
+typedef void* (AL_APIENTRY*LPALGETPOINTERSOFT)(ALenum pname);
+typedef void (AL_APIENTRY*LPALGETPOINTERVSOFT)(ALenum pname, void **values);
+#ifdef AL_ALEXT_PROTOTYPES
+AL_API void AL_APIENTRY alEventControlSOFT(ALsizei count, const ALenum *types, ALboolean enable);
+AL_API void AL_APIENTRY alEventCallbackSOFT(ALEVENTPROCSOFT callback, void *userParam);
+AL_API void* AL_APIENTRY alGetPointerSOFT(ALenum pname);
+AL_API void AL_APIENTRY alGetPointervSOFT(ALenum pname, void **values);
+#endif
 #endif
 
 #ifdef __cplusplus
