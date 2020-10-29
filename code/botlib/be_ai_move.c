@@ -1727,7 +1727,11 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 				}
 			}
 
-			speed = 400 - (200 - gapdist);
+			if (gapdist > 270) {
+				gapdist = 270;
+			}
+
+			speed = 400 - (270 - gapdist); // Tobias NOTE: should be 400 - (200 - gapdist) some day
 		} else {
 			speed = 400;
 		}
