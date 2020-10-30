@@ -61,10 +61,10 @@ BotSetTeamCampDist
 int BotSetTeamCampDist(bot_state_t *bs) {
 	int teammates;
 
-	teammates = BotCountAllTeamMates(bs, 256);
+	teammates = BotCountAllTeamMates(bs, 2048);
 
 	if (teammates > 1) {
-		return 64 + (teammates * 64);
+		return 48 + (teammates * 48);
 	}
 
 	return 64;
@@ -78,10 +78,10 @@ BotSetTeamFormationDist
 int BotSetTeamFormationDist(bot_state_t *bs) {
 	int teammates;
 
-	teammates = BotCountAllTeamMates(bs, 256);
+	teammates = BotCountAllTeamMates(bs, 2048);
 
 	if (teammates > 1) {
-		return 128 + (teammates * 128);
+		return 48 + (teammates * 48);
 	}
 
 	return 128;
