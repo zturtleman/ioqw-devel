@@ -8850,6 +8850,19 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 	// if blocked by a player
 	} else {
 		VectorSubtract(entinfo.origin, bs->origin, dir1);
+		// Tobias HACK?: accompanying teammates are less concerned about blocking teammates
+		// Tobias NOTE: also do this for multiple teammates trying to camp at the same spot (camp_dist)
+		if (bs->ltgtype == LTG_TEAMACCOMPANY && BotSameTeam(bs, moveresult->blockentity) && VectorLengthSquared(dir1) > Square(bs->formation_dist) * 1.25) { // Tobias NOTE: repalac 1.25 by a more advanced value (in fov etc.)
+#ifdef OBSTACLEDEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "Ignoring blocking teammate outside formation space!\n");
+#endif
+			return;
+#ifdef OBSTACLEDEBUG
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BLOCKED inside formation space!\n");
+#endif
+		}
+
 		VectorNormalize(dir1);
 		VectorNormalize2(ent->client->ps.velocity, dir2);
 		// if the blocking entity is moving away from us (or moving along the same direction), or if it is an enemy farther away than 24 units
