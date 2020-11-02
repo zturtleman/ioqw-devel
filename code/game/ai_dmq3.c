@@ -5706,7 +5706,7 @@ BotCountAllTeamMates
 Counts all teammates inside a specific range, regardless if they are visible or not.
 =======================================================================================================================================
 */
-int BotCountAllTeamMates(bot_state_t *bs, float range) {
+int BotCountAllTeamMates(bot_state_t *bs, vec3_t origin, float range) {
 	int teammates, i;
 	aas_entityinfo_t entinfo;
 	vec3_t dir;
@@ -5733,7 +5733,7 @@ int BotCountAllTeamMates(bot_state_t *bs, float range) {
 			continue;
 		}
 		// if not within range
-		VectorSubtract(entinfo.origin, bs->origin, dir);
+		VectorSubtract(entinfo.origin, origin, dir);
 
 		if (VectorLengthSquared(dir) > Square(range)) {
 			continue;

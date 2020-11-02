@@ -61,7 +61,8 @@ BotSetTeamCampDist
 int BotSetTeamCampDist(bot_state_t *bs) {
 	int teammates;
 
-	teammates = BotCountAllTeamMates(bs, 2048);
+	// count all teammates within the given radius surrounding the camping bot
+	teammates = BotCountAllTeamMates(bs, bs->origin, 2048);
 
 	if (teammates > 1) {
 		return 48 + (teammates * 48);
@@ -78,7 +79,8 @@ BotSetTeamFormationDist
 int BotSetTeamFormationDist(bot_state_t *bs) {
 	int teammates;
 
-	teammates = BotCountAllTeamMates(bs, 2048);
+	// count all teammates within the specified radius, starting from the teammate to be followed
+	teammates = BotCountAllTeamMates(bs, bs->teamgoal.origin, 2048);
 
 	if (teammates > 1) {
 		return 48 + (teammates * 48);
