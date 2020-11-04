@@ -341,4 +341,5 @@ extern vmCvar_t bot_teamavoidpickup;
 extern vmCvar_t bot_alt_aggressive;
 extern vmCvar_t bot_alt_pickup;
 extern vmCvar_t bot_alt_aim;
+extern vmCvar_t bot_alt_attack;
 // Tobias END

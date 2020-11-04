@@ -7138,9 +7138,9 @@ Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
 	float attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
-	int attackentity, fov, weaponfov, weaponrange, mask;
+	int attackentity, fov, weaponfov, range, weaponrange, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, end, targetpoint, dir, angles;
+	vec3_t forward, right, start, end, dir, angles;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -7222,26 +7222,10 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-
-	VectorSubtract(bs->aimtarget, bs->eye, dir);
-	// if using a close combat weapon and the enemy is too far away
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
-		return qfalse;
-	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
 		return qfalse;
 	}
-/*
-	BotAI_Trace(&bsptrace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
-
-	if (!bs->allowHitWorld && bsptrace.fraction < 1.0f && bsptrace.entityNum != attackentity) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
-#endif
-		return qfalse;
-	}
-*/
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
 		return qfalse;
@@ -7262,120 +7246,116 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 			bs->firethrottlewait_time = 0;
 		}
 	}
-	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.5 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-	if (attack_accuracy != 0.5) {
-		// get some weapon specific attack values
-		switch (bs->weaponnum) {
-			case WP_GAUNTLET:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
-				weaponfov = 90;
-				weaponrange = 42;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_MACHINEGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
-				weaponfov = 20;
-				weaponrange = 100000;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_CHAINGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
-				weaponfov = 80;
-				weaponrange = 100000;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_SHOTGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
-				weaponfov = 20;
-				weaponrange = 500;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_NAILGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
-				weaponfov = 40; // 30 (pre-aiming?)
-				weaponrange = 500;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_PROXLAUNCHER:
-			case WP_GRENADELAUNCHER:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
-				weaponfov = 120;
-				weaponrange = 2000;
-				mins = rmins;
-				maxs = rmaxs;
-				//mask = MASK_MISSILESHOT;
-				mask = MASK_SHOT;
-				break;
-			case WP_NAPALMLAUNCHER:
-			case WP_ROCKETLAUNCHER:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
-				weaponfov = 60;
-				weaponrange = 1000;
-				mins = rmins;
-				maxs = rmaxs;
-				mask = MASK_SHOT;
-				break;
-			case WP_BEAMGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
-				weaponfov = 80;
-				weaponrange = BEAMGUN_RANGE;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_RAILGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
-				weaponfov = 20;
-				weaponrange = 100000;
-				mins = NULL;
-				maxs = NULL;
-				mask = MASK_SHOT;
-				break;
-			case WP_PLASMAGUN:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
-				weaponfov = 20;
-				weaponrange = 1000;
-				mins = rmins;
-				maxs = rmaxs;
-				mask = MASK_SHOT;
-				break;
-			case WP_BFG:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
-				weaponfov = 20;
-				weaponrange = 1000;
-				mins = rmins;
-				maxs = rmaxs;
-				mask = MASK_SHOT;
-				break;
-			default:
-				aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
-				weaponfov = 50;
-				weaponrange = 1000;
-				mins = rmins;
-				maxs = rmaxs;
-				mask = MASK_SHOT;
-				break;
-		}
-		// Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
-		weaponfov += 30 - (30 * aim_accuracy);
-	// simulate old style Q3A Gladiator bot behaviour
-	} else {
-		weaponfov = 50;
-		weaponrange = 1000;
-		mins = NULL;
-		maxs = NULL;
-		mask = MASK_SHOT;
+
+	VectorSubtract(bs->aimtarget, bs->eye, dir);
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return qfalse;
 	}
+	// get some weapon specific attack values
+	switch (bs->weaponnum) {
+		case WP_GAUNTLET:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+			weaponfov = 90;
+			weaponrange = 42;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_MACHINEGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
+			weaponfov = 20;
+			weaponrange = 100000;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_CHAINGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
+			weaponfov = 80;
+			weaponrange = 100000;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_SHOTGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
+			weaponfov = 20;
+			weaponrange = 500;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_NAILGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
+			weaponfov = 40; // 30 (pre-aiming?)
+			weaponrange = 500;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_PROXLAUNCHER:
+		case WP_GRENADELAUNCHER:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
+			weaponfov = 120;
+			weaponrange = 2000;
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
+			break;
+		case WP_NAPALMLAUNCHER:
+		case WP_ROCKETLAUNCHER:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
+			weaponfov = 60;
+			weaponrange = 1000;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		case WP_BEAMGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
+			weaponfov = 80;
+			weaponrange = BEAMGUN_RANGE;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_RAILGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
+			weaponfov = 20;
+			weaponrange = 100000;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_PLASMAGUN:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
+			weaponfov = 20;
+			weaponrange = 1000;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		case WP_BFG:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
+			weaponfov = 20;
+			weaponrange = 1000;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		default:
+			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+			weaponfov = 50;
+			weaponrange = 1000;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+	}
+	// Tobias HACK(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
+	weaponfov += 30 - (30 * aim_accuracy);
 
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
@@ -7383,7 +7363,12 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
-		fov = weaponfov;
+		if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
+			fov = weaponfov;
+		// simulate old style Q3A Gladiator bot behaviour
+		} else {
+			fov = 50;
+		}
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
 #endif
@@ -7411,6 +7396,17 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
+	// simulate old style Q3A Gladiator bot behaviour
+	if (attack_accuracy == 0.5 || !bot_alt_attack.integer) {
+		BotAI_Trace(&trace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
+
+		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
+#endif
+			return qfalse;
+		}
+	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
 
@@ -7426,26 +7422,23 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
 	// end point aiming at
-	VectorMA(start, weaponrange, forward, end); // Tobias NOTE: 262144 (default Railgun range see g_weapon.c) does NOT work with the (unmodified/default) broken code for radial damage projectiles from below!
-	// Tobias NOTE: (FIXME: remove this?) an attack_accuracy of 0.5 restores the old (incorrect) behaviour of bots shooting accidently at walls (they hit the trigger to soon, and they release the trigger too late (-> lot of suicides by rockets near walls etc.)!
-	if (attack_accuracy > 0.5) {
-		VectorCopy(end, targetpoint); // Tobias FIXME(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
-	// simulate old style Q3A Gladiator bot behaviour
+	if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
+		range = weaponrange;
+		// simulate old style Q3A Gladiator bot behaviour
 	} else {
-		VectorCopy(bs->aimtarget, targetpoint);
+		range = 1000;
 	}
 
-	BotAI_Trace(&trace, start, mins, maxs, targetpoint, bs->entitynum, mask);
+	VectorMA(start, range, forward, end);
+	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
 
-	if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+	if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
+		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-		if (attack_accuracy != 0.5) {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (> 0.5 Fixed) No attack: trace won't hit!\n", netname);
-		} else {
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: (== 0.5 Default) No attack: trace won't hit!\n", netname);
-		}
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
 #endif
-		return qfalse;
+			return qfalse;
+		}
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
