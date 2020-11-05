@@ -6149,8 +6149,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	if (aim_accuracy > 1.0f) {
 		aim_accuracy = 1.0f;
 	}
-
-	bs->allowHitWorld = qfalse;
 	// if the enemy is NOT visible
 	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(bs->lastenemyorigin, bestorigin);
@@ -6178,8 +6176,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 							bestorigin[2] -= 20;
 						}
 					}
-					// allow the bot to hit the world
-					bs->allowHitWorld = qtrue;
+
 					aim_accuracy = 1.0f;
 				}
 			}
@@ -6305,8 +6302,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, FloatTime());
 #endif
 								VectorCopy(groundtarget, bestorigin);
-								// allow the bot to hit the world (shooting at the ground)
-								bs->allowHitWorld = qtrue;
 							}
 						}
 					}
@@ -6721,8 +6716,6 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 	if (aim_accuracy > 1.0f) {
 		aim_accuracy = 1.0f;
 	}
-
-	bs->allowHitWorld = qfalse;
 	// if the enemy is NOT visible
 	if (!BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		VectorCopy(bs->lastenemyorigin, bestorigin);
@@ -6750,8 +6743,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 							bestorigin[2] -= 20;
 						}
 					}
-					// allow the bot to hit the world
-					bs->allowHitWorld = qtrue;
+
 					aim_accuracy = 1.0f;
 				}
 			}
@@ -6877,8 +6869,6 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 								BotAI_Print(PRT_MESSAGE, "%s: Time = %1.1f Aiming at ground.\n", netname, FloatTime());
 #endif
 								VectorCopy(groundtarget, bestorigin);
-								// allow the bot to hit the world (shooting at the ground)
-								bs->allowHitWorld = qtrue;
 							}
 						}
 					}
@@ -7122,29 +7112,19 @@ static qboolean BotMayRadiusDamageTeamMate(bot_state_t *bs, vec3_t origin, float
 =======================================================================================================================================
 BotCheckAttack
 
-Tobias NOTE: This new version only uses one trace call, instead of two!
-			 The trace call using 'bs->aimtarget' was merged into the existing one below.
-Tobias FIXME: Due to fixing an old idtech3 bug now 'weaponfov' contradicts 'aim_accuracy' -> the bot isn't firing the gun because of
-			  'bs->aimtarget' isn't used anymore.
-			  Although this is theoretically correct, it feels wrong :(
-			  The goal of the bugfix was to not fire rockets near walls etc., not to don't fire the weapon when aim is not perfect...
-			  Either tweak this via aim_accuracy or through a list of weapons that allow imprecision.
-			  Anyways this was always a bug, but by default the bug wasn't so likely to happen.
-
 Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, obelisk splash dmg, low 'attack_accuracy' value etc.).
 Tobias TODO: Make use of self/team preservation.
-Tobias TODO: Re-enable better use of 'bs->aimtarget' again?
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
-	int attackentity, fov, weaponfov, range, weaponrange, mask;
+	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
-	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
+	static vec3_t rmins = {-2, -2, -2}, rmaxs = {2, 2, 2}; // rockets/missiles
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
 //	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
 #ifdef DEBUG
@@ -7257,7 +7237,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_GAUNTLET:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			weaponfov = 90;
-			weaponrange = 42;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7265,7 +7244,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_MACHINEGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
 			weaponfov = 20;
-			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7273,7 +7251,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_CHAINGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
 			weaponfov = 80;
-			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7281,7 +7258,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_SHOTGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
 			weaponfov = 20;
-			weaponrange = 500;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7289,7 +7265,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_NAILGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
 			weaponfov = 40; // 30 (pre-aiming?)
-			weaponrange = 500;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7298,7 +7273,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_GRENADELAUNCHER:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
 			weaponfov = 120;
-			weaponrange = 2000;
 			mins = rmins;
 			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
@@ -7308,7 +7282,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_ROCKETLAUNCHER:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
 			weaponfov = 60;
-			weaponrange = 1000;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
@@ -7316,7 +7289,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_BEAMGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
 			weaponfov = 80;
-			weaponrange = BEAMGUN_RANGE;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7324,7 +7296,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_RAILGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
 			weaponfov = 20;
-			weaponrange = 100000;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
@@ -7332,7 +7303,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_PLASMAGUN:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
 			weaponfov = 20;
-			weaponrange = 1000;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
@@ -7340,7 +7310,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		case WP_BFG:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
 			weaponfov = 20;
-			weaponrange = 1000;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
@@ -7348,7 +7317,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		default:
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			weaponfov = 50;
-			weaponrange = 1000;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
@@ -7396,17 +7364,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #endif
 		return qfalse;
 	}
-	// simulate old style Q3A Gladiator bot behaviour
-	if (attack_accuracy == 0.5 || !bot_alt_attack.integer) {
-		BotAI_Trace(&trace, bs->eye, mins, maxs, bs->aimtarget, bs->client, mask);
-
-		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit!\n", netname);
-#endif
-			return qfalse;
-		}
-	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
 
@@ -7421,30 +7378,20 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
-	// end point aiming at
-	if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
-		range = weaponrange;
-		// simulate old style Q3A Gladiator bot behaviour
-	} else {
-		range = 1000;
-	}
+	BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->client, mask); // Tobias CHECK: why do higher mins/max values stop bots from shooting rockets etc. near walls?
 
-	VectorMA(start, range, forward, end);
-	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, mask);
-
-	if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
-		if (!bs->allowHitWorld && trace.fraction < 1.0f && trace.entityNum != attackentity) {
+	if (trace.fraction < 1.0f && trace.entityNum != attackentity) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: trace won't hit!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit aimtarget!\n", netname);
 #endif
-			return qfalse;
-		}
+		return qfalse;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-		if (trace.entityNum != attackentity) { // Tobias CHECK: isn't this already checke above? Remove this twice?
+		if (trace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace ent is a teammate!\n", netname);
 				return qfalse;
 			}
 		}
@@ -7458,6 +7405,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: points > 0 (%f)!\n", netname, points);
 					return qfalse;
 				}
 			}

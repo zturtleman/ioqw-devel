@@ -200,7 +200,6 @@ typedef struct bot_state_s {
 	float blockedbyavoidspot_time;			// time blocked by an avoid spot
 	float predictobstacles_time;			// last time the bot predicted obstacles
 	int predictobstacles_goalareanum;		// last goal areanum the bot predicted obstacles for
-	qboolean allowHitWorld;					// in some situations a bot is allowed to shoot at the ground or walls (i.e. projectiles with radial damage)
 	float aimnotperfect_time;				// last time the bot didn't exactly aim to enemy
 	vec3_t aimtarget;
 	vec3_t enemyvelocity;					// enemy velocity 0.5 secs ago during battle
