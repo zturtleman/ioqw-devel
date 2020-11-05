@@ -7112,12 +7112,14 @@ static qboolean BotMayRadiusDamageTeamMate(bot_state_t *bs, vec3_t origin, float
 =======================================================================================================================================
 BotCheckAttack
 
+Tobias TODO: Repair the 'points' section?
 Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, obelisk splash dmg, low 'attack_accuracy' value etc.).
-Tobias TODO: Make use of self/team preservation.
+Tobias TODO: Adjust weaponfov (via attack_accuracy, self preservation) narrow fov for safety sake, wider fov for aiming prediction.
+Tobias TODO: Adjust 'aimnotperfect_time' for thinktime 100 (was calculated for thinktime 10)
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float /*points, */attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float /*points, */attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, dir, angles;
@@ -7235,35 +7237,30 @@ void BotCheckAttack(bot_state_t *bs) {
 	// get some weapon specific attack values
 	switch (bs->weaponnum) {
 		case WP_GAUNTLET:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			weaponfov = 90;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_MACHINEGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
 			weaponfov = 20;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_CHAINGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
 			weaponfov = 80;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_SHOTGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
 			weaponfov = 20;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAILGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
 			weaponfov = 40; // 30 (pre-aiming?)
 			mins = NULL;
 			maxs = NULL;
@@ -7271,7 +7268,6 @@ void BotCheckAttack(bot_state_t *bs) {
 			break;
 		case WP_PROXLAUNCHER:
 		case WP_GRENADELAUNCHER:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
 			weaponfov = 120;
 			mins = rmins;
 			maxs = rmaxs;
@@ -7280,50 +7276,42 @@ void BotCheckAttack(bot_state_t *bs) {
 			break;
 		case WP_NAPALMLAUNCHER:
 		case WP_ROCKETLAUNCHER:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
-			weaponfov = 60;
+			weaponfov = 50;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BEAMGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
 			weaponfov = 80;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
 			weaponfov = 20;
 			mins = NULL;
 			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PLASMAGUN:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
 			weaponfov = 20;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BFG:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
 			weaponfov = 20;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		default:
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			weaponfov = 50;
 			mins = rmins;
 			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 	}
-	// Tobias HACK(?): some bots really have a very bad aim accuracy, in this case the bots view shakes so the enemy is outside their fov(!), extend the fov in this case, otherwise bots won't hit the trigger.
-	weaponfov += 30 - (30 * aim_accuracy);
 
 	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
@@ -7331,12 +7319,7 @@ void BotCheckAttack(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
 #endif
 	} else {
-		if (attack_accuracy != 0.5 || bot_alt_attack.integer) {
-			fov = weaponfov;
-		// simulate old style Q3A Gladiator bot behaviour
-		} else {
-			fov = 50;
-		}
+		fov = weaponfov;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
 #endif
