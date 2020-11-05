@@ -7117,10 +7117,10 @@ Tobias TODO: Make use of self/team preservation.
 =======================================================================================================================================
 */
 qboolean BotCheckAttack(bot_state_t *bs) {
-	float points, attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float /*points, */attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, end, dir, angles;
+	vec3_t forward, right, start, dir, angles;
 	weaponinfo_t wi;
 	bsp_trace_t trace;
 	aas_entityinfo_t entinfo;
@@ -7391,7 +7391,9 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 		if (trace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
 			// if a teammate is hit
 			if (BotSameTeam(bs, trace.entityNum)) {
+#ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace ent is a teammate!\n", netname);
+#endif
 				return qfalse;
 			}
 		}
@@ -7405,7 +7407,9 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
+#ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: points > 0 (%f)!\n", netname, points);
+#endif
 					return qfalse;
 				}
 			}
