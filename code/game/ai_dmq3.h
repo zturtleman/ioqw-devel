@@ -130,7 +130,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent);
 void BotAimAtEnemy(bot_state_t *bs);
 void BotAimAtEnemy_New(bot_state_t *bs); // Tobias DEBUG
 // check if the bot should attack
-qboolean BotCheckAttack(bot_state_t *bs);
+void BotCheckAttack(bot_state_t *bs);
 // AI when the bot is blocked
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc);
 // AI to predict obstacles

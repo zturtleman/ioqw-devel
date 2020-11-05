@@ -7116,7 +7116,7 @@ Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, 
 Tobias TODO: Make use of self/team preservation.
 =======================================================================================================================================
 */
-qboolean BotCheckAttack(bot_state_t *bs) {
+void BotCheckAttack(bot_state_t *bs) {
 	float /*points, */attack_accuracy, aim_accuracy, reactiontime, firethrottle, *mins, *maxs;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
@@ -7135,33 +7135,33 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	attackentity = bs->enemy;
 
 	if (attackentity < 0) {
-		return qfalse;
+		return;
 	}
 
 	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
-		return qfalse;
+		return;
 	}
 /*
 	// don't attack with the flamethrower if moving faster than normal
 	if (bs->weaponnum == WP_FLAMETHROWER && VectorLengthSquared(bs->cur_ps.velocity) > 160000) {
-		return qfalse;
+		return;
 	}
 */
 	// get the entity information
 	BotEntityInfo(attackentity, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
-		return qfalse;
+		return;
 	}
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
-		return qfalse;
+		return;
 	}
 	// if attacking an obelisk
 	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
 		// if the obelisk is respawning
 		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
-			return qfalse;
+			return;
 		}
 	}
 
@@ -7193,22 +7193,22 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
 #endif
-		return qfalse;
+		return;
 	}
 
 	if (bs->teleport_time > FloatTime() - reactiontime) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
 #endif
-		return qfalse;
+		return;
 	}
 	// if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) {
-		return qfalse;
+		return;
 	}
 	// check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) {
-		return qfalse;
+		return;
 	}
 
 	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
@@ -7230,7 +7230,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
 	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
-		return qfalse;
+		return;
 	}
 	// get some weapon specific attack values
 	switch (bs->weaponnum) {
@@ -7354,7 +7354,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (> 0.6) No attack: aimnotperfect_time!\n", netname);
 #endif
-			return qfalse;
+			return;
 		}
 	}
 
@@ -7362,7 +7362,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
 #endif
-		return qfalse;
+		return;
 	}
 	// get the start point shooting from
 	VectorCopy(bs->origin, start);
@@ -7384,7 +7384,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit aimtarget!\n", netname);
 #endif
-		return qfalse;
+		return;
 	}
 	// if the entity is a client
 	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
@@ -7394,7 +7394,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace ent is a teammate!\n", netname);
 #endif
-				return qfalse;
+				return;
 			}
 		}
 	}
@@ -7410,7 +7410,7 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: points > 0 (%f)!\n", netname, points);
 #endif
-					return qfalse;
+					return;
 				}
 			}
 			// FIXME: check if a teammate gets radial damage
@@ -7420,12 +7420,12 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	// check if a teammate gets radial damage
 	if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
 		if (BotMayRadiusDamageTeamMate(bs, trace.endpos, wi.proj.radius)) {
-			return qfalse;
+			return;
 		}
 	}
 // Tobias DEBUG
 	if (bot_noshoot.integer) {
-		return qfalse;
+		return;
 	}
 #ifdef DEBUG
 	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
@@ -7441,8 +7441,6 @@ qboolean BotCheckAttack(bot_state_t *bs) {
 	}
 
 	bs->flags ^= BFL_ATTACKED;
-
-	return qfalse;
 }
 
 /*
