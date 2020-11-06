@@ -7112,19 +7112,19 @@ static qboolean BotMayRadiusDamageTeamMate(bot_state_t *bs, vec3_t origin, float
 =======================================================================================================================================
 BotCheckAttack
 
-Tobias TODO: Repair the 'points' section?
 Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, obelisk splash dmg, low 'attack_accuracy' value etc.).
 Tobias TODO: Adjust weaponfov (via attack_accuracy, self preservation) narrow fov for safety sake, wider fov for aiming prediction.
-Tobias TODO: Adjust 'aimnotperfect_time' for thinktime 100 (was calculated for thinktime 10)
+Tobias TODO: Adjust 'aimnotperfect_time' for thinktime 100 (was calculated for thinktime 10).
+Tobias TODO: Adjust 'end' and 'mins'/'maxs' (default was 8).
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float /*points, */attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float points, attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
-	vec3_t forward, right, start, dir, angles;
+	vec3_t forward, right, start, end, dir, angles;
 	weaponinfo_t wi;
-	bsp_trace_t trace;
+	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
 	static vec3_t rmins = {-2, -2, -2}, rmaxs = {2, 2, 2}; // rockets/missiles
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
@@ -7361,37 +7361,39 @@ void BotCheckAttack(bot_state_t *bs) {
 	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
 	// a little back to make sure not inside a very close enemy
 	VectorMA(start, -8, forward, start);
-	BotAI_Trace(&trace, start, mins, maxs, bs->aimtarget, bs->client, mask); // Tobias CHECK: why do higher mins/max values stop bots from shooting rockets etc. near walls?
+	BotAI_Trace(&bsptrace, start, NULL, NULL, bs->aimtarget, bs->client, mask); // Tobias CHECK: why do higher mins/max values stop bots from shooting rockets etc. near walls?
 
-	if (trace.fraction < 1.0f && trace.entityNum != attackentity) {
+	if (bsptrace.fraction < 1.0f && bsptrace.entityNum != attackentity) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace won't hit aimtarget!\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace.ent is NOT attackentity!\n", netname);
 #endif
 		return;
 	}
+	// end point aiming at
+	VectorMA(start, 1000, forward, end);
+	BotAI_Trace(&bsptrace, start, mins, maxs, end, bs->entitynum, mask);
 	// if the entity is a client
-	if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
-		if (trace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
+	if (bsptrace.entityNum >= 0 && bsptrace.entityNum < MAX_CLIENTS) {
+		if (bsptrace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
 			// if a teammate is hit
-			if (BotSameTeam(bs, trace.entityNum)) {
+			if (BotSameTeam(bs, bsptrace.entityNum)) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace ent is a teammate!\n", netname);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace.ent is a teammate!\n", netname);
 #endif
 				return;
 			}
 		}
 	}
-/*
 	// if won't hit the enemy or not attacking a player (obelisk)
-	if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
+	if (bsptrace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
 		// if the projectile does radial damage
 		if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-			if (trace.fraction * 1000 < wi.proj.radius) {
-				points = (wi.proj.damage - 0.5 * trace.fraction * 1000) * 0.5;
+			if (bsptrace.fraction * 1000 < wi.proj.radius) {
+				points = (wi.proj.damage - 0.5 * bsptrace.fraction * 1000) * 0.5;
 
 				if (points > 0) {
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: points > 0 (%f)!\n", netname, points);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: Radial damage (%f)!\n", netname, points);
 #endif
 					return;
 				}
@@ -7399,10 +7401,9 @@ void BotCheckAttack(bot_state_t *bs) {
 			// FIXME: check if a teammate gets radial damage
 		}
 	}
-*/
 	// check if a teammate gets radial damage
 	if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
-		if (BotMayRadiusDamageTeamMate(bs, trace.endpos, wi.proj.radius)) {
+		if (BotMayRadiusDamageTeamMate(bs, bsptrace.endpos, wi.proj.radius)) {
 			return;
 		}
 	}
