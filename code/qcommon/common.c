@@ -263,7 +263,7 @@ void QDECL Com_Error(int code, const char *fmt, ...) {
 	qboolean restartClient;
 
 	if (com_errorEntered) {
-		Sys_Error("recursive error after: %s", com_errorMessage);
+		Sys_Error("Recursive error after: %s", com_errorMessage);
 	}
 
 	com_errorEntered = qtrue;

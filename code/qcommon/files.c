@@ -3362,10 +3362,7 @@ static void FS_CheckPak0(void) {
 	}
 
 	if ((foundPak & 0x0f) != 0x0f) {
-		char errorText[MAX_STRING_CHARS] = "";
-
-		Q_strcat(errorText, sizeof(errorText), va("Missing files. Please re-install Quake Wars. Also check that your Quake Wars executable is in the correct place and that every file in the \"%s\" directory is present and readable!", BASEGAME));
-		Com_Error(ERR_FATAL, "%s", errorText);
+		Com_Error(ERR_FATAL, "Missing files! Please re-install Quake Wars. Also check that your Quake Wars executable is in the correct place and that every file in the \"%s\" directory is present and readable", BASEGAME);
 	}
 }
 

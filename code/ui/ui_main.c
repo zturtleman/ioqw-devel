@@ -54,8 +54,8 @@ static const char *MonthAbbrev[] = {
 static const char *skillLevels[] = {
 	"I Can Win",
 	"Bring It On",
+	"Hurt Me Plenty",
 	"Hardcore",
-	"Suicide",
 	"Nightmare"
 };
 
