@@ -2678,9 +2678,11 @@ void CG_Player(centity_t *cent) {
 		powerup.customSkin = 0;
 		// always draw
 		powerup.renderfx &= ~RF_ONLY_MIRROR;
+
 		VectorClear(angles);
 		AnglesToAxis(angles, powerup.axis);
 		VectorCopy(cent->lerpOrigin, powerup.origin);
+
 		powerup.origin[2] += -24 + (float)t * 80 / 500;
 
 		if (t > 400) {

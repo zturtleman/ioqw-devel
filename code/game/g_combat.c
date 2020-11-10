@@ -821,7 +821,7 @@ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t
 	take -= asave;
 
 	if (g_debugDamage.integer) {
-		G_Printf("%i: client:%i health:%i damage:%i armor:%i\n", level.time, targ->s.number, targ->health, take, asave);
+		G_Printf("%i: client: %i health: %i damage: %i armor: %i\n", level.time, targ->s.number, targ->health, take, asave);
 	}
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks at the end of the frame

@@ -39,7 +39,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define CTF_FRAG_CARRIER_ASSIST_TIMEOUT 10000
 #define CTF_RETURN_FLAG_ASSIST_TIMEOUT 10000
 #define OVERLOAD_ATTACK_BASE_SOUND_TIME 20000
-// Prototypes
+// prototypes
 int OtherTeam(int team);
 const char *TeamName(int team);
 const char *TeamColorString(int team);

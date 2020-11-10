@@ -34,7 +34,7 @@ void DeathmatchScoreboardMessage(gentity_t *ent) {
 	char entry[1024];
 	char string[1000];
 	int stringlength;
-	int i, j;
+	int i, j, ping;
 	gclient_t *cl;
 	int numSorted, scoreFlags, accuracy, perfect;
 
@@ -50,8 +50,6 @@ void DeathmatchScoreboardMessage(gentity_t *ent) {
 	numSorted = level.numConnectedClients;
 
 	for (i = 0; i < numSorted; i++) {
-		int ping;
-
 		cl = &level.clients[level.sortedClients[i]];
 
 		if (cl->pers.connected == CON_CONNECTING) {

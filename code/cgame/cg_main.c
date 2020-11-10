@@ -352,8 +352,8 @@ void CG_RegisterCvars(void) {
 	}
 	// see if we are also running the server on this machine
 	trap_Cvar_VariableStringBuffer("sv_running", var, sizeof(var));
-	cgs.localServer = atoi(var);
 
+	cgs.localServer = atoi(var);
 	forceModelModificationCount = cg_forceModel.modificationCount;
 	redTeamNameModificationCount = cg_redTeamName.modificationCount;
 	blueTeamNameModificationCount = cg_blueTeamName.modificationCount;
@@ -370,11 +370,10 @@ CG_ForceModelChange
 =======================================================================================================================================
 */
 static void CG_ForceModelChange(void) {
+	const char *clientInfo;
 	int i;
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
-		const char *clientInfo;
-
 		clientInfo = CG_ConfigString(CS_PLAYERS + i);
 
 		if (!clientInfo[0]) {

@@ -215,7 +215,6 @@ void QDECL G_Printf(const char *fmt, ...) {
 	va_start(argptr, fmt);
 	Q_vsnprintf(text, sizeof(text), fmt, argptr);
 	va_end(argptr);
-
 	trap_Print(text);
 }
 
@@ -231,7 +230,6 @@ void QDECL G_Error(const char *fmt, ...) {
 	va_start(argptr, fmt);
 	Q_vsnprintf(text, sizeof(text), fmt, argptr);
 	va_end(argptr);
-
 	trap_Error(text);
 }
 
@@ -498,6 +496,7 @@ void G_ShutdownGame(int restart) {
 		G_LogPrintf("ShutdownGame:\n");
 		G_LogPrintf("------------------------------------------------------------\n");
 		trap_FS_FCloseFile(level.logFile);
+
 		level.logFile = 0;
 	}
 	// write all the client session data so we can get it back
@@ -522,7 +521,6 @@ void QDECL Com_Error(int level, const char *error, ...) {
 	va_start(argptr, error);
 	Q_vsnprintf(text, sizeof(text), error, argptr);
 	va_end(argptr);
-
 	trap_Error(text);
 }
 
@@ -538,7 +536,6 @@ void QDECL Com_Printf(const char *msg, ...) {
 	va_start(argptr, msg);
 	Q_vsnprintf(text, sizeof(text), msg, argptr);
 	va_end(argptr);
-
 	trap_Print(text);
 }
 

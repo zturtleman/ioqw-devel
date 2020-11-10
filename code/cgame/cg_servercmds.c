@@ -389,7 +389,6 @@ static void CG_AddToTeamChat(const char *str) {
 			}
 
 			*p = 0;
-
 			cgs.teamChatMsgTimes[cgs.teamChatPos % chatHeight] = cg.time;
 			cgs.teamChatPos++;
 			p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];

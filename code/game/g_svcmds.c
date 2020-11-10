@@ -68,7 +68,6 @@ typedef struct ipFilter_s {
 
 static ipFilter_t ipFilters[MAX_IPFILTERS];
 static int numIPFilters;
-
 /*
 =======================================================================================================================================
 StringToFilter

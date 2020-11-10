@@ -457,7 +457,7 @@ void Touch_Item(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if (ent->flags & FL_DROPPED_ITEM) {
 		ent->freeAfterEvent = qtrue;
 	}
-	// picked up items still stay around, they just don't draw anything. This allows respawnable items to be placed on movers.
+	// picked up items still stay around, they just don't draw anything. This allows respawnable items to be placed on movers
 	ent->r.svFlags |= SVF_NOCLIENT;
 	ent->s.eFlags |= EF_NODRAW;
 	ent->r.contents = 0;
@@ -882,7 +882,7 @@ void G_RunItem(gentity_t *ent) {
 	int contents;
 	int mask;
 
-	// if its groundentity has been set to none, it may have been pushed off an edge
+	// if its groundentity has been set to ENTITYNUM_NONE, it may have been pushed off an edge
 	if (ent->s.groundEntityNum == ENTITYNUM_NONE) {
 		if (ent->s.pos.trType != TR_GRAVITY) {
 			ent->s.pos.trType = TR_GRAVITY;

@@ -53,13 +53,13 @@ void Team_InitGame(void) {
 
 	switch (g_gametype.integer) {
 		case GT_CTF:
-			teamgame.redStatus = -1; // Invalid to force update
+			teamgame.redStatus = -1; // invalid to force update
 			Team_SetFlagStatus(TEAM_RED, FLAG_ATBASE);
-			teamgame.blueStatus = -1; // Invalid to force update
+			teamgame.blueStatus = -1; // invalid to force update
 			Team_SetFlagStatus(TEAM_BLUE, FLAG_ATBASE);
 			break;
 		case GT_1FCTF:
-			teamgame.flagStatus = -1; // Invalid to force update
+			teamgame.flagStatus = -1; // invalid to force update
 			Team_SetFlagStatus(TEAM_FREE, FLAG_ATBASE);
 			break;
 		default:
@@ -761,7 +761,7 @@ int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 	// ok, let's do the player loop, hand out the bonuses
 	for (i = 0; i < level.maxclients; i++) {
 		player = &g_entities[i];
-		// also make sure we don't award assist bonuses to the flag carrier himself.
+		// also make sure we don't award assist bonuses to the flag carrier himself
 		if (!player->inuse || player == other) {
 			continue;
 		}
