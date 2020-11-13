@@ -82,6 +82,11 @@
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"1"
+			}
 
 			action {
 				hide grpMenu;
@@ -102,6 +107,11 @@
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"1"
+			}
 
 			action {
 				hide grpMenu;
@@ -122,6 +132,11 @@
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"1"
+			}
 
 			action {
 				hide grpMenu;
@@ -142,6 +157,86 @@
 			textscale .25
 			forecolor 1 1 1 1
 			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"1"
+			}
+
+			action {
+				hide grpMenu;
+				show quitConfirm
+			}
+		}
+
+		itemDef {
+			name leave
+			group grpMenu
+			text "Restart"
+			style 2
+			type 1
+			rect 0 30 128 20
+			textalign 1
+			textalignx 65
+			textaligny 18
+			textscale .25
+			forecolor 1 1 1 1
+			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"0"
+			}
+
+			action {
+				hide grpMenu;
+				show restartConfirm
+			}
+		}
+
+		itemDef {
+			name leave
+			text "Main Menu"
+			group grpMenu
+			style 2
+			rect 0 50 128 20
+			type 1
+			textalign 1
+			textalignx 64
+			textaligny 18
+			textscale .25
+			forecolor 1 1 1 1
+			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"0"
+			}
+
+			action {
+				hide grpMenu;
+				show leaveConfirm
+			}
+		}
+
+		itemDef {
+			name leave
+			group grpMenu
+			type 1
+			text "Quit"
+			style 2
+			rect 0 70 128 20
+			textalign 1
+			textalignx 64
+			textaligny 18
+			textscale .25
+			forecolor 1 1 1 1
+			visible 1
+			cvarTest "ui_singlePlayerActive"
+
+			hideCvar {
+				"0"
+			}
 
 			action {
 				hide grpMenu;
