@@ -4153,6 +4153,8 @@ static void UI_RunMenuScript(char **args) {
 					}
 				}
 			}
+			// Tobias NOTE: update the ui cvars, otherwise bot orders will not work anymore after the new map has loaded ('UI_NotTeamMember_HandleKey')
+			UI_UpdateCvars();
 // Tobias END
 		} else if (Q_stricmp(name, "updateSPMenu") == 0) {
 			UI_SetCapFragLimits(qtrue);
