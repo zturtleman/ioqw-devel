@@ -31,10 +31,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 G_BounceMissile
 =======================================================================================================================================
 */
-void G_BounceMissile(gentity_t *ent, trace_t *trace) {
+static qboolean G_BounceMissile(gentity_t *ent, trace_t *trace) {
 	vec3_t velocity;
+	int hitTime, contents;
 	float dot;
-	int hitTime;
 
 	// reflect the velocity on the trace plane
 	hitTime = level.previousTime + (level.time - level.previousTime) * trace->fraction;
@@ -45,13 +45,24 @@ void G_BounceMissile(gentity_t *ent, trace_t *trace) {
 
 	VectorMA(velocity, -2 * dot, trace->plane.normal, ent->s.pos.trDelta);
 
+	contents = trap_PointContents(ent->r.currentOrigin, -1);
+
+	if (contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA)) {
+		ent->s.pos.trDelta[2] *= 0.25f;
+	}
+
 	if (ent->s.eFlags & EF_BOUNCE_HALF) {
-		VectorScale(ent->s.pos.trDelta, 0.65, ent->s.pos.trDelta);
-		// check for stop
-		if (trace->plane.normal[2] > 0.2 && VectorLength(ent->s.pos.trDelta) < 40) {
-			G_SetOrigin(ent, trace->endpos);
-			ent->s.time = level.time / 4;
-			return;
+		// if it hit a client then barely bounce off of them since they are "soft"
+		if (trace->entityNum >= 0 && trace->entityNum < MAX_CLIENTS) {
+			VectorScale(ent->s.pos.trDelta, 0.02f, ent->s.pos.trDelta);
+		} else {
+			VectorScale(ent->s.pos.trDelta, 0.65, ent->s.pos.trDelta);
+			// check for stop
+			if (trace->plane.normal[2] > 0.2 && VectorLength(ent->s.pos.trDelta) < 40) {
+				G_SetOrigin(ent, trace->endpos);
+				ent->s.time = level.time / 4;
+				return qfalse;
+			}
 		}
 	}
 
@@ -59,6 +70,7 @@ void G_BounceMissile(gentity_t *ent, trace_t *trace) {
 	VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
 
 	ent->s.pos.trTime = level.time;
+	return qtrue;
 }
 
 /*
@@ -258,9 +270,11 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 	other = &g_entities[trace->entityNum];
 	// check for bounce
-	if (!other->takedamage && (ent->s.eFlags & (EF_BOUNCE|EF_BOUNCE_HALF))) {
-		G_BounceMissile(ent, trace);
-		G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+	if (ent->s.eFlags & (EF_BOUNCE|EF_BOUNCE_HALF)) {
+		if (G_BounceMissile(ent, trace) && !trace->startsolid) { // no bounce, no bounce sound
+			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+		}
+
 		return;
 	}
 	// impact damage
@@ -274,7 +288,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 			BG_EvaluateTrajectoryDelta(&ent->s.pos, level.time, velocity);
 
-			if (VectorLength(velocity) == 0) {
+			if (VectorLengthSquared(velocity) == 0) {
 				velocity[2] = 1; // stepped on a grenade
 			}
 
