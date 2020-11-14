@@ -284,7 +284,7 @@ SCR_DrawBigString
 void SCR_DrawBigString(int x, int y, const char *s, float alpha, qboolean noColorEscape) {
 	float color[4];
 
-	color[0] = color[1] = color[2] = 1.0;
+	color[0] = color[1] = color[2] = 1.0f;
 	color[3] = alpha;
 
 	SCR_DrawStringExt(x, y, BIGCHAR_WIDTH, s, color, qfalse, noColorEscape);

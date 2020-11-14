@@ -36,9 +36,9 @@ extern menuDef_t *menuScoreboard;
 CG_TargetCommand_f
 =======================================================================================================================================
 */
-void CG_TargetCommand_f(void) {
+static void CG_TargetCommand_f(void) {
 	int targetNum;
-	char test[4];
+	char cmd[4];
 
 	targetNum = CG_CrosshairPlayer();
 
@@ -46,8 +46,8 @@ void CG_TargetCommand_f(void) {
 		return;
 	}
 
-	trap_Argv(1, test, 4);
-	trap_SendClientCommand(va("gc %i %i", targetNum, atoi(test)));
+	trap_Argv(1, cmd, sizeof(cmd));
+	trap_SendClientCommand(va("gc %i %i", targetNum, atoi(cmd)));
 }
 
 /*
@@ -228,8 +228,8 @@ static void CG_TellTarget_f(void) {
 		return;
 	}
 
-	trap_Args(message, 128);
-	Com_sprintf(command, 128, "tell %i %s", clientNum, message);
+	trap_Args(message, sizeof(message));
+	Com_sprintf(command, sizeof(command), "tell %i %s", clientNum, message);
 	trap_SendClientCommand(command);
 }
 
@@ -249,8 +249,8 @@ static void CG_TellAttacker_f(void) {
 		return;
 	}
 
-	trap_Args(message, 128);
-	Com_sprintf(command, 128, "tell %i %s", clientNum, message);
+	trap_Args(message, sizeof(message));
+	Com_sprintf(command, sizeof(command), "tell %i %s", clientNum, message);
 	trap_SendClientCommand(command);
 }
 
@@ -270,8 +270,8 @@ static void CG_VoiceTellTarget_f(void) {
 		return;
 	}
 
-	trap_Args(message, 128);
-	Com_sprintf(command, 128, "vtell %i %s", clientNum, message);
+	trap_Args(message, sizeof(message));
+	Com_sprintf(command, sizeof(command), "vtell %i %s", clientNum, message);
 	trap_SendClientCommand(command);
 }
 
@@ -291,8 +291,8 @@ static void CG_VoiceTellAttacker_f(void) {
 		return;
 	}
 
-	trap_Args(message, 128);
-	Com_sprintf(command, 128, "vtell %i %s", clientNum, message);
+	trap_Args(message, sizeof(message));
+	Com_sprintf(command, sizeof(command), "vtell %i %s", clientNum, message);
 	trap_SendClientCommand(command);
 }
 
@@ -534,7 +534,7 @@ static void CG_TaskSuicide_f(void) {
 		return;
 	}
 
-	Com_sprintf(command, 128, "tell %i suicide", clientNum);
+	Com_sprintf(command, sizeof(command), "tell %i suicide", clientNum);
 	trap_SendClientCommand(command);
 }
 
@@ -632,7 +632,7 @@ void CG_GenerateTracemap(void) {
 }
 
 typedef struct {
-	char *cmd;
+	const char *cmd;
 	void (*function)(void);
 } consoleCommand_t;
 

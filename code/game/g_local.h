@@ -67,12 +67,12 @@ struct gentity_s {
 	//=================================================================================================================================
 	struct gclient_s *client;	// NULL if not a client
 	qboolean inuse;
-	char *classname;			// set in QuakeEd
+	const char *classname;		// set in QuakeEd
 	int spawnflags;				// set in QuakeEd
 	qboolean neverFree;			// if true, FreeEntity will only unlink, bodyque uses this
 	int flags;					// FL_* variables
-	char *model;
-	char *model2;
+	const char *model;
+	const char *model2;
 	int freetime;				// level.time when the object was freed
 	int eventTime;				// events will be cleared EVENT_VALID_MSEC after set
 	qboolean freeAfterEvent;
@@ -93,11 +93,11 @@ struct gentity_s {
 	vec3_t pos1, pos2;
 	char *message;
 	int timestamp;				// body queue sinking, etc.
-	char *target;
-	char *targetname;
-	char *team;
-	char *targetShaderName;
-	char *targetShaderNewName;
+	const char *target;
+	const char *targetname;
+	const char *team;
+	const char *targetShaderName;
+	const char *targetShaderNewName;
 	gentity_t *target_ent;
 	float speed;
 	vec3_t movedir;
@@ -170,7 +170,7 @@ typedef struct {
 } playerTeamState_t;
 // client data that stays across multiple levels or tournament restarts
 // this is achieved by writing all the data to cvar strings at game shutdown time and reading them back at connection time.
-// anything added here MUST be dealt with in G_InitSessionData()/G_ReadSessionData()/G_WriteSessionData()
+// anything added here MUST be dealt with in G_InitSessionData()/G_ReadClientSessionData()/G_WriteSessionData()
 typedef struct {
 	team_t sessionTeam;
 	int spectatorNum;		// for determining next-in-line to play
@@ -189,7 +189,6 @@ typedef struct {
 	qboolean localClient;			// true if "ip" info key is "localhost"
 	qboolean initialSpawn;			// the first spawn should be at a cool location
 	qboolean predictItemPickup;		// based on cg_predictItems userinfo
-	qboolean pmoveFixed;
 	char netname[MAX_NETNAME];
 	int enterTime;					// level.time the client entered the game
 	playerTeamState_t teamState;	// status in teamplay games
@@ -323,19 +322,18 @@ gentity_t *Drop_Item(gentity_t *ent, gitem_t *item, float angle);
 gentity_t *Launch_Item(gitem_t *item, vec3_t origin, vec3_t velocity);
 void G_SpawnItem(gentity_t *ent, gitem_t *item);
 void FinishSpawningItem(gentity_t *ent);
-void Add_Ammo(gentity_t *ent, int weapon, int count);
 void Touch_Item(gentity_t *ent, gentity_t *other, trace_t *trace);
 void ClearRegisteredItems(void);
 void RegisterItem(gitem_t *item);
 void SaveRegisteredItems(void);
 // g_utils.c
-int G_FindConfigstringIndex(char *name, int start, int max, qboolean create);
-int G_ModelIndex(char *name);
-int G_SoundIndex(char *name);
-void G_TeamCommand(team_t team, char *cmd);
+int G_FindConfigstringIndex(const char *name, int start, int max, qboolean create);
+int G_ModelIndex(const char *name);
+int G_SoundIndex(const char *name);
+void G_TeamCommand(team_t team, const char *cmd);
 void G_KillBox(gentity_t *ent);
 gentity_t *G_Find(gentity_t *from, int fieldofs, const char *match);
-gentity_t *G_PickTarget(char *targetname);
+gentity_t *G_PickTarget(const char *targetname);
 void G_UseTargets(gentity_t *ent, gentity_t *activator);
 void G_SetMovedir(vec3_t angles, vec3_t movedir);
 void G_InitGentity(gentity_t *e);
@@ -349,7 +347,7 @@ void G_TouchTriggers(gentity_t *ent);
 float *TempVector(float x, float y, float z);
 char *VectorToString(const vec3_t v);
 float VectorToYaw(const vec3_t vec);
-void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm);
+void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm);
 void G_AddEvent(gentity_t *ent, int event, int eventParm);
 void G_SetOrigin(gentity_t *ent, vec3_t origin);
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
@@ -423,11 +421,10 @@ void CheckTeamLeader(int team);
 void G_RunThink(gentity_t *ent);
 void AddTournamentQueue(gclient_t *client);
 void QDECL G_LogPrintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-void SendScoreboardMessageToAllClients(void);
 void QDECL G_Printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void QDECL G_Error(const char *fmt, ...) __attribute__((noreturn, format(printf, 1, 2)));
 // g_client.c
-char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+const char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void ClientUserinfoChanged(int clientNum);
 void ClientDisconnect(int clientNum);
 void ClientBegin(int clientNum);
@@ -446,7 +443,7 @@ void *G_Alloc(int size);
 void G_InitMemory(void);
 void Svcmd_GameMem_f(void);
 // g_session.c
-void G_ReadSessionData(gclient_t *client);
+void G_ReadClientSessionData(gclient_t *client);
 void G_InitSessionData(gclient_t *client, char *userinfo);
 void G_InitWorldSession(void);
 void G_WriteSessionData(void);
@@ -563,8 +560,8 @@ int trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void trap_DebugPolygonDelete(int id);
 int trap_BotLibSetup(void);
 int trap_BotLibShutdown(void);
-int trap_BotLibVarSet(char *var_name, char *value);
-int trap_BotLibVarGet(char *var_name, char *value, int size);
+int trap_BotLibVarSet(const char *var_name, const char *value);
+int trap_BotLibVarGet(const char *var_name, char *value, int size);
 int trap_BotLibStartFrame(float time);
 int trap_BotLibLoadMap(const char *mapname);
 int trap_BotLibUpdateEntity(int ent, void /*struct bot_updateentity_s*/ *bue);

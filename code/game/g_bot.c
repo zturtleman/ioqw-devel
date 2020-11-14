@@ -119,7 +119,7 @@ int G_ParseInfos(char *buf, int max, char *infos[]) {
 G_LoadArenasFromFile
 =======================================================================================================================================
 */
-static void G_LoadArenasFromFile(char *filename) {
+static void G_LoadArenasFromFile(const char *filename) {
 	int len;
 	fileHandle_t f;
 	char buf[MAX_ARENAS_TEXT];
@@ -170,7 +170,7 @@ static void G_LoadArenas(void) {
 		G_LoadArenasFromFile("scripts/arenas.txt");
 	}
 	// get all arenas from .arena files
-	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, 1024);
+	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, sizeof(dirlist));
 	dirptr = dirlist;
 
 	for (i = 0; i < numdirs; i++, dirptr += dirlen + 1) {
@@ -237,7 +237,7 @@ G_CountBotPlayersByName
 Check connected and connecting (delay join) bots. Returns number of bots with name on specified team or whole server if team is -1.
 =======================================================================================================================================
 */
-int G_CountBotPlayersByName(const char *name, int team) {
+static int G_CountBotPlayersByName(const char *name, int team) {
 	int i, num;
 	gclient_t *cl;
 
@@ -387,7 +387,7 @@ int G_RemoveRandomBot(int team) {
 G_CountHumanPlayers
 =======================================================================================================================================
 */
-int G_CountHumanPlayers(int team) {
+static int G_CountHumanPlayers(int team) {
 	int i, num;
 	gclient_t *cl;
 
@@ -421,7 +421,7 @@ G_CountBotPlayers
 Check connected and connecting (delay join) bots.
 =======================================================================================================================================
 */
-int G_CountBotPlayers(int team) {
+static int G_CountBotPlayers(int team) {
 	int i, num;
 	gclient_t *cl;
 
@@ -648,15 +648,15 @@ static int G_DefaultColorForName(const char *name) {
 G_AddBot
 =======================================================================================================================================
 */
-static void G_AddBot(const char *name, float skill, const char *team, int delay, char *altname) {
+static void G_AddBot(const char *name, float skill, const char *team, int delay, const char *altname) {
 	int clientNum;
 	int teamNum;
 	char *botinfo;
 	char *key;
 	char *s;
-	char *botname;
-	char *model;
-	char *headmodel;
+	const char *botname;
+	const char *model;
+	const char *headmodel;
 	char userinfo[MAX_INFO_STRING];
 	qboolean modelSet;
 
@@ -910,7 +910,7 @@ void Svcmd_BotList_f(void) {
 G_SpawnBots
 =======================================================================================================================================
 */
-static void G_SpawnBots(char *botList, int baseDelay) {
+static void G_SpawnBots(const char *botList, int baseDelay) {
 	char *bot;
 	char *p;
 	float skill;
@@ -967,7 +967,7 @@ static void G_SpawnBots(char *botList, int baseDelay) {
 G_LoadBotsFromFile
 =======================================================================================================================================
 */
-static void G_LoadBotsFromFile(char *filename) {
+static void G_LoadBotsFromFile(const char *filename) {
 	int len;
 	fileHandle_t f;
 	char buf[MAX_BOTS_TEXT];
@@ -1022,7 +1022,7 @@ static void G_LoadBots(void) {
 		G_LoadBotsFromFile("scripts/bots.txt");
 	}
 	// get all bots from .bot files
-	numdirs = trap_FS_GetFileList("scripts", ".bot", dirlist, 1024);
+	numdirs = trap_FS_GetFileList("scripts", ".bot", dirlist, sizeof(dirlist));
 	dirptr = dirlist;
 
 	for (i = 0; i < numdirs; i++, dirptr += dirlen + 1) {

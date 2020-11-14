@@ -133,7 +133,7 @@ void CG_BloodTrail(localEntity_t *le) {
 	for (; t <= t2; t += step) {
 		BG_EvaluateTrajectory(&le->pos, t, newOrigin);
 
-		blood = CG_SmokePuff(newOrigin, vec3_origin, 20, 1, 1, 1, 1, 2000, t, 0, 0, cgs.media.bloodTrailShader);
+		blood = CG_SmokePuff(newOrigin, vec3_origin, 20, 1.0f, 1.0f, 1.0f, 1.0f, 2000, t, 0, 0, cgs.media.bloodTrailShader);
 		// use the optimized version
 		blood->leType = LE_FALL_SCALE_FADE;
 		// drop a total of 40 units over its lifetime
@@ -151,10 +151,10 @@ void CG_FragmentBounceMark(localEntity_t *le, trace_t *trace) {
 
 	if (le->leMarkType == LEMT_BLOOD) {
 		markRadius = 16 + (rand()&31);
-		CG_ImpactMark(cgs.media.bloodMarkShader, trace->endpos, trace->plane.normal, random() * 360, 1, 1, 1, 1, qtrue, markRadius, qfalse);
+		CG_ImpactMark(cgs.media.bloodMarkShader, trace->endpos, trace->plane.normal, random() * 360, 1.0f, 1.0f, 1.0f, 1.0f, qtrue, markRadius, qfalse);
 	} else if (le->leMarkType == LEMT_BURN) {
 		markRadius = 8 + (rand()&15);
-		CG_ImpactMark(cgs.media.burnMarkShader, trace->endpos, trace->plane.normal, random() * 360, 1, 1, 1, 1, qtrue, markRadius, qfalse);
+		CG_ImpactMark(cgs.media.burnMarkShader, trace->endpos, trace->plane.normal, random() * 360, 1.0f, 1.0f, 1.0f, 1.0f, qtrue, markRadius, qfalse);
 	}
 	// don't allow a fragment to make multiple marks, or they pile up while settling
 	le->leMarkType = LEMT_NONE;
@@ -233,7 +233,7 @@ void CG_ReflectVelocity(localEntity_t *le, trace_t *trace) {
 CG_AddFragment
 =======================================================================================================================================
 */
-void CG_AddFragment(localEntity_t *le) {
+static void CG_AddFragment(localEntity_t *le) {
 	vec3_t newOrigin, origin, angles, dir;
 	trace_t trace, tr; // Tobias NOTE: simplify?
 	float oldZ, dist;
@@ -358,7 +358,7 @@ void CG_AddFragment(localEntity_t *le) {
 CG_AddFadeRGB
 =======================================================================================================================================
 */
-void CG_AddFadeRGB(localEntity_t *le) {
+static void CG_AddFadeRGB(localEntity_t *le) {
 	refEntity_t *re;
 	float c;
 
@@ -712,7 +712,7 @@ void CG_AddKamikaze(localEntity_t *le) {
 
 		trap_R_AddRefEntityToScene(re);
 		// add the dlight
-		trap_R_AddLightToScene(re->origin, c * 1000.0, 1.0, 1.0, 1.0, c, 0);
+		trap_R_AddLightToScene(re->origin, c * 1000.0f, 1.0f, 1.0f, 1.0f, c, 0);
 	}
 
 	if (t > KAMI_SHOCKWAVE2_STARTTIME && t < KAMI_SHOCKWAVE2_ENDTIME) {
@@ -767,7 +767,7 @@ void CG_AddKamikaze(localEntity_t *le) {
 CG_AddRefEntity
 =======================================================================================================================================
 */
-void CG_AddRefEntity(localEntity_t *le) {
+static void CG_AddRefEntity(localEntity_t *le) {
 
 	if (le->endTime < cg.time) {
 		CG_FreeLocalEntity(le);

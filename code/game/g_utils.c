@@ -97,7 +97,7 @@ const char *BuildShaderStateConfig(void) {
 G_FindConfigstringIndex
 =======================================================================================================================================
 */
-int G_FindConfigstringIndex(char *name, int start, int max, qboolean create) {
+int G_FindConfigstringIndex(const char *name, int start, int max, qboolean create) {
 	int i;
 	char s[MAX_STRING_CHARS];
 
@@ -135,7 +135,7 @@ int G_FindConfigstringIndex(char *name, int start, int max, qboolean create) {
 G_ModelIndex
 =======================================================================================================================================
 */
-int G_ModelIndex(char *name) {
+int G_ModelIndex(const char *name) {
 	return G_FindConfigstringIndex(name, CS_MODELS, MAX_MODELS, qtrue);
 }
 
@@ -144,7 +144,7 @@ int G_ModelIndex(char *name) {
 G_SoundIndex
 =======================================================================================================================================
 */
-int G_SoundIndex(char *name) {
+int G_SoundIndex(const char *name) {
 	return G_FindConfigstringIndex(name, CS_SOUNDS, MAX_SOUNDS, qtrue);
 }
 
@@ -155,7 +155,7 @@ G_TeamCommand
 Broadcasts a command to only a specific team.
 =======================================================================================================================================
 */
-void G_TeamCommand(team_t team, char *cmd) {
+void G_TeamCommand(team_t team, const char *cmd) {
 	int i;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -212,7 +212,7 @@ G_PickTarget
 Selects a random entity from among the targets.
 =======================================================================================================================================
 */
-gentity_t *G_PickTarget(char *targetname) {
+gentity_t *G_PickTarget(const char *targetname) {
 	gentity_t *ent = NULL;
 	int num_choices = 0;
 	gentity_t *choice[MAXCHOICES];
@@ -254,13 +254,14 @@ Search for (string) targetname in all entities that match (string) self.target a
 */
 void G_UseTargets(gentity_t *ent, gentity_t *activator) {
 	gentity_t *t;
+	float f;
 
 	if (!ent) {
 		return;
 	}
 
 	if (ent->targetShaderName && ent->targetShaderNewName) {
-		float f = level.time * 0.001;
+		f = level.time * 0.001;
 
 		AddRemap(ent->targetShaderName, ent->targetShaderNewName, f);
 		trap_SetConfigstring(CS_SHADERSTATE, BuildShaderStateConfig());
@@ -551,13 +552,13 @@ Use for non-pmove events that would also be predicted on the client side: jumppa
 Adds an event + parm and twiddles the event counter.
 =======================================================================================================================================
 */
-void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm) {
+void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm) {
 
 	if (!ent->client) {
 		return;
 	}
 
-	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps);
+	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps, -1);
 }
 
 /*

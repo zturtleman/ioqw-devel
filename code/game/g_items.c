@@ -46,7 +46,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 Pickup_Powerup
 =======================================================================================================================================
 */
-int Pickup_Powerup(gentity_t *ent, gentity_t *other) {
+static int Pickup_Powerup(gentity_t *ent, gentity_t *other) {
 	int quantity;
 	int i;
 	gclient_t *client;
@@ -119,7 +119,7 @@ int Pickup_Powerup(gentity_t *ent, gentity_t *other) {
 Pickup_PersistantPowerup
 =======================================================================================================================================
 */
-int Pickup_PersistantPowerup(gentity_t *ent, gentity_t *other) {
+static int Pickup_PersistantPowerup(gentity_t *ent, gentity_t *other) {
 
 	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ent->item - bg_itemlist;
 	other->client->persistantPowerup = ent;
@@ -143,7 +143,7 @@ int Pickup_PersistantPowerup(gentity_t *ent, gentity_t *other) {
 Pickup_Holdable
 =======================================================================================================================================
 */
-int Pickup_Holdable(gentity_t *ent, gentity_t *other) {
+static int Pickup_Holdable(gentity_t *ent, gentity_t *other) {
 
 	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ent->item - bg_itemlist;
 
@@ -159,7 +159,7 @@ int Pickup_Holdable(gentity_t *ent, gentity_t *other) {
 Add_Ammo
 =======================================================================================================================================
 */
-void Add_Ammo(gentity_t *ent, int weapon, int count) {
+static void Add_Ammo(gentity_t *ent, int weapon, int count) {
 
 	ent->client->ps.ammo[weapon] += count;
 
@@ -173,7 +173,7 @@ void Add_Ammo(gentity_t *ent, int weapon, int count) {
 Pickup_Ammo
 =======================================================================================================================================
 */
-int Pickup_Ammo(gentity_t *ent, gentity_t *other) {
+static int Pickup_Ammo(gentity_t *ent, gentity_t *other) {
 	int quantity;
 
 	if (ent->count) {
@@ -192,7 +192,7 @@ int Pickup_Ammo(gentity_t *ent, gentity_t *other) {
 Pickup_Weapon
 =======================================================================================================================================
 */
-int Pickup_Weapon(gentity_t *ent, gentity_t *other) {
+static int Pickup_Weapon(gentity_t *ent, gentity_t *other) {
 	int quantity;
 
 	if (ent->count < 0) {
@@ -236,7 +236,7 @@ int Pickup_Weapon(gentity_t *ent, gentity_t *other) {
 Pickup_Health
 =======================================================================================================================================
 */
-int Pickup_Health(gentity_t *ent, gentity_t *other) {
+static int Pickup_Health(gentity_t *ent, gentity_t *other) {
 	int quantity;
 
 	if (ent->count) {
@@ -261,7 +261,7 @@ int Pickup_Health(gentity_t *ent, gentity_t *other) {
 Pickup_Armor
 =======================================================================================================================================
 */
-int Pickup_Armor(gentity_t *ent, gentity_t *other) {
+static int Pickup_Armor(gentity_t *ent, gentity_t *other) {
 
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
 
@@ -391,7 +391,13 @@ void Touch_Item(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			break;
 		case IT_POWERUP:
 			respawn = Pickup_Powerup(ent, other);
-			predict = qfalse;
+			// allow prediction for some powerups
+			if (ent->item->giTag == PW_QUAD) {
+				predict = qtrue;
+			} else {
+				predict = qfalse;
+			}
+
 			break;
 		case IT_PERSISTANT_POWERUP:
 			respawn = Pickup_PersistantPowerup(ent, other);
@@ -578,6 +584,12 @@ void FinishSpawningItem(gentity_t *ent) {
 	ent->touch = Touch_Item;
 	// using an item causes it to respawn
 	ent->use = Use_Item;
+	// for pickup prediction
+	if (ent->count) {
+		ent->s.time2 = ent->count;
+	} else if (ent->item) {
+		ent->s.time2 = ent->item->quantity;
+	}
 
 	if (ent->spawnflags & 1) {
 		// suspended

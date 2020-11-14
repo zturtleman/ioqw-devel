@@ -236,7 +236,7 @@ float BotGetTime(bot_match_t *match) {
 FindClientByName
 =======================================================================================================================================
 */
-int FindClientByName(char *name) {
+static int FindClientByName(char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
 
@@ -264,7 +264,7 @@ int FindClientByName(char *name) {
 FindEnemyByName
 =======================================================================================================================================
 */
-int FindEnemyByName(bot_state_t *bs, char *name) {
+static int FindEnemyByName(bot_state_t *bs, char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
 
@@ -424,7 +424,7 @@ int BotAddressedToBot(bot_state_t *bs, bot_match_t *match) {
 	if (match->subtype & ST_ADDRESSED) {
 		trap_BotMatchVariable(match, ADDRESSEE, addressedto, sizeof(addressedto));
 		// the name of this bot
-		ClientName(bs->client, botname, 128);
+		ClientName(bs->client, botname, sizeof(botname));
 
 		while (trap_BotFindMatch(addressedto, &addresseematch, MTCONTEXT_ADDRESSEE)) {
 			if (addresseematch.type == MSG_EVERYONE) {

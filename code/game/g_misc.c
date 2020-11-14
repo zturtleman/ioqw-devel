@@ -498,7 +498,7 @@ void SP_corona(gentity_t *ent) {
 	ent->s.eType = ET_CORONA;
 	// if it's black or has no color assigned
 	if (ent->dl_color[0] <= 0 && ent->dl_color[1] <= 0 && ent->dl_color[2] <= 0) {
-		ent->dl_color[0] = ent->dl_color[1] = ent->dl_color[2] = 1; // set white
+		ent->dl_color[0] = ent->dl_color[1] = ent->dl_color[2] = 1.0f; // set white
 	}
 
 	ent->dl_color[0] = ent->dl_color[0] * 255;
@@ -671,7 +671,7 @@ void SP_dlight(gentity_t *ent) {
 	ent->nextthink = dlightstarttime;
 	// if it's black or has no color assigned, make it white
 	if (ent->dl_color[0] <= 0 && ent->dl_color[1] <= 0 && ent->dl_color[2] <= 0) {
-		ent->dl_color[0] = ent->dl_color[1] = ent->dl_color[2] = 1;
+		ent->dl_color[0] = ent->dl_color[1] = ent->dl_color[2] = 1.0f;
 	}
 
 	ent->dl_color[0] = ent->dl_color[0] * 255; // range 0-255 now so the client doesn't have to on every update

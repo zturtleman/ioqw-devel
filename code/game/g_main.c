@@ -28,8 +28,8 @@ level_locals_t level;
 
 typedef struct {
 	vmCvar_t *vmCvar;
-	char *cvarName;
-	char *defaultString;
+	const char *cvarName;
+	const char *defaultString;
 	int cvarFlags;
 	int modificationCount;	// for tracking changes
 	qboolean trackChange;	// track this variable, and announce if changed
@@ -151,12 +151,10 @@ static cvarTable_t gameCvarTable[] = {
 	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse}
 };
 
-static int gameCvarTableSize = ARRAY_LEN(gameCvarTable);
-
-void G_InitGame(int levelTime, int randomSeed, int restart);
-void G_RunFrame(int levelTime);
-void G_ShutdownGame(int restart);
-void CheckExitRules(void);
+static void G_InitGame(int levelTime, int randomSeed, int restart);
+static void G_RunFrame(int levelTime);
+static void G_ShutdownGame(int restart);
+static void CheckExitRules(void);
 
 /*
 =======================================================================================================================================
@@ -328,7 +326,7 @@ void G_RegisterCvars(void) {
 	cvarTable_t *cv;
 	qboolean remapped = qfalse;
 
-	for (i = 0, cv = gameCvarTable; i < gameCvarTableSize; i++, cv++) {
+	for (i = 0, cv = gameCvarTable; i < ARRAY_LEN(gameCvarTable); i++, cv++) {
 		trap_Cvar_Register(cv->vmCvar, cv->cvarName, cv->defaultString, cv->cvarFlags);
 
 		if (cv->vmCvar) {
@@ -358,12 +356,12 @@ void G_RegisterCvars(void) {
 G_UpdateCvars
 =======================================================================================================================================
 */
-void G_UpdateCvars(void) {
+static void G_UpdateCvars(void) {
 	int i;
 	cvarTable_t *cv;
 	qboolean remapped = qfalse;
 
-	for (i = 0, cv = gameCvarTable; i < gameCvarTableSize; i++, cv++) {
+	for (i = 0, cv = gameCvarTable; i < ARRAY_LEN(gameCvarTable); i++, cv++) {
 		if (cv->vmCvar) {
 			trap_Cvar_Update(cv->vmCvar);
 
@@ -391,7 +389,7 @@ void G_UpdateCvars(void) {
 G_InitGame
 =======================================================================================================================================
 */
-void G_InitGame(int levelTime, int randomSeed, int restart) {
+static void G_InitGame(int levelTime, int randomSeed, int restart) {
 	int i;
 
 	G_Printf("------- Game Initialization -------\n");
@@ -488,7 +486,7 @@ void G_InitGame(int levelTime, int randomSeed, int restart) {
 G_ShutdownGame
 =======================================================================================================================================
 */
-void G_ShutdownGame(int restart) {
+static void G_ShutdownGame(int restart) {
 
 	G_Printf("==== ShutdownGame ====\n");
 
@@ -691,10 +689,27 @@ void AdjustTournamentScores(void) {
 
 /*
 =======================================================================================================================================
+SendScoreboardMessageToAllClients
+
+Do this at BeginIntermission time and whenever ranks are recalculated due to enters/exits/forced team changes.
+=======================================================================================================================================
+*/
+static void SendScoreboardMessageToAllClients(void) {
+	int i;
+
+	for (i = 0; i < level.maxclients; i++) {
+		if (level.clients[i].pers.connected == CON_CONNECTED) {
+			DeathmatchScoreboardMessage(g_entities + i);
+		}
+	}
+}
+
+/*
+=======================================================================================================================================
 SortRanks
 =======================================================================================================================================
 */
-int QDECL SortRanks(const void *a, const void *b) {
+static int QDECL SortRanks(const void *a, const void *b) {
 	gclient_t *ca, *cb;
 
 	ca = &level.clients[*(int *)a];
@@ -874,23 +889,6 @@ void CalculateRanks(void) {
 
 =======================================================================================================================================
 */
-
-/*
-=======================================================================================================================================
-SendScoreboardMessageToAllClients
-
-Do this at BeginIntermission time and whenever ranks are recalculated due to enters/exits/forced team changes.
-=======================================================================================================================================
-*/
-void SendScoreboardMessageToAllClients(void) {
-	int i;
-
-	for (i = 0; i < level.maxclients; i++) {
-		if (level.clients[i].pers.connected == CON_CONNECTED) {
-			DeathmatchScoreboardMessage(g_entities + i);
-		}
-	}
-}
 
 /*
 =======================================================================================================================================
@@ -1257,7 +1255,7 @@ void CheckIntermissionExit(void) {
 ScoreIsTied
 =======================================================================================================================================
 */
-qboolean ScoreIsTied(void) {
+static qboolean ScoreIsTied(void) {
 	int a, b;
 
 	if (level.numPlayingClients < 2) {
@@ -1282,7 +1280,7 @@ There will be a delay between the time the exit is qualified for and the time ev
 see the last frag.
 =======================================================================================================================================
 */
-void CheckExitRules(void) {
+static void CheckExitRules(void) {
 	int i;
 	gclient_t *cl;
 	qboolean won = qtrue;
@@ -1406,7 +1404,7 @@ CheckTournament
 Once a frame, check for changes in tournament player state.
 =======================================================================================================================================
 */
-void CheckTournament(void) {
+static void CheckTournament(void) {
 
 	// check because we run 3 game frames before calling ClientConnect and/or ClientBegin for clients on a map_restart
 	if (level.numPlayingClients == 0) {
@@ -1521,7 +1519,7 @@ void CheckTournament(void) {
 CheckVote
 =======================================================================================================================================
 */
-void CheckVote(void) {
+static void CheckVote(void) {
 
 	if (level.voteExecuteTime && level.voteExecuteTime < level.time) {
 		level.voteExecuteTime = 0;
@@ -1559,7 +1557,7 @@ void CheckVote(void) {
 PrintTeam
 =======================================================================================================================================
 */
-void PrintTeam(int team, char *message) {
+static void PrintTeam(int team, const char *message) {
 	int i;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -1654,7 +1652,7 @@ void CheckTeamLeader(int team) {
 CheckTeamVote
 =======================================================================================================================================
 */
-void CheckTeamVote(int team) {
+static void CheckTeamVote(int team) {
 	int cs_offset;
 
 	if (team == TEAM_RED) {
@@ -1751,7 +1749,7 @@ G_RunFrame
 Advances the non-player objects in the world.
 =======================================================================================================================================
 */
-void G_RunFrame(int levelTime) {
+static void G_RunFrame(int levelTime) {
 	int i;
 	gentity_t *ent;
 

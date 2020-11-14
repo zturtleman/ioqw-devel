@@ -177,8 +177,8 @@ bot_waypoint_t *BotFindWayPoint(bot_waypoint_t *waypoints, char *name);
 // strstr but case insensitive
 char *stristr(char *str, char *charset);
 // returns the number of the client with the given name
-int ClientFromName(char *name);
-int ClientOnSameTeamFromName(bot_state_t *bs, char *name);
+int ClientFromName(const char *name);
+int ClientOnSameTeamFromName(bot_state_t *bs, const char *name);
 int BotPointAreaNum(int entnum, vec3_t origin);
 void BotMapScripts(bot_state_t *bs);
 // CTF flags

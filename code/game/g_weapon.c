@@ -148,7 +148,7 @@ qboolean CheckGauntletAttack(gentity_t *ent) {
 Bullet_Fire
 =======================================================================================================================================
 */
-void Bullet_Fire(gentity_t *ent, float spread, int damage, int mod) {
+static void Bullet_Fire(gentity_t *ent, float spread, int damage, int mod) {
 	trace_t tr;
 	vec3_t end;
 	float r;
@@ -216,7 +216,7 @@ void Bullet_Fire(gentity_t *ent, float spread, int damage, int mod) {
 ShotgunPellet
 =======================================================================================================================================
 */
-qboolean ShotgunPellet(vec3_t start, vec3_t end, gentity_t *ent) {
+qboolean ShotgunPellet(const vec3_t start, const vec3_t end, gentity_t *ent) {
 	trace_t tr;
 	int damage, i, passent;
 	gentity_t *traceEnt;
@@ -261,7 +261,7 @@ ShotgunPattern
 This should match CG_ShotgunPattern.
 =======================================================================================================================================
 */
-void ShotgunPattern(vec3_t origin, vec3_t origin2, int seed, gentity_t *ent) {
+void ShotgunPattern(const vec3_t origin, const vec3_t origin2, int seed, gentity_t *ent) {
 	int i;
 	float r, u;
 	vec3_t end;
@@ -293,7 +293,7 @@ void ShotgunPattern(vec3_t origin, vec3_t origin2, int seed, gentity_t *ent) {
 Weapon_Shotgun_Fire
 =======================================================================================================================================
 */
-void Weapon_Shotgun_Fire(gentity_t *ent) {
+static void Weapon_Shotgun_Fire(gentity_t *ent) {
 	gentity_t *tent;
 
 	// send shotgun blast

@@ -100,12 +100,12 @@ typedef enum {
 } fieldtype_t;
 
 typedef struct {
-	char *name;
+	const char *name;
 	size_t ofs;
 	fieldtype_t type;
 } field_t;
 
-field_t fields[] = {
+const field_t fields[] = {
 	{"classname", FOFS(classname), F_STRING},
 	{"origin", FOFS(s.origin), F_VECTOR},
 	{"model", FOFS(model), F_STRING},
@@ -339,7 +339,7 @@ Takes a key/value pair and sets the binary values in a gentity.
 =======================================================================================================================================
 */
 void G_ParseField(const char *key, const char *value, gentity_t *ent) {
-	field_t *f;
+	const field_t *f;
 	byte *b;
 	float v;
 	vec3_t vec;

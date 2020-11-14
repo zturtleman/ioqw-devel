@@ -1831,7 +1831,7 @@ char *ClientName(int client, char *name, int size) {
 ClientFromName
 =======================================================================================================================================
 */
-int ClientFromName(char *name) {
+int ClientFromName(const char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
 
@@ -1852,7 +1852,7 @@ int ClientFromName(char *name) {
 ClientOnSameTeamFromName
 =======================================================================================================================================
 */
-int ClientOnSameTeamFromName(bot_state_t *bs, char *name) {
+int ClientOnSameTeamFromName(bot_state_t *bs, const char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
 

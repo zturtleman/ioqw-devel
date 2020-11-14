@@ -40,7 +40,7 @@ teamgame_t teamgame;
 
 gentity_t *neutralObelisk;
 
-void Team_SetFlagStatus(int team, flagStatus_t status);
+static void Team_SetFlagStatus(int team, flagStatus_t status);
 
 /*
 =======================================================================================================================================
@@ -218,7 +218,7 @@ static char oneFlagStatusRemap[] = {'0', '1', '2', '3', '4'};
 Team_SetFlagStatus
 =======================================================================================================================================
 */
-void Team_SetFlagStatus(int team, flagStatus_t status) {
+static void Team_SetFlagStatus(int team, flagStatus_t status) {
 	qboolean modified = qfalse;
 
 	switch (team) {
@@ -243,6 +243,8 @@ void Team_SetFlagStatus(int team, flagStatus_t status) {
 			}
 
 			break;
+		default:
+			return;
 	}
 
 	if (modified) {
@@ -282,7 +284,7 @@ void Team_CheckDroppedItem(gentity_t *dropped) {
 Team_ForceGesture
 =======================================================================================================================================
 */
-void Team_ForceGesture(int team) {
+static void Team_ForceGesture(int team) {
 	int i;
 	gentity_t *ent;
 
@@ -513,7 +515,7 @@ void Team_CheckHurtCarrier(gentity_t *targ, gentity_t *attacker) {
 Team_ResetFlag
 =======================================================================================================================================
 */
-gentity_t *Team_ResetFlag(int team) {
+static gentity_t *Team_ResetFlag(int team) {
 	char *c;
 	gentity_t *ent, *rent = NULL;
 
@@ -567,7 +569,7 @@ void Team_ResetFlags(void) {
 Team_ReturnFlagSound
 =======================================================================================================================================
 */
-void Team_ReturnFlagSound(gentity_t *ent, int team) {
+static void Team_ReturnFlagSound(gentity_t *ent, int team) {
 	gentity_t *te;
 
 	if (ent == NULL) {
@@ -591,7 +593,7 @@ void Team_ReturnFlagSound(gentity_t *ent, int team) {
 Team_TakeFlagSound
 =======================================================================================================================================
 */
-void Team_TakeFlagSound(gentity_t *ent, int team) {
+static void Team_TakeFlagSound(gentity_t *ent, int team) {
 	gentity_t *te;
 
 	if (ent == NULL) {
@@ -618,6 +620,8 @@ void Team_TakeFlagSound(gentity_t *ent, int team) {
 
 			teamgame.redTakenTime = level.time;
 			break;
+		default:
+			return;
 	}
 
 	te = G_TempEntity(ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND);
@@ -636,7 +640,7 @@ void Team_TakeFlagSound(gentity_t *ent, int team) {
 Team_CaptureFlagSound
 =======================================================================================================================================
 */
-void Team_CaptureFlagSound(gentity_t *ent, int team) {
+static void Team_CaptureFlagSound(gentity_t *ent, int team) {
 	gentity_t *te;
 
 	if (ent == NULL) {
@@ -715,7 +719,7 @@ void Team_DroppedFlagThink(gentity_t *ent) {
 Team_TouchOurFlag
 =======================================================================================================================================
 */
-int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
+static int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 	int i;
 	gentity_t *player;
 	gclient_t *cl = other->client;
@@ -768,7 +772,7 @@ int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 
 		if (player->client->sess.sessionTeam != cl->sess.sessionTeam) {
 			player->client->pers.teamState.lasthurtcarrier = -5;
-		} else/* if (player->client->sess.sessionTeam == cl->sess.sessionTeam)*/ {
+		} else {
 			AddScore(player, ent->r.currentOrigin, CTF_TEAM_BONUS);
 			// award extra points for capture assists
 			if (player->client->pers.teamState.lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time) {
@@ -804,7 +808,7 @@ int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 Team_TouchEnemyFlag
 =======================================================================================================================================
 */
-int Team_TouchEnemyFlag(gentity_t *ent, gentity_t *other, int team) {
+static int Team_TouchEnemyFlag(gentity_t *ent, gentity_t *other, int team) {
 	gclient_t *cl = other->client;
 
 	if (g_gametype.integer == GT_1FCTF) {

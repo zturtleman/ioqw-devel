@@ -601,13 +601,13 @@ void CG_DrawTeamBackground(int x, int y, int w, int h, float alpha, int team) {
 	hcolor[3] = alpha;
 
 	if (team == TEAM_RED) {
-		hcolor[0] = 1;
-		hcolor[1] = 0;
-		hcolor[2] = 0;
+		hcolor[0] = 1.0f;
+		hcolor[1] = 0.0f;
+		hcolor[2] = 0.0f;
 	} else if (team == TEAM_BLUE) {
-		hcolor[0] = 0;
-		hcolor[1] = 0;
-		hcolor[2] = 1;
+		hcolor[0] = 0.0f;
+		hcolor[1] = 0.0f;
+		hcolor[2] = 1.0f;
 	} else {
 		return;
 	}
@@ -831,7 +831,7 @@ CG_DrawSnapshot
 =======================================================================================================================================
 */
 static float CG_DrawSnapshot(float y) {
-	char *s;
+	const char *s;
 	int w;
 
 	s = va("Time:%i Snap:%i Cmd:%i", cg.snap->serverTime, cg.latestSnapshotNum, cgs.serverCommandSequence);
@@ -849,7 +849,7 @@ CG_DrawFPS
 =======================================================================================================================================
 */
 static float CG_DrawFPS(float y) {
-	char *s;
+	const char *s;
 	int w;
 	static int previousTimes[FPS_FRAMES];
 	static int index;
@@ -893,7 +893,7 @@ CG_DrawTimer
 =======================================================================================================================================
 */
 static float CG_DrawTimer(float y) {
-	char *s;
+	const char *s;
 	int w;
 	int mins, seconds, tens;
 	int msec;
@@ -1020,7 +1020,7 @@ static float CG_DrawTeamOverlay(float y, qboolean right, qboolean upper) {
 		ci = cgs.clientinfo + sortedTeamPlayers[i];
 
 		if (ci->infoValid && ci->team == team) {
-			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0;
+			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0f;
 			xx = x + TINYCHAR_WIDTH;
 
 			CG_DrawStringExt(xx, y, ci->name, hcolor, qfalse, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, TEAM_OVERLAY_MAXNAME_WIDTH);
@@ -1155,7 +1155,7 @@ static float CG_DrawScores(float y) {
 		color[1] = 0.0f;
 		color[2] = 1.0f;
 		color[3] = 0.33f;
-
+		// second score
 		s = va("%2i", s2);
 		w = CG_DrawStrlen(s) * BIGCHAR_WIDTH + 8;
 		x -= w;
@@ -1213,7 +1213,7 @@ static float CG_DrawScores(float y) {
 		color[1] = 0.0f;
 		color[2] = 0.0f;
 		color[3] = 0.33f;
-
+		// first score
 		s = va("%2i", s1);
 		w = CG_DrawStrlen(s) * BIGCHAR_WIDTH + 8;
 		x -= w;
@@ -1361,7 +1361,7 @@ static float CG_DrawPowerups(float y) {
 	int color;
 	float size;
 	float f;
-	static float colors[2][4] = {{0.2f, 1.0f, 0.2f, 1.0f}, {1.0f, 0.2f, 0.2f, 1.0f}};
+	static const float colors[2][4] = {{0.2f, 1.0f, 0.2f, 1.0f}, {1.0f, 0.2f, 0.2f, 1.0f}};
 
 	ps = &cg.snap->ps;
 
@@ -1433,7 +1433,7 @@ static float CG_DrawPowerups(float y) {
 			}
 
 			if (cg.powerupActive == sorted[i] && cg.time - cg.powerupTime < PULSE_TIME) {
-				f = 1.0 - (((float)cg.time - cg.powerupTime) / PULSE_TIME);
+				f = 1.0 - ((float)(cg.time - cg.powerupTime) / PULSE_TIME);
 				size = ICON_SIZE * (1.0 + (PULSE_SCALE - 1.0) * f);
 			} else {
 				size = ICON_SIZE;
@@ -1707,6 +1707,30 @@ lagometer_t lagometer;
 
 /*
 =======================================================================================================================================
+CG_CalculatePing
+=======================================================================================================================================
+*/
+static void CG_CalculatePing(void) {
+	int count, i, v;
+
+	cg.meanPing = 0;
+
+	for (i = 0, count = 0; i < LAG_SAMPLES; i++) {
+		v = lagometer.snapshotSamples[i];
+
+		if (v >= 0) {
+			cg.meanPing += v;
+			count++;
+		}
+	}
+
+	if (count) {
+		cg.meanPing /= count;
+	}
+}
+
+/*
+=======================================================================================================================================
 CG_AddLagometerFrameInfo
 
 Adds the current interpolate/extrapolate bar for this frame.
@@ -1894,8 +1918,12 @@ static void CG_DrawLagometer(void) {
 
 	trap_R_SetColor(NULL);
 
-	if (cg_nopredict.integer || cg_synchronousClients.integer) {
+	if (cg_nopredict.integer || cgs.synchronousClients) {
 		CG_DrawBigString(x, y, "snc", 1.0);
+	}
+
+	if (!cg.demoPlayback) {
+		CG_DrawBigString(x + 1, y, va("%ims", cg.meanPing), 1.0);
 	}
 
 	CG_DrawDisconnect();
@@ -2159,7 +2187,7 @@ CG_DrawCrosshairNames
 */
 static void CG_DrawCrosshairNames(void) {
 	float *color;
-	char *name;
+	const char *name;
 	float w;
 
 	if (!cg_drawCrosshair.integer) {
@@ -2434,10 +2462,10 @@ static qboolean CG_DrawFollow(void) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
+	color[0] = 1.0f;
+	color[1] = 1.0f;
+	color[2] = 1.0f;
+	color[3] = 1.0f;
 
 	CG_DrawBigString(320 - 9 * 8, 24, "Following", 1.0f);
 
@@ -2878,6 +2906,10 @@ void CG_DrawActive(stereoFrame_t stereoView) {
 	if (!cg.snap) {
 		CG_DrawInformation();
 		return;
+	}
+
+	if (!cg.demoPlayback) {
+		CG_CalculatePing();
 	}
 	// clear around the rendered view if sized down
 	CG_TileClear();

@@ -309,9 +309,9 @@ void CG_AddParticleToScene(cparticle_t *p, vec3_t org, float alpha) {
 		vec3_t rr, ru;
 		vec3_t rotate_ang;
 #ifdef WOLF_PARTICLES
-		VectorSet(color, 1.0, 1.0, 1.0);
+		VectorSet(color, 1.0f, 1.0f, 1.0f);
 #else
-		VectorSet(color, 1.0, 1.0, 0.5);
+		VectorSet(color, 1.0f, 1.0f, 0.5f);
 #endif
 		time = cg.time - p->time;
 		time2 = p->endtime - p->time;
@@ -409,7 +409,7 @@ void CG_AddParticleToScene(cparticle_t *p, vec3_t org, float alpha) {
 
 			VectorSet(color, greyit, greyit, greyit);
 		} else {
-			VectorSet(color, 1.0, 1.0, 1.0);
+			VectorSet(color, 1.0f, 1.0f, 1.0f);
 		}
 
 		time = cg.time - p->time;
@@ -1187,7 +1187,7 @@ void CG_ParticleBulletDebris(vec3_t org, vec3_t vel, int duration) {
 CG_ParticleExplosion
 =======================================================================================================================================
 */
-void CG_ParticleExplosion(char *animStr, vec3_t origin, vec3_t vel, int duration, int sizeStart, int sizeEnd) {
+void CG_ParticleExplosion(const char *animStr, const vec3_t origin, const vec3_t vel, int duration, int sizeStart, int sizeEnd) {
 	cparticle_t *p;
 	int anim;
 

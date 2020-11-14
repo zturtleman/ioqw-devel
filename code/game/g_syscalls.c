@@ -598,7 +598,7 @@ int trap_BotLibShutdown(void) {
 trap_BotLibVarSet
 =======================================================================================================================================
 */
-int trap_BotLibVarSet(char *var_name, char *value) {
+int trap_BotLibVarSet(const char *var_name, const char *value) {
 	return syscall(BOTLIB_LIBVAR_SET, var_name, value);
 }
 
@@ -607,7 +607,7 @@ int trap_BotLibVarSet(char *var_name, char *value) {
 trap_BotLibVarGet
 =======================================================================================================================================
 */
-int trap_BotLibVarGet(char *var_name, char *value, int size) {
+int trap_BotLibVarGet(const char *var_name, char *value, int size) {
 	return syscall(BOTLIB_LIBVAR_GET, var_name, value, size);
 }
 

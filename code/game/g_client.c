@@ -739,15 +739,6 @@ void ClientUserinfoChanged(int clientNum) {
 			client->pers.teamInfo = qfalse;
 		}
 	}
-	/*
-	s = Info_ValueForKey(userinfo, "cg_pmove_fixed");
-
-	if (!*s || atoi(s) == 0) {
-		client->pers.pmoveFixed = qfalse;
-	} else {
-		client->pers.pmoveFixed = qtrue;
-	}
-	*/
 	// team task (0 = none, 1 = offence, 2 = defence)
 	teamTask = atoi(Info_ValueForKey(userinfo, "teamtask"));
 	// team leader (1 = leader, 0 is normal player)
@@ -789,7 +780,7 @@ Otherwise, the client will be sent the current gamestate and will eventually get
 restarts.
 =======================================================================================================================================
 */
-char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot) {
+const char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot) {
 	char *value;
 //	char *areabits;
 	gclient_t *client;
@@ -857,7 +848,7 @@ char *ClientConnect(int clientNum, qboolean firstTime, qboolean isBot) {
 		G_InitSessionData(client, userinfo);
 	}
 
-	G_ReadSessionData(client);
+	G_ReadClientSessionData(client);
 	// get and distribute relevant parameters
 	G_LogPrintf("ClientConnect: %i\n", clientNum);
 	ClientUserinfoChanged(clientNum);

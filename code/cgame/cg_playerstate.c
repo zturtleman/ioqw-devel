@@ -206,16 +206,18 @@ void CG_Respawn(void) {
 	cg.weaponSelectTime = cg.time;
 	// select the weapon the server says we are using
 	cg.weaponSelect = cg.snap->ps.weapon;
+	cg.timeResidual = cg.snap->ps.commandTime + 1000;
 }
 
-extern char *eventnames[];
+extern int eventStack;
+extern int eventParm2[MAX_PREDICTED_EVENTS];
 /*
 =======================================================================================================================================
 CG_CheckPlayerstateEvents
 =======================================================================================================================================
 */
-void CG_CheckPlayerstateEvents(playerState_t *ps, playerState_t *ops) {
-	int i;
+static void CG_CheckPlayerstateEvents(const playerState_t *ps, const playerState_t *ops) {
+	int i, n;
 	int event;
 	centity_t *cent;
 
@@ -223,59 +225,33 @@ void CG_CheckPlayerstateEvents(playerState_t *ps, playerState_t *ops) {
 		cent = &cg_entities[ps->clientNum];
 		cent->currentState.event = ps->externalEvent;
 		cent->currentState.eventParm = ps->externalEventParm;
-		CG_EntityEvent(cent, cent->lerpOrigin);
+		CG_EntityEvent(cent, cent->lerpOrigin, -1);
 	}
 
 	cent = &cg.predictedPlayerEntity; // cg_entities[ps->clientNum];
+	n = eventStack - MAX_PS_EVENTS;
+
+	if (n < 0) {
+		n = 0;
+	}
 	// go through the predictable events buffer
 	for (i = ps->eventSequence - MAX_PS_EVENTS; i < ps->eventSequence; i++) {
 		// if we have a new predictable event or the server told us to play another event instead of a predicted event we already issued
 		// or something the server told us changed our prediction causing a different event
 		if (i >= ops->eventSequence || (i > ops->eventSequence - MAX_PS_EVENTS && ps->events[i & (MAX_PS_EVENTS - 1)] != ops->events[i & (MAX_PS_EVENTS - 1)])) {
 			event = ps->events[i & (MAX_PS_EVENTS - 1)];
+
+			if (event == EV_NONE) { // ignore empty events
+				continue;
+			}
+
 			cent->currentState.event = event;
 			cent->currentState.eventParm = ps->eventParms[i & (MAX_PS_EVENTS - 1)];
 
-			CG_EntityEvent(cent, cent->lerpOrigin);
+			CG_EntityEvent(cent, cent->lerpOrigin, eventParm2[n++]);
 
 			cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)] = event;
 			cg.eventSequence++;
-		}
-	}
-}
-
-/*
-=======================================================================================================================================
-CG_CheckChangedPredictableEvents
-=======================================================================================================================================
-*/
-void CG_CheckChangedPredictableEvents(playerState_t *ps) {
-	int i;
-	int event;
-	centity_t *cent;
-
-	cent = &cg.predictedPlayerEntity;
-
-	for (i = ps->eventSequence - MAX_PS_EVENTS; i < ps->eventSequence; i++) {
-		if (i >= cg.eventSequence) {
-			continue;
-		}
-		// if this event is not further back in than the maximum predictable events we remember
-		if (i > cg.eventSequence - MAX_PREDICTED_EVENTS) {
-			// if the new playerstate event is different from a previously predicted one
-			if (ps->events[i & (MAX_PS_EVENTS - 1)] != cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)]) {
-				event = ps->events[i & (MAX_PS_EVENTS - 1)];
-				cent->currentState.event = event;
-				cent->currentState.eventParm = ps->eventParms[i & (MAX_PS_EVENTS - 1)];
-
-				CG_EntityEvent(cent, cent->lerpOrigin);
-
-				cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)] = event;
-
-				if (cg_showmiss.integer) {
-					CG_Printf("WARNING: changed predicted event\n");
-				}
-			}
 		}
 	}
 }
@@ -466,8 +442,12 @@ void CG_TransitionPlayerState(playerState_t *ps, playerState_t *ops) {
 	}
 	// check for going low on ammo
 	CG_CheckAmmo();
+	// try to play potentially dropped events
+	CG_PlayDroppedEvents(ps, ops);
 	// run events
 	CG_CheckPlayerstateEvents(ps, ops);
+	// reset event stack
+	eventStack = 0;
 	// smooth the ducking viewheight change
 	if (ps->viewheight != ops->viewheight) {
 		cg.duckChange = ps->viewheight - ops->viewheight;

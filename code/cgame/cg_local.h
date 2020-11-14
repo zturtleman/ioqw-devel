@@ -213,6 +213,7 @@ typedef struct {
 	lerpFrame_t legs, torso, flag;
 	int painTime;
 	int painDirection; // flip from 0 to 1
+	qboolean painIgnore;
 	int beamgunFiring;
 	int railFireTime;
 	// machinegun spinning
@@ -237,6 +238,8 @@ typedef struct centity_s {
 	int trailTime;				// so missile trails can handle dropped initial packets
 	int dustTrailTime;
 	int miscTime;
+	int delaySpawn;
+	qboolean delaySpawnPlayed;
 	int snapShotTime;			// last time this entity was found in a snapshot
 	playerEntity_t pe;
 	int errorTime;				// decay the error from this time
@@ -465,6 +468,8 @@ typedef struct {
 **************************************************************************************************************************************/
 
 #define MAX_PREDICTED_EVENTS 16
+#define PICKUP_PREDICTION_DELAY 200
+#define NUM_SAVED_STATES (CMD_BACKUP + 2)
 
 typedef struct {
 	int clientFrame;				// incremented each frame
@@ -617,6 +622,14 @@ typedef struct {
 	refEntity_t testModelEntity;
 	char testModelName[MAX_QPATH];
 	qboolean testGun;
+	// optimized prediction
+	int lastPredictedCommand;
+	int lastServerTime;
+	playerState_t savedPmoveStates[NUM_SAVED_STATES];
+	int stateHead, stateTail;
+	int meanPing;
+	int timeResidual;
+	int allowPickupPrediction;
 } cg_t;
 
 /**************************************************************************************************************************************
@@ -996,6 +1009,9 @@ typedef struct {
 	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 	// media
 	cgMedia_t media;
+	qboolean pmove_fixed;
+	int pmove_msec;
+	qboolean synchronousClients;
 } cgs_t;
 
 extern cgs_t cgs;
@@ -1091,9 +1107,6 @@ extern vmCvar_t cg_noVoiceChats;
 extern vmCvar_t cg_noVoiceText;
 extern vmCvar_t cg_scorePlum;
 extern vmCvar_t cg_smoothClients;
-extern vmCvar_t pmove_fixed;
-extern vmCvar_t pmove_msec;
-//extern vmCvar_t cg_pmove_fixed;
 extern vmCvar_t cg_cameraOrbit;
 extern vmCvar_t cg_timescaleFadeEnd;
 extern vmCvar_t cg_timescaleFadeSpeed;
@@ -1121,6 +1134,8 @@ extern vmCvar_t cg_currentSelectedPlayer;
 extern vmCvar_t cg_currentSelectedPlayerName;
 extern vmCvar_t cg_recordSPDemo;
 extern vmCvar_t cg_recordSPDemoName;
+
+extern const char *eventnames[EV_MAX];
 // cg_main.c
 const char *CG_ConfigString(int index);
 const char *CG_Argv(int arg);
@@ -1254,7 +1269,7 @@ void CG_ParticleBulletDebris(vec3_t org, vec3_t vel, int duration);
 void CG_ParticleSparks(vec3_t org, vec3_t vel, int duration, float x, float y, float speed);
 void CG_ParticleDust(centity_t *cent, vec3_t origin, vec3_t dir);
 void CG_ParticleMisc(qhandle_t pshader, vec3_t origin, int size, int duration, float alpha);
-void CG_ParticleExplosion(char *animStr, vec3_t origin, vec3_t vel, int duration, int sizeStart, int sizeEnd);
+void CG_ParticleExplosion(const char *animStr, const vec3_t origin, const vec3_t vel, int duration, int sizeStart, int sizeEnd);
 extern qboolean initparticles;
 int CG_NewParticleArea(int num);
 // cg_player.c
@@ -1273,18 +1288,19 @@ int CG_PointContents(const vec3_t point, int passEntityNum);
 void CG_Trace(trace_t *result, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int skipNumber, int mask);
 void CG_PredictPlayerState(void);
 void CG_LoadDeferredPlayers(void);
+void CG_PlayDroppedEvents(playerState_t *ps, playerState_t *ops);
 // cg_events.c
 void CG_CheckEvents(centity_t *cent);
 const char *CG_PlaceString(int rank);
-void CG_EntityEvent(centity_t *cent, vec3_t position);
+void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum);
 void CG_PainEvent(centity_t *cent, int health);
 // cg_ents.c
-void CG_SetEntitySoundPosition(centity_t *cent);
+void CG_SetEntitySoundPosition(const centity_t *cent);
 void CG_AddPacketEntities(void);
-void CG_Beam(centity_t *cent);
-void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out);
-qboolean CG_PositionEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, char *tagName);
-qboolean CG_PositionRotatedEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, char *tagName);
+void CG_Beam(const centity_t *cent);
+void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, const vec3_t angles_in, vec3_t angles_out);
+qboolean CG_PositionEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, const char *tagName);
+qboolean CG_PositionRotatedEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, const char *tagName);
 // cg_weapons.c
 void CG_NextWeapon_f(void);
 void CG_PrevWeapon_f(void);
@@ -1296,7 +1312,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir);
 void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum);
 void CG_ShotgunFire(entityState_t *es);
 void CG_Bullet(vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum);
-void CG_RailTrail(clientInfo_t *ci, vec3_t start, vec3_t end);
+void CG_RailTrail(const clientInfo_t *ci, vec3_t start, const vec3_t end);
 void CG_AddViewWeapon(playerState_t *ps);
 void CG_AddPlayerWeapon(refEntity_t *parent, playerState_t *ps, centity_t *cent, int team);
 void CG_DrawWeaponSelect(void);
@@ -1311,19 +1327,19 @@ localEntity_t *CG_AllocLocalEntity(void);
 void CG_AddLocalEntities(void);
 // cg_effects.c
 localEntity_t *CG_SmokePuff(const vec3_t p, const vec3_t vel, float radius, float r, float g, float b, float a, float duration, int startTime, int fadeInTime, int leFlags, qhandle_t hShader);
-void CG_BubbleTrail(vec3_t start, vec3_t end, float spacing);
-int CG_SpawnBubbles(localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles);
-void CG_SpawnEffectDefault(vec3_t org);
-void CG_SpawnEffectSmall(vec3_t org);
-void CG_KamikazeEffect(vec3_t org);
-void CG_ObeliskExplode(vec3_t org, int entityNum);
-void CG_ObeliskPain(vec3_t org);
+void CG_BubbleTrail(const vec3_t start, const vec3_t end, float spacing);
+int CG_SpawnBubbles(localEntity_t **bubbles, const vec3_t origin, float baseSize, int numBubbles);
+void CG_SpawnEffectDefault(const vec3_t origin);
+void CG_SpawnEffectSmall(const vec3_t origin);
+void CG_KamikazeEffect(const vec3_t origin);
+void CG_ObeliskExplode(const vec3_t obeliskOrigin, int entityNum);
+void CG_ObeliskPain(const vec3_t origin);
 void CG_LightningBolt(vec3_t start, vec3_t end);
-void CG_ScorePlum(int client, vec3_t org, int score);
-void CG_GibPlayer(vec3_t playerOrigin);
-void CG_BigExplode(vec3_t playerOrigin);
-void CG_Bleed(vec3_t origin, int entityNum);
-localEntity_t *CG_MakeExplosion(vec3_t origin, vec3_t dir, qhandle_t hModel, qhandle_t shader, int msec, qboolean isSprite);
+void CG_ScorePlum(int client, const vec3_t origin, int score);
+void CG_GibPlayer(const vec3_t playerOrigin);
+void CG_BigExplode(const vec3_t playerOrigin);
+void CG_Bleed(const vec3_t origin, int entityNum);
+localEntity_t *CG_MakeExplosion(const vec3_t origin, const vec3_t dir, qhandle_t hModel, qhandle_t shader, int msec, qboolean isSprite);
 // cg_snapshot.c
 void CG_ProcessSnapshots(void);
 // cg_spawn.c
@@ -1344,6 +1360,7 @@ void CG_InitConsoleCommands(void);
 // cg_servercmds.c
 void CG_ExecuteNewServerCommands(int latestSequence);
 void CG_ParseServerinfo(void);
+void CG_ParseSysteminfo(void);
 void CG_SetConfigValues(void);
 void CG_ShaderStateChanged(void);
 void CG_LoadVoiceChats(void);
@@ -1442,7 +1459,7 @@ qhandle_t trap_R_AddSkinToFrame(int numSurfaces, const qhandle_t *surfaces);
 void trap_R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
 qboolean trap_R_inPVS(const vec3_t p1, const vec3_t p2);
 // normal sounds will have their volume dynamically changed as their entity moves and the listener moves
-void trap_S_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int range);
+void trap_S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int range);
 // a local sound is always played full volume
 void trap_S_StartLocalSound(sfxHandle_t sfx, int channelNum);
 void trap_S_StopLoopingSound(int entnum);

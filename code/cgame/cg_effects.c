@@ -35,7 +35,7 @@ CG_BubbleTrail
 Bullets shot underwater.
 =======================================================================================================================================
 */
-void CG_BubbleTrail(vec3_t start, vec3_t end, float spacing) {
+void CG_BubbleTrail(const vec3_t start, const vec3_t end, float spacing) {
 	vec3_t move;
 	vec3_t vec;
 	float len;
@@ -97,7 +97,7 @@ void CG_BubbleTrail(vec3_t start, vec3_t end, float spacing) {
 CG_SpawnBubbles
 =======================================================================================================================================
 */
-int CG_SpawnBubbles(localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles) {
+int CG_SpawnBubbles(localEntity_t **bubbles, const vec3_t origin, float baseSize, int numBubbles) {
 	int i;
 	float rnd;
 	qboolean spawnedLarge;
@@ -219,7 +219,7 @@ CG_SpawnEffectSmall
 Small teleportation effect.
 =======================================================================================================================================
 */
-void CG_SpawnEffectSmall(vec3_t org) {
+void CG_SpawnEffectSmall(const vec3_t origin) {
 	localEntity_t *le;
 	refEntity_t *re;
 
@@ -229,7 +229,7 @@ void CG_SpawnEffectSmall(vec3_t org) {
 	le->startTime = cg.time;
 	le->endTime = cg.time + 500;
 	le->lifeRate = 1.0 / (le->endTime - le->startTime);
-	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0f;
 
 	re = &le->refEntity;
 	re->reType = RT_MODEL;
@@ -238,7 +238,7 @@ void CG_SpawnEffectSmall(vec3_t org) {
 	re->hModel = cgs.media.teleportEffectModel;
 
 	AxisClear(re->axis);
-	VectorCopy(org, re->origin);
+	VectorCopy(origin, re->origin);
 	VectorScale(re->axis[2], 0.45, re->axis[2]); // Tobias HACK: decrease the size of the models until we have a models looking similar like the one from Alien Arena item respawn...
 
 	re->origin[2] -= 4;
@@ -251,7 +251,7 @@ CG_SpawnEffectDefault
 Player teleporting in or out.
 =======================================================================================================================================
 */
-void CG_SpawnEffectDefault(vec3_t org) {
+void CG_SpawnEffectDefault(const vec3_t origin) {
 	localEntity_t *le;
 	refEntity_t *re;
 
@@ -261,7 +261,7 @@ void CG_SpawnEffectDefault(vec3_t org) {
 	le->startTime = cg.time;
 	le->endTime = cg.time + 500;
 	le->lifeRate = 1.0 / (le->endTime - le->startTime);
-	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0f;
 
 	re = &le->refEntity;
 	re->reType = RT_MODEL;
@@ -270,7 +270,7 @@ void CG_SpawnEffectDefault(vec3_t org) {
 	re->hModel = cgs.media.teleportEffectModel;
 
 	AxisClear(re->axis);
-	VectorCopy(org, re->origin);
+	VectorCopy(origin, re->origin);
 
 	re->origin[2] -= 4;
 }
@@ -305,7 +305,7 @@ void CG_LightningBolt(vec3_t start, vec3_t end) {
 CG_KamikazeEffect
 =======================================================================================================================================
 */
-void CG_KamikazeEffect(vec3_t org) {
+void CG_KamikazeEffect(const vec3_t origin) {
 	localEntity_t *le;
 	refEntity_t *re;
 
@@ -315,7 +315,7 @@ void CG_KamikazeEffect(vec3_t org) {
 	le->startTime = cg.time;
 	le->endTime = cg.time + 3000; //2250
 	le->lifeRate = 1.0 / (le->endTime - le->startTime);
-	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0f;
 
 	VectorClear(le->angles.trBase);
 
@@ -324,7 +324,7 @@ void CG_KamikazeEffect(vec3_t org) {
 	re->shaderTime = cg.time;
 	re->hModel = cgs.media.kamikazeEffectModel;
 
-	VectorCopy(org, re->origin);
+	VectorCopy(origin, re->origin);
 }
 
 /*
@@ -332,20 +332,20 @@ void CG_KamikazeEffect(vec3_t org) {
 CG_ObeliskExplode
 =======================================================================================================================================
 */
-void CG_ObeliskExplode(vec3_t org, int entityNum) {
+void CG_ObeliskExplode(const vec3_t obeliskOrigin, int entityNum) {
 	localEntity_t *le;
 	vec3_t origin;
 
 	// create an explosion
-	VectorCopy(org, origin);
+	VectorCopy(obeliskOrigin, origin);
 
 	origin[2] += 64;
 
 	le = CG_MakeExplosion(origin, vec3_origin, cgs.media.dishFlashModel, cgs.media.rocketExplosionShader, 600, qtrue);
 	le->light = 300;
-	le->lightColor[0] = 1;
-	le->lightColor[1] = 0.75;
-	le->lightColor[2] = 0.0;
+	le->lightColor[0] = 1.0f;
+	le->lightColor[1] = 0.75f;
+	le->lightColor[2] = 0.0f;
 }
 
 /*
@@ -353,7 +353,7 @@ void CG_ObeliskExplode(vec3_t org, int entityNum) {
 CG_ObeliskPain
 =======================================================================================================================================
 */
-void CG_ObeliskPain(vec3_t org) {
+void CG_ObeliskPain(const vec3_t origin) {
 	float r;
 	sfxHandle_t sfx;
 
@@ -368,7 +368,7 @@ void CG_ObeliskPain(vec3_t org) {
 		sfx = cgs.media.obeliskHitSound3;
 	}
 
-	trap_S_StartSound(org, ENTITYNUM_NONE, CHAN_BODY, sfx, 64);
+	trap_S_StartSound(origin, ENTITYNUM_NONE, CHAN_BODY, sfx, 64);
 }
 
 /*
@@ -376,7 +376,7 @@ void CG_ObeliskPain(vec3_t org) {
 CG_ScorePlum
 =======================================================================================================================================
 */
-void CG_ScorePlum(int client, vec3_t org, int score) {
+void CG_ScorePlum(int client, const vec3_t origin, int score) {
 	localEntity_t *le;
 	refEntity_t *re;
 	vec3_t angles;
@@ -393,17 +393,17 @@ void CG_ScorePlum(int client, vec3_t org, int score) {
 	le->startTime = cg.time;
 	le->endTime = cg.time + 4000;
 	le->lifeRate = 1.0 / (le->endTime - le->startTime);
-	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0f;
 	le->radius = score;
 
-	VectorCopy(org, le->pos.trBase);
+	VectorCopy(origin, le->pos.trBase);
 
-	if (org[2] >= lastPos[2] - 20 && org[2] <= lastPos[2] + 20) {
+	if (origin[2] >= lastPos[2] - 20 && origin[2] <= lastPos[2] + 20) {
 		le->pos.trBase[2] -= 20;
 	}
 
-	//CG_Printf("Plum origin %i %i %i -- %i\n", (int)org[0], (int)org[1], (int)org[2], (int)Distance(org, lastPos));
-	VectorCopy(org, lastPos);
+	//CG_Printf("Plum origin %i %i %i -- %i\n", (int)origin[0], (int)origin[1], (int)origin[2], (int)Distance(origin, lastPos));
+	VectorCopy(origin, lastPos);
 
 	re = &le->refEntity;
 	re->reType = RT_SPRITE;
@@ -418,7 +418,7 @@ void CG_ScorePlum(int client, vec3_t org, int score) {
 CG_MakeExplosion
 =======================================================================================================================================
 */
-localEntity_t *CG_MakeExplosion(vec3_t origin, vec3_t dir, qhandle_t hModel, qhandle_t shader, int msec, qboolean isSprite) {
+localEntity_t *CG_MakeExplosion(const vec3_t origin, const vec3_t dir, qhandle_t hModel, qhandle_t shader, int msec, qboolean isSprite) {
 	float ang;
 	localEntity_t *ex;
 	int offset;
@@ -460,7 +460,7 @@ localEntity_t *CG_MakeExplosion(vec3_t origin, vec3_t dir, qhandle_t hModel, qha
 	VectorCopy(newOrigin, ex->refEntity.origin);
 	VectorCopy(newOrigin, ex->refEntity.oldorigin);
 
-	ex->color[0] = ex->color[1] = ex->color[2] = 1.0;
+	ex->color[0] = ex->color[1] = ex->color[2] = 1.0f;
 	return ex;
 }
 
@@ -471,7 +471,7 @@ CG_Bleed
 This is the spurt of blood when a character gets hit.
 =======================================================================================================================================
 */
-void CG_Bleed(vec3_t origin, int entityNum) {
+void CG_Bleed(const vec3_t origin, int entityNum) {
 	localEntity_t *ex;
 
 	if (!cg_blood.integer) {
@@ -500,7 +500,7 @@ void CG_Bleed(vec3_t origin, int entityNum) {
 CG_LaunchGib
 =======================================================================================================================================
 */
-void CG_LaunchGib(vec3_t origin, vec3_t velocity, qhandle_t hModel) {
+static void CG_LaunchGib(const vec3_t origin, const vec3_t velocity, qhandle_t hModel) {
 	localEntity_t *le;
 	refEntity_t *re;
 
@@ -538,7 +538,7 @@ CG_GibPlayer
 Generated a bunch of gibs launching out from the bodies location.
 =======================================================================================================================================
 */
-void CG_GibPlayer(vec3_t playerOrigin) {
+void CG_GibPlayer(const vec3_t playerOrigin) {
 	vec3_t origin, velocity;
 
 	if (CG_PointContents(playerOrigin, -1) & (CONTENTS_WATER|CONTENTS_SLIME)) {
@@ -655,7 +655,7 @@ void CG_LaunchExplode(vec3_t origin, vec3_t velocity, qhandle_t hModel) {
 CG_BigExplode
 =======================================================================================================================================
 */
-void CG_BigExplode(vec3_t playerOrigin) {
+void CG_BigExplode(const vec3_t playerOrigin) {
 	vec3_t origin, velocity;
 
 	if (!cg_blood.integer) {

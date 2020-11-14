@@ -162,6 +162,7 @@ void CG_ParseServerinfo(void) {
 	char *mapname;
 
 	info = CG_ConfigString(CS_SERVERINFO);
+
 	cgs.gametype = atoi(Info_ValueForKey(info, "g_gametype"));
 
 	trap_Cvar_SetValue("g_gametype", cgs.gametype);
@@ -171,9 +172,32 @@ void CG_ParseServerinfo(void) {
 	cgs.capturelimit = atoi(Info_ValueForKey(info, "capturelimit"));
 	cgs.timelimit = atoi(Info_ValueForKey(info, "timelimit"));
 	cgs.maxclients = atoi(Info_ValueForKey(info, "sv_maxclients"));
+
 	mapname = Info_ValueForKey(info, "mapname");
 
 	Com_sprintf(cgs.mapname, sizeof(cgs.mapname), "maps/%s.bsp", mapname);
+}
+
+/*
+=======================================================================================================================================
+CG_ParseSysteminfo
+=======================================================================================================================================
+*/
+void CG_ParseSysteminfo(void) {
+	const char *info;
+
+	info = CG_ConfigString(CS_SYSTEMINFO);
+
+	cgs.pmove_fixed = (atoi(Info_ValueForKey(info, "pmove_fixed"))) ? qtrue : qfalse;
+	cgs.pmove_msec = atoi(Info_ValueForKey(info, "pmove_msec"));
+
+	if (cgs.pmove_msec < 8) {
+		cgs.pmove_msec = 8;
+	} else if (cgs.pmove_msec > 33) {
+		cgs.pmove_msec = 33;
+	}
+
+	cgs.synchronousClients = (atoi(Info_ValueForKey(info, "g_synchronousClients"))) ? qtrue : qfalse;
 }
 
 /*
@@ -281,6 +305,8 @@ static void CG_ConfigStringModified(void) {
 	// do something with it if necessary
 	if (num == CS_MUSIC) {
 		CG_StartMusic();
+	} else if (num == CS_SYSTEMINFO) {
+		CG_ParseSysteminfo();
 	} else if (num == CS_SERVERINFO) {
 		CG_ParseServerinfo();
 	} else if (num == CS_WARMUP) {

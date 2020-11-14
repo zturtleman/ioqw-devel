@@ -35,7 +35,7 @@ CG_PositionEntityOnTag
 Modifies the entities position and axis by the given tag location.
 =======================================================================================================================================
 */
-qboolean CG_PositionEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, char *tagName) {
+qboolean CG_PositionEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, const char *tagName) {
 	int i;
 	orientation_t lerped;
 	qboolean returnValue;
@@ -63,7 +63,7 @@ CG_PositionRotatedEntityOnTag
 Modifies the entities position and axis by the given tag location.
 =======================================================================================================================================
 */
-qboolean CG_PositionRotatedEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, char *tagName) {
+qboolean CG_PositionRotatedEntityOnTag(refEntity_t *entity, const refEntity_t *parent, qhandle_t parentModel, const char *tagName) {
 	int i;
 	orientation_t lerped;
 	vec3_t tempAxis[3];
@@ -99,7 +99,7 @@ CG_SetEntitySoundPosition
 Also called by event processing code.
 =======================================================================================================================================
 */
-void CG_SetEntitySoundPosition(centity_t *cent) {
+void CG_SetEntitySoundPosition(const centity_t *cent) {
 
 	if (cent->currentState.solid == SOLID_BMODEL) {
 		vec3_t origin;
@@ -240,9 +240,9 @@ static void CG_EntityEffects(centity_t *cent) {
 CG_General
 =======================================================================================================================================
 */
-static void CG_General(centity_t *cent) {
+static void CG_General(const centity_t *cent) {
 	refEntity_t ent;
-	entityState_t *s1;
+	const entityState_t *s1;
 
 	s1 = &cent->currentState;
 	// if set to invisible, skip
@@ -302,7 +302,7 @@ CG_Item
 static void CG_Item(centity_t *cent) {
 	refEntity_t ent;
 	entityState_t *es;
-	gitem_t *item;
+	const gitem_t *item;
 	int msec;
 	float frac;
 	float scale;
@@ -314,7 +314,7 @@ static void CG_Item(centity_t *cent) {
 		CG_Error("Bad item index %i on entity", es->modelindex);
 	}
 	// if set to invisible, skip
-	if (!es->modelindex || (es->eFlags & EF_NODRAW)) {
+	if (!es->modelindex || (es->eFlags & EF_NODRAW) || cent->delaySpawn > cg.time) {
 		return;
 	}
 
@@ -574,9 +574,9 @@ static void CG_Missile(centity_t *cent) {
 CG_Mover
 =======================================================================================================================================
 */
-static void CG_Mover(centity_t *cent) {
+static void CG_Mover(const centity_t *cent) {
 	refEntity_t ent;
-	entityState_t *s1;
+	const entityState_t *s1;
 
 	s1 = &cent->currentState;
 	// create the render entity
@@ -613,9 +613,9 @@ CG_Beam
 Also called as an event.
 =======================================================================================================================================
 */
-void CG_Beam(centity_t *cent) {
+void CG_Beam(const centity_t *cent) {
 	refEntity_t ent;
-	entityState_t *s1;
+	const entityState_t *s1;
 
 	s1 = &cent->currentState;
 	// create the render entity
@@ -636,9 +636,9 @@ void CG_Beam(centity_t *cent) {
 CG_Portal
 =======================================================================================================================================
 */
-static void CG_Portal(centity_t *cent) {
+static void CG_Portal(const centity_t *cent) {
 	refEntity_t ent;
-	entityState_t *s1;
+	const entityState_t *s1;
 
 	s1 = &cent->currentState;
 	// create the render entity
@@ -709,7 +709,7 @@ CG_AdjustPositionForMover
 Also called by client movement prediction code.
 =======================================================================================================================================
 */
-void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out) {
+void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, const vec3_t angles_in, vec3_t angles_out) {
 	centity_t *cent;
 	vec3_t oldOrigin, origin, deltaOrigin;
 	vec3_t oldAngles, angles, deltaAngles;

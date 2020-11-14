@@ -212,7 +212,7 @@ BotAI_GetEntityState
 =======================================================================================================================================
 */
 int BotAI_GetEntityState(int entityNum, entityState_t *state) {
-	gentity_t *ent;
+	const gentity_t *ent;
 
 	ent = &g_entities[entityNum];
 

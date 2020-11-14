@@ -1107,7 +1107,7 @@ void BG_EvaluateTrajectoryDelta(const trajectory_t *tr, int atTime, vec3_t resul
 	}
 }
 
-char *eventnames[] = {
+const char *eventnames[EV_MAX] = {
 	"EV_NONE",
 	"EV_FIRE_WEAPON",
 	"EV_BULLET_HIT_FLESH",
@@ -1234,6 +1234,9 @@ char *eventnames[] = {
 	"EV_DEBUG_LINE"
 };
 
+#ifdef CGAME
+void CG_StoreEvent(entity_event_t ev, int eventParm, int entityNum);
+#endif
 /*
 =======================================================================================================================================
 BG_AddPredictableEventToPlayerstate
@@ -1241,7 +1244,7 @@ BG_AddPredictableEventToPlayerstate
 Handles the sequence numbers.
 =======================================================================================================================================
 */
-void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps) {
+void BG_AddPredictableEventToPlayerstate(entity_event_t newEvent, int eventParm, playerState_t *ps, int entityNum) {
 #ifdef _DEBUG
 	{
 		char buf[256];
@@ -1256,6 +1259,9 @@ void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerStat
 #endif
 		}
 	}
+#endif
+#ifdef CGAME
+	CG_StoreEvent(newEvent, eventParm, entityNum);
 #endif
 	ps->events[ps->eventSequence & (MAX_PS_EVENTS - 1)] = newEvent;
 	ps->eventParms[ps->eventSequence & (MAX_PS_EVENTS - 1)] = eventParm;
@@ -1288,7 +1294,7 @@ void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad) {
 			effectNum = 1;
 		}
 
-		BG_AddPredictableEventToPlayerstate(EV_JUMP_PAD, effectNum, ps);
+		BG_AddPredictableEventToPlayerstate(EV_JUMP_PAD, effectNum, ps, -1);
 	}
 	// remember hitting this jumppad this frame
 	ps->jumppad_ent = jumppad->number;

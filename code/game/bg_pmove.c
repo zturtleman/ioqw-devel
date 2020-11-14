@@ -52,7 +52,7 @@ PM_AddEvent
 =======================================================================================================================================
 */
 void PM_AddEvent(int newEvent) {
-	BG_AddPredictableEventToPlayerstate(newEvent, 0, pm->ps);
+	BG_AddPredictableEventToPlayerstate(newEvent, 0, pm->ps, -1);
 }
 
 /*
@@ -67,7 +67,7 @@ void PM_AddTouchEnt(int entityNum) {
 		return;
 	}
 
-	if (pm->numtouch == MAXTOUCH) {
+	if (pm->numtouch >= MAXTOUCH) {
 		return;
 	}
 	// see if it is already added

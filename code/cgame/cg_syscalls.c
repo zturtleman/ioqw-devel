@@ -902,7 +902,7 @@ void trap_S_StopBackgroundTrack(void) {
 trap_S_StartSound
 =======================================================================================================================================
 */
-void trap_S_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int range) {
+void trap_S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int range) {
 	syscall(CG_S_STARTSOUND, origin, entityNum, entchannel, sfx, range);
 }
 

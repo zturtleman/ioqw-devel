@@ -357,7 +357,7 @@ void Field_VariableSizeDraw(field_t *edit, int x, int y, int width, int size, qb
 	if (size == SMALLCHAR_WIDTH) {
 		float color[4];
 
-		color[0] = color[1] = color[2] = color[3] = 1.0;
+		color[0] = color[1] = color[2] = color[3] = 1.0f;
 		SCR_DrawSmallStringExt(x, y, str, color, qfalse, noColorEscape);
 	} else {
 		// draw big string with drop shadow

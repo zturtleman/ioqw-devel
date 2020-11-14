@@ -28,7 +28,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-char *cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
+static const char *cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
 	// default death
 	"*dd1.wav",
 	"*dd2.wav",
@@ -83,7 +83,7 @@ sfxHandle_t CG_CustomSound(int clientNum, const char *soundName) {
 		}
 	}
 
-	CG_Error("Unknown custom sound: %s", soundName);
+	//CG_Error("Unknown custom sound: %s", soundName);
 	return 0;
 }
 
@@ -921,25 +921,25 @@ void CG_ColorFromIndex(int val, vec3_t color) {
 
 			break;
 		case 8: // orange
-			VectorSet(color, 1, 0.5f, 0);
+			VectorSet(color, 1.0f, 0.5f, 0.0f);
 			break;
 		case 9: // lime
-			VectorSet(color, 0.5f, 1, 0);
+			VectorSet(color, 0.5f, 1.0f, 0.0f);
 			break;
 		case 10: // vivid green
-			VectorSet(color, 0, 1, 0.5f);
+			VectorSet(color, 0.0f, 1.0f, 0.5f);
 			break;
 		case 11: // light blue
-			VectorSet(color, 0, 0.5f, 1);
+			VectorSet(color, 0.0f, 0.5f, 1.0f);
 			break;
 		case 12: // purple
-			VectorSet(color, 0.5f, 0, 1);
+			VectorSet(color, 0.5f, 0.0f, 1.0f);
 			break;
 		case 13: // pink
-			VectorSet(color, 1, 0, 0.5f);
+			VectorSet(color, 1.0f, 0.0f, 0.5f);
 			break;
 		default: // fall back to white
-			VectorSet(color, 1, 1, 1);
+			VectorSet(color, 1.0f, 1.0f, 1.0f);
 			break;
 	}
 }
@@ -1061,7 +1061,7 @@ static void CG_LoadClientInfo(int clientNum, clientInfo_t *ci) {
 CG_CopyClientInfoModel
 =======================================================================================================================================
 */
-static void CG_CopyClientInfoModel(clientInfo_t *from, clientInfo_t *to) {
+static void CG_CopyClientInfoModel(const clientInfo_t *from, clientInfo_t *to) {
 
 	VectorCopy(from->headOffset, to->headOffset);
 
@@ -1622,7 +1622,7 @@ static void CG_SwingAngles(float destination, float swingTolerance, float clampT
 		}
 
 		*angle = AngleMod(*angle + move);
-	} else/* if (swing < 0)*/ {
+	} else {
 		move = cg.frametime * scale * -speed;
 
 		if (move <= swing) {
@@ -1807,7 +1807,7 @@ static void CG_BreathPuff(int clientNum, vec3_t origin, vec3_t *axis) {
 
 			VectorSet(up, 0, 0, 8);
 
-			puffs[0] = CG_SmokePuff(origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader);
+			puffs[0] = CG_SmokePuff(origin, up, 16, 1.0f, 1.0f, 1.0f, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader);
 		}
 	}
 }
@@ -1893,7 +1893,7 @@ static void CG_DustTrail(centity_t *cent) {
 	end[2] -= 16;
 
 	VectorSet(vel, 0, 0, -30);
-	CG_SmokePuff(end, vel, 24, .8f, .8f, 0.7f, 0.33f, 500, cg.time, 0, 0, cgs.media.dustPuffShader);
+	CG_SmokePuff(end, vel, 24, 0.8f, 0.8f, 0.7f, 0.33f, 500, cg.time, 0, 0, cgs.media.dustPuffShader);
 }
 
 /*
@@ -1901,7 +1901,7 @@ static void CG_DustTrail(centity_t *cent) {
 CG_TrailItem
 =======================================================================================================================================
 */
-static void CG_TrailItem(centity_t *cent, qhandle_t hModel) {
+static void CG_TrailItem(const centity_t *cent, qhandle_t hModel) {
 	refEntity_t ent;
 	vec3_t angles;
 	vec3_t axis[3];
@@ -2149,7 +2149,7 @@ static void CG_PlayerPowerups(centity_t *cent, refEntity_t *torso) {
 	}
 	// quad gives a dlight
 	if (powerups & (1 << PW_QUAD)) {
-		trap_R_AddLightToScene(cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1, 0);
+		trap_R_AddLightToScene(cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1.0f, 0);
 	}
 
 	ci = &cgs.clientinfo[cent->currentState.clientNum];
@@ -2335,7 +2335,7 @@ static qboolean CG_PlayerShadow(centity_t *cent, float *shadowPlane) {
 	// hack/FPE - bogus planes?
 	//assert(DotProduct(trace.plane.normal, trace.plane.normal) != 0.0f)
 	// add the mark as a temporary, so it goes directly to the renderer without taking a spot in the cg_marks array
-	CG_ImpactMark(cgs.media.shadowMarkShader, trace.endpos, trace.plane.normal, cent->pe.legs.yawAngle, alpha, alpha, alpha, 1, qfalse, 24, qtrue);
+	CG_ImpactMark(cgs.media.shadowMarkShader, trace.endpos, trace.plane.normal, cent->pe.legs.yawAngle, alpha, alpha, alpha, 1.0f, qfalse, 24, qtrue);
 	return qtrue;
 }
 
@@ -2346,7 +2346,7 @@ CG_PlayerSplash
 Draw a mark at the water surface.
 =======================================================================================================================================
 */
-static void CG_PlayerSplash(centity_t *cent) {
+static void CG_PlayerSplash(const centity_t *cent) {
 	vec3_t start, end;
 	trace_t trace;
 	int contents;

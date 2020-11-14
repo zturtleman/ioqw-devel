@@ -31,7 +31,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define GAME_VERSION BASEGAME "-1"
 #define DEFAULT_GRAVITY 800
 #define GIB_HEALTH -40
-#define ARMOR_PROTECTION 0.66
+#define ARMOR_PROTECTION 0.66f
 #define MAX_ITEMS 256
 #define RANK_TIED_FLAG 0x4000
 #define DEFAULT_SHOTGUN_SPREAD 700
@@ -226,6 +226,8 @@ typedef enum {
 #define EF_CONNECTION		0x00001000 // draw a connection trouble sprite
 #define EF_TALK				0x00002000 // draw a talk balloon
 
+#define EF_NOPREDICT (/*EF_AWARDS|EF_PERSISTANT|*/EF_TALK)
+
 /**************************************************************************************************************************************
 
 	player_state->powerup[] indexes
@@ -419,7 +421,8 @@ typedef enum {
 	EV_USE_ITEM15,
 	EV_SCOREPLUM,			// score plum
 	EV_LIGHTNINGBOLT,
-	EV_DEBUG_LINE
+	EV_DEBUG_LINE,
+	EV_MAX
 } entity_event_t;
 
 typedef enum {
@@ -623,15 +626,15 @@ typedef enum {
 #define MAX_ITEM_MODELS 4
 
 typedef struct gitem_s {
-	char *classname;	// spawning name
+	const char *classname;	// spawning name
 	char *pickup_sound;
 	char *world_model[MAX_ITEM_MODELS];
 	char *icon;
 	char *pickup_name;	// for printing on pickup
 	int quantity;		// for ammo how much, or duration of powerup
 	itemType_t giType;	// IT_* flags
-	int giTag;
-	char *sounds;		// string of all sounds this item will use
+	int const giTag;
+	char const *sounds;		// string of all sounds this item will use
 } gitem_t;
 // included in both the game dll and the client
 extern gitem_t bg_itemlist[];
@@ -685,7 +688,7 @@ void FinalizeTracemapClamp(int *x, int *y);
 
 void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result);
 void BG_EvaluateTrajectoryDelta(const trajectory_t *tr, int atTime, vec3_t result);
-void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
+void BG_AddPredictableEventToPlayerstate(entity_event_t newEvent, int eventParm, playerState_t *ps, int entityNum);
 void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad);
 void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *s, qboolean snap);
 void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s, int time, qboolean snap);

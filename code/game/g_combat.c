@@ -100,7 +100,9 @@ void TossClientItems(gentity_t *self) {
 		// find the item type for this weapon
 		item = BG_FindItemForWeapon(weapon);
 		// spawn the item
-		Drop_Item(self, item, 0);
+		drop = Drop_Item(self, item, 0);
+		// for pickup prediction
+		drop->s.time2 = item->quantity;
 	}
 	// drop all the powerups if dead
 	for (i = 1; i < PW_NUM_POWERUPS; i++) {
@@ -119,7 +121,8 @@ void TossClientItems(gentity_t *self) {
 			if (drop->count < 1) {
 				drop->count = 1;
 			}
-
+			// for pickup prediction
+			drop->s.time2 = drop->count;
 			angle += 45;
 		}
 	}

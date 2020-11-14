@@ -53,12 +53,12 @@ void G_WriteClientSessionData(gclient_t *client) {
 
 /*
 =======================================================================================================================================
-G_ReadSessionData
+G_ReadClientSessionData
 
 Called on a reconnect.
 =======================================================================================================================================
 */
-void G_ReadSessionData(gclient_t *client) {
+void G_ReadClientSessionData(gclient_t *client) {
 	char s[MAX_STRING_CHARS];
 	const char *var;
 	int teamLeader;

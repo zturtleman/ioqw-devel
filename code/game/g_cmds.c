@@ -344,7 +344,7 @@ argv(0) god.
 =======================================================================================================================================
 */
 void Cmd_God_f(gentity_t *ent) {
-	char *msg;
+	const char *msg;
 
 	if (!CheatsOk(ent)) {
 		return;
@@ -370,7 +370,7 @@ argv(0) notarget.
 =======================================================================================================================================
 */
 void Cmd_Notarget_f(gentity_t *ent) {
-	char *msg;
+	const char *msg;
 
 	if (!CheatsOk(ent)) {
 		return;
@@ -395,7 +395,7 @@ argv(0) noclip.
 =======================================================================================================================================
 */
 void Cmd_Noclip_f(gentity_t *ent) {
-	char *msg;
+	const char *msg;
 
 	if (!CheatsOk(ent)) {
 		return;
@@ -666,7 +666,7 @@ void StopFollowing(gentity_t *ent) {
 Cmd_Team_f
 =======================================================================================================================================
 */
-void Cmd_Team_f(gentity_t *ent) {
+static void Cmd_Team_f(gentity_t *ent) {
 	int oldTeam;
 	char s[MAX_TOKEN_CHARS];
 
@@ -699,7 +699,7 @@ void Cmd_Team_f(gentity_t *ent) {
 Cmd_Follow_f
 =======================================================================================================================================
 */
-void Cmd_Follow_f(gentity_t *ent) {
+static void Cmd_Follow_f(gentity_t *ent) {
 	int i;
 	char arg[MAX_TOKEN_CHARS];
 
@@ -840,7 +840,7 @@ static void G_SayTo(gentity_t *ent, gentity_t *other, int mode, int color, const
 G_Say
 =======================================================================================================================================
 */
-void G_Say(gentity_t *ent, gentity_t *target, int mode, const char *chatText) {
+static void G_Say(gentity_t *ent, gentity_t *target, int mode, const char *chatText) {
 	int j;
 	gentity_t *other;
 	int color;
@@ -1415,7 +1415,7 @@ void Cmd_CallVote_f(gentity_t *ent) {
 Cmd_Vote_f
 =======================================================================================================================================
 */
-void Cmd_Vote_f(gentity_t *ent) {
+static void Cmd_Vote_f(gentity_t *ent) {
 	char msg[64];
 
 	if (!level.voteTime) {
@@ -1454,7 +1454,7 @@ void Cmd_Vote_f(gentity_t *ent) {
 Cmd_CallTeamVote_f
 =======================================================================================================================================
 */
-void Cmd_CallTeamVote_f(gentity_t *ent) {
+static void Cmd_CallTeamVote_f(gentity_t *ent) {
 	int i, team, cs_offset;
 	char *c;
 	char arg1[MAX_STRING_TOKENS];
@@ -1607,7 +1607,7 @@ void Cmd_CallTeamVote_f(gentity_t *ent) {
 Cmd_TeamVote_f
 =======================================================================================================================================
 */
-void Cmd_TeamVote_f(gentity_t *ent) {
+static void Cmd_TeamVote_f(gentity_t *ent) {
 	int team, cs_offset;
 	char msg[64];
 
@@ -1657,7 +1657,7 @@ void Cmd_TeamVote_f(gentity_t *ent) {
 Cmd_SetViewpos_f
 =======================================================================================================================================
 */
-void Cmd_SetViewpos_f(gentity_t *ent) {
+static void Cmd_SetViewpos_f(gentity_t *ent) {
 	vec3_t origin, angles;
 	char buffer[MAX_TOKEN_CHARS];
 	int i;
@@ -1691,7 +1691,7 @@ void Cmd_SetViewpos_f(gentity_t *ent) {
 Cmd_Stats_f
 =======================================================================================================================================
 */
-void Cmd_Stats_f(gentity_t *ent) {
+static void Cmd_Stats_f(gentity_t *ent) {
 /*
 	int max, n, i;
 
