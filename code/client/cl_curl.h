@@ -27,7 +27,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #ifdef USE_LOCAL_HEADERS
-#include "../curl-7.54.0/include/curl/curl.h"
+#include "../curl-7.73.0/include/curl/curl.h"
 #else
 #include <curl/curl.h>
 #endif
