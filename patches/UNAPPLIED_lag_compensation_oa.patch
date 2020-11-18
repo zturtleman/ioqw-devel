@@ -1,0 +1,2452 @@
+Index: code/cgame/cg_ents.c
+===================================================================
+--- code/cgame/cg_ents.c	(revision 797)
++++ code/cgame/cg_ents.c	(working copy)
+@@ -789,15 +789,12 @@
+ =======================================================================================================================================
+ */
+ static void CG_CalcEntityLerpPositions(centity_t *cent) {
++	trace_t tr;
++	vec3_t lastOrigin;
++	int timeshift;
+ 
+-	// if this player does not want to see extrapolated players
+-	if (!cg_smoothClients.integer) {
+-		// make sure the clients use TR_INTERPOLATE
+-		if (cent->currentState.number < MAX_CLIENTS) {
+-			cent->currentState.pos.trType = TR_INTERPOLATE;
+-			cent->nextState.pos.trType = TR_INTERPOLATE;
+-		}
+-	}
++	// this will be set to how far forward projectiles will be extrapolated
++	timeshift = 0;
+ 
+ 	if (cent->interpolate && cent->currentState.pos.trType == TR_INTERPOLATE) {
+ 		CG_InterpolateEntityPosition(cent);
+@@ -808,9 +805,40 @@
+ 		CG_InterpolateEntityPosition(cent);
+ 		return;
+ 	}
++	// interpolating failed (probably no nextSnap), so extrapolate. This can also happen if the teleport bit is flipped, but that
++	// won't be noticeable
++	if (cent->currentState.number < MAX_CLIENTS && cent->currentState.clientNum != cg.predictedPlayerState.clientNum) {
++		cent->currentState.pos.trType = TR_LINEAR_STOP;
++		cent->currentState.pos.trTime = cg.snap->serverTime;
++		cent->currentState.pos.trDuration = 1000 / sv_fps.integer;
++	}
++	// if it's a missile
++	if (cent->currentState.eType == ET_MISSILE) {
++		// if it's one of ours
++		if (cent->currentState.otherEntityNum == cg.clientNum) {
++			// extrapolate one server frame's worth - this will correct for tiny visual inconsistencies introduced by backward-reconciling
++			// all players one server frame before running projectiles
++			timeshift = 1000 / sv_fps.integer;
++		// if it's not, and it's not a grenade launcher
++		} else if (cent->currentState.weapon != WP_GRENADELAUNCHER) {
++			// extrapolate based on cg_projectileNudge
++			timeshift = cg_projectileNudge.integer + 1000 / sv_fps.integer;
++		}
++	}
+ 	// just use the current frame and evaluate as best we can
+-	BG_EvaluateTrajectory(&cent->currentState.pos, cg.time, cent->lerpOrigin);
+-	BG_EvaluateTrajectory(&cent->currentState.apos, cg.time, cent->lerpAngles);
++	BG_EvaluateTrajectory(&cent->currentState.pos, cg.time + timeshift, cent->lerpOrigin);
++	BG_EvaluateTrajectory(&cent->currentState.apos, cg.time + timeshift, cent->lerpAngles);
++	// if there's a time shift
++	if (timeshift != 0) {
++		BG_EvaluateTrajectory(&cent->currentState.pos, cg.time, lastOrigin);
++		CG_Trace(&tr, lastOrigin, vec3_origin, vec3_origin, cent->lerpOrigin, cent->currentState.number, MASK_SHOT);
++		// don't let the projectile go through the floor
++		if (tr.fraction < 1.0f) {
++			cent->lerpOrigin[0] = lastOrigin[0] + tr.fraction * (cent->lerpOrigin[0] - lastOrigin[0]);
++			cent->lerpOrigin[1] = lastOrigin[1] + tr.fraction * (cent->lerpOrigin[1] - lastOrigin[1]);
++			cent->lerpOrigin[2] = lastOrigin[2] + tr.fraction * (cent->lerpOrigin[2] - lastOrigin[2]);
++		}
++	}
+ 	// adjust for riding a mover if it wasn't rolled into the predicted player state
+ 	if (cent != &cg.predictedPlayerEntity) {
+ 		CG_AdjustPositionForMover(cent->lerpOrigin, cent->currentState.groundEntityNum, cg.snap->serverTime, cg.time, cent->lerpOrigin, cent->lerpAngles, cent->lerpAngles);
+@@ -1132,9 +1160,27 @@
+ 	CG_AddCEntity(&cg.predictedPlayerEntity);
+ 	// lerp the non-predicted value for beam gun origins
+ 	CG_CalcEntityLerpPositions(&cg_entities[cg.snap->ps.clientNum]);
++	// early transitioning
++	if (cg.nextSnap) {
++		// pre-add some of the entities sent over by the server
++		// we have data for them and they don't need to interpolate
++		for (num = 0; num < cg.nextSnap->numEntities; num++) {
++			cent = &cg_entities[cg.nextSnap->entities[num].number];
++
++			if (cent->nextState.eType == ET_MISSILE || cent->nextState.eType == ET_GENERAL) {
++				// transition it immediately and add it
++				CG_TransitionEntity(cent);
++				cent->interpolate = qtrue;
++				CG_AddCEntity(cent);
++			}
++		}
++	}
+ 	// add each entity sent over by the server
+ 	for (num = 0; num < cg.snap->numEntities; num++) {
+ 		cent = &cg_entities[cg.snap->entities[num].number];
+-		CG_AddCEntity(cent);
++
++		if (!cg.nextSnap || (cent->nextState.eType != ET_MISSILE && cent->nextState.eType != ET_GENERAL)) {
++			CG_AddCEntity(cent);
++		}
+ 	}
+ }
+Index: code/cgame/cg_event.c
+===================================================================
+--- code/cgame/cg_event.c	(revision 797)
++++ code/cgame/cg_event.c	(working copy)
+@@ -557,12 +557,26 @@
+ 		// bullet impacts
+ 		case EV_BULLET_HIT_FLESH:
+ 			DEBUGNAME("EV_BULLET_HIT_FLESH");
+-			CG_Bullet(es->pos.trBase, es->otherEntityNum, dir, qtrue, es->eventParm);
++			// if the client is us, unlagged is on server-side, and we've got it client-side
++			if (es->clientNum == cg.predictedPlayerState.clientNum && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 2)) {
++				// do nothing, because it was already predicted
++			} else {
++				// do the bullet, because it wasn't predicted
++				CG_Bullet(es->pos.trBase, es->otherEntityNum, dir, qtrue, es->eventParm);
++			}
++
+ 			break;
+ 		case EV_BULLET_HIT_WALL:
+ 			DEBUGNAME("EV_BULLET_HIT_WALL");
+-			ByteToDir(es->eventParm, dir);
+-			CG_Bullet(es->pos.trBase, es->otherEntityNum, dir, qfalse, ENTITYNUM_WORLD);
++			// if the client is us, unlagged is on server-side, and we've got it client-side
++			if (es->clientNum == cg.predictedPlayerState.clientNum && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 2)) {
++				// do nothing, because it was already predicted
++			} else {
++				// do the bullet, because it wasn't predicted
++				ByteToDir(es->eventParm, dir);
++				CG_Bullet(es->pos.trBase, es->otherEntityNum, dir, qfalse, ENTITYNUM_WORLD);
++			}
++
+ 			break;
+ 		// missile impacts
+ 		case EV_MISSILE_HIT:
+@@ -578,26 +592,37 @@
+ 		case EV_RAILTRAIL:
+ 			DEBUGNAME("EV_RAILTRAIL");
+ 			cent->currentState.weapon = WP_RAILGUN;
+-
+-			if (es->clientNum == cg.snap->ps.clientNum && !cg.renderingThirdPerson) {
+-				if (cg_drawGun.integer == 2) {
+-					VectorMA(es->origin2, 8, cg.refdef.viewaxis[1], es->origin2);
+-				} else if (cg_drawGun.integer == 3) {
+-					VectorMA(es->origin2, 4, cg.refdef.viewaxis[1], es->origin2);
++			// if the client is us, unlagged is on server-side, and we've got it client-side
++			if (es->clientNum == cg.predictedPlayerState.clientNum && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 16)) {
++				// do nothing, because it was already predicted
++			} else {
++				if (es->clientNum == cg.snap->ps.clientNum && !cg.renderingThirdPerson) {
++					if (cg_drawGun.integer == 2) {
++						VectorMA(es->origin2, 8, cg.refdef.viewaxis[1], es->origin2);
++					} else if (cg_drawGun.integer == 3) {
++						VectorMA(es->origin2, 4, cg.refdef.viewaxis[1], es->origin2);
++					}
+ 				}
++				// draw a rail trail, because it wasn't predicted
++				CG_RailTrail(ci, es->origin2, es->pos.trBase);
++				// if the end was on a nomark surface, don't make an explosion
++				if (es->eventParm != 255) {
++					ByteToDir(es->eventParm, dir);
++					CG_MissileHitWall(es->weapon, clientNum, position, dir);
++				}
+ 			}
+ 
+-			CG_RailTrail(ci, es->origin2, es->pos.trBase);
+-			// if the end was on a nomark surface, don't make an explosion
+-			if (es->eventParm != 255) {
+-				ByteToDir(es->eventParm, dir);
+-				CG_MissileHitWall(es->weapon, clientNum, position, dir);
+-			}
+-
+ 			break;
+ 		case EV_SHOTGUN:
+ 			DEBUGNAME("EV_SHOTGUN");
+-			CG_ShotgunFire(es);
++			// if the client is us, unlagged is on server-side, and we've got it client-side
++			if (es->otherEntityNum == cg.predictedPlayerState.clientNum && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 4)) {
++				// do nothing, because it was already predicted
++			} else {
++				// do the shotgun pattern, because it wasn't predicted
++				CG_ShotgunFire(es);
++			}
++
+ 			break;
+ 		case EV_PROXIMITY_MINE_STICK:
+ 			DEBUGNAME("EV_PROXIMITY_MINE_STICK");
+Index: code/cgame/cg_local.h
+===================================================================
+--- code/cgame/cg_local.h	(revision 797)
++++ code/cgame/cg_local.h	(working copy)
+@@ -988,6 +988,8 @@
+ 	qboolean pmove_fixed;
+ 	int pmove_msec;
+ 	qboolean synchronousClients;
++	// this will be set to the server's g_delagHitscan
++	int delagHitscan;
+ } cgs_t;
+ 
+ extern cgs_t cgs;
+@@ -1080,7 +1082,6 @@
+ extern vmCvar_t cg_noVoiceChats;
+ extern vmCvar_t cg_noVoiceText;
+ extern vmCvar_t cg_scorePlum;
+-extern vmCvar_t cg_smoothClients;
+ extern vmCvar_t cg_cameraOrbit;
+ extern vmCvar_t cg_timescaleFadeEnd;
+ extern vmCvar_t cg_timescaleFadeSpeed;
+@@ -1108,8 +1109,17 @@
+ extern vmCvar_t cg_currentSelectedPlayerName;
+ extern vmCvar_t cg_recordSPDemo;
+ extern vmCvar_t cg_recordSPDemoName;
++extern vmCvar_t cg_delag;
++extern vmCvar_t cg_cmdTimeNudge;
++extern vmCvar_t sv_fps;
++extern vmCvar_t cg_projectileNudge;
++extern vmCvar_t cg_optimizePrediction;
++extern vmCvar_t cl_timeNudge;
+ 
+ extern const char *eventnames[EV_MAX];
++
++void CG_PredictWeaponEffects(centity_t *cent);
++qboolean CG_Cvar_ClampInt(const char *name, vmCvar_t *vmCvar, int min, int max);
+ // cg_main.c
+ const char *CG_ConfigString(int index);
+ const char *CG_Argv(int arg);
+@@ -1281,6 +1291,7 @@
+ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir);
+ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum);
+ void CG_ShotgunFire(entityState_t *es);
++void CG_ShotgunPattern(vec3_t origin, vec3_t origin2, int seed, int otherEntNum);
+ void CG_Bullet(vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum);
+ void CG_RailTrail(const clientInfo_t *ci, vec3_t start, const vec3_t end);
+ void CG_AddViewWeapon(playerState_t *ps);
+@@ -1312,6 +1323,7 @@
+ localEntity_t *CG_MakeExplosion(const vec3_t origin, const vec3_t dir, qhandle_t hModel, qhandle_t shader, int msec, qboolean isSprite);
+ // cg_snapshot.c
+ void CG_ProcessSnapshots(void);
++void CG_TransitionEntity(centity_t *cent);
+ // cg_spawn.c
+ qboolean CG_SpawnString(const char *key, const char *defaultString, char **out);
+ // spawn string returns a temporary reference, you must CopyString() if you want to keep it
+Index: code/cgame/cg_main.c
+===================================================================
+--- code/cgame/cg_main.c	(revision 797)
++++ code/cgame/cg_main.c	(working copy)
+@@ -173,7 +173,6 @@
+ vmCvar_t cg_noVoiceText;
+ vmCvar_t cg_hudFiles;
+ vmCvar_t cg_scorePlum;
+-vmCvar_t cg_smoothClients;
+ vmCvar_t cg_cameraMode;
+ vmCvar_t cg_cameraOrbit;
+ vmCvar_t cg_timescaleFadeEnd;
+@@ -201,6 +200,12 @@
+ vmCvar_t cg_currentSelectedPlayerName;
+ vmCvar_t cg_recordSPDemo;
+ vmCvar_t cg_recordSPDemoName;
++vmCvar_t cg_delag;
++vmCvar_t cg_cmdTimeNudge;
++vmCvar_t sv_fps;
++vmCvar_t cg_projectileNudge;
++vmCvar_t cg_optimizePrediction;
++vmCvar_t cl_timeNudge;
+ 
+ typedef struct {
+ 	vmCvar_t *vmCvar;
+@@ -307,7 +312,6 @@
+ 	{&cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
+ 	{&cg_timescale, "timescale", "1", 0},
+ 	{&cg_scorePlum, "cg_scorePlum", "0", CVAR_USERINFO|CVAR_ARCHIVE},
+-	{&cg_smoothClients, "cg_smoothClients", "1", CVAR_USERINFO|CVAR_ARCHIVE},
+ 	{&cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
+ 	{&cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
+ 	{&cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE},
+@@ -322,7 +326,14 @@
+ 	{&cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE},
+ 	{&cg_fadeExplosions, "cg_fadeExplosions", "1", CVAR_ARCHIVE},
+ 	{&cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE},
+-	{&cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE}
++	{&cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE},
++	{&cg_delag, "cg_delag", "1", CVAR_ARCHIVE|CVAR_USERINFO},
++	{&cg_cmdTimeNudge, "cg_cmdTimeNudge", "0", CVAR_ARCHIVE|CVAR_USERINFO},
++	// this will be automagically copied from the server
++	{&sv_fps, "sv_fps", "20", CVAR_SYSTEMINFO},
++	{&cg_projectileNudge, "cg_projectileNudge", "0", CVAR_ARCHIVE},
++	{&cg_optimizePrediction, "cg_optimizePrediction", "1", CVAR_ARCHIVE},
++	{&cl_timeNudge, "cl_timeNudge", "0", CVAR_ARCHIVE}
+ };
+ 
+ /*
+@@ -382,6 +393,19 @@
+ 	const cvarTable_t *cv;
+ 
+ 	for (i = 0, cv = cgameCvarTable; i < ARRAY_LEN(cgameCvarTable); i++, cv++) {
++		// clamp the value between 0 and 999
++		// negative values would suck - people could conceivably shoot other players *long* after they had left the area, on purpose
++		if (cv->vmCvar == &cg_cmdTimeNudge) {
++			CG_Cvar_ClampInt(cv->cvarName, cv->vmCvar, 0, 999);
++		// cl_timenudge less than -50 or greater than 50 doesn't actually do anything more than -50 or 50 (actually the numbers are
++		// probably closer to -30 and 30, but 50 is nice and round-ish) might as well not feed the myth, eh?
++		} else if (cv->vmCvar == &cl_timeNudge) {
++			CG_Cvar_ClampInt(cv->cvarName, cv->vmCvar, -50, 50);
++		// don't let this go too high - no point
++		} else if (cv->vmCvar == &cg_errorDecay) {
++			CG_Cvar_ClampInt(cv->cvarName, cv->vmCvar, 0, 250);
++		}
++
+ 		trap_Cvar_Update(cv->vmCvar);
+ 	}
+ 	// check for modications here
+Index: code/cgame/cg_predict.c
+===================================================================
+--- code/cgame/cg_predict.c	(revision 797)
++++ code/cgame/cg_predict.c	(working copy)
+@@ -617,90 +617,18 @@
+ 	}
+ }
+ 
+-/*
+-=======================================================================================================================================
+-CG_CheckTimers
+-=======================================================================================================================================
+-*/
+-static void CG_CheckTimers(void) {
+-	int i, maxHealth, addHealth;
++#define ABS(x) ((x) < 0 ? (-(x)) : (x))
+ 
+-	// no prediction for spectators
+-	if (cg.predictedPlayerState.pm_type == PM_SPECTATOR) {
+-		return;
+-	}
+-	// no armor/health/powerups prediction for dead bodies
+-	if (cg.predictedPlayerState.stats[STAT_HEALTH] <= 0) {
+-		return;
+-	}
+-
+-	cg.timeResidual += 1000;
+-
+-	maxHealth = 0;
+-	addHealth = 0;
+-	// periodic tasks
+-	if (cg.timeResidual && cg.predictedPlayerState.commandTime >= cg.timeResidual && !cg.thisFrameTeleport) {
+-		cg.timeResidual -= 1000;
+-		// regenerate
+-		if (cg.predictedPlayerState.powerups[PW_REGEN]) {
+-			maxHealth = 200;
+-			addHealth += 10;
+-		}
+-		// guard
+-		if (cg.predictedPlayerState.powerups[PW_GUARD]) {
+-			maxHealth = 200;
+-			addHealth += 5;
+-		}
+-
+-		if (maxHealth) {
+-			if (cg.predictedPlayerState.stats[STAT_HEALTH] < maxHealth * 0.5) {
+-				cg.predictedPlayerState.stats[STAT_HEALTH] += addHealth * 2;
+-
+-				if (cg.predictedPlayerState.stats[STAT_HEALTH] > maxHealth * 1.1) {
+-					cg.predictedPlayerState.stats[STAT_HEALTH] = maxHealth * 1.1;
+-				}
+-				// TODO: add external EV_POWERUP_REGEN
+-			} else if (cg.predictedPlayerState.stats[STAT_HEALTH] < maxHealth) {
+-				cg.predictedPlayerState.stats[STAT_HEALTH] += addHealth;
+-
+-				if (cg.predictedPlayerState.stats[STAT_HEALTH] > maxHealth) {
+-					cg.predictedPlayerState.stats[STAT_HEALTH] = maxHealth;
+-				}
+-				// TODO: add external EV_POWERUP_REGEN
+-			}
+-		} else {
+-			// count down health when over max
+-			if (cg.predictedPlayerState.stats[STAT_HEALTH] > 100) {
+-				cg.predictedPlayerState.stats[STAT_HEALTH]--;
+-			}
+-			// count down armor when over max
+-			if (cg.predictedPlayerState.stats[STAT_ARMOR] > 100) {
+-				cg.predictedPlayerState.stats[STAT_ARMOR]--;
+-			}
+-		}
+-	}
+-	// turn off any expired powerups
+-	for (i = 0; i < MAX_POWERUPS; i++) {
+-		if (!cg.predictedPlayerState.powerups[i]) {
+-			continue;
+-		}
+-
+-		if (cg.predictedPlayerState.powerups[i] < cg.predictedPlayerState.commandTime) {
+-			cg.predictedPlayerState.powerups[i] = 0;
+-		}
+-	}
+-}
+-
+ /*
+ =======================================================================================================================================
+ CG_IsUnacceptableError
+ =======================================================================================================================================
+ */
+-static int CG_IsUnacceptableError(playerState_t *ps, playerState_t *pps, qboolean *forceMove) {
++static int CG_IsUnacceptableError(playerState_t *ps, playerState_t *pps) {
+ 	vec3_t delta;
+-	int i, n, v0, v1;
++	int i;
+ 
+-	if (pps->pm_time != ps->pm_time || pps->pm_type != ps->pm_type || pps->pm_flags != ps->pm_flags) {
++	if (pps->pm_type != ps->pm_type || pps->pm_flags != ps->pm_flags || pps->pm_time != ps->pm_time) {
+ 		return 1;
+ 	}
+ 
+@@ -707,8 +635,8 @@
+ 	VectorSubtract(pps->origin, ps->origin, delta);
+ 
+ 	if (VectorLengthSquared(delta) > 0.01f * 0.01f) {
+-		if (cg_showmiss.integer > 2) {
+-			CG_Printf("origin delta: %.2f  ", VectorLength(delta));
++		if (cg_showmiss.integer) {
++			CG_Printf("origin delta: %0.2f  ", VectorLength(delta));
+ 		}
+ 
+ 		return 2;
+@@ -716,8 +644,8 @@
+ 
+ 	VectorSubtract(pps->velocity, ps->velocity, delta);
+ 
+-	if (VectorLengthSquared(delta) > 0.01f * 0.01f) {
+-		if (cg_showmiss.integer > 2) {
++	if (VectorLengthSquared(delta) > 0.1f * 0.1f) {
++		if (cg_showmiss.integer) {
+ 			CG_Printf("velocity delta: %.2f  ", VectorLength(delta));
+ 		}
+ 
+@@ -725,40 +653,14 @@
+ 	}
+ 
+ 	if (pps->weaponTime != ps->weaponTime || pps->gravity != ps->gravity || pps->speed != ps->speed || pps->delta_angles[0] != ps->delta_angles[0] || pps->delta_angles[1] != ps->delta_angles[1] || pps->delta_angles[2] != ps->delta_angles[2] || pps->groundEntityNum != ps->groundEntityNum) {
+-		if (cg_showmiss.integer > 1) {
+-			CG_Printf("%i %i %i %i => %i %i %i %i", pps->weaponTime, pps->gravity, pps->speed, pps->groundEntityNum, ps->weaponTime, ps->gravity, ps->speed, ps->groundEntityNum);
+-		}
+-
+ 		return 4;
+ 	}
+-	// forward gesture animation
+-	if (pps->torsoAnim != ps->torsoAnim && (ps->torsoAnim & ~ANIM_TOGGLEBIT) == TORSO_GESTURE) {
+-		for (n = 0; n < NUM_SAVED_STATES; n++) {
+-			cg.savedPmoveStates[n].torsoAnim = ps->torsoAnim;
+-			cg.savedPmoveStates[n].torsoTimer = ps->torsoTimer;
+-		}
+-	}
+ 
+ 	if (pps->legsTimer != ps->legsTimer || pps->legsAnim != ps->legsAnim || pps->torsoTimer != ps->torsoTimer || pps->torsoAnim != ps->torsoAnim || pps->movementDir != ps->movementDir) {
+ 		return 5;
+ 	}
+-	// check/update eFlags if needed
+-	v0 = pps->eFlags & EF_NOPREDICT;
+-	v1 = ps->eFlags & EF_NOPREDICT;
+ 
+-	if (v0 != v1) {
+-		for (i = 0; i < NUM_SAVED_STATES; i++) {
+-			cg.savedPmoveStates[i].eFlags = (cg.savedPmoveStates[i].eFlags & ~EF_NOPREDICT)|v1;
+-		}
+-
+-		pps->eFlags = (pps->eFlags & ~EF_NOPREDICT)|v1;
+-	}
+-
+ 	if (pps->eFlags != ps->eFlags) {
+-		if (cg_showmiss.integer > 1) {
+-			CG_Printf("eFlags %i => %i", pps->eFlags, ps->eFlags);
+-		}
+-
+ 		return 6;
+ 	}
+ 
+@@ -767,21 +669,9 @@
+ 	}
+ 
+ 	for (i = 0; i < MAX_PS_EVENTS; i++) {
+-		if (pps->events[i] != ps->events[i]) {
+-			if (cg_showmiss.integer > 1) {
+-				CG_Printf("event[%i] %i => %i\n", i, pps->events[i], ps->events[i]);
+-			}
+-
++		if (pps->events[i] != ps->events[i] || pps->eventParms[i] != ps->eventParms[i]) {
+ 			return 8;
+ 		}
+-
+-		if (pps->eventParms[i] != ps->eventParms[i]) {
+-			if (cg_showmiss.integer > 1) {
+-				CG_Printf("eventParms[%i] %i => %i\n", i, pps->eventParms[i], ps->eventParms[i]);
+-			}
+-
+-			return 8;
+-		}
+ 	}
+ 
+ 	if (pps->externalEvent != ps->externalEvent || pps->externalEventParm != ps->externalEventParm || pps->externalEventTime != ps->externalEventTime) {
+@@ -792,7 +682,7 @@
+ 		return 10;
+ 	}
+ 
+-	if (fabs(AngleDelta(ps->viewangles[0], pps->viewangles[0])) > 1.0f || fabs(AngleDelta(ps->viewangles[1], pps->viewangles[1])) > 1.0f || fabs(AngleDelta(ps->viewangles[2], pps->viewangles[2])) > 1.0f) {
++	if (ABS(pps->viewangles[0] - ps->viewangles[0]) > 1.0f || ABS(pps->viewangles[1] - ps->viewangles[1]) > 1.0f || ABS(pps->viewangles[2] - ps->viewangles[2]) > 1.0f) {
+ 		return 11;
+ 	}
+ 
+@@ -801,45 +691,11 @@
+ 	}
+ 
+ 	if (pps->damageEvent != ps->damageEvent || pps->damageYaw != ps->damageYaw || pps->damagePitch != ps->damagePitch || pps->damageCount != ps->damageCount) {
+-		if (cg_showmiss.integer > 1) {
+-			CG_Printf("dmg %i %i %i %i >= %i %i %i %i\n", pps->damageEvent, pps->damageYaw, pps->damagePitch, pps->damageCount, ps->damageEvent, ps->damageYaw, ps->damagePitch, ps->damageCount);
+-		}
+-
+ 		return 13;
+ 	}
+-	// health countdown?
+-	if (pps->stats[STAT_HEALTH] == ps->stats[STAT_HEALTH] + 1 && ps->stats[STAT_HEALTH] >= 200) {
+-		cg.timeResidual = ps->commandTime + 1000;
+ 
+-		for (n = 0; n < NUM_SAVED_STATES; n++) {
+-			cg.savedPmoveStates[n].stats[STAT_HEALTH] = ps->stats[STAT_HEALTH];
+-		}
+-	}
+-	// armor countdown?
+-	if (pps->stats[STAT_ARMOR] == ps->stats[STAT_ARMOR] - 1 && ps->stats[STAT_ARMOR] >= 200) {
+-		// we may need few frames to sync with client->timeResidual on server side
+-		cg.timeResidual = ps->commandTime + 1000;
+-
+-		for (n = 0; n < NUM_SAVED_STATES; n++) {
+-			cg.savedPmoveStates[n].stats[STAT_ARMOR] = ps->stats[STAT_ARMOR];
+-		}
+-	}
+-
+ 	for (i = 0; i < MAX_STATS; i++) {
+-		// we can't predict some flags
+-		if (i == STAT_CLIENTS_READY /*|| i == STAT_MAX_HEALTH */) {
+-			for (n = 0; n < NUM_SAVED_STATES; n++) {
+-				cg.savedPmoveStates[n].stats[i] = ps->stats[i];
+-			}
+-
+-			continue;
+-		}
+-
+ 		if (pps->stats[i] != ps->stats[i]) {
+-			if (cg_showmiss.integer > 1) {
+-				CG_Printf("stats[%i] %i => %i ", i, pps->stats[i], ps->stats[i]);
+-			}
+-
+ 			return 14;
+ 		}
+ 	}
+@@ -846,48 +702,26 @@
+ 
+ 	for (i = 0; i < MAX_PERSISTANT; i++) {
+ 		if (pps->persistant[i] != ps->persistant[i]) {
+-			if (i >= PERS_TEAM && i <= PERS_PLAYEREVENTS) {
+-				if (cg_showmiss.integer > 1) {
+-					CG_Printf("persistant[%i] %i => %i ", i, pps->persistant[i], ps->persistant[i]);
+-				}
++			return 15;
++		}
++	}
+ 
+-				return 15;
+-			}
+-
+-			v0 = ps->persistant[i];
+-
+-			for (n = 0; n < NUM_SAVED_STATES; n++) {
+-				cg.savedPmoveStates[n].persistant[i] = v0;
+-			}
+-
+-			*forceMove = qtrue;
++	for (i = 0; i < MAX_POWERUPS; i++) {
++		if (pps->powerups[i] != ps->powerups[i]) {
++			return 16;
+ 		}
+ 	}
+ 
+ 	for (i = 0; i < MAX_WEAPONS; i++) {
+ 		if (pps->ammo[i] != ps->ammo[i]) {
+-			if (cg_showmiss.integer > 1) {
+-				CG_Printf("ammo[%i] %i => %i ", i, pps->ammo[i], ps->ammo[i]);
+-			}
+-
+ 			return 17;
+ 		}
+ 	}
+ 
+-	if (pps->tokens != ps->tokens || pps->loopSound != ps->loopSound) {
++	if (pps->tokens != ps->tokens || pps->loopSound != ps->loopSound || pps->jumppad_ent != ps->jumppad_ent) {
+ 		return 18;
+ 	}
+ 
+-	for (i = 0; i < MAX_POWERUPS; i++) {
+-		if (pps->powerups[i] != ps->powerups[i]) {
+-			if (cg_showmiss.integer > 1) {
+-				CG_Printf("powerups[%i] %i => %i ", i, pps->powerups[i], ps->powerups[i]);
+-			}
+-
+-			return 19;
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -910,7 +744,7 @@
+ =======================================================================================================================================
+ */
+ void CG_PredictPlayerState(void) {
+-	int stateIndex, predictCmd, cmdNum, current;
++	int stateIndex, predictCmd, cmdNum, current, numPredicted, numPlayedBack;
+ 	playerState_t oldPlayerState;
+ 	qboolean moved;
+ 	usercmd_t oldestCmd, latestCmd;
+@@ -917,6 +751,8 @@
+ 
+ 	stateIndex = 0;
+ 	predictCmd = 0;
++	numPredicted = 0;// debug code
++	numPlayedBack = 0;// debug code
+ 
+ 	cg.hyperspace = qfalse; // will be set if touching a trigger_teleport
+ 	// if this is the first frame we must guarantee predictedPlayerState is valid even if there is some other error condition
+@@ -978,13 +814,6 @@
+ 
+ 	cg_pmove.pmove_fixed = cgs.pmove_fixed;
+ 	cg_pmove.pmove_msec = cgs.pmove_msec;
+-	// clean event stack
+-	eventStack = 0;
+-	// run cmds
+-	moved = qfalse;
+-
+-	cg_pmove.pmove_fixed = cgs.pmove_fixed;
+-	cg_pmove.pmove_msec = cgs.pmove_msec;
+ 	// like the comments described above, a player's state is entirely re-predicted from the last valid snapshot every client frame,
+ 	// which can be really, really, really slow. Every old command has to be run again. For every client frame that is NOT directly
+ 	// after a snapshot, this is unnecessary, since we have no new information. For those, we'll play back the predictions from the
+@@ -994,7 +823,7 @@
+ 	// an incremental predict. With this method, we get incremental predicts on every client frame except a frame following a new
+ 	// snapshot in which there was a prediction error. This yeilds anywhere from a 15% to 40% performance increase, depending on how
+ 	// much of a bottleneck the CPU is
+-	if (1) {
++	if (cg_optimizePrediction.integer) {
+ 		if (cg.nextFrameTeleport || cg.thisFrameTeleport) {
+ 			// do a full predict
+ 			cg.lastPredictedCommand = 0;
+@@ -1007,7 +836,6 @@
+ 		} else {
+ 			// we have a new snapshot
+ 			int i;
+-			int errorcode;
+ 			qboolean error = qtrue;
+ 
+ 			// loop through the saved states queue
+@@ -1014,28 +842,29 @@
+ 			for (i = cg.stateHead; i != cg.stateTail; i = (i + 1) % NUM_SAVED_STATES) {
+ 				// if we find a predicted state whose commandTime matches the snapshot
+ 				// player state's commandTime
+-				if (cg.savedPmoveStates[i].commandTime != cg.predictedPlayerState.commandTime) {
+-					continue;
+-				}
+-				// make sure the state differences are acceptable
+-				errorcode = CG_IsUnacceptableError(&cg.predictedPlayerState, &cg.savedPmoveStates[i], &moved);
++				if (cg.savedPmoveStates[i].commandTime == cg.predictedPlayerState.commandTime) {
++					// make sure the state differences are acceptable
++					int errorcode = CG_IsUnacceptableError(&cg.predictedPlayerState, &cg.savedPmoveStates[i]);
+ 
+-				if (errorcode) {
+-					if (cg_showmiss.integer > 1) {
+-						CG_Printf("errorcode %d at %d\n", errorcode, cg.time);
++					// too much change?
++					if (errorcode) {
++						if (cg_showmiss.integer) {
++							CG_Printf("errorcode %d at %d\n", errorcode, cg.time);
++						}
++						// yeah, so do a full predict
++						break;
+ 					}
+ 
++					// this one is almost exact, so we'll copy it in as the starting point
++					*cg_pmove.ps = cg.savedPmoveStates[i];
++					// advance the head
++					cg.stateHead = (i + 1) % NUM_SAVED_STATES;
++					// set the next command to predict
++					predictCmd = cg.lastPredictedCommand + 1;
++					// a saved state matched, so flag it
++					error = qfalse;
+ 					break;
+ 				}
+-				// this one is almost exact, so we'll copy it in as the starting point
+-				*cg_pmove.ps = cg.savedPmoveStates[i];
+-				// advance the head
+-				cg.stateHead = (i + 1) % NUM_SAVED_STATES;
+-				// set the next command to predict
+-				predictCmd = cg.lastPredictedCommand + 1;
+-				// a saved state matched, so flag it
+-				error = qfalse;
+-				break;
+ 			}
+ 			// if no saved states matched
+ 			if (error) {
+@@ -1049,14 +878,10 @@
+ 		cg.lastServerTime = cg.physicsTime;
+ 		stateIndex = cg.stateHead;
+ 	}
++	// run cmds
++	moved = qfalse;
+ 
+-	cmdNum = current - CMD_BACKUP + 1;
+-
+-	if (cmdNum < 0) { // can happen on first spawn
+-		cmdNum = 0;
+-	}
+-	// run cmds
+-	for (; cmdNum <= current; cmdNum++) {
++	for (cmdNum = current - CMD_BACKUP + 1; cmdNum <= current; cmdNum++) {
+ 		// get the command
+ 		trap_GetUserCmd(cmdNum, &cg_pmove.cmd);
+ 
+@@ -1087,8 +912,6 @@
+ 				}
+ 
+ 				cg.thisFrameTeleport = qfalse;
+-				// delay prediction for some time or until first server event
+-				cg.allowPickupPrediction = cg.time + PICKUP_PREDICTION_DELAY;
+ 			} else {
+ 				vec3_t adjusted, new_angles;
+ 
+@@ -1102,11 +925,11 @@
+ 
+ 				VectorSubtract(oldPlayerState.origin, adjusted, delta);
+ 
+-				len = VectorLengthSquared(delta);
++				len = VectorLength(delta);
+ 
+-				if (len > (0.01f * 0.01f)) {
++				if (len > 0.1) {
+ 					if (cg_showmiss.integer) {
+-						CG_Printf("Prediction miss: %f\n", sqrt(len));
++						CG_Printf("Prediction miss: %f\n", len);
+ 					}
+ 
+ 					if (cg_errorDecay.integer) {
+@@ -1139,31 +962,57 @@
+ 		if (cg_pmove.pmove_fixed) {
+ 			cg_pmove.cmd.serverTime = ((cg_pmove.cmd.serverTime + cg_pmove.pmove_msec - 1) / cg_pmove.pmove_msec) * cg_pmove.pmove_msec;
+ 		}
++		if (cg_optimizePrediction.integer) {
++			// if we need to predict this command, or we've run out of space in the saved states queue
++			if (cmdNum >= predictCmd || (stateIndex + 1) % NUM_SAVED_STATES == cg.stateHead) {
++				// run the Pmove
++				Pmove (&cg_pmove);
+ 
+-		if (cmdNum >= predictCmd || (stateIndex + 1) % NUM_SAVED_STATES == cg.stateHead) {
+-			Pmove(&cg_pmove);
+-			// add push trigger movement effects
+-			CG_TouchTriggerPrediction();
+-			// check for expired powerups etc.
+-			CG_CheckTimers();
+-			// record the last predicted command
+-			cg.lastPredictedCommand = cmdNum;
+-			// if we haven't run out of space in the saved states queue
+-			if ((stateIndex + 1) % NUM_SAVED_STATES != cg.stateHead) {
+-				// save the state for the false case (of cmdNum >= predictCmd) in later calls to this function
+-				cg.savedPmoveStates[stateIndex] = *cg_pmove.ps;
++				numPredicted++; // debug code
++				// record the last predicted command
++				cg.lastPredictedCommand = cmdNum;
++				// if we haven't run out of space in the saved states queue
++				if ((stateIndex + 1) % NUM_SAVED_STATES != cg.stateHead) {
++					// save the state for the false case (of cmdNum >= predictCmd) in later calls to this function
++					cg.savedPmoveStates[stateIndex] = *cg_pmove.ps;
++					stateIndex = (stateIndex + 1) % NUM_SAVED_STATES;
++					cg.stateTail = stateIndex;
++				}
++			} else {
++				numPlayedBack++; // debug code
++
++				if (cg_showmiss.integer && cg.savedPmoveStates[stateIndex].commandTime != cg_pmove.cmd.serverTime) {
++					// this should ONLY happen just after changing the value of pmove_fixed
++					CG_Printf("saved state miss\n");
++				}
++				// play back the command from the saved states
++				*cg_pmove.ps = cg.savedPmoveStates[stateIndex];
++				// go to the next element in the saved states array
+ 				stateIndex = (stateIndex + 1) % NUM_SAVED_STATES;
+-				cg.stateTail = stateIndex;
+ 			}
+ 		} else {
+-			*cg_pmove.ps = cg.savedPmoveStates[stateIndex];
+-			stateIndex = (stateIndex + 1) % NUM_SAVED_STATES;
++			// run the Pmove
++			Pmove (&cg_pmove);
++
++			numPredicted++; // debug code
+ 		}
+ 
+ 		moved = qtrue;
++		// add push trigger movement effects
++		CG_TouchTriggerPrediction();
++		// check for predictable events that changed from previous predictions
++		//CG_CheckChangedPredictableEvents(&cg.predictedPlayerState);
+ 	}
+ 
+-	if (cg_showmiss.integer > 3) {
++//unlagged - optimized prediction
++	// do a /condump after a few seconds of this
++	//CG_Printf("cg.time: %d, numPredicted: %d, numPlayedBack: %d\n", cg.time, numPredicted, numPlayedBack); // debug code
++	// if everything is working right, numPredicted should be 1 more than 98%
++	// of the time, meaning only ONE predicted move was done in the frame
++	// you should see other values for numPredicted after CG_IsUnacceptableError
++	// returns nonzero, and that's it
++//unlagged - optimized prediction
++	if (cg_showmiss.integer > 1) {
+ 		CG_Printf("[%i : %i] ", cg_pmove.cmd.serverTime, cg.time);
+ 	}
+ 
+@@ -1171,8 +1020,7 @@
+ 		if (cg_showmiss.integer) {
+ 			CG_Printf("Not moved\n");
+ 		}
+-		// clean event stack
+-		eventStack = 0;
++
+ 		return;
+ 	}
+ 	// adjust for the movement of the groundentity
+Index: code/cgame/cg_servercmds.c
+===================================================================
+--- code/cgame/cg_servercmds.c	(revision 797)
++++ code/cgame/cg_servercmds.c	(working copy)
+@@ -166,7 +166,11 @@
+ 	cgs.gametype = atoi(Info_ValueForKey(info, "g_gametype"));
+ 
+ 	trap_Cvar_SetValue("g_gametype", cgs.gametype);
++	// we'll need this for deciding whether or not to predict weapon effects
++	cgs.delagHitscan = atoi(Info_ValueForKey(info, "g_delagHitscan"));
+ 
++	trap_Cvar_Set("g_delagHitscan", va("%i", cgs.delagHitscan));
++
+ 	cgs.dmflags = atoi(Info_ValueForKey(info, "dmflags"));
+ 	cgs.fraglimit = atoi(Info_ValueForKey(info, "fraglimit"));
+ 	cgs.capturelimit = atoi(Info_ValueForKey(info, "capturelimit"));
+Index: code/cgame/cg_snapshot.c
+===================================================================
+--- code/cgame/cg_snapshot.c	(revision 797)
++++ code/cgame/cg_snapshot.c	(working copy)
+@@ -57,7 +57,7 @@
+ cent->nextState is moved to cent->currentState and events are fired.
+ =======================================================================================================================================
+ */
+-static void CG_TransitionEntity(centity_t *cent) {
++void CG_TransitionEntity(centity_t *cent) {
+ 
+ 	cent->currentState = cent->nextState;
+ 	cent->currentValid = qtrue;
+Index: code/cgame/cg_unlagged.c
+===================================================================
+--- code/cgame/cg_unlagged.c	(nonexistent)
++++ code/cgame/cg_unlagged.c	(working copy)
+@@ -0,0 +1,396 @@
++/*
++=======================================================================================================================================
++Copyright (C) 2006 Neil Toronto.
++
++This file is part of Spearmint Source Code.
++
++Spearmint Source Code is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
++published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
++
++Spearmint Source Code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with Spearmint Source Code.
++If not, see <http://www.gnu.org/licenses/>.
++
++In addition, Spearmint Source Code is also subject to certain additional terms. You should have received a copy of these additional
++terms immediately following the terms and conditions of the GNU General Public License. If not, please request a copy in writing from
++id Software at the address below.
++
++If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o
++ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
++=======================================================================================================================================
++*/
++
++#include "cg_local.h"
++
++/*
++=======================================================================================================================================
++CG_PredictWeaponEffects
++
++Draws predicted effects for the railgun, shotgun, and machinegun. The beamgun is done in CG_LightningBolt, since it was just a
++matter of setting the right origin and angles.
++=======================================================================================================================================
++*/
++void CG_PredictWeaponEffects(centity_t *cent) {
++	vec3_t muzzlePoint, forward, right, up, endPoint, v;
++	entityState_t *ent;
++	trace_t trace;
++	trace_t tr;
++	int contents, seed, fleshEntityNum;
++	qboolean flesh;
++	float r, u;
++
++	ent = &cent->currentState;
++	// if the client isn't us, forget it
++	if (cent->currentState.number != cg.predictedPlayerState.clientNum) {
++		return;
++	}
++	// if it's not switched on server-side, forget it
++	if (!cgs.delagHitscan) {
++		return;
++	}
++	// get the muzzle point
++	VectorCopy(cg.predictedPlayerState.origin, muzzlePoint);
++
++	muzzlePoint[2] += cg.predictedPlayerState.viewheight;
++	// get forward, right, and up
++	AngleVectors(cg.predictedPlayerState.viewangles, forward, right, up);
++	VectorMA(muzzlePoint, 14, forward, muzzlePoint);
++	// was it a rail attack?
++	if (ent->weapon == WP_RAILGUN) {
++		// do we have it on for the rail gun?
++		if (cg_delag.integer & 1 || cg_delag.integer & 16) {
++			// trace forward
++			VectorMA(muzzlePoint, 8192, forward, endPoint);
++// ------------------------------------------------------------------------
++			// THIS IS FOR DEBUGGING!
++			// you definitely *will* want something like this to test the backward reconciliation
++			// to make sure it's working *exactly* right
++			/* // Sago: There are some problems with some unlagged code. People will just have to trust it
++			if (cg_debugDelag.integer) {
++				// trace forward
++				CG_Trace(&trace, muzzlePoint, vec3_origin, vec3_origin, endPoint, cent->currentState.number, CONTENTS_BODY|CONTENTS_SOLID);
++				// did we hit another player?
++				if (trace.fraction < 1.0f && (trace.contents & CONTENTS_BODY)) {
++					// if we have two snapshots (we're interpolating)
++					if (cg.nextSnap) {
++						centity_t *c = &cg_entities[trace.entityNum];
++						vec3_t origin1, origin2;
++
++						// figure the two origins used for interpolation
++						BG_EvaluateTrajectory(&c->currentState.pos, cg.snap->serverTime, origin1);
++						BG_EvaluateTrajectory(&c->nextState.pos, cg.nextSnap->serverTime, origin2);
++						// print some debugging stuff exactly like what the server does
++						// it starts with "Int:" to let you know the target was interpolated
++						CG_Printf("^3Int: time: %d, j: %d, k: %d, origin: %0.2f %0.2f %0.2f\n", cg.oldTime, cg.snap->serverTime, cg.nextSnap->serverTime, c->lerpOrigin[0], c->lerpOrigin[1], c->lerpOrigin[2]);
++						CG_Printf("^5frac: %0.4f, origin1: %0.2f %0.2f %0.2f, origin2: %0.2f %0.2f %0.2f\n", cg.frameInterpolation, origin1[0], origin1[1], origin1[2], origin2[0], origin2[1], origin2[2]);
++					} else {
++						// we haven't got a next snapshot
++						// the client clock has either drifted ahead (seems to happen once per server frame when you play locally) or the client is using timenudge
++						// in any case, CG_CalcEntityLerpPositions extrapolated rather than interpolated
++						centity_t *c = &cg_entities[trace.entityNum];
++						vec3_t origin1, origin2;
++
++						c->currentState.pos.trTime = TR_LINEAR_STOP;
++						c->currentState.pos.trTime = cg.snap->serverTime;
++						c->currentState.pos.trDuration = 1000 / sv_fps.integer;
++
++						BG_EvaluateTrajectory(&c->currentState.pos, cg.snap->serverTime, origin1);
++						BG_EvaluateTrajectory(&c->currentState.pos, cg.snap->serverTime + 1000 / sv_fps.integer, origin2);
++						// print some debugging stuff exactly like what the server does
++						// it starts with "Ext:" to let you know the target was extrapolated
++						CG_Printf("^3Ext: time: %d, j: %d, k: %d, origin: %0.2f %0.2f %0.2f\n", cg.oldTime, cg.snap->serverTime, cg.snap->serverTime, c->lerpOrigin[0], c->lerpOrigin[1], c->lerpOrigin[2]);
++						CG_Printf("^5frac: %0.4f, origin1: %0.2f %0.2f %0.2f, origin2: %0.2f %0.2f %0.2f\n", cg.frameInterpolation, origin1[0], origin1[1], origin1[2], origin2[0], origin2[1], origin2[2]);
++					}
++				}
++			}
++			*/
++// ------------------------------------------------------------------------
++			// find the rail's end point
++			CG_Trace(&trace, muzzlePoint, vec3_origin, vec3_origin, endPoint, cg.predictedPlayerState.clientNum, CONTENTS_SOLID);
++			// do the magic-number adjustment
++			VectorMA(muzzlePoint, 4, right, muzzlePoint);
++			VectorMA(muzzlePoint, -1, up, muzzlePoint);
++
++			if(!cg.renderingThirdPerson) {
++				if(cg_drawGun.integer == 2) {
++					VectorMA(muzzlePoint, 8, cg.refdef.viewaxis[1], muzzlePoint);
++				} else if(cg_drawGun.integer == 3) {
++					VectorMA(muzzlePoint, 4, cg.refdef.viewaxis[1], muzzlePoint);
++				}
++			}
++			// draw a rail trail
++			CG_RailTrail(&cgs.clientinfo[cent->currentState.number], muzzlePoint, trace.endpos);
++			//Com_Printf("Predicted rail trail\n");
++			// explosion at end if not SURF_NOIMPACT
++			if (!(trace.surfaceFlags & SURF_NOIMPACT)) {
++				// predict an explosion
++				CG_MissileHitWall(ent->weapon, cg.predictedPlayerState.clientNum, trace.endpos, trace.plane.normal);
++			}
++		}
++	// was it a shotgun attack?
++	} else if (ent->weapon == WP_SHOTGUN) {
++		// do we have it on for the shotgun?
++		if (cg_delag.integer & 1 || cg_delag.integer & 4) {
++			// do everything like the server does
++			SnapVector(muzzlePoint);
++			VectorScale(forward, 4096, endPoint);
++			SnapVector(endPoint);
++			VectorSubtract(endPoint, muzzlePoint, v);
++			VectorNormalize(v);
++			VectorScale(v, 32, v);
++			VectorAdd(muzzlePoint, v, v);
++			// do the shotgun pellets
++			CG_ShotgunPattern(muzzlePoint, endPoint, cg.oldTime % 256, cg.predictedPlayerState.clientNum);
++			//Com_Printf("Predicted shotgun pattern\n");
++		}
++	// was it a machinegun attack?
++	} else if (ent->weapon == WP_MACHINEGUN) {
++		// do we have it on for the machinegun?
++		if (cg_delag.integer & 1 || cg_delag.integer & 2) {
++			// the server will use this exact time (it'll be serverTime on that end)
++			seed = cg.oldTime % 256;
++			fleshEntityNum = 0;
++			// do everything exactly like the server does
++			r = Q_random(&seed) * M_PI * 2.0f;
++			u = sin(r) * Q_crandom(&seed) * MACHINEGUN_SPREAD * 16;
++			r = cos(r) * Q_crandom(&seed) * MACHINEGUN_SPREAD * 16;
++
++			VectorMA(muzzlePoint, 8192*16, forward, endPoint);
++			VectorMA(endPoint, r, right, endPoint);
++			VectorMA(endPoint, u, up, endPoint);
++
++			CG_Trace(&tr, muzzlePoint, NULL, NULL, endPoint, cg.predictedPlayerState.clientNum, MASK_SHOT);
++
++			if (tr.surfaceFlags & SURF_NOIMPACT) {
++				return;
++			}
++			// snap the endpos to integers, but nudged towards the line
++			SnapVectorTowards(tr.endpos, muzzlePoint);
++			// do bullet impact
++			if (tr.entityNum < MAX_CLIENTS) {
++				flesh = qtrue;
++				fleshEntityNum = tr.entityNum;
++			} else {
++				flesh = qfalse;
++			}
++			// do the bullet impact
++			CG_Bullet(tr.endpos, cg.predictedPlayerState.clientNum, tr.plane.normal, flesh, fleshEntityNum);
++		}
++	// was it a chaingun attack?
++	} else if (ent->weapon == WP_CHAINGUN) {
++		// do we have it on for the machinegun?
++		if (cg_delag.integer & 1 || cg_delag.integer & 2) {
++			// the server will use this exact time (it'll be serverTime on that end)
++			seed = cg.oldTime % 256;
++			fleshEntityNum = 0;
++			// do everything exactly like the server does
++			r = Q_random(&seed) * M_PI * 2.0f;
++			u = sin(r) * Q_crandom(&seed) * CHAINGUN_SPREAD * 16;
++			r = cos(r) * Q_crandom(&seed) * CHAINGUN_SPREAD * 16;
++
++			VectorMA(muzzlePoint, 8192*16, forward, endPoint);
++			VectorMA(endPoint, r, right, endPoint);
++			VectorMA(endPoint, u, up, endPoint);
++
++			CG_Trace(&tr, muzzlePoint, NULL, NULL, endPoint, cg.predictedPlayerState.clientNum, MASK_SHOT);
++
++			if (tr.surfaceFlags & SURF_NOIMPACT) {
++				return;
++			}
++			// snap the endpos to integers, but nudged towards the line
++			SnapVectorTowards(tr.endpos, muzzlePoint);
++			// do bullet impact
++			if (tr.entityNum < MAX_CLIENTS) {
++				flesh = qtrue;
++				fleshEntityNum = tr.entityNum;
++			} else {
++				flesh = qfalse;
++			}
++			// do the bullet impact
++			CG_Bullet(tr.endpos, cg.predictedPlayerState.clientNum, tr.plane.normal, flesh, fleshEntityNum);
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++CG_AddBoundingBox
++
++Draws a bounding box around a player. Called from CG_Player.
++=======================================================================================================================================
++*/
++/*
++void CG_AddBoundingBox(centity_t *cent) {
++	polyVert_t verts[4];
++	clientInfo_t *ci;
++	int i;
++	vec3_t mins = {-15, -15, -24};
++	vec3_t maxs = {15, 15, 32};
++	float extx, exty, extz;
++	vec3_t corners[8];
++	qhandle_t bboxShader, bboxShader_nocull;
++
++	if (!cg_drawBBox.integer) {
++		return;
++	}
++
++	// don't draw it if it's us in first-person
++	if (cent->currentState.number == cg.predictedPlayerState.clientNum && !cg.renderingThirdPerson) {
++		return;
++	}
++	// don't draw it for dead players
++	if (cent->currentState.eFlags & EF_DEAD) {
++		return;
++	}
++	// get the shader handles
++	bboxShader = trap_R_RegisterShader("bbox");
++	bboxShader_nocull = trap_R_RegisterShader("bbox_nocull");
++	// if they don't exist, forget it
++	if (!bboxShader || !bboxShader_nocull) {
++		return;
++	}
++	// get the player's client info
++	ci = &cgs.clientinfo[cent->currentState.clientNum];
++	// if it's us
++	if (cent->currentState.number == cg.predictedPlayerState.clientNum) {
++		// use the view height
++		maxs[2] = cg.predictedPlayerState.viewheight + 6;
++	} else {
++		int x, zd, zu;
++
++		// otherwise grab the encoded bounding box
++		x = (cent->currentState.solid & 255);
++		zd = ((cent->currentState.solid>>8) & 255);
++		zu = ((cent->currentState.solid>>16) & 255) - 32;
++
++		mins[0] = mins[1] = -x;
++		maxs[0] = maxs[1] = x;
++		mins[2] = -zd;
++		maxs[2] = zu;
++	}
++
++	// get the extents (size)
++	extx = maxs[0] - mins[0];
++	exty = maxs[1] - mins[1];
++	extz = maxs[2] - mins[2];
++	// set the polygon's texture coordinates
++	verts[0].st[0] = 0;
++	verts[0].st[1] = 0;
++	verts[1].st[0] = 0;
++	verts[1].st[1] = 1;
++	verts[2].st[0] = 1;
++	verts[2].st[1] = 1;
++	verts[3].st[0] = 1;
++	verts[3].st[1] = 0;
++	// set the polygon's vertex colors
++	if (ci->team == TEAM_RED) {
++		for (i = 0; i < 4; i++) {
++			verts[i].modulate[0] = 160;
++			verts[i].modulate[1] = 0;
++			verts[i].modulate[2] = 0;
++			verts[i].modulate[3] = 255;
++		}
++	} else if (ci->team == TEAM_BLUE) {
++		for (i = 0; i < 4; i++) {
++			verts[i].modulate[0] = 0;
++			verts[i].modulate[1] = 0;
++			verts[i].modulate[2] = 192;
++			verts[i].modulate[3] = 255;
++		}
++	} else {
++		for (i = 0; i < 4; i++) {
++			verts[i].modulate[0] = 0;
++			verts[i].modulate[1] = 128;
++			verts[i].modulate[2] = 0;
++			verts[i].modulate[3] = 255;
++		}
++	}
++
++	VectorAdd(cent->lerpOrigin, maxs, corners[3]);
++
++	VectorCopy(corners[3], corners[2]);
++	corners[2][0] -= extx;
++
++	VectorCopy(corners[2], corners[1]);
++	corners[1][1] -= exty;
++
++	VectorCopy(corners[1], corners[0]);
++	corners[0][0] += extx;
++
++	for (i = 0; i < 4; i++) {
++		VectorCopy(corners[i], corners[i + 4]);
++		corners[i + 4][2] -= extz;
++	}
++	// top
++	VectorCopy(corners[0], verts[0].xyz);
++	VectorCopy(corners[1], verts[1].xyz);
++	VectorCopy(corners[2], verts[2].xyz);
++	VectorCopy(corners[3], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader, 4, verts);
++	// bottom
++	VectorCopy(corners[7], verts[0].xyz);
++	VectorCopy(corners[6], verts[1].xyz);
++	VectorCopy(corners[5], verts[2].xyz);
++	VectorCopy(corners[4], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader, 4, verts);
++	// top side
++	VectorCopy(corners[3], verts[0].xyz);
++	VectorCopy(corners[2], verts[1].xyz);
++	VectorCopy(corners[6], verts[2].xyz);
++	VectorCopy(corners[7], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader_nocull, 4, verts);
++	// left side
++	VectorCopy(corners[2], verts[0].xyz);
++	VectorCopy(corners[1], verts[1].xyz);
++	VectorCopy(corners[5], verts[2].xyz);
++	VectorCopy(corners[6], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader_nocull, 4, verts);
++	// right side
++	VectorCopy(corners[0], verts[0].xyz);
++	VectorCopy(corners[3], verts[1].xyz);
++	VectorCopy(corners[7], verts[2].xyz);
++	VectorCopy(corners[4], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader_nocull, 4, verts);
++	// bottom side
++	VectorCopy(corners[1], verts[0].xyz);
++	VectorCopy(corners[0], verts[1].xyz);
++	VectorCopy(corners[4], verts[2].xyz);
++	VectorCopy(corners[5], verts[3].xyz);
++	trap_R_AddPolyToScene(bboxShader_nocull, 4, verts);
++}
++*/
++/*
++=======================================================================================================================================
++CG_Cvar_ClampInt
++
++Clamps a cvar between two integer values, returns qtrue if it had to.
++=======================================================================================================================================
++*/
++qboolean CG_Cvar_ClampInt(const char *name, vmCvar_t *vmCvar, int min, int max) {
++
++	if (vmCvar->integer > max) {
++		CG_Printf("Allowed values are %d to %d.\n", min, max);
++		Com_sprintf(vmCvar->string, MAX_CVAR_VALUE_STRING, "%d", max);
++
++		vmCvar->value = max;
++		vmCvar->integer = max;
++
++		trap_Cvar_Set(name, vmCvar->string);
++		return qtrue;
++	}
++
++	if (vmCvar->integer < min) {
++		CG_Printf("Allowed values are %d to %d.\n", min, max);
++		Com_sprintf(vmCvar->string, MAX_CVAR_VALUE_STRING, "%d", min);
++
++		vmCvar->value = min;
++		vmCvar->integer = min;
++
++		trap_Cvar_Set(name, vmCvar->string);
++		return qtrue;
++	}
++
++	return qfalse;
++}
+Index: code/cgame/cg_weapons.c
+===================================================================
+--- code/cgame/cg_weapons.c	(revision 797)
++++ code/cgame/cg_weapons.c	(working copy)
+@@ -419,13 +419,21 @@
+ 	}
+ 
+ 	memset(&beam, 0, sizeof(beam));
++	// if the entity is us, unlagged is on server-side, and we've got it on for the beamgun
++	if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 8)) {
++		// always shoot straight forward from our current position
++		AngleVectorsForward(cg.predictedPlayerState.viewangles, forward);
++		VectorCopy(cg.predictedPlayerState.origin, muzzlePoint);
+ 	// CPMA "true" lightning
+-	if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
+-		vec3_t angle;
++	} else if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
++		vec3_t angle, viewangles;
+ 		int i;
+ 
++		// might as well fix up true lightning while we're at it
++		VectorCopy(cg.predictedPlayerState.viewangles, viewangles);
++
+ 		for (i = 0; i < 3; i++) {
+-			float a = cent->lerpAngles[i] - cg.refdefViewAngles[i];
++			float a = cent->lerpAngles[i] - viewangles[i];
+ 
+ 			if (a > 180) {
+ 				a -= 360;
+@@ -435,7 +443,7 @@
+ 				a += 360;
+ 			}
+ 
+-			angle[i] = cg.refdefViewAngles[i] + a * (1.0 - cg_trueLightning.value);
++			angle[i] = viewangles[i] + a * (1.0 - cg_trueLightning.value);
+ 
+ 			if (angle[i] < 0) {
+ 				angle[i] += 360;
+@@ -447,7 +455,8 @@
+ 		}
+ 
+ 		AngleVectorsForward(angle, forward);
+-		VectorCopy(cent->lerpOrigin, muzzlePoint);
++		// this is the correct origin for true lightning
++		VectorCopy(cg.predictedPlayerState.origin, muzzlePoint);
+ 	// !CPMA
+ 	} else {
+ 		AngleVectorsForward(cent->lerpAngles, forward);
+@@ -1183,7 +1192,7 @@
+ Perform the same traces the server did to locate the hit splashes.
+ =======================================================================================================================================
+ */
+-static void CG_ShotgunPattern(vec3_t origin, vec3_t origin2, int seed, int otherEntNum) {
++void CG_ShotgunPattern(vec3_t origin, vec3_t origin2, int seed, int otherEntNum) {
+ 	int i;
+ 	float r, u;
+ 	vec3_t end;
+@@ -1287,6 +1296,8 @@
+ 	if (weap->ejectBrassFunc && cg_brassTime.integer > 0) {
+ 		weap->ejectBrassFunc(cent);
+ 	}
++
++	CG_PredictWeaponEffects(cent);
+ }
+ 
+ /*
+Index: code/game/bg_public.h
+===================================================================
+--- code/game/bg_public.h	(revision 797)
++++ code/game/bg_public.h	(working copy)
+@@ -266,6 +266,11 @@
+ 
+ **************************************************************************************************************************************/
+ 
++#define CHAINGUN_SPREAD 600
++#define CHAINGUN_DAMAGE 7
++#define MACHINEGUN_SPREAD 200
++#define MACHINEGUN_DAMAGE 5
++
+ typedef enum {
+ 	WP_NONE,
+ 	WP_GAUNTLET,
+Index: code/game/g_active.c
+===================================================================
+--- code/game/g_active.c	(revision 797)
++++ code/game/g_active.c	(working copy)
+@@ -711,6 +711,7 @@
+ 	pmove_t pm;
+ 	int oldEventSequence;
+ 	int msec;
++	int i, sum;
+ 	usercmd_t *ucmd;
+ 
+ 	client = ent->client;
+@@ -718,6 +719,9 @@
+ 	if (client->pers.connected != CON_CONNECTED) {
+ 		return;
+ 	}
++	// frameOffset should be about the number of milliseconds into a frame this command packet was received, depending on how fast the
++	// server does a G_RunFrame()
++	client->frameOffset = trap_Milliseconds() - level.frameStartTime;
+ 	// mark the time, so the connection sprite can be removed
+ 	ucmd = &ent->client->pers.cmd;
+ 	// sanity check the command time to prevent speedup cheating
+@@ -728,7 +732,38 @@
+ 		ucmd->serverTime = level.time - 1000;
+ //		G_Printf("serverTime >>>>>\n");
+ 	}
++	// save the estimated ping in a queue for averaging later
++	// we use level.previousTime to account for 50ms lag correction
++	// besides, this will turn out numbers more like what players are used to
++	client->pers.pingsamples[client->pers.samplehead] = level.previousTime + client->frameOffset - ucmd->serverTime;
++	client->pers.samplehead++;
+ 
++	if (client->pers.samplehead >= NUM_PING_SAMPLES) {
++		client->pers.samplehead -= NUM_PING_SAMPLES;
++	}
++	// initialize the real ping
++	if (g_truePing.integer) {
++		sum = 0;
++		// get an average of the samples we saved up
++		for (i = 0; i < NUM_PING_SAMPLES; i++) {
++			sum += client->pers.pingsamples[i];
++		}
++
++		client->pers.realPing = sum / NUM_PING_SAMPLES;
++	} else {
++		// if g_truePing is off, use the normal ping
++		client->pers.realPing = client->ps.ping;
++	}
++	// save the command time *before* pmove_fixed messes with the serverTime, and *after* lag simulation messes with it :)
++	// attackTime will be used for backward reconciliation later (time shift)
++	client->attackTime = ucmd->serverTime;
++	// keep track of this for later - we'll use this to decide whether or not to send extrapolated positions for this client
++	client->lastUpdateFrame = level.framenum;
++	// make sure the true ping is over 0 - with cl_timenudge it can be less
++	if (client->pers.realPing < 0) {
++		client->pers.realPing = 0;
++	}
++
+ 	msec = ucmd->serverTime - client->ps.commandTime;
+ 	// following others may result in bad times, but we still want to check for follow toggles
+ 	if (msec < 1 && client->sess.spectatorState != SPECTATOR_FOLLOW) {
+@@ -849,12 +884,7 @@
+ 		ent->eventTime = level.time;
+ 	}
+ 
+-	if (g_smoothClients.integer) {
+-		BG_PlayerStateToEntityStateExtraPolate(&ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue);
+-	} else {
+-		BG_PlayerStateToEntityState(&ent->client->ps, &ent->s, qtrue);
+-	}
+-
++	BG_PlayerStateToEntityState(&ent->client->ps, &ent->s, qtrue);
+ 	SendPendingPredictableEvents(&ent->client->ps);
+ 
+ 	if (!(ent->client->ps.eFlags & EF_FIRING)) {
+@@ -923,8 +953,6 @@
+ 	ent = g_entities + clientNum;
+ 
+ 	trap_GetUsercmd(clientNum, &ent->client->pers.cmd);
+-	// mark the time we got info, so we can display the phone jack if they don't get any for a while
+-	ent->client->lastCmdTime = level.time;
+ 
+ 	if (!(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer) {
+ 		ClientThink_Real(ent);
+@@ -1005,7 +1033,7 @@
+ =======================================================================================================================================
+ */
+ void ClientEndFrame(gentity_t *ent) {
+-	int i;
++	int i, frames;
+ 
+ 	if (ent->client->sess.sessionTeam == TEAM_SPECTATOR) {
+ 		SpectatorClientEndFrame(ent);
+@@ -1048,24 +1076,35 @@
+ 	G_WorldEffects(ent);
+ 	// apply all the damage taken this frame
+ 	G_DamageFeedback(ent);
+-	// add the EF_CONNECTION flag if we haven't gotten commands recently
+-	if (level.time - ent->client->lastCmdTime > 1000) {
+-		ent->client->ps.eFlags |= EF_CONNECTION;
+-	} else {
+-		ent->client->ps.eFlags &= ~EF_CONNECTION;
+-	}
+ 
+ 	ent->client->ps.stats[STAT_HEALTH] = ent->health; // FIXME: get rid of ent->health...
+ 
+ 	G_SetClientSound(ent);
+ 	// set the latest infor
+-	if (g_smoothClients.integer) {
+-		BG_PlayerStateToEntityStateExtraPolate(&ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue);
+-	} else {
+-		BG_PlayerStateToEntityState(&ent->client->ps, &ent->s, qtrue);
++	BG_PlayerStateToEntityState(&ent->client->ps, &ent->s, qtrue);
++	SendPendingPredictableEvents(&ent->client->ps);
++	// mark as not missing updates initially
++	ent->client->ps.eFlags &= ~EF_CONNECTION;
++	// see how many frames the client has missed
++	frames = level.framenum - ent->client->lastUpdateFrame - 1;
++	// don't extrapolate more than two frames
++	if (frames > 2) {
++		frames = 2;
++		// if they missed more than two in a row, show the phone jack
++		if (!(ent->r.svFlags & SVF_BOT)) {
++			ent->client->ps.eFlags |= EF_CONNECTION;
++			ent->s.eFlags |= EF_CONNECTION;
++		}
+ 	}
+-
+-	SendPendingPredictableEvents(&ent->client->ps);
++	// did the client miss any frames?
++	if (frames > 0 && g_smoothClients.integer) {
++		// yep, missed one or more, so extrapolate the player's movement
++		G_PredictPlayerMove(ent, (float)frames / sv_fps.integer);
++		// save network bandwidth
++		SnapVector(ent->s.pos.trBase);
++	}
++	// store the client's position for backward reconciliation later
++	G_StoreHistory(ent);
+ 	// set the bit for the reachability area the client is currently in
+ 	//i = trap_AAS_PointReachabilityAreaIndex(ent->client->ps.origin);
+ 	//ent->client->areabits[i >> 3] |= 1 << (i & 7);
+Index: code/game/g_client.c
+===================================================================
+--- code/game/g_client.c	(revision 797)
++++ code/game/g_client.c	(working copy)
+@@ -698,6 +698,18 @@
+ 	} else {
+ 		client->pers.predictItemPickup = qtrue;
+ 	}
++	// see if the player has opted out
++	s = Info_ValueForKey(userinfo, "cg_delag");
++
++	if (!atoi(s)) {
++		client->pers.delag = 0;
++	} else {
++		client->pers.delag = atoi(s);
++	}
++	// see if the player is nudging his shots
++	s = Info_ValueForKey(userinfo, "cg_cmdTimeNudge");
++
++	client->pers.cmdTimeNudge = atoi(s);
+ 	// set name
+ 	Q_strncpyz(oldname, client->pers.netname, sizeof(oldname));
+ 
+@@ -851,6 +863,12 @@
+ 	}
+ 	// count current clients and rank for scoreboard
+ 	CalculateRanks();
++	// announce it
++	if (g_delagHitscan.integer) {
++		trap_SendServerCommand(clientNum, "print \"Full lag compensation is ON!\n\"");
++	} else {
++		trap_SendServerCommand(clientNum, "print \"Full lag compensation is OFF!\n\"");
++	}
+ 	// for statistics
+ 	//client->areabits = areabits;
+ 
+@@ -963,6 +981,8 @@
+ 	// toggle the teleport bit so the client knows to not lerp and never clear the voted flag
+ 	flags = ent->client->ps.eFlags & (EF_TELEPORT_BIT|EF_VOTED|EF_TEAMVOTED);
+ 	flags ^= EF_TELEPORT_BIT;
++	// and this is as good a time as any to clear the saved state
++	ent->client->saved.leveltime = 0;
+ 	// clear everything but the persistant data
+ 	saved = client->pers;
+ 	savedSess = client->sess;
+@@ -1085,6 +1105,8 @@
+ 	}
+ 	// clear entity state values
+ 	BG_PlayerStateToEntityState(&client->ps, &ent->s, qtrue);
++	// we don't want players being backward-reconciled to the place they died
++	G_ResetHistory(ent);
+ }
+ 
+ /*
+Index: code/game/g_cmds.c
+===================================================================
+--- code/game/g_cmds.c	(revision 797)
++++ code/game/g_cmds.c	(working copy)
+@@ -55,7 +55,7 @@
+ 		if (cl->pers.connected == CON_CONNECTING) {
+ 			ping = -1;
+ 		} else {
+-			ping = cl->ps.ping < 999 ? cl->ps.ping : 999;
++			ping = cl->pers.realPing < 999 ? cl->pers.realPing : 999;
+ 		}
+ 
+ 		if (cl->accuracy_shots) {
+Index: code/game/g_combat.c
+===================================================================
+--- code/game/g_combat.c	(revision 797)
++++ code/game/g_combat.c	(working copy)
+@@ -450,6 +450,8 @@
+ 	if (level.intermissiontime) {
+ 		return;
+ 	}
++	// make sure the body shows up in the player's current position
++	G_UnTimeShiftClient(self);
+ 	// check for an almost capture
+ 	CheckAlmostCapture(self, attacker);
+ 	// check for a player that almost brought in cubes
+Index: code/game/g_local.h
+===================================================================
+--- code/game/g_local.h	(revision 797)
++++ code/game/g_local.h	(working copy)
+@@ -182,6 +182,8 @@
+ 
+ #define MAX_NETNAME 36
+ #define MAX_VOTE_COUNT 3
++// true ping
++#define NUM_PING_SAMPLES 64
+ // client data that stays across multiple respawns, but is cleared on each level change or team change at ClientBegin()
+ typedef struct {
+ 	clientConnected_t connected;
+@@ -195,7 +197,25 @@
+ 	int voteCount;					// to prevent people from constantly calling votes
+ 	int teamVoteCount;				// to prevent people from constantly calling votes
+ 	qboolean teamInfo;				// send team overlay updates?
++	// these correspond with variables in the userinfo string
++	int delag;
++	int cmdTimeNudge;
++	// true ping
++	int realPing;
++	int pingsamples[NUM_PING_SAMPLES];
++	int samplehead;
+ } clientPersistant_t;
++
++// the size of history we'll keep
++#define NUM_CLIENT_HISTORY 17
++// everything we need to know to backward reconcile
++typedef struct {
++	vec3_t mins;
++	vec3_t maxs;
++	vec3_t currentOrigin;
++	int leveltime;
++} clientHistory_t;
++
+ // this structure is cleared on each ClientSpawn(), except for 'client->pers' and 'client->sess'
+ struct gclient_s {
+ 	// ps MUST be the first element, because the server expects it
+@@ -205,7 +225,6 @@
+ 	clientSession_t sess;
+ 	qboolean readyToExit;	// wishes to leave the intermission
+ 	qboolean noclip;
+-	int lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION we can't just use pers.lastCommand.time, because of the g_sycronousclients case
+ 	int buttons;
+ 	int oldbuttons;
+ 	int latched_buttons;
+@@ -237,6 +256,12 @@
+ 	gentity_t *persistantPowerup;
+ 	int ammoTimes[WP_NUM_WEAPONS];
+ 	char *areabits;
++	int attackTime;			// the serverTime the button was pressed (stored before pmove_fixed changes serverTime)
++	int historyHead;		// the head of the history queue
++	clientHistory_t history[NUM_CLIENT_HISTORY]; // the history queue
++	clientHistory_t saved;	// the client's saved position used to restore after time shift
++	int frameOffset;		// an approximation of the actual server time we received this command (not in 50ms increments)
++	int lastUpdateFrame;	// the last frame number we got an update from this client
+ };
+ // this structure is cleared as each map is entered
+ typedef struct {
+@@ -254,6 +279,7 @@
+ 	int time;						// in msec
+ 	int previousTime;				// so movers can back up when blocked
+ 	int startTime;					// level.time the map was started
++	int frameStartTime;				// actual time this server frame started
+ 	int teamScores[TEAM_NUM_TEAMS];
+ 	int lastTeamLocationTime;		// last time of client team location update
+ 	qboolean newSession;			// don't use any old session data, because we changed gametype
+@@ -400,6 +426,15 @@
+ void AddScore(gentity_t *ent, vec3_t origin, int score);
+ void CalculateRanks(void);
+ qboolean SpotWouldTelefrag(gentity_t *spot);
++// g_unlagged.c
++void G_ResetHistory(gentity_t *ent);
++void G_StoreHistory(gentity_t *ent);
++void G_TimeShiftAllClients(int time, gentity_t *skip);
++void G_UnTimeShiftAllClients(gentity_t *skip);
++void G_DoTimeShiftFor(gentity_t *ent);
++void G_UndoTimeShiftFor(gentity_t *ent);
++void G_UnTimeShiftClient(gentity_t *client);
++void G_PredictPlayerMove(gentity_t *ent, float frametime);
+ // g_svcmds.c
+ qboolean G_ConsoleCommand(void);
+ void G_RegisterCommands(void);
+@@ -525,6 +560,10 @@
+ extern vmCvar_t g_redteam;
+ extern vmCvar_t g_blueteam;
+ extern vmCvar_t g_smoothClients;
++extern vmCvar_t g_delagHitscan;
++extern vmCvar_t g_truePing;
++extern vmCvar_t sv_fps; // this is for convenience - using "sv_fps.integer" is nice :)
++extern vmCvar_t g_lagBeamgun;
+ extern vmCvar_t pmove_fixed;
+ extern vmCvar_t pmove_msec;
+ extern vmCvar_t g_singlePlayer;
+Index: code/game/g_main.c
+===================================================================
+--- code/game/g_main.c	(revision 797)
++++ code/game/g_main.c	(working copy)
+@@ -78,6 +78,10 @@
+ vmCvar_t g_banIPs;
+ vmCvar_t g_filterBan;
+ vmCvar_t g_smoothClients;
++vmCvar_t g_delagHitscan;
++vmCvar_t g_truePing;
++vmCvar_t sv_fps;
++vmCvar_t g_lagBeamgun; // adds a little lag to the lightninggun to make it less powerful
+ vmCvar_t pmove_fixed;
+ vmCvar_t pmove_msec;
+ vmCvar_t g_listEntity;
+@@ -147,6 +151,10 @@
+ 	{&g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
+ 	{&g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
+ 	{&g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse},
++	{&g_delagHitscan, "g_delagHitscan", "0", CVAR_ARCHIVE|CVAR_SERVERINFO, 0, qtrue},
++	{&g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue},
++	{&sv_fps, "sv_fps", "20", CVAR_SYSTEMINFO|CVAR_ARCHIVE, 0, qfalse}, // it's CVAR_SYSTEMINFO so the client's sv_fps will be automagically set to its value
++	{&g_lagBeamgun, "g_lagBeamgun", "1", CVAR_ARCHIVE, 0, qtrue },
+ 	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
+ 	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse}
+ };
+@@ -1802,11 +1810,6 @@
+ 			continue;
+ 		}
+ 
+-		if (ent->s.eType == ET_MISSILE) {
+-			G_RunMissile(ent);
+-			continue;
+-		}
+-
+ 		if (ent->s.eType == ET_ITEM || ent->physicsObject) {
+ 			G_RunItem(ent);
+ 			continue;
+@@ -1824,9 +1827,28 @@
+ 
+ 		G_RunThink(ent);
+ 	}
+-	// perform final fixups on the players
++	// now run the missiles, with all players backward-reconciled to the positions they were in exactly 50ms ago, at the end of the
++	// last server frame
++	G_TimeShiftAllClients(level.previousTime, NULL);
++
+ 	ent = &g_entities[0];
+ 
++	for (i = 0; i < level.num_entities; i++, ent++) {
++		if (!ent->inuse) {
++			continue;
++		}
++		// temporary entities don't think
++		if (ent->freeAfterEvent) {
++			continue;
++		}
++
++		if (ent->s.eType == ET_MISSILE) {
++			G_RunMissile(ent);
++		}
++	}
++
++	G_UnTimeShiftAllClients(NULL);
++	// perform final fixups on the players
+ 	for (i = 0; i < level.maxclients; i++, ent++) {
+ 		if (ent->inuse) {
+ 			ClientEndFrame(ent);
+@@ -1853,4 +1875,7 @@
+ 
+ 		trap_Cvar_SetValue("g_listEntity", 0);
+ 	}
++	// record the time at the end of this frame - it should be about the time the next frame begins - when the server starts accepting
++	// commands from connected clients
++	level.frameStartTime = trap_Milliseconds();
+ }
+Index: code/game/g_misc.c
+===================================================================
+--- code/game/g_misc.c	(revision 797)
++++ code/game/g_misc.c	(working copy)
+@@ -141,6 +141,8 @@
+ 	if (ps->pm_type != PM_SPECTATOR) {
+ 		trap_LinkEntity(player);
+ 	}
++	// we don't want players being backward-reconciled back through teleporters
++	G_ResetHistory(player);
+ }
+ 
+ /*QUAKED misc_teleporter_dest (1 0 0) (-32 -32 -24) (32 32 -16)
+Index: code/game/g_missile.c
+===================================================================
+--- code/game/g_missile.c	(revision 797)
++++ code/game/g_missile.c	(working copy)
+@@ -435,6 +435,7 @@
+ 	bolt->s.eType = ET_MISSILE;
+ 	bolt->s.weapon = WP_NAILGUN;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 20;
+ 	bolt->methodOfDeath = MOD_NAIL;
+@@ -489,6 +490,7 @@
+ 	bolt->s.weapon = WP_PROXLAUNCHER;
+ 	bolt->s.eFlags = 0;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 0;
+ 	bolt->splashDamage = 100;
+@@ -533,6 +535,7 @@
+ 	bolt->s.weapon = WP_GRENADELAUNCHER;
+ 	bolt->s.eFlags = EF_BOUNCE_HALF;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 0;
+ 	bolt->splashDamage = 200;
+@@ -576,6 +579,7 @@
+ 	bolt->s.eType = ET_MISSILE;
+ 	bolt->s.weapon = WP_NAPALMLAUNCHER;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 0;
+ 	bolt->splashDamage = 10;
+@@ -619,6 +623,7 @@
+ 	bolt->s.eType = ET_MISSILE;
+ 	bolt->s.weapon = WP_ROCKETLAUNCHER;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 100;
+ 	bolt->splashDamage = 100;
+@@ -662,6 +667,7 @@
+ 	bolt->s.eType = ET_MISSILE;
+ 	bolt->s.weapon = WP_PLASMAGUN;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 20;
+ 	bolt->splashDamage = 15;
+@@ -705,6 +711,7 @@
+ 	bolt->s.eType = ET_MISSILE;
+ 	bolt->s.weapon = WP_BFG;
+ 	bolt->r.ownerNum = self->s.number;
++	bolt->s.otherEntityNum = self->s.number; // we'll need this for nudging projectiles later
+ 	bolt->parent = self;
+ 	bolt->damage = 100;
+ 	bolt->splashDamage = 100;
+Index: code/game/g_unlagged.c
+===================================================================
+--- code/game/g_unlagged.c	(nonexistent)
++++ code/game/g_unlagged.c	(working copy)
+@@ -0,0 +1,498 @@
++/*
++=======================================================================================================================================
++Copyright (C) 2006 Neil Toronto.
++
++This file is part of Spearmint Source Code.
++
++Spearmint Source Code is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
++published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
++
++Spearmint Source Code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with Spearmint Source Code.
++If not, see <http://www.gnu.org/licenses/>.
++
++In addition, Spearmint Source Code is also subject to certain additional terms. You should have received a copy of these additional
++terms immediately following the terms and conditions of the GNU General Public License. If not, please request a copy in writing from
++id Software at the address below.
++
++If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o
++ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
++=======================================================================================================================================
++*/
++
++#include "g_local.h"
++
++/*
++=======================================================================================================================================
++G_ResetHistory
++
++Clear out the given client's history (should be called when the teleport bit is flipped).
++=======================================================================================================================================
++*/
++void G_ResetHistory(gentity_t *ent) {
++	int i, time;
++
++	// fill up the history with data (assume the current position)
++	ent->client->historyHead = NUM_CLIENT_HISTORY - 1;
++
++	for (i = ent->client->historyHead, time = level.time; i >= 0; i--, time -= 50) {
++		VectorCopy(ent->r.mins, ent->client->history[i].mins);
++		VectorCopy(ent->r.maxs, ent->client->history[i].maxs);
++		VectorCopy(ent->r.currentOrigin, ent->client->history[i].currentOrigin);
++
++		ent->client->history[i].leveltime = time;
++	}
++}
++
++/*
++=======================================================================================================================================
++G_StoreHistory
++
++Keep track of where the client's been.
++=======================================================================================================================================
++*/
++void G_StoreHistory(gentity_t *ent) {
++	int head;
++
++	ent->client->historyHead++;
++
++	if (ent->client->historyHead >= NUM_CLIENT_HISTORY) {
++		ent->client->historyHead = 0;
++	}
++
++	head = ent->client->historyHead;
++	// store all the collision-detection info and the time
++	VectorCopy(ent->r.mins, ent->client->history[head].mins);
++	VectorCopy(ent->r.maxs, ent->client->history[head].maxs);
++	VectorCopy(ent->s.pos.trBase, ent->client->history[head].currentOrigin);
++	SnapVector(ent->client->history[head].currentOrigin);
++
++	ent->client->history[head].leveltime = level.time;
++}
++
++/*
++=======================================================================================================================================
++TimeShiftLerp
++
++Used below to interpolate between two previous vectors. Returns a vector "frac" times the distance between "start" and "end".
++=======================================================================================================================================
++*/
++static void TimeShiftLerp(float frac, vec3_t start, vec3_t end, vec3_t result) {
++	// from CG_InterpolateEntityPosition in cg_ents.c:
++/*
++	cent->lerpOrigin[0] = current[0] + f * (next[0] - current[0]);
++	cent->lerpOrigin[1] = current[1] + f * (next[1] - current[1]);
++	cent->lerpOrigin[2] = current[2] + f * (next[2] - current[2]);
++*/
++	// making these exactly the same should avoid floating-point error
++	result[0] = start[0] + frac * (end[0] - start[0]);
++	result[1] = start[1] + frac * (end[1] - start[1]);
++	result[2] = start[2] + frac * (end[2] - start[2]);
++}
++
++/*
++=======================================================================================================================================
++G_TimeShiftClient
++
++Move a client back to where he was at the specified "time".
++=======================================================================================================================================
++*/
++void G_TimeShiftClient(gentity_t *ent, int time, qboolean debug, gentity_t *debugger) {
++	int j, k;
++	float frac;
++
++	// find two entries in the history whose times sandwich "time", assumes no two adjacent records have the same timestamp
++	j = k = ent->client->historyHead;
++
++	do {
++		if (ent->client->history[j].leveltime <= time) {
++			break;
++		}
++
++		k = j;
++		j--;
++
++		if (j < 0) {
++			j = NUM_CLIENT_HISTORY - 1;
++		}
++	}
++
++	while (j != ent->client->historyHead);
++	// if we got past the first iteration above, we've sandwiched (or wrapped)
++	if (j != k) {
++		// make sure it doesn't get re-saved
++		if (ent->client->saved.leveltime != level.time) {
++			// save the current origin and bounding box
++			VectorCopy(ent->r.mins, ent->client->saved.mins);
++			VectorCopy(ent->r.maxs, ent->client->saved.maxs);
++			VectorCopy(ent->r.currentOrigin, ent->client->saved.currentOrigin);
++
++			ent->client->saved.leveltime = level.time;
++		}
++		// if we haven't wrapped back to the head, we've sandwiched, so we shift the client's position back to where he was at "time"
++		if (j != ent->client->historyHead) {
++			frac = (float)(time - ent->client->history[j].leveltime) / (float)(ent->client->history[k].leveltime - ent->client->history[j].leveltime);
++			// interpolate between the two origins to give position at time index "time"
++			TimeShiftLerp(frac, ent->client->history[j].currentOrigin, ent->client->history[k].currentOrigin, ent->r.currentOrigin);
++			// lerp these too, just for fun (and ducking)
++			TimeShiftLerp(frac, ent->client->history[j].mins, ent->client->history[k].mins, ent->r.mins);
++			TimeShiftLerp(frac, ent->client->history[j].maxs, ent->client->history[k].maxs, ent->r.maxs);
++			// this will recalculate absmin and absmax
++			trap_LinkEntity(ent);
++		} else {
++			// we wrapped, so grab the earliest
++			VectorCopy(ent->client->history[k].currentOrigin, ent->r.currentOrigin);
++			VectorCopy(ent->client->history[k].mins, ent->r.mins);
++			VectorCopy(ent->client->history[k].maxs, ent->r.maxs);
++			// this will recalculate absmin and absmax
++			trap_LinkEntity(ent);
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++G_TimeShiftAllClients
++
++Move ALL clients back to where they were at the specified "time", except for "skip".
++=======================================================================================================================================
++*/
++void G_TimeShiftAllClients(int time, gentity_t *skip) {
++	int i;
++	gentity_t *ent;
++	qboolean debug = (skip != NULL && skip->client && skip->s.weapon == WP_RAILGUN);
++
++	// for every client
++	ent = &g_entities[0];
++
++	for (i = 0; i < MAX_CLIENTS; i++, ent++) {
++		if (ent->client && ent->inuse && ent->client->sess.sessionTeam < TEAM_SPECTATOR && ent != skip) {
++			G_TimeShiftClient(ent, time, debug, skip);
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++G_DoTimeShiftFor
++
++Decide what time to shift everyone back to, and do it.
++=======================================================================================================================================
++*/
++void G_DoTimeShiftFor(gentity_t *ent) {
++	int wpflags[WP_NUM_WEAPONS] = {0, 0, 2, 4, 0, 0, 8, 16, 0, 0, 0, 32, 0, 64};
++	int wpflag;
++	int time;
++
++	wpflag = wpflags[ent->client->ps.weapon];
++	// don't time shift for mistakes or bots
++	if (!ent->inuse || !ent->client || (ent->r.svFlags & SVF_BOT)) {
++		return;
++	}
++	// if it's enabled server-side and the client wants it or wants it for this weapon
++	if (g_delagHitscan.integer && (ent->client->pers.delag & 1 || ent->client->pers.delag & wpflag)) {
++		// do the full lag compensation, except what the client nudges
++		time = ent->client->attackTime + ent->client->pers.cmdTimeNudge;
++		// give the beamgun some handicap (lag was part of weapon balance in VQ3)
++		if (ent->client->ps.weapon == WP_BEAMGUN && g_lagBeamgun.integer) {
++			time += 50;
++		}
++	} else {
++		// do just 50ms
++		time = level.previousTime + ent->client->frameOffset;
++	}
++
++	G_TimeShiftAllClients(time, ent);
++}
++
++/*
++=======================================================================================================================================
++G_UnTimeShiftClient
++
++Move a client back to where he was before the time shift.
++=======================================================================================================================================
++*/
++void G_UnTimeShiftClient(gentity_t *ent) {
++
++	// if it was saved
++	if (ent->client->saved.leveltime == level.time) {
++		// move it back
++		VectorCopy(ent->client->saved.mins, ent->r.mins);
++		VectorCopy(ent->client->saved.maxs, ent->r.maxs);
++		VectorCopy(ent->client->saved.currentOrigin, ent->r.currentOrigin);
++
++		ent->client->saved.leveltime = 0;
++		// this will recalculate absmin and absmax
++		trap_LinkEntity(ent);
++	}
++}
++
++/*
++=======================================================================================================================================
++G_UnTimeShiftAllClients
++
++Move ALL the clients back to where they were before the time shift, except for "skip".
++=======================================================================================================================================
++*/
++void G_UnTimeShiftAllClients(gentity_t *skip) {
++	int i;
++	gentity_t *ent;
++
++	ent = &g_entities[0];
++
++	for (i = 0; i < MAX_CLIENTS; i++, ent++) {
++		if (ent->client && ent->inuse && ent->client->sess.sessionTeam < TEAM_SPECTATOR && ent != skip) {
++			G_UnTimeShiftClient(ent);
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++G_UndoTimeShiftFor
++
++Put everyone except for this client back where they were.
++=======================================================================================================================================
++*/
++void G_UndoTimeShiftFor(gentity_t *ent) {
++
++	// don't un-time shift for mistakes or bots
++	if (!ent->inuse || !ent->client || (ent->r.svFlags & SVF_BOT)) {
++		return;
++	}
++
++	G_UnTimeShiftAllClients(ent);
++}
++
++#define OVERCLIP 1.001f
++/*
++=======================================================================================================================================
++G_PredictPlayerClipVelocity
++
++Slide on the impacting surface.
++=======================================================================================================================================
++*/
++void G_PredictPlayerClipVelocity(vec3_t in, vec3_t normal, vec3_t out) {
++	float backoff;
++
++	// find the magnitude of the vector "in" along "normal"
++	backoff = DotProduct (in, normal);
++	// tilt the plane a bit to avoid floating-point error issues
++	if (backoff < 0) {
++		backoff *= OVERCLIP;
++	} else {
++		backoff /= OVERCLIP;
++	}
++	// slide along
++	VectorMA(in, -backoff, normal, out);
++}
++
++#define MAX_CLIP_PLANES 5
++/*
++=======================================================================================================================================
++G_PredictPlayerSlideMove
++
++Advance the given entity frametime seconds, sliding as appropriate.
++=======================================================================================================================================
++*/
++qboolean G_PredictPlayerSlideMove(gentity_t *ent, float frametime) {
++	vec3_t dir, planes[MAX_CLIP_PLANES], primal_velocity, velocity, origin, clipVelocity, end, endVelocity, endClipVelocity;
++	int bumpcount, numbumps, numplanes, i, j, k;
++	float d, time_left, into;
++	trace_t trace;
++
++	numbumps = 4;
++
++	VectorCopy(ent->s.pos.trDelta, primal_velocity);
++	VectorCopy(primal_velocity, velocity);
++	VectorCopy(ent->s.pos.trBase, origin);
++	VectorCopy(velocity, endVelocity);
++
++	time_left = frametime;
++	numplanes = 0;
++
++	for (bumpcount = 0; bumpcount < numbumps; bumpcount++) {
++		// calculate position we are trying to move to
++		VectorMA(origin, time_left, velocity, end);
++		// see if we can make it there
++		trap_Trace(&trace, origin, ent->r.mins, ent->r.maxs, end, ent->s.number, ent->clipmask);
++
++		if (trace.allsolid) {
++			// entity is completely trapped in another solid
++			VectorClear(velocity);
++			VectorCopy(origin, ent->s.pos.trBase);
++			return qtrue;
++		}
++
++		if (trace.fraction > 0) {
++			// actually covered some distance
++			VectorCopy(trace.endpos, origin);
++		}
++
++		if (trace.fraction == 1) {
++			break; // moved the entire distance
++		}
++
++		time_left -= time_left * trace.fraction;
++
++		if (numplanes >= MAX_CLIP_PLANES) {
++			// this shouldn't really happen
++			VectorClear(velocity);
++			VectorCopy(origin, ent->s.pos.trBase);
++			return qtrue;
++		}
++		// if this is the same plane we hit before, nudge velocity out along it, which fixes some epsilon issues with non-axial planes
++		for (i = 0; i < numplanes; i++) {
++			if (DotProduct(trace.plane.normal, planes[i]) > 0.99) {
++				VectorAdd(trace.plane.normal, velocity, velocity);
++				break;
++			}
++		}
++
++		if (i < numplanes) {
++			continue;
++		}
++
++		VectorCopy(trace.plane.normal, planes[numplanes]);
++
++		numplanes++;
++		// modify velocity so it parallels all of the clip planes
++		// find a plane that it enters
++		for (i = 0; i < numplanes; i++) {
++			into = DotProduct(velocity, planes[i]);
++
++			if (into >= 0.1) {
++				continue; // move doesn't interact with the plane
++			}
++			// slide along the plane
++			G_PredictPlayerClipVelocity(velocity, planes[i], clipVelocity);
++			// slide along the plane
++			G_PredictPlayerClipVelocity(endVelocity, planes[i], endClipVelocity);
++			// see if there is a second plane that the new move enters
++			for (j = 0; j < numplanes; j++) {
++				if (j == i) {
++					continue;
++				}
++
++				if (DotProduct(clipVelocity, planes[j]) >= 0.1) {
++					continue; // move doesn't interact with the plane
++				}
++				// try clipping the move to the plane
++				G_PredictPlayerClipVelocity(clipVelocity, planes[j], clipVelocity);
++				G_PredictPlayerClipVelocity(endClipVelocity, planes[j], endClipVelocity);
++				// see if it goes back into the first clip plane
++				if (DotProduct(clipVelocity, planes[i]) >= 0) {
++					continue;
++				}
++				// slide the original velocity along the crease
++				CrossProduct(planes[i], planes[j], dir);
++				VectorNormalize(dir);
++
++				d = DotProduct(dir, velocity);
++
++				VectorScale(dir, d, clipVelocity);
++				CrossProduct(planes[i], planes[j], dir);
++				VectorNormalize(dir);
++
++				d = DotProduct(dir, endVelocity);
++
++				VectorScale(dir, d, endClipVelocity);
++				// see if there is a third plane the the new move enters
++				for (k = 0; k < numplanes; k++) {
++					if (k == i || k == j) {
++						continue;
++					}
++
++					if (DotProduct(clipVelocity, planes[k]) >= 0.1) {
++						continue; // move doesn't interact with the plane
++					}
++					// stop dead at a tripple plane interaction
++					VectorClear(velocity);
++					VectorCopy(origin, ent->s.pos.trBase);
++					return qtrue;
++				}
++			}
++			// if we have fixed all interactions, try another move
++			VectorCopy(clipVelocity, velocity);
++			VectorCopy(endClipVelocity, endVelocity);
++			break;
++		}
++	}
++
++	VectorCopy(endVelocity, velocity);
++	VectorCopy(origin, ent->s.pos.trBase);
++
++	return (bumpcount != 0);
++}
++
++#define STEPSIZE 18
++/*
++=======================================================================================================================================
++G_PredictPlayerStepSlideMove
++
++Advance the given entity frametime seconds, stepping and sliding as appropriate.
++=======================================================================================================================================
++*/
++void G_PredictPlayerStepSlideMove(gentity_t *ent, float frametime) {
++	vec3_t start_o, start_v;
++//	vec3_t down_o, down_v;
++	vec3_t down, up;
++	trace_t trace;
++	float stepSize;
++
++	VectorCopy(ent->s.pos.trBase, start_o);
++	VectorCopy(ent->s.pos.trDelta, start_v);
++
++	if (!G_PredictPlayerSlideMove(ent, frametime)) {
++		// not clipped, so forget stepping
++		return;
++	}
++
++	//VectorCopy(ent->s.pos.trBase, down_o);
++	//VectorCopy(ent->s.pos.trDelta, down_v);
++
++	VectorCopy(start_o, up);
++
++	up[2] += STEPSIZE;
++	// test the client position if they were a stepheight higher
++	trap_Trace(&trace, start_o, ent->r.mins, ent->r.maxs, up, ent->s.number, ent->clipmask);
++
++	if (trace.allsolid) {
++		return; // can't step up
++	}
++
++	stepSize = trace.endpos[2] - start_o[2];
++	// try slidemove from this position
++	VectorCopy(trace.endpos, ent->s.pos.trBase);
++	VectorCopy(start_v, ent->s.pos.trDelta);
++
++	G_PredictPlayerSlideMove(ent, frametime);
++	// push down the final amount
++	VectorCopy(ent->s.pos.trBase, down);
++
++	down[2] -= stepSize;
++
++	trap_Trace(&trace, ent->s.pos.trBase, ent->r.mins, ent->r.maxs, down, ent->s.number, ent->clipmask);
++
++	if (!trace.allsolid) {
++		VectorCopy(trace.endpos, ent->s.pos.trBase);
++	}
++
++	if (trace.fraction < 1.0) {
++		G_PredictPlayerClipVelocity(ent->s.pos.trDelta, trace.plane.normal, ent->s.pos.trDelta);
++	}
++}
++
++/*
++=======================================================================================================================================
++G_PredictPlayerMove
++
++Advance the given entity frametime seconds, stepping and sliding as appropriate.
++This is the entry point to the server-side-only prediction code.
++=======================================================================================================================================
++*/
++void G_PredictPlayerMove(gentity_t *ent, float frametime) {
++	G_PredictPlayerStepSlideMove(ent, frametime);
++}
+Index: code/game/g_weapon.c
+===================================================================
+--- code/game/g_weapon.c	(revision 797)
++++ code/game/g_weapon.c	(working copy)
+@@ -138,11 +138,6 @@
+ =======================================================================================================================================
+ */
+ 
+-#define CHAINGUN_SPREAD 600
+-#define CHAINGUN_DAMAGE 7
+-#define MACHINEGUN_SPREAD 200
+-#define MACHINEGUN_DAMAGE 5
+-
+ /*
+ =======================================================================================================================================
+ Bullet_Fire
+@@ -155,12 +150,15 @@
+ 	float u;
+ 	gentity_t *tent;
+ 	gentity_t *traceEnt;
+-	int i, passent;
++	int i, passent, seed;
+ 
++	// we have to use something now that the client knows in advance
++	seed = ent->client->attackTime % 256;
+ 	damage *= s_quadFactor;
+-	r = random() * M_PI * 2.0f;
+-	u = sin(r) * crandom() * spread * 16;
+-	r = cos(r) * crandom() * spread * 16;
++	// this has to match what's on the client
++	r = Q_random(&seed) * M_PI * 2.0f;
++	u = sin(r) * Q_crandom(&seed) * spread * 16;
++	r = cos(r) * Q_crandom(&seed) * spread * 16;
+ 
+ 	VectorMA(muzzle, 131072, forward, end); // 8192 * 16
+ 	VectorMA(end, r, right, end);
+@@ -169,7 +167,12 @@
+ 	passent = ent->s.number;
+ 
+ 	for (i = 0; i < 10; i++) {
++		// backward-reconcile the other clients
++		G_DoTimeShiftFor(ent);
++
+ 		trap_Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT);
++		// put them back
++		G_UndoTimeShiftFor(ent);
+ 
+ 		if (tr.surfaceFlags & SURF_NOIMPACT) {
+ 			return;
+@@ -182,6 +185,8 @@
+ 		if (traceEnt->takedamage && traceEnt->client) {
+ 			tent = G_TempEntity(tr.endpos, EV_BULLET_HIT_FLESH);
+ 			tent->s.eventParm = traceEnt->s.number;
++			// we need the client number to determine whether or not to suppress this event
++			tent->s.clientNum = ent->s.clientNum;
+ 
+ 			if (LogAccuracyHit(traceEnt, ent)) {
+ 				ent->client->accuracy_hits++;
+@@ -189,6 +194,8 @@
+ 		} else {
+ 			tent = G_TempEntity(tr.endpos, EV_BULLET_HIT_WALL);
+ 			tent->s.eventParm = DirToByte(tr.plane.normal);
++			// we need the client number to determine whether or not to suppress this event
++			tent->s.clientNum = ent->s.clientNum;
+ 		}
+ 
+ 		tent->s.otherEntityNum = ent->s.number;
+@@ -272,6 +279,8 @@
+ 	VectorNormalize2(origin2, forward);
+ 	PerpendicularVector(right, forward);
+ 	CrossProduct(forward, right, up);
++	// backward-reconcile the other clients
++	G_DoTimeShiftFor(ent);
+ 	// generate the "random" spread pattern
+ 	for (i = 0; i < DEFAULT_SHOTGUN_COUNT; i++) {
+ 		r = Q_crandom(&seed) * DEFAULT_SHOTGUN_SPREAD * 16;
+@@ -286,6 +295,8 @@
+ 			ent->client->accuracy_hits++;
+ 		}
+ 	}
++	// put them back
++	G_UndoTimeShiftFor(ent);
+ }
+ 
+ /*
+@@ -301,8 +312,8 @@
+ 
+ 	VectorScale(forward, 4096, tent->s.origin2);
+ 	SnapVector(tent->s.origin2);
+-
+-	tent->s.eventParm = rand() & 255; // seed for spread pattern
++	// this has to be something the client can predict now
++	tent->s.eventParm = ent->client->attackTime % 256; // seed for spread pattern
+ 	tent->s.otherEntityNum = ent->s.number;
+ 
+ 	ShotgunPattern(tent->s.pos.trBase, tent->s.origin2, tent->s.eventParm, ent);
+@@ -456,7 +467,12 @@
+ 
+ 	for (i = 0; i < 10; i++) {
+ 		VectorMA(muzzle, BEAMGUN_RANGE, forward, end);
++		// backward-reconcile the other clients
++		G_DoTimeShiftFor(ent);
++
+ 		trap_Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT);
++		// put them back
++		G_UndoTimeShiftFor(ent);
+ 
+ 		if (tr.entityNum == ENTITYNUM_NONE) {
+ 			return;
+@@ -509,6 +525,8 @@
+ 	damage = 100 * s_quadFactor;
+ 
+ 	VectorMA(muzzle, 262144, forward, end);
++	// backward-reconcile the other clients
++	G_DoTimeShiftFor(ent);
+ 	// trace only against the solids, so the railgun will go through people
+ 	unlinked = 0;
+ 	hits = 0;
+@@ -540,6 +558,8 @@
+ 		unlinkedEntities[unlinked] = traceEnt;
+ 		unlinked++;
+ 	} while (unlinked < MAX_RAIL_HITS);
++	// put them back
++	G_UndoTimeShiftFor(ent);
+ 	// link back in any entities we unlinked
+ 	for (i = 0; i < unlinked; i++) {
+ 		trap_LinkEntity(unlinkedEntities[i]);
+Index: Makefile
+===================================================================
+--- Makefile	(revision 797)
++++ Makefile	(working copy)
+@@ -2398,6 +2398,7 @@
+   $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
+   $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
+   $(B)/$(BASEGAME)/cgame/cg_spawn.o \
++  $(B)/$(BASEGAME)/cgame/cg_unlagged.o \
+   $(B)/$(BASEGAME)/cgame/cg_view.o \
+   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
+   $(B)/$(BASEGAME)/ui/ui_shared.o \
+@@ -2451,6 +2452,7 @@
+   $(B)/$(BASEGAME)/game/g_target.o \
+   $(B)/$(BASEGAME)/game/g_team.o \
+   $(B)/$(BASEGAME)/game/g_trigger.o \
++  $(B)/$(BASEGAME)/game/g_unlagged.o \
+   $(B)/$(BASEGAME)/game/g_utils.o \
+   $(B)/$(BASEGAME)/game/g_weapon.o \
+   \

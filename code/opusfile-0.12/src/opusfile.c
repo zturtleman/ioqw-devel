@@ -835,6 +835,7 @@ static int op_find_initial_pcm_offset(OggOpusFile *_of,
   ogg_int64_t  cur_page_gp;
   ogg_uint32_t serialno;
   opus_int32   total_duration;
+  ogg_int64_t diff;
   int          durations[255];
   int          cur_page_eos;
   int          op_count;
@@ -842,6 +843,7 @@ static int op_find_initial_pcm_offset(OggOpusFile *_of,
   if(_og==NULL)_og=&og;
   serialno=_of->os.serialno;
   op_count=0;
+  diff=0;
   /*We shouldn't have to initialize total_duration, but gcc is too dumb to
      figure out that op_count>0 implies we've been through the whole loop at
      least once.*/
@@ -931,7 +933,6 @@ static int op_find_initial_pcm_offset(OggOpusFile *_of,
   prev_packet_gp=pcm_start;
   for(pi=0;pi<op_count;pi++){
     if(cur_page_eos){
-      ogg_int64_t diff;
       OP_ALWAYS_TRUE(!op_granpos_diff(&diff,cur_page_gp,prev_packet_gp));
       diff=durations[pi]-diff;
       /*If we have samples to trim...*/
@@ -1737,6 +1738,7 @@ ogg_int64_t op_pcm_total(const OggOpusFile *_of,int _li){
   ogg_int64_t  diff;
   int          nlinks;
   nlinks=_of->nlinks;
+  diff=0;
   if(OP_UNLIKELY(_of->ready_state<OP_OPENED)
    ||OP_UNLIKELY(!_of->seekable)
    ||OP_UNLIKELY(_li>=nlinks)){
@@ -2195,6 +2197,7 @@ static ogg_int64_t op_get_granulepos(const OggOpusFile *_of,
   links=_of->links;
   li_lo=0;
   li_hi=nlinks;
+  duration=0;
   do{
     int li;
     li=li_lo+(li_hi-li_lo>>1);
@@ -2268,6 +2271,7 @@ static int op_pcm_seek_page(OggOpusFile *_of,
   ogg_int64_t        pcm_end;
   ogg_int64_t        best_gp;
   ogg_int64_t        diff;
+  ogg_int64_t        diff2;
   ogg_uint32_t       serialno;
   opus_int32         pre_skip;
   opus_int64         begin;
@@ -2279,6 +2283,7 @@ static int op_pcm_seek_page(OggOpusFile *_of,
   opus_int64         d0;
   opus_int64         d1;
   opus_int64         d2;
+  ogg_int64_t         prev_page_gp;
   int                force_bisect;
   int                buffering;
   int                ret;
@@ -2291,6 +2296,10 @@ static int op_pcm_seek_page(OggOpusFile *_of,
   best=best_start=begin=link->data_offset;
   page_offset=-1;
   buffering=0;
+  diff=0;
+  diff2=0;
+  prev_page_gp=0;
+  pcm_pre_skip=0;
   /*We discard the first 80 ms of data after a seek, so seek back that much
      farther.
     If we can't, simply seek to the beginning of the link.*/
@@ -2351,7 +2360,6 @@ static int op_pcm_seek_page(OggOpusFile *_of,
             }
           }
           else{
-            ogg_int64_t prev_page_gp;
             /*We might get lucky and already have the packet with the target
                buffered.
               Worth checking.
@@ -2405,7 +2413,6 @@ static int op_pcm_seek_page(OggOpusFile *_of,
       d2=end-begin>>1;
       if(force_bisect)bisect=begin+(end-begin>>1);
       else{
-        ogg_int64_t diff2;
         OP_ALWAYS_TRUE(!op_granpos_diff(&diff,_target_gp,pcm_start));
         OP_ALWAYS_TRUE(!op_granpos_diff(&diff2,pcm_end,pcm_start));
         /*Take a (pretty decent) guess.*/

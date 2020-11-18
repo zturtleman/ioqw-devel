@@ -1,0 +1,1651 @@
+Index: code/cgame/cg_draw.c
+===================================================================
+--- code/cgame/cg_draw.c	(revision 745)
++++ code/cgame/cg_draw.c	(working copy)
+@@ -1707,6 +1707,30 @@
+ 
+ /*
+ =======================================================================================================================================
++CG_CalculatePing
++=======================================================================================================================================
++*/
++static void CG_CalculatePing(void) {
++	int count, i, v;
++
++	cg.meanPing = 0;
++
++	for (i = 0, count = 0; i < LAG_SAMPLES; i++) {
++		v = lagometer.snapshotSamples[i];
++
++		if (v >= 0) {
++			cg.meanPing += v;
++			count++;
++		}
++	}
++
++	if (count) {
++		cg.meanPing /= count;
++	}
++}
++
++/*
++=======================================================================================================================================
+ CG_AddLagometerFrameInfo
+ 
+ Adds the current interpolate/extrapolate bar for this frame.
+@@ -1894,10 +1918,14 @@
+ 
+ 	trap_R_SetColor(NULL);
+ 
+-	if (cg_nopredict.integer || cg_synchronousClients.integer) {
++	if (cg_nopredict.integer || cgs.synchronousClients) {
+ 		CG_DrawBigString(x, y, "snc", 1.0);
+ 	}
+ 
++	if (!cg.demoPlayback) {
++		CG_DrawBigString(x + 1, y, va("%ims", cg.meanPing), 1.0);
++	}
++
+ 	CG_DrawDisconnect();
+ }
+ 
+@@ -2820,6 +2848,10 @@
+ 		CG_DrawInformation();
+ 		return;
+ 	}
++
++	if (!cg.demoPlayback) {
++		CG_CalculatePing();
++	}
+ 	// clear around the rendered view if sized down
+ 	CG_TileClear();
+ 	CG_DrawMiscGamemodels();
+Index: code/cgame/cg_ents.c
+===================================================================
+--- code/cgame/cg_ents.c	(revision 745)
++++ code/cgame/cg_ents.c	(working copy)
+@@ -314,7 +314,7 @@
+ 		CG_Error("Bad item index %i on entity", es->modelindex);
+ 	}
+ 	// if set to invisible, skip
+-	if (!es->modelindex || (es->eFlags & EF_NODRAW)) {
++	if (!es->modelindex || (es->eFlags & EF_NODRAW) || cent->delaySpawn > cg.time) {
+ 		return;
+ 	}
+ 
+Index: code/cgame/cg_event.c
+===================================================================
+--- code/cgame/cg_event.c	(revision 745)
++++ code/cgame/cg_event.c	(working copy)
+@@ -474,8 +474,14 @@
+ 
+ 	// don't do more than two pain sounds a second
+ 	if (cg.time - cent->pe.painTime < 500) {
++		cent->pe.painIgnore = qfalse;
+ 		return;
+ 	}
++
++	if (cent->pe.painIgnore) {
++		cent->pe.painIgnore = qfalse;
++		return;
++	}
+ 	// default pain sounds
+ 	if (health < 25) {
+ 		snd = "*pd4.wav";
+@@ -509,19 +515,25 @@
+ =======================================================================================================================================
+ */
+ #define DEBUGNAME(x) if (cg_debugEvents.integer) {CG_Printf(x"\n");}
+-void CG_EntityEvent(centity_t *cent, vec3_t position) {
++void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
+ 	entityState_t *es;
+-	int event;
++	entity_event_t event;
+ 	vec3_t dir;
+ 	const char *s;
+ 	int clientNum;
+ 	clientInfo_t *ci;
++	centity_t *ce;
+ 
+ 	es = &cent->currentState;
+ 	event = es->event & ~EV_EVENT_BITS;
+ 
++	if ((unsigned) event >= EV_MAX) {
++		CG_Error("Unknown event: %i", event);
++		return;
++	}
++
+ 	if (cg_debugEvents.integer) {
+-		CG_Printf("ent:%3i  event:%3i ", es->number, event);
++		CG_Printf("ent:%3i  event:%3i %s", es->number, event, eventnames[event]);
+ 	}
+ 
+ 	if (!event) {
+@@ -813,6 +825,7 @@
+ 			DEBUGNAME("EV_FALL_DIE");
+ 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*df1.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 			break;
+ 		case EV_FALL_DMG_50:
+@@ -819,6 +832,7 @@
+ 			DEBUGNAME("EV_FALL_DMG_50");
+ 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff5.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 
+ 			if (clientNum == cg.predictedPlayerState.clientNum) {
+@@ -832,6 +846,7 @@
+ 			DEBUGNAME("EV_FALL_DMG_25");
+ 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff4.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 
+ 			if (clientNum == cg.predictedPlayerState.clientNum) {
+@@ -845,6 +860,7 @@
+ 			DEBUGNAME("EV_FALL_DMG_15");
+ 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff3.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 
+ 			if (clientNum == cg.predictedPlayerState.clientNum) {
+@@ -859,6 +875,7 @@
+ 			// use normal pain sound
+ 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*ff2.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 
+ 			if (clientNum == cg.predictedPlayerState.clientNum) {
+@@ -873,6 +890,7 @@
+ 			// use normal pain sound
+ 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*ff1.wav"), 64);
+ 
++			cent->pe.painIgnore = qtrue;
+ 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
+ 
+ 			if (clientNum == cg.predictedPlayerState.clientNum) {
+@@ -895,7 +913,11 @@
+ 			break;
+ 		case EV_JUMP:
+ 			DEBUGNAME("EV_JUMP");
+-			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*jd1.wav"), 64);
++			// pain event with fast sequential jump just creates sound distortion
++			if (cg.time - cent->pe.painTime > 50) {
++				trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*jd1.wav"), 64);
++			}
++
+ 			break;
+ 		case EV_JUMP_PAD:
+ 			DEBUGNAME("EV_JUMP_PAD");
+@@ -1438,7 +1460,7 @@
+ 					break;
+ 				}
+ 				// if we are interpolating, we don't need to smooth steps
+-				if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cg_synchronousClients.integer) {
++				if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cgs.synchronousClients) {
+ 					break;
+ 				}
+ 				// check for stepping up before a previous step is completed
+@@ -1485,6 +1507,17 @@
+ 					break;
+ 				}
+ 
++				if (entityNum >= 0) {
++					// our predicted entity
++					ce = cg_entities + entityNum;
++
++					if (ce->delaySpawn > cg.time && ce->delaySpawnPlayed) {
++						break; // delay item pickup
++					}
++				} else {
++					ce = NULL;
++				}
++
+ 				item = &bg_itemlist[index];
+ 				// powerups and team items will have a separate global sound, this one will be played at prediction time
+ 				if (item->giType == IT_POWERUP || item->giType == IT_TEAM) {
+@@ -1511,6 +1544,10 @@
+ 				if (es->number == cg.snap->ps.clientNum) {
+ 					CG_ItemPickup(index);
+ 				}
++
++				if (ce) {
++					ce->delaySpawnPlayed = qtrue;
++				}
+ 			}
+ 
+ 			break;
+@@ -1524,6 +1561,17 @@
+ 				if (index < 1 || index >= bg_numItems) {
+ 					break;
+ 				}
++
++				if (entityNum >= 0) {
++					// our predicted entity
++					ce = cg_entities + entityNum;
++
++					if (ce->delaySpawn > cg.time && ce->delaySpawnPlayed) {
++						break;
++					}
++				} else {
++					ce = NULL;
++				}
+ 				// powerup pickups aren't global if an announcer sound is already playing
+ 				if (cg.soundPlaying) {
+ 					trap_S_StartSound(NULL, es->number, CHAN_AUTO, cgs.media.pickupSound, 52);
+@@ -1535,6 +1583,10 @@
+ 				if (es->number == cg.snap->ps.clientNum) {
+ 					CG_ItemPickup(index);
+ 				}
++
++				if (ce) {
++					ce->delaySpawnPlayed = qtrue;
++				}
+ 			}
+ 
+ 			break;
+@@ -1676,5 +1728,5 @@
+ 	// calculate the position at exactly the frame time
+ 	BG_EvaluateTrajectory(&cent->currentState.pos, cg.snap->serverTime, cent->lerpOrigin);
+ 	CG_SetEntitySoundPosition(cent);
+-	CG_EntityEvent(cent, cent->lerpOrigin);
++	CG_EntityEvent(cent, cent->lerpOrigin, -1);
+ }
+Index: code/cgame/cg_local.h
+===================================================================
+--- code/cgame/cg_local.h	(revision 745)
++++ code/cgame/cg_local.h	(working copy)
+@@ -213,6 +213,7 @@
+ 	lerpFrame_t legs, torso, flag;
+ 	int painTime;
+ 	int painDirection; // flip from 0 to 1
++	qboolean painIgnore;
+ 	int beamgunFiring;
+ 	int railFireTime;
+ 	// machinegun spinning
+@@ -237,6 +238,8 @@
+ 	int trailTime;				// so missile trails can handle dropped initial packets
+ 	int dustTrailTime;
+ 	int miscTime;
++	int delaySpawn;
++	qboolean delaySpawnPlayed;
+ 	int snapShotTime;			// last time this entity was found in a snapshot
+ 	playerEntity_t pe;
+ 	int errorTime;				// decay the error from this time
+@@ -461,6 +464,8 @@
+ **************************************************************************************************************************************/
+ 
+ #define MAX_PREDICTED_EVENTS 16
++#define PICKUP_PREDICTION_DELAY 200
++#define NUM_SAVED_STATES (CMD_BACKUP + 2)
+ 
+ typedef struct {
+ 	int clientFrame;				// incremented each frame
+@@ -613,6 +618,14 @@
+ 	refEntity_t testModelEntity;
+ 	char testModelName[MAX_QPATH];
+ 	qboolean testGun;
++	// optimized prediction
++	int lastPredictedCommand;
++	int lastServerTime;
++	playerState_t savedPmoveStates[NUM_SAVED_STATES];
++	int stateHead, stateTail;
++	int meanPing;
++	int timeResidual;
++	int allowPickupPrediction;
+ } cg_t;
+ 
+ /**************************************************************************************************************************************
+@@ -972,6 +985,9 @@
+ 	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
+ 	// media
+ 	cgMedia_t media;
++	qboolean pmove_fixed;
++	int pmove_msec;
++	qboolean synchronousClients;
+ } cgs_t;
+ 
+ extern cgs_t cgs;
+@@ -1049,7 +1065,6 @@
+ extern vmCvar_t cg_thirdPerson;
+ extern vmCvar_t cg_drawLagometer;
+ extern vmCvar_t cg_drawAttacker;
+-extern vmCvar_t cg_synchronousClients;
+ extern vmCvar_t cg_singlePlayer;
+ extern vmCvar_t cg_teamChatTime;
+ extern vmCvar_t cg_teamChatHeight;
+@@ -1066,9 +1081,6 @@
+ extern vmCvar_t cg_noVoiceText;
+ extern vmCvar_t cg_scorePlum;
+ extern vmCvar_t cg_smoothClients;
+-extern vmCvar_t pmove_fixed;
+-extern vmCvar_t pmove_msec;
+-//extern vmCvar_t cg_pmove_fixed;
+ extern vmCvar_t cg_cameraOrbit;
+ extern vmCvar_t cg_timescaleFadeEnd;
+ extern vmCvar_t cg_timescaleFadeSpeed;
+@@ -1096,6 +1108,8 @@
+ extern vmCvar_t cg_currentSelectedPlayerName;
+ extern vmCvar_t cg_recordSPDemo;
+ extern vmCvar_t cg_recordSPDemoName;
++
++extern const char *eventnames[EV_MAX];
+ // cg_main.c
+ const char *CG_ConfigString(int index);
+ const char *CG_Argv(int arg);
+@@ -1244,10 +1258,11 @@
+ void CG_Trace(trace_t *result, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int skipNumber, int mask);
+ void CG_PredictPlayerState(void);
+ void CG_LoadDeferredPlayers(void);
++void CG_PlayDroppedEvents(playerState_t *ps, playerState_t *ops);
+ // cg_events.c
+ void CG_CheckEvents(centity_t *cent);
+ const char *CG_PlaceString(int rank);
+-void CG_EntityEvent(centity_t *cent, vec3_t position);
++void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum);
+ void CG_PainEvent(centity_t *cent, int health);
+ // cg_ents.c
+ void CG_SetEntitySoundPosition(const centity_t *cent);
+@@ -1315,6 +1330,7 @@
+ // cg_servercmds.c
+ void CG_ExecuteNewServerCommands(int latestSequence);
+ void CG_ParseServerinfo(void);
++void CG_ParseSysteminfo(void);
+ void CG_SetConfigValues(void);
+ void CG_ShaderStateChanged(void);
+ void CG_LoadVoiceChats(void);
+Index: code/cgame/cg_main.c
+===================================================================
+--- code/cgame/cg_main.c	(revision 745)
++++ code/cgame/cg_main.c	(working copy)
+@@ -155,7 +155,6 @@
+ vmCvar_t cg_thirdPersonAngle;
+ vmCvar_t cg_drawLagometer;
+ vmCvar_t cg_drawAttacker;
+-vmCvar_t cg_synchronousClients;
+ vmCvar_t cg_singlePlayer;
+ vmCvar_t cg_teamChatTime;
+ vmCvar_t cg_teamChatHeight;
+@@ -175,10 +174,6 @@
+ vmCvar_t cg_hudFiles;
+ vmCvar_t cg_scorePlum;
+ vmCvar_t cg_smoothClients;
+-vmCvar_t pmove_fixed;
+-//vmCvar_t cg_pmove_fixed;
+-vmCvar_t pmove_msec;
+-vmCvar_t cg_pmove_msec;
+ vmCvar_t cg_cameraMode;
+ vmCvar_t cg_cameraOrbit;
+ vmCvar_t cg_timescaleFadeEnd;
+@@ -296,7 +291,6 @@
+ 	{&cg_buildScript, "com_buildScript", "0", 0}, // force loading of all possible data amd error on failures
+ 	{&cg_paused, "cl_paused", "0", CVAR_ROM},
+ 	{&cg_blood, "com_blood", "1", CVAR_ARCHIVE},
+-	{&cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO},
+ 	{&cg_enableDust, "cg_enableDust", "1", 0},
+ 	{&cg_enableBreath, "cg_enableBreath", "1", 0},
+ 	{&cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO},
+@@ -315,8 +309,6 @@
+ 	{&cg_scorePlum, "cg_scorePlum", "0", CVAR_USERINFO|CVAR_ARCHIVE},
+ 	{&cg_smoothClients, "cg_smoothClients", "1", CVAR_USERINFO|CVAR_ARCHIVE},
+ 	{&cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
+-	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO},
+-	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO},
+ 	{&cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
+ 	{&cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE},
+ 	{&cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE},
+@@ -2219,6 +2211,7 @@
+ 	cgs.levelStartTime = atoi(s);
+ 
+ 	CG_ParseServerinfo();
++	CG_ParseSysteminfo();
+ 	// load the new map
+ 	CG_LoadingString("collision map");
+ 	trap_CM_LoadMap(cgs.mapname);
+Index: code/cgame/cg_playerstate.c
+===================================================================
+--- code/cgame/cg_playerstate.c	(revision 745)
++++ code/cgame/cg_playerstate.c	(working copy)
+@@ -206,9 +206,11 @@
+ 	cg.weaponSelectTime = cg.time;
+ 	// select the weapon the server says we are using
+ 	cg.weaponSelect = cg.snap->ps.weapon;
++	cg.timeResidual = cg.snap->ps.commandTime + 1000;
+ }
+ 
+-extern char *eventnames[];
++extern int eventStack;
++extern int eventParm2[MAX_PREDICTED_EVENTS];
+ /*
+ =======================================================================================================================================
+ CG_CheckPlayerstateEvents
+@@ -215,7 +217,7 @@
+ =======================================================================================================================================
+ */
+ static void CG_CheckPlayerstateEvents(const playerState_t *ps, const playerState_t *ops) {
+-	int i;
++	int i, n;
+ 	int event;
+ 	centity_t *cent;
+ 
+@@ -223,10 +225,15 @@
+ 		cent = &cg_entities[ps->clientNum];
+ 		cent->currentState.event = ps->externalEvent;
+ 		cent->currentState.eventParm = ps->externalEventParm;
+-		CG_EntityEvent(cent, cent->lerpOrigin);
++		CG_EntityEvent(cent, cent->lerpOrigin, -1);
+ 	}
+ 
+ 	cent = &cg.predictedPlayerEntity; // cg_entities[ps->clientNum];
++	n = eventStack - MAX_PS_EVENTS;
++
++	if (n < 0) {
++		n = 0;
++	}
+ 	// go through the predictable events buffer
+ 	for (i = ps->eventSequence - MAX_PS_EVENTS; i < ps->eventSequence; i++) {
+ 		// if we have a new predictable event or the server told us to play another event instead of a predicted event we already issued
+@@ -233,10 +240,15 @@
+ 		// or something the server told us changed our prediction causing a different event
+ 		if (i >= ops->eventSequence || (i > ops->eventSequence - MAX_PS_EVENTS && ps->events[i & (MAX_PS_EVENTS - 1)] != ops->events[i & (MAX_PS_EVENTS - 1)])) {
+ 			event = ps->events[i & (MAX_PS_EVENTS - 1)];
++
++			if (event == EV_NONE) { // ignore empty events
++				continue;
++			}
++
+ 			cent->currentState.event = event;
+ 			cent->currentState.eventParm = ps->eventParms[i & (MAX_PS_EVENTS - 1)];
+ 
+-			CG_EntityEvent(cent, cent->lerpOrigin);
++			CG_EntityEvent(cent, cent->lerpOrigin, eventParm2[n++]);
+ 
+ 			cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)] = event;
+ 			cg.eventSequence++;
+@@ -246,42 +258,6 @@
+ 
+ /*
+ =======================================================================================================================================
+-CG_CheckChangedPredictableEvents
+-=======================================================================================================================================
+-*/
+-void CG_CheckChangedPredictableEvents(playerState_t *ps) {
+-	int i;
+-	int event;
+-	centity_t *cent;
+-
+-	cent = &cg.predictedPlayerEntity;
+-
+-	for (i = ps->eventSequence - MAX_PS_EVENTS; i < ps->eventSequence; i++) {
+-		if (i >= cg.eventSequence) {
+-			continue;
+-		}
+-		// if this event is not further back in than the maximum predictable events we remember
+-		if (i > cg.eventSequence - MAX_PREDICTED_EVENTS) {
+-			// if the new playerstate event is different from a previously predicted one
+-			if (ps->events[i & (MAX_PS_EVENTS - 1)] != cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)]) {
+-				event = ps->events[i & (MAX_PS_EVENTS - 1)];
+-				cent->currentState.event = event;
+-				cent->currentState.eventParm = ps->eventParms[i & (MAX_PS_EVENTS - 1)];
+-
+-				CG_EntityEvent(cent, cent->lerpOrigin);
+-
+-				cg.predictableEvents[i & (MAX_PREDICTED_EVENTS - 1)] = event;
+-
+-				if (cg_showmiss.integer) {
+-					CG_Printf("WARNING: changed predicted event\n");
+-				}
+-			}
+-		}
+-	}
+-}
+-
+-/*
+-=======================================================================================================================================
+ CG_CheckLocalSounds
+ =======================================================================================================================================
+ */
+@@ -466,8 +442,12 @@
+ 	}
+ 	// check for going low on ammo
+ 	CG_CheckAmmo();
++	// try to play potentially dropped events
++	CG_PlayDroppedEvents(ps, ops);
+ 	// run events
+ 	CG_CheckPlayerstateEvents(ps, ops);
++	// reset event stack
++	eventStack = 0;
+ 	// smooth the ducking viewheight change
+ 	if (ps->viewheight != ops->viewheight) {
+ 		cg.duckChange = ps->viewheight - ops->viewheight;
+Index: code/cgame/cg_predict.c
+===================================================================
+--- code/cgame/cg_predict.c	(revision 745)
++++ code/cgame/cg_predict.c	(working copy)
+@@ -247,8 +247,248 @@
+ 	}
+ }
+ 
++int eventStack;
++entity_event_t events[MAX_PREDICTED_EVENTS];
++int eventParms[MAX_PREDICTED_EVENTS];
++int eventParm2[MAX_PREDICTED_EVENTS]; // client entity index
++void CG_AddFallDamage(int damage);
++
+ /*
+ =======================================================================================================================================
++CG_StoreEvents
++
++Save events that may be dropped during prediction.
++=======================================================================================================================================
++*/
++void CG_StoreEvent(entity_event_t evt, int eventParm, int entityNum) {
++
++	if (eventStack >= MAX_PREDICTED_EVENTS) {
++		return;
++	}
++
++	if (evt == EV_FALL_DIE) {
++		CG_AddFallDamage(200);
++	} else if (evt == EV_FALL_DMG_50) {
++		CG_AddFallDamage(50);
++	} else if (evt == EV_FALL_DMG_25) {
++		CG_AddFallDamage(25);
++	} else if (evt == EV_FALL_DMG_15) {
++		CG_AddFallDamage(15);
++	} else if (evt == EV_FALL_DMG_10) {
++		CG_AddFallDamage(10);
++	} else if (evt == EV_FALL_DMG_5) {
++		CG_AddFallDamage(5);
++	}
++
++	events[eventStack] = evt;
++	eventParms[eventStack] = eventParm;
++	eventParm2[eventStack] = entityNum;
++	eventStack++;
++}
++
++/*
++=======================================================================================================================================
++CG_PlayDroppedEvents
++=======================================================================================================================================
++*/
++void CG_PlayDroppedEvents(playerState_t *ps, playerState_t *ops) {
++	centity_t *cent;
++	entity_event_t oldEvent;
++	int i, oldParam;
++
++	if (ps == ops) {
++		return;
++	}
++
++	if (eventStack <= MAX_PS_EVENTS) {
++		return;
++	}
++
++	cent = &cg.predictedPlayerEntity;
++	oldEvent = cent->currentState.event;
++	oldParam = cent->currentState.eventParm;
++
++	for (i = 0; i < eventStack - MAX_PS_EVENTS; i++) {
++		cent->currentState.event = events[i];
++		cent->currentState.eventParm = eventParms[i];
++
++		if (cg_showmiss.integer) {
++			CG_Printf("Playing dropped event: %s %i", eventnames[events[i]], eventParms[i]);
++		}
++
++		CG_EntityEvent(cent, cent->lerpOrigin, eventParm2[i]);
++
++		cg.eventSequence++;
++	}
++
++	cent->currentState.event = oldEvent;
++	cent->currentState.eventParm = oldParam;
++}
++
++/*
++=======================================================================================================================================
++CG_AddArmor
++=======================================================================================================================================
++*/
++static void CG_AddArmor(const gitem_t *item, int quantity) {
++
++	cg.predictedPlayerState.stats[STAT_ARMOR] += quantity;
++
++	if (cg.predictedPlayerState.stats[STAT_ARMOR] > 200) {
++		cg.predictedPlayerState.stats[STAT_ARMOR] = 200;
++	}
++}
++
++/*
++=======================================================================================================================================
++CG_AddAmmo
++=======================================================================================================================================
++*/
++static void CG_AddAmmo(int weapon, int count) {
++
++	if (weapon == WP_GAUNTLET) {
++		cg.predictedPlayerState.ammo[weapon] = -1;
++	} else {
++		cg.predictedPlayerState.ammo[weapon] += count;
++
++		if (weapon >= WP_MACHINEGUN && weapon <= WP_BFG) {
++			if (cg.predictedPlayerState.ammo[weapon] > 200) {
++				cg.predictedPlayerState.ammo[weapon] = 200;
++			}
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++CG_AddWeapon
++=======================================================================================================================================
++*/
++static void CG_AddWeapon(int weapon, int quantity, qboolean dropped) {
++
++	// dropped items and teamplay weapons always have full ammo
++	if (!dropped && cgs.gametype != GT_TEAM) {
++		if (cg.predictedPlayerState.ammo[weapon] < quantity) {
++			quantity = quantity - cg.predictedPlayerState.ammo[weapon];
++		} else {
++			quantity = 1;
++		}
++	}
++	// add the weapon
++	cg.predictedPlayerState.stats[STAT_WEAPONS] |= (1 << weapon);
++
++	CG_AddAmmo(weapon, quantity);
++}
++
++/*
++=======================================================================================================================================
++CG_CheckArmor
++=======================================================================================================================================
++*/
++static int CG_CheckArmor(int damage) {
++	int save, count;
++
++	if (!damage) {
++		return 0;
++	}
++
++	count = cg.predictedPlayerState.stats[STAT_ARMOR];
++	save = ceil(damage * ARMOR_PROTECTION);
++
++	if (save >= count) {
++		save = count;
++	}
++
++	if (!save) {
++		return 0;
++	}
++	
++	cg.predictedPlayerState.stats[STAT_ARMOR] -= save;
++
++	return save;
++}
++
++/*
++=======================================================================================================================================
++CG_AddFallDamage
++=======================================================================================================================================
++*/
++void CG_AddFallDamage(int damage) {
++	int take, asave;
++
++	if (cg.predictedPlayerState.clientNum != cg.snap->ps.clientNum || cg.snap->ps.pm_flags & PMF_FOLLOW) {
++		return;
++	}
++
++	take = damage;
++	asave = CG_CheckArmor(take);
++	take -= asave;
++
++	cg.predictedPlayerState.stats[STAT_HEALTH] -= take;
++#if 0
++	CG_Printf("take: %i asave:%i health:%i armor:%i\n", take, asave, cg.predictedPlayerState.stats[STAT_HEALTH], cg.predictedPlayerState.stats[STAT_ARMOR]);
++#endif
++	cg.predictedPlayerState.damagePitch = 255;
++	cg.predictedPlayerState.damageYaw = 255;
++	cg.predictedPlayerState.damageCount = take + asave;
++}
++
++/*
++=======================================================================================================================================
++CG_PickupPrediction
++=======================================================================================================================================
++*/
++static void CG_PickupPrediction(centity_t *cent, const gitem_t *item) {
++
++	// health prediction
++	if (item->giType == IT_HEALTH && cent->currentState.time2 > 0) {
++		cg.predictedPlayerState.stats[STAT_HEALTH] += cent->currentState.time2;
++
++		if (cg.predictedPlayerState.stats[STAT_HEALTH] > 100) {
++			cg.predictedPlayerState.stats[STAT_HEALTH] = 100;
++		}
++	}
++	// armor prediction
++	if (item->giType == IT_ARMOR && cent->currentState.time2 > 0) {
++		CG_AddArmor(item, cent->currentState.time2);
++		return;
++	}
++	// ammo prediction
++	if (item->giType == IT_AMMO && cent->currentState.time2 > 0) {
++		CG_AddAmmo(item->giTag, cent->currentState.time2);
++		return;
++	}
++	// weapon prediction
++	if (item->giType == IT_WEAPON && cent->currentState.time2 > 0) {
++		CG_AddWeapon(item->giTag, cent->currentState.time2, (cent->currentState.modelindex2 == 1));
++		return;
++	}
++	// holdable prediction
++	if (item->giType == IT_HOLDABLE && (item->giTag == HI_MEDKIT || item->giTag == HI_KAMIKAZE)) {
++		cg.predictedPlayerState.stats[STAT_HOLDABLE_ITEM] = item - bg_itemlist;
++	}
++	// powerups prediction
++	if (item->giType == IT_POWERUP && item->giTag >= PW_QUAD && item->giTag <= PW_REGEN) {
++		// round timing to seconds to make multiple powerup timers count in sync
++		if (!cg.predictedPlayerState.powerups[item->giTag]) {
++			cg.predictedPlayerState.powerups[item->giTag] = cg.predictedPlayerState.commandTime - (cg.predictedPlayerState.commandTime % 1000);
++		}
++
++		cg.predictedPlayerState.powerups[item->giTag] += cent->currentState.time2 * 1000;
++	}
++	// persistant powerups prediction
++	if (item->giType == IT_PERSISTANT_POWERUP) {
++		// this assumption is correct only on transition and implies a hardcoded coefficient
++		if (item->giTag == PW_SCOUT) {
++			cg.predictedPlayerState.speed *= SCOUT_SPEED_SCALE;
++		}
++
++		cg.predictedPlayerState.stats[STAT_PERSISTANT_POWERUP] = item - bg_itemlist;
++	}
++}
++
++/*
++=======================================================================================================================================
+ CG_TouchItem
+ =======================================================================================================================================
+ */
+@@ -255,6 +495,10 @@
+ static void CG_TouchItem(centity_t *cent) {
+ 	const gitem_t *item;
+ 
++	if (cg.allowPickupPrediction && cg.allowPickupPrediction > cg.time) {
++		return;
++	}
++
+ 	if (!cg_predictItems.integer) {
+ 		return;
+ 	}
+@@ -263,7 +507,7 @@
+ 		return;
+ 	}
+ 	// never pick an item up twice in a prediction
+-	if (cent->miscTime == cg.time) {
++	if (cent->delaySpawn > cg.time) {
+ 		return;
+ 	}
+ 
+@@ -289,12 +533,17 @@
+ 		}
+ 	}
+ 	// grab it
+-	BG_AddPredictableEventToPlayerstate(EV_ITEM_PICKUP, cent->currentState.modelindex, &cg.predictedPlayerState);
++	BG_AddPredictableEventToPlayerstate(EV_ITEM_PICKUP, cent->currentState.modelindex, &cg.predictedPlayerState, cent - cg_entities);
++	// perform prediction
++	CG_PickupPrediction(cent, item);
+ 	// remove it from the frame so it won't be drawn
+ 	cent->currentState.eFlags |= EF_NODRAW;
+ 	// don't touch it again this prediction
+ 	cent->miscTime = cg.time;
+-	// if it's a weapon, give them some predicted ammo so the autoswitch will work
++	// delay next potential pickup for some time
++	cent->delaySpawn = cg.time + (cg.meanPing > 0 ? cg.meanPing * 2 + 100 : 333);
++	cent->delaySpawnPlayed = qfalse;
++	// if it is a weapon, give them some predicted ammo so the autoswitch will work
+ 	if (item->giType == IT_WEAPON) {
+ 		cg.predictedPlayerState.stats[STAT_WEAPONS] |= 1 << item->giTag;
+ 
+@@ -370,6 +619,280 @@
+ 
+ /*
+ =======================================================================================================================================
++CG_CheckTimers
++=======================================================================================================================================
++*/
++static void CG_CheckTimers(void) {
++	int i, maxHealth, addHealth;
++
++	// no prediction for spectators
++	if (cg.predictedPlayerState.pm_type == PM_SPECTATOR) {
++		return;
++	}
++	// no armor/health/powerups prediction for dead bodies
++	if (cg.predictedPlayerState.stats[STAT_HEALTH] <= 0) {
++		return;
++	}
++
++	cg.timeResidual += 1000;
++
++	maxHealth = 0;
++	addHealth = 0;
++	// periodic tasks
++	if (cg.timeResidual && cg.predictedPlayerState.commandTime >= cg.timeResidual && !cg.thisFrameTeleport) {
++		cg.timeResidual -= 1000;
++		// regenerate
++		if (cg.predictedPlayerState.powerups[PW_REGEN]) {
++			maxHealth = 200;
++			addHealth += 10;
++		}
++		// guard
++		if (cg.predictedPlayerState.powerups[PW_GUARD]) {
++			maxHealth = 200;
++			addHealth += 5;
++		}
++
++		if (maxHealth) {
++			if (cg.predictedPlayerState.stats[STAT_HEALTH] < maxHealth * 0.5) {
++				cg.predictedPlayerState.stats[STAT_HEALTH] += addHealth * 2;
++
++				if (cg.predictedPlayerState.stats[STAT_HEALTH] > maxHealth * 1.1) {
++					cg.predictedPlayerState.stats[STAT_HEALTH] = maxHealth * 1.1;
++				}
++				// TODO: add external EV_POWERUP_REGEN
++			} else if (cg.predictedPlayerState.stats[STAT_HEALTH] < maxHealth) {
++				cg.predictedPlayerState.stats[STAT_HEALTH] += addHealth;
++
++				if (cg.predictedPlayerState.stats[STAT_HEALTH] > maxHealth) {
++					cg.predictedPlayerState.stats[STAT_HEALTH] = maxHealth;
++				}
++				// TODO: add external EV_POWERUP_REGEN
++			}
++		} else {
++			// count down health when over max
++			if (cg.predictedPlayerState.stats[STAT_HEALTH] > 100) {
++				cg.predictedPlayerState.stats[STAT_HEALTH]--;
++			}
++			// count down armor when over max
++			if (cg.predictedPlayerState.stats[STAT_ARMOR] > 100) {
++				cg.predictedPlayerState.stats[STAT_ARMOR]--;
++			}
++		}
++	}
++	// turn off any expired powerups
++	for (i = 0; i < MAX_POWERUPS; i++) {
++		if (!cg.predictedPlayerState.powerups[i]) {
++			continue;
++		}
++
++		if (cg.predictedPlayerState.powerups[i] < cg.predictedPlayerState.commandTime) {
++			cg.predictedPlayerState.powerups[i] = 0;
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++CG_IsUnacceptableError
++=======================================================================================================================================
++*/
++static int CG_IsUnacceptableError(playerState_t *ps, playerState_t *pps, qboolean *forceMove) {
++	vec3_t delta;
++	int i, n, v0, v1;
++
++	if (pps->pm_time != ps->pm_time || pps->pm_type != ps->pm_type || pps->pm_flags != ps->pm_flags) {
++		return 1;
++	}
++
++	VectorSubtract(pps->origin, ps->origin, delta);
++
++	if (VectorLengthSquared(delta) > 0.01f * 0.01f) {
++		if (cg_showmiss.integer > 2) {
++			CG_Printf("origin delta: %.2f  ", VectorLength(delta));
++		}
++
++		return 2;
++	}
++
++	VectorSubtract(pps->velocity, ps->velocity, delta);
++
++	if (VectorLengthSquared(delta) > 0.01f * 0.01f) {
++		if (cg_showmiss.integer > 2) {
++			CG_Printf("velocity delta: %.2f  ", VectorLength(delta));
++		}
++
++		return 3;
++	}
++
++	if (pps->weaponTime != ps->weaponTime || pps->gravity != ps->gravity || pps->speed != ps->speed || pps->delta_angles[0] != ps->delta_angles[0] || pps->delta_angles[1] != ps->delta_angles[1] || pps->delta_angles[2] != ps->delta_angles[2] || pps->groundEntityNum != ps->groundEntityNum) {
++		if (cg_showmiss.integer > 1) {
++			CG_Printf("%i %i %i %i => %i %i %i %i", pps->weaponTime, pps->gravity, pps->speed, pps->groundEntityNum, ps->weaponTime, ps->gravity, ps->speed, ps->groundEntityNum);
++		}
++
++		return 4;
++	}
++	// forward gesture animation
++	if (pps->torsoAnim != ps->torsoAnim && (ps->torsoAnim & ~ANIM_TOGGLEBIT) == TORSO_GESTURE) {
++		for (n = 0; n < NUM_SAVED_STATES; n++) {
++			cg.savedPmoveStates[n].torsoAnim = ps->torsoAnim;
++			cg.savedPmoveStates[n].torsoTimer = ps->torsoTimer;
++		}
++	}
++
++	if (pps->legsTimer != ps->legsTimer || pps->legsAnim != ps->legsAnim || pps->torsoTimer != ps->torsoTimer || pps->torsoAnim != ps->torsoAnim || pps->movementDir != ps->movementDir) {
++		return 5;
++	}
++	// check/update eFlags if needed
++	v0 = pps->eFlags & EF_NOPREDICT;
++	v1 = ps->eFlags & EF_NOPREDICT;
++
++	if (v0 != v1) {
++		for (i = 0; i < NUM_SAVED_STATES; i++) {
++			cg.savedPmoveStates[i].eFlags = (cg.savedPmoveStates[i].eFlags & ~EF_NOPREDICT)|v1;
++		}
++
++		pps->eFlags = (pps->eFlags & ~EF_NOPREDICT)|v1;
++	}
++
++	if (pps->eFlags != ps->eFlags) {
++		if (cg_showmiss.integer > 1) {
++			CG_Printf("eFlags %i => %i", pps->eFlags, ps->eFlags);
++		}
++
++		return 6;
++	}
++
++	if (pps->eventSequence != ps->eventSequence) {
++		return 7;
++	}
++
++	for (i = 0; i < MAX_PS_EVENTS; i++) {
++		if (pps->events[i] != ps->events[i]) {
++			if (cg_showmiss.integer > 1) {
++				CG_Printf("event[%i] %i => %i\n", i, pps->events[i], ps->events[i]);
++			}
++
++			return 8;
++		}
++
++		if (pps->eventParms[i] != ps->eventParms[i]) {
++			if (cg_showmiss.integer > 1) {
++				CG_Printf("eventParms[%i] %i => %i\n", i, pps->eventParms[i], ps->eventParms[i]);
++			}
++
++			return 8;
++		}
++	}
++
++	if (pps->externalEvent != ps->externalEvent || pps->externalEventParm != ps->externalEventParm || pps->externalEventTime != ps->externalEventTime) {
++		return 9;
++	}
++
++	if (pps->clientNum != ps->clientNum || pps->weapon != ps->weapon || pps->weaponstate != ps->weaponstate) {
++		return 10;
++	}
++
++	if (fabs(AngleDelta(ps->viewangles[0], pps->viewangles[0])) > 1.0f || fabs(AngleDelta(ps->viewangles[1], pps->viewangles[1])) > 1.0f || fabs(AngleDelta(ps->viewangles[2], pps->viewangles[2])) > 1.0f) {
++		return 11;
++	}
++
++	if (pps->viewheight != ps->viewheight) {
++		return 12;
++	}
++
++	if (pps->damageEvent != ps->damageEvent || pps->damageYaw != ps->damageYaw || pps->damagePitch != ps->damagePitch || pps->damageCount != ps->damageCount) {
++		if (cg_showmiss.integer > 1) {
++			CG_Printf("dmg %i %i %i %i >= %i %i %i %i\n", pps->damageEvent, pps->damageYaw, pps->damagePitch, pps->damageCount, ps->damageEvent, ps->damageYaw, ps->damagePitch, ps->damageCount);
++		}
++
++		return 13;
++	}
++	// health countdown?
++	if (pps->stats[STAT_HEALTH] == ps->stats[STAT_HEALTH] + 1 && ps->stats[STAT_HEALTH] >= 200) {
++		cg.timeResidual = ps->commandTime + 1000;
++
++		for (n = 0; n < NUM_SAVED_STATES; n++) {
++			cg.savedPmoveStates[n].stats[STAT_HEALTH] = ps->stats[STAT_HEALTH];
++		}
++	}
++	// armor countdown?
++	if (pps->stats[STAT_ARMOR] == ps->stats[STAT_ARMOR] - 1 && ps->stats[STAT_ARMOR] >= 200) {
++		// we may need few frames to sync with client->timeResidual on server side
++		cg.timeResidual = ps->commandTime + 1000;
++
++		for (n = 0; n < NUM_SAVED_STATES; n++) {
++			cg.savedPmoveStates[n].stats[STAT_ARMOR] = ps->stats[STAT_ARMOR];
++		}
++	}
++
++	for (i = 0; i < MAX_STATS; i++) {
++		// we can't predict some flags
++		if (i == STAT_CLIENTS_READY /*|| i == STAT_MAX_HEALTH */) {
++			for (n = 0; n < NUM_SAVED_STATES; n++) {
++				cg.savedPmoveStates[n].stats[i] = ps->stats[i];
++			}
++
++			continue;
++		}
++
++		if (pps->stats[i] != ps->stats[i]) {
++			if (cg_showmiss.integer > 1) {
++				CG_Printf("stats[%i] %i => %i ", i, pps->stats[i], ps->stats[i]);
++			}
++
++			return 14;
++		}
++	}
++
++	for (i = 0; i < MAX_PERSISTANT; i++) {
++		if (pps->persistant[i] != ps->persistant[i]) {
++			if (i >= PERS_TEAM && i <= PERS_PLAYEREVENTS) {
++				if (cg_showmiss.integer > 1) {
++					CG_Printf("persistant[%i] %i => %i ", i, pps->persistant[i], ps->persistant[i]);
++				}
++
++				return 15;
++			}
++
++			v0 = ps->persistant[i];
++
++			for (n = 0; n < NUM_SAVED_STATES; n++) {
++				cg.savedPmoveStates[n].persistant[i] = v0;
++			}
++
++			*forceMove = qtrue;
++		}
++	}
++
++	for (i = 0; i < MAX_WEAPONS; i++) {
++		if (pps->ammo[i] != ps->ammo[i]) {
++			if (cg_showmiss.integer > 1) {
++				CG_Printf("ammo[%i] %i => %i ", i, pps->ammo[i], ps->ammo[i]);
++			}
++
++			return 17;
++		}
++	}
++
++	if (pps->tokens != ps->tokens || pps->loopSound != ps->loopSound) {
++		return 18;
++	}
++
++	for (i = 0; i < MAX_POWERUPS; i++) {
++		if (pps->powerups[i] != ps->powerups[i]) {
++			if (cg_showmiss.integer > 1) {
++				CG_Printf("powerups[%i] %i => %i ", i, pps->powerups[i], ps->powerups[i]);
++			}
++
++			return 19;
++		}
++	}
++
++	return 0;
++}
++
++/*
++=======================================================================================================================================
+ CG_PredictPlayerState
+ 
+ Generates cg.predictedPlayerState for the current cg.time, cg.predictedPlayerState is guaranteed to be valid after exiting.
+@@ -387,12 +910,14 @@
+ =======================================================================================================================================
+ */
+ void CG_PredictPlayerState(void) {
+-	int cmdNum, current;
++	int stateIndex, predictCmd, cmdNum, current;
+ 	playerState_t oldPlayerState;
+ 	qboolean moved;
+-	usercmd_t oldestCmd;
+-	usercmd_t latestCmd;
++	usercmd_t oldestCmd, latestCmd;
+ 
++	stateIndex = 0;
++	predictCmd = 0;
++
+ 	cg.hyperspace = qfalse; // will be set if touching a trigger_teleport
+ 	// if this is the first frame we must guarantee predictedPlayerState is valid even if there is some other error condition
+ 	if (!cg.validPPS) {
+@@ -405,7 +930,7 @@
+ 		return;
+ 	}
+ 	// non-predicting local movement will grab the latest angles
+-	if (cg_nopredict.integer || cg_synchronousClients.integer) {
++	if (cg_nopredict.integer || cgs.synchronousClients) {
+ 		CG_InterpolatePlayerState(qtrue);
+ 		return;
+ 	}
+@@ -434,7 +959,7 @@
+ 
+ 	if (oldestCmd.serverTime > cg.snap->ps.commandTime && oldestCmd.serverTime < cg.time) { // special check for map_restart
+ 		if (cg_showmiss.integer) {
+-			CG_Printf("exceeded PACKET_BACKUP on commands\n");
++			CG_Printf("Exceeded PACKET_BACKUP on commands.\n");
+ 		}
+ 
+ 		return;
+@@ -451,24 +976,91 @@
+ 		cg.physicsTime = cg.snap->serverTime;
+ 	}
+ 
+-	if (pmove_msec.integer < 8) {
+-		trap_Cvar_SetValue("pmove_msec", 8);
+-		trap_Cvar_Update(&pmove_msec);
+-	} else if (pmove_msec.integer > 33) {
+-		trap_Cvar_SetValue("pmove_msec", 33);
+-		trap_Cvar_Update(&pmove_msec);
++	cg_pmove.pmove_fixed = cgs.pmove_fixed;
++	cg_pmove.pmove_msec = cgs.pmove_msec;
++	// clean event stack
++	eventStack = 0;
++	// run cmds
++	moved = qfalse;
++
++	cg_pmove.pmove_fixed = cgs.pmove_fixed;
++	cg_pmove.pmove_msec = cgs.pmove_msec;
++	// like the comments described above, a player's state is entirely re-predicted from the last valid snapshot every client frame,
++	// which can be really, really, really slow. Every old command has to be run again. For every client frame that is NOT directly
++	// after a snapshot, this is unnecessary, since we have no new information. For those, we'll play back the predictions from the
++	// last frame and predict only the newest commands. Essentially, we'll be doing an incremental predict instead of a full predict.
++	// If we have a new snapshot, we can compare its player state's command time to the command times in the queue to find a match.
++	// If we find a matching state, and the predicted version has not deviated, we can use the predicted state as a base - and also do
++	// an incremental predict. With this method, we get incremental predicts on every client frame except a frame following a new
++	// snapshot in which there was a prediction error. This yeilds anywhere from a 15% to 40% performance increase, depending on how
++	// much of a bottleneck the CPU is
++	if (1) {
++		if (cg.nextFrameTeleport || cg.thisFrameTeleport) {
++			// do a full predict
++			cg.lastPredictedCommand = 0;
++			cg.stateTail = cg.stateHead;
++			predictCmd = current - CMD_BACKUP + 1;
++		// cg.physicsTime is the current snapshot's serverTime if it's the same as the last one
++		} else if (cg.physicsTime == cg.lastServerTime) {
++			// we have no new information, so do an incremental predict
++			predictCmd = cg.lastPredictedCommand + 1;
++		} else {
++			// we have a new snapshot
++			int i;
++			int errorcode;
++			qboolean error = qtrue;
++
++			// loop through the saved states queue
++			for (i = cg.stateHead; i != cg.stateTail; i = (i + 1) % NUM_SAVED_STATES) {
++				// if we find a predicted state whose commandTime matches the snapshot
++				// player state's commandTime
++				if (cg.savedPmoveStates[i].commandTime != cg.predictedPlayerState.commandTime) {
++					continue;
++				}
++				// make sure the state differences are acceptable
++				errorcode = CG_IsUnacceptableError(&cg.predictedPlayerState, &cg.savedPmoveStates[i], &moved);
++
++				if (errorcode) {
++					if (cg_showmiss.integer > 1) {
++						CG_Printf("errorcode %d at %d\n", errorcode, cg.time);
++					}
++
++					break;
++				}
++				// this one is almost exact, so we'll copy it in as the starting point
++				*cg_pmove.ps = cg.savedPmoveStates[i];
++				// advance the head
++				cg.stateHead = (i + 1) % NUM_SAVED_STATES;
++				// set the next command to predict
++				predictCmd = cg.lastPredictedCommand + 1;
++				// a saved state matched, so flag it
++				error = qfalse;
++				break;
++			}
++			// if no saved states matched
++			if (error) {
++				// do a full predict
++				cg.lastPredictedCommand = 0;
++				cg.stateTail = cg.stateHead;
++				predictCmd = current - CMD_BACKUP + 1;
++			}
++		}
++		// keep track of the server time of the last snapshot so we know when we're starting from a new one in future calls
++		cg.lastServerTime = cg.physicsTime;
++		stateIndex = cg.stateHead;
+ 	}
+ 
+-	cg_pmove.pmove_fixed = pmove_fixed.integer; //|cg_pmove_fixed.integer;
+-	cg_pmove.pmove_msec = pmove_msec.integer;
++	cmdNum = current - CMD_BACKUP + 1;
++
++	if (cmdNum < 0) { // can happen on first spawn
++		cmdNum = 0;
++	}
+ 	// run cmds
+-	moved = qfalse;
+-
+-	for (cmdNum = current - CMD_BACKUP + 1; cmdNum <= current; cmdNum++) {
++	for (; cmdNum <= current; cmdNum++) {
+ 		// get the command
+ 		trap_GetUserCmd(cmdNum, &cg_pmove.cmd);
+ 
+-		if (cg_pmove.pmove_fixed) {
++		if (cgs.pmove_fixed) {
+ 			PM_UpdateViewAngles(cg_pmove.ps, &cg_pmove.cmd);
+ 		}
+ 		// don't do anything if the time is before the snapshot player time
+@@ -495,6 +1087,8 @@
+ 				}
+ 
+ 				cg.thisFrameTeleport = qfalse;
++				// delay prediction for some time or until first server event
++				cg.allowPickupPrediction = cg.time + PICKUP_PREDICTION_DELAY;
+ 			} else {
+ 				vec3_t adjusted, new_angles;
+ 
+@@ -502,17 +1096,17 @@
+ 
+ 				if (cg_showmiss.integer) {
+ 					if (!VectorCompare(oldPlayerState.origin, adjusted)) {
+-						CG_Printf("prediction error\n");
++						CG_Printf("Prediction error\n");
+ 					}
+ 				}
+ 
+ 				VectorSubtract(oldPlayerState.origin, adjusted, delta);
+ 
+-				len = VectorLength(delta);
++				len = VectorLengthSquared(delta);
+ 
+-				if (len > 0.1) {
++				if (len > (0.01f * 0.01f)) {
+ 					if (cg_showmiss.integer) {
+-						CG_Printf("Prediction miss: %f\n", len);
++						CG_Printf("Prediction miss: %f\n", sqrt(len));
+ 					}
+ 
+ 					if (cg_errorDecay.integer) {
+@@ -543,27 +1137,42 @@
+ 		cg_pmove.gauntletHit = qfalse;
+ 
+ 		if (cg_pmove.pmove_fixed) {
+-			cg_pmove.cmd.serverTime = ((cg_pmove.cmd.serverTime + pmove_msec.integer - 1) / pmove_msec.integer) * pmove_msec.integer;
++			cg_pmove.cmd.serverTime = ((cg_pmove.cmd.serverTime + cg_pmove.pmove_msec - 1) / cg_pmove.pmove_msec) * cg_pmove.pmove_msec;
+ 		}
+ 
+-		Pmove(&cg_pmove);
++		if (cmdNum >= predictCmd || (stateIndex + 1) % NUM_SAVED_STATES == cg.stateHead) {
++			Pmove(&cg_pmove);
++			// add push trigger movement effects
++			CG_TouchTriggerPrediction();
++			// check for expired powerups etc.
++			CG_CheckTimers();
++			// record the last predicted command
++			cg.lastPredictedCommand = cmdNum;
++			// if we haven't run out of space in the saved states queue
++			if ((stateIndex + 1) % NUM_SAVED_STATES != cg.stateHead) {
++				// save the state for the false case (of cmdNum >= predictCmd) in later calls to this function
++				cg.savedPmoveStates[stateIndex] = *cg_pmove.ps;
++				stateIndex = (stateIndex + 1) % NUM_SAVED_STATES;
++				cg.stateTail = stateIndex;
++			}
++		} else {
++			*cg_pmove.ps = cg.savedPmoveStates[stateIndex];
++			stateIndex = (stateIndex + 1) % NUM_SAVED_STATES;
++		}
+ 
+ 		moved = qtrue;
+-		// add push trigger movement effects
+-		CG_TouchTriggerPrediction();
+-		// check for predictable events that changed from previous predictions
+-		//CG_CheckChangedPredictableEvents(&cg.predictedPlayerState);
+ 	}
+ 
+-	if (cg_showmiss.integer > 1) {
++	if (cg_showmiss.integer > 3) {
+ 		CG_Printf("[%i : %i] ", cg_pmove.cmd.serverTime, cg.time);
+ 	}
+ 
+ 	if (!moved) {
+ 		if (cg_showmiss.integer) {
+-			CG_Printf("not moved\n");
++			CG_Printf("Not moved\n");
+ 		}
+-
++		// clean event stack
++		eventStack = 0;
+ 		return;
+ 	}
+ 	// adjust for the movement of the groundentity
+Index: code/cgame/cg_servercmds.c
+===================================================================
+--- code/cgame/cg_servercmds.c	(revision 745)
++++ code/cgame/cg_servercmds.c	(working copy)
+@@ -178,6 +178,28 @@
+ 
+ /*
+ =======================================================================================================================================
++CG_ParseSysteminfo
++=======================================================================================================================================
++*/
++void CG_ParseSysteminfo(void) {
++	const char *info;
++
++	info = CG_ConfigString(CS_SYSTEMINFO);
++
++	cgs.pmove_fixed = (atoi(Info_ValueForKey(info, "pmove_fixed"))) ? qtrue : qfalse;
++	cgs.pmove_msec = atoi(Info_ValueForKey(info, "pmove_msec"));
++
++	if (cgs.pmove_msec < 8) {
++		cgs.pmove_msec = 8;
++	} else if (cgs.pmove_msec > 33) {
++		cgs.pmove_msec = 33;
++	}
++
++	cgs.synchronousClients = (atoi(Info_ValueForKey(info, "g_synchronousClients"))) ? qtrue : qfalse;
++}
++
++/*
++=======================================================================================================================================
+ CG_ParseWarmup
+ =======================================================================================================================================
+ */
+@@ -281,6 +303,8 @@
+ 	// do something with it if necessary
+ 	if (num == CS_MUSIC) {
+ 		CG_StartMusic();
++	} else if (num == CS_SYSTEMINFO) {
++		CG_ParseSysteminfo();
+ 	} else if (num == CS_SERVERINFO) {
+ 		CG_ParseServerinfo();
+ 	} else if (num == CS_WARMUP) {
+Index: code/cgame/cg_snapshot.c
+===================================================================
+--- code/cgame/cg_snapshot.c	(revision 745)
++++ code/cgame/cg_snapshot.c	(working copy)
+@@ -166,7 +166,7 @@
+ 			cg.thisFrameTeleport = qtrue; // will be cleared by prediction code
+ 		}
+ 		// if we are not doing client side movement prediction for any reason, then the client events and view changes will be issued now
+-		if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cg_synchronousClients.integer) {
++		if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cgs.synchronousClients) {
+ 			CG_TransitionPlayerState(ps, ops);
+ 		}
+ 	}
+Index: code/game/bg_misc.c
+===================================================================
+--- code/game/bg_misc.c	(revision 745)
++++ code/game/bg_misc.c	(working copy)
+@@ -1107,7 +1107,7 @@
+ 	}
+ }
+ 
+-const char *eventnames[] = {
++const char *eventnames[EV_MAX] = {
+ 	"EV_NONE",
+ 	"EV_FIRE_WEAPON",
+ 	"EV_BULLET_HIT_FLESH",
+@@ -1234,6 +1234,9 @@
+ 	"EV_DEBUG_LINE"
+ };
+ 
++#ifdef CGAME
++void CG_StoreEvent(entity_event_t ev, int eventParm, int entityNum);
++#endif
+ /*
+ =======================================================================================================================================
+ BG_AddPredictableEventToPlayerstate
+@@ -1241,7 +1244,7 @@
+ Handles the sequence numbers.
+ =======================================================================================================================================
+ */
+-void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps) {
++void BG_AddPredictableEventToPlayerstate(entity_event_t newEvent, int eventParm, playerState_t *ps, int entityNum) {
+ #ifdef _DEBUG
+ 	{
+ 		char buf[256];
+@@ -1257,6 +1260,9 @@
+ 		}
+ 	}
+ #endif
++#ifdef CGAME
++	CG_StoreEvent(newEvent, eventParm, entityNum);
++#endif
+ 	ps->events[ps->eventSequence & (MAX_PS_EVENTS - 1)] = newEvent;
+ 	ps->eventParms[ps->eventSequence & (MAX_PS_EVENTS - 1)] = eventParm;
+ 	ps->eventSequence++;
+@@ -1288,7 +1294,7 @@
+ 			effectNum = 1;
+ 		}
+ 
+-		BG_AddPredictableEventToPlayerstate(EV_JUMP_PAD, effectNum, ps);
++		BG_AddPredictableEventToPlayerstate(EV_JUMP_PAD, effectNum, ps, -1);
+ 	}
+ 	// remember hitting this jumppad this frame
+ 	ps->jumppad_ent = jumppad->number;
+Index: code/game/bg_pmove.c
+===================================================================
+--- code/game/bg_pmove.c	(revision 745)
++++ code/game/bg_pmove.c	(working copy)
+@@ -52,7 +52,7 @@
+ =======================================================================================================================================
+ */
+ void PM_AddEvent(int newEvent) {
+-	BG_AddPredictableEventToPlayerstate(newEvent, 0, pm->ps);
++	BG_AddPredictableEventToPlayerstate(newEvent, 0, pm->ps, -1);
+ }
+ 
+ /*
+@@ -67,7 +67,7 @@
+ 		return;
+ 	}
+ 
+-	if (pm->numtouch == MAXTOUCH) {
++	if (pm->numtouch >= MAXTOUCH) {
+ 		return;
+ 	}
+ 	// see if it is already added
+Index: code/game/bg_public.h
+===================================================================
+--- code/game/bg_public.h	(revision 745)
++++ code/game/bg_public.h	(working copy)
+@@ -31,7 +31,7 @@
+ #define GAME_VERSION BASEGAME "-1"
+ #define DEFAULT_GRAVITY 800
+ #define GIB_HEALTH -40
+-#define ARMOR_PROTECTION 0.66
++#define ARMOR_PROTECTION 0.66f
+ #define MAX_ITEMS 256
+ #define RANK_TIED_FLAG 0x4000
+ #define DEFAULT_SHOTGUN_SPREAD 700
+@@ -226,6 +226,8 @@
+ #define EF_CONNECTION		0x00001000 // draw a connection trouble sprite
+ #define EF_TALK				0x00002000 // draw a talk balloon
+ 
++#define EF_NOPREDICT (/*EF_AWARDS|EF_PERSISTANT|*/EF_TALK)
++
+ /**************************************************************************************************************************************
+ 
+ 	player_state->powerup[] indexes
+@@ -419,7 +421,8 @@
+ 	EV_USE_ITEM15,
+ 	EV_SCOREPLUM,			// score plum
+ 	EV_LIGHTNINGBOLT,
+-	EV_DEBUG_LINE
++	EV_DEBUG_LINE,
++	EV_MAX
+ } entity_event_t;
+ 
+ typedef enum {
+@@ -662,7 +665,7 @@
+ 
+ void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result);
+ void BG_EvaluateTrajectoryDelta(const trajectory_t *tr, int atTime, vec3_t result);
+-void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
++void BG_AddPredictableEventToPlayerstate(entity_event_t newEvent, int eventParm, playerState_t *ps, int entityNum);
+ void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad);
+ void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *s, qboolean snap);
+ void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s, int time, qboolean snap);
+Index: code/game/g_active.c
+===================================================================
+--- code/game/g_active.c	(revision 745)
++++ code/game/g_active.c	(working copy)
+@@ -724,9 +724,7 @@
+ 	if (ucmd->serverTime > level.time + 200) {
+ 		ucmd->serverTime = level.time + 200;
+ //		G_Printf("serverTime <<<<<\n");
+-	}
+-
+-	if (ucmd->serverTime < level.time - 1000) {
++	} else if (ucmd->serverTime < level.time - 1000) {
+ 		ucmd->serverTime = level.time - 1000;
+ //		G_Printf("serverTime >>>>>\n");
+ 	}
+@@ -749,7 +747,7 @@
+ 		trap_Cvar_Update(&pmove_msec);
+ 	}
+ 
+-	if (pmove_fixed.integer || client->pers.pmoveFixed) {
++	if (pmove_fixed.integer) {
+ 		ucmd->serverTime = ((ucmd->serverTime + pmove_msec.integer - 1) / pmove_msec.integer) * pmove_msec.integer;
+ 		//if (ucmd->serverTime - client->ps.commandTime <= 0)
+ 		//	return;
+@@ -816,7 +814,7 @@
+ 	pm.trace = trap_Trace;
+ 	pm.pointcontents = trap_PointContents;
+ 	pm.debugLevel = g_debugMove.integer;
+-	pm.pmove_fixed = pmove_fixed.integer|client->pers.pmoveFixed;
++	pm.pmove_fixed = pmove_fixed.integer;
+ 	pm.pmove_msec = pmove_msec.integer;
+ 
+ 	VectorCopy(client->ps.origin, client->oldOrigin);
+@@ -1015,7 +1013,7 @@
+ 	}
+ 	// turn off any expired powerups
+ 	for (i = 0; i < MAX_POWERUPS; i++) {
+-		if (ent->client->ps.powerups[i] < level.time) {
++		if (ent->client->ps.powerups[i] < ent->client->pers.cmd.serverTime) {
+ 			ent->client->ps.powerups[i] = 0;
+ 		}
+ 	}
+Index: code/game/g_client.c
+===================================================================
+--- code/game/g_client.c	(revision 745)
++++ code/game/g_client.c	(working copy)
+@@ -736,15 +736,6 @@
+ 			client->pers.teamInfo = qfalse;
+ 		}
+ 	}
+-	/*
+-	s = Info_ValueForKey(userinfo, "cg_pmove_fixed");
+-
+-	if (!*s || atoi(s) == 0) {
+-		client->pers.pmoveFixed = qfalse;
+-	} else {
+-		client->pers.pmoveFixed = qtrue;
+-	}
+-	*/
+ 	// team task (0 = none, 1 = offence, 2 = defence)
+ 	teamTask = atoi(Info_ValueForKey(userinfo, "teamtask"));
+ 	// team leader (1 = leader, 0 is normal player)
+Index: code/game/g_combat.c
+===================================================================
+--- code/game/g_combat.c	(revision 745)
++++ code/game/g_combat.c	(working copy)
+@@ -100,7 +100,9 @@
+ 		// find the item type for this weapon
+ 		item = BG_FindItemForWeapon(weapon);
+ 		// spawn the item
+-		Drop_Item(self, item, 0);
++		drop = Drop_Item(self, item, 0);
++		// for pickup prediction
++		drop->s.time2 = item->quantity;
+ 	}
+ 	// drop all the powerups if dead
+ 	for (i = 1; i < PW_NUM_POWERUPS; i++) {
+@@ -119,7 +121,8 @@
+ 			if (drop->count < 1) {
+ 				drop->count = 1;
+ 			}
+-
++			// for pickup prediction
++			drop->s.time2 = drop->count;
+ 			angle += 45;
+ 		}
+ 	}
+Index: code/game/g_items.c
+===================================================================
+--- code/game/g_items.c	(revision 745)
++++ code/game/g_items.c	(working copy)
+@@ -386,7 +386,13 @@
+ 			break;
+ 		case IT_POWERUP:
+ 			respawn = Pickup_Powerup(ent, other);
+-			predict = qfalse;
++			// allow prediction for some powerups
++			if (ent->item->giTag == PW_QUAD) {
++				predict = qtrue;
++			} else {
++				predict = qfalse;
++			}
++
+ 			break;
+ 		case IT_PERSISTANT_POWERUP:
+ 			respawn = Pickup_PersistantPowerup(ent, other);
+@@ -573,6 +579,12 @@
+ 	ent->touch = Touch_Item;
+ 	// using an item causes it to respawn
+ 	ent->use = Use_Item;
++	// for pickup prediction
++	if (ent->count) {
++		ent->s.time2 = ent->count;
++	} else if (ent->item) {
++		ent->s.time2 = ent->item->quantity;
++	}
+ 
+ 	if (ent->spawnflags & 1) {
+ 		// suspended
+Index: code/game/g_local.h
+===================================================================
+--- code/game/g_local.h	(revision 745)
++++ code/game/g_local.h	(working copy)
+@@ -189,7 +189,6 @@
+ 	qboolean localClient;			// true if "ip" info key is "localhost"
+ 	qboolean initialSpawn;			// the first spawn should be at a cool location
+ 	qboolean predictItemPickup;		// based on cg_predictItems userinfo
+-	qboolean pmoveFixed;
+ 	char netname[MAX_NETNAME];
+ 	int enterTime;					// level.time the client entered the game
+ 	playerTeamState_t teamState;	// status in teamplay games
+@@ -347,7 +346,7 @@
+ float *TempVector(float x, float y, float z);
+ char *VectorToString(const vec3_t v);
+ float VectorToYaw(const vec3_t vec);
+-void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm);
++void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm);
+ void G_AddEvent(gentity_t *ent, int event, int eventParm);
+ void G_SetOrigin(gentity_t *ent, vec3_t origin);
+ void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
+Index: code/game/g_utils.c
+===================================================================
+--- code/game/g_utils.c	(revision 745)
++++ code/game/g_utils.c	(working copy)
+@@ -552,13 +552,13 @@
+ Adds an event + parm and twiddles the event counter.
+ =======================================================================================================================================
+ */
+-void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm) {
++void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm) {
+ 
+ 	if (!ent->client) {
+ 		return;
+ 	}
+ 
+-	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps);
++	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps, -1);
+ }
+ 
+ /*
