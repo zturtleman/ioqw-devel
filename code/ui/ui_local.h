@@ -114,7 +114,6 @@ extern char *ui_medalSounds[];
 // ui_main.c
 void UI_Report(void);
 void UI_Load(void);
-void UI_LoadMenus(const char *menuFile, qboolean reset);
 void _UI_SetActiveMenu(uiMenuCommand_t menu);
 int UI_AdjustTimeByGame(int time);
 void UI_ShowPostGame(qboolean newHigh);
@@ -186,7 +185,7 @@ typedef struct {
 } playerInfo_t;
 
 void UI_DrawPlayer(float x, float y, float w, float h, playerInfo_t *pi, int time);
-void UI_PlayerInfo_SetModel(playerInfo_t *pi, const char *model, const char *headmodel, char *teamName);
+void UI_PlayerInfo_SetModel(playerInfo_t *pi, const char *model, const char *headmodel, const char *teamName);
 void UI_PlayerInfo_SetInfo(playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat);
 void UI_ColorFromIndex(int val, vec3_t color);
 void UI_PlayerInfo_UpdateColor(playerInfo_t *pi);
@@ -438,7 +437,6 @@ extern void UI_Init(void);
 extern void UI_Shutdown(void);
 extern void UI_KeyEvent(int key);
 extern void UI_MouseEvent(int dx, int dy);
-extern void UI_Refresh(int realtime);
 extern qboolean UI_ConsoleCommand(int realTime);
 extern void UI_DrawPic(float x, float y, float w, float h, qhandle_t hShader);
 extern void UI_FillRect(float x, float y, float width, float height, const float *color);
@@ -450,21 +448,17 @@ extern float UI_ProportionalSizeScale(int style);
 extern void UI_DrawProportionalString(int x, int y, const char *str, int style, vec4_t color);
 extern int UI_ProportionalStringWidth(const char *str);
 extern void UI_AdjustFrom640(float *x, float *y, float *w, float *h);
-extern qboolean UI_IsFullscreen(void);
 extern void UI_SetActiveMenu(uiMenuCommand_t menu);
-extern char *UI_Argv(int arg);
+extern const char *UI_Argv(int arg);
 extern char *UI_Cvar_VariableString(const char *var_name);
 extern void UI_SetClipRegion(float x, float y, float w, float h);
 extern void UI_ClearClipRegion(void);
 void UI_LoadBestScores(const char *map, int game);
 // ui_gameinfo.c
-char *UI_GetBotInfoByNumber(int num);
-char *UI_GetBotInfoByName(const char *name);
 int UI_GetNumBots(void);
 void UI_LoadBots(void);
 char *UI_GetBotNameByNumber(int num);
 qhandle_t UI_AddSkinToFrame(const cgSkin_t *skin, entityState_t *state);
-qboolean UI_RegisterSkin(const char *name, cgSkin_t *skin, qboolean append);
 
 /*
 =======================================================================================================================================

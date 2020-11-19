@@ -94,7 +94,7 @@ int BotSetTeamFormationDist(bot_state_t *bs) {
 BotValidTeamLeader
 =======================================================================================================================================
 */
-int BotValidTeamLeader(bot_state_t *bs) {
+static int BotValidTeamLeader(bot_state_t *bs) {
 
 	if (!strlen(bs->teamleader)) {
 		return qfalse;
@@ -112,7 +112,7 @@ int BotValidTeamLeader(bot_state_t *bs) {
 BotNumTeamMates
 =======================================================================================================================================
 */
-int BotNumTeamMates(bot_state_t *bs) {
+static int BotNumTeamMates(bot_state_t *bs) {
 	int i, numteammates;
 	char buf[MAX_INFO_STRING];
 
@@ -144,7 +144,7 @@ BotGetNextPlayer
 Returns -1 if there are no more players. Does not return the bot itself (if bs != NULL). Use lastPlayer = -1 for first call.
 =======================================================================================================================================
 */
-int BotGetNextPlayer(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
+static int BotGetNextPlayer(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
 	int currentClient;
 
 	for (currentClient = lastPlayer + 1; currentClient < level.maxclients; currentClient++) {
@@ -186,7 +186,7 @@ Returns -1 if there are no more players. Does not return the bot itself (if bs !
 =======================================================================================================================================
 */
 /*
-int BotGetNextPlayerOrMonster(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
+static int BotGetNextPlayerOrMonster(bot_state_t *bs, int lastPlayer, playerState_t *ps) {
 	int currentClient;
 
 	if (lastPlayer < MAX_CLIENTS) {
@@ -221,7 +221,7 @@ BotGetNextTeamMate
 Returns -1 if there are no more teammates. Does not return the bot itself. Use lastTeamMate = -1 for first call.
 =======================================================================================================================================
 */
-int BotGetNextTeamMate(bot_state_t *bs, int lastTeamMate, playerState_t *ps) {
+static int BotGetNextTeamMate(bot_state_t *bs, int lastTeamMate, playerState_t *ps) {
 	int player;
 
 	if (gametype < GT_TEAM) {
@@ -278,7 +278,7 @@ void BotDetermineVisibleTeammates(bot_state_t *bs) {
 BotClientTravelTimeToGoal
 =======================================================================================================================================
 */
-int BotClientTravelTimeToGoal(int client, bot_goal_t *goal) {
+static int BotClientTravelTimeToGoal(int client, bot_goal_t *goal) {
 	playerState_t ps;
 	int areanum;
 
@@ -300,7 +300,7 @@ int BotClientTravelTimeToGoal(int client, bot_goal_t *goal) {
 BotSortTeamMatesByBaseTravelTime
 =======================================================================================================================================
 */
-int BotSortTeamMatesByBaseTravelTime(bot_state_t *bs, int *teammates, int maxteammates) {
+static int BotSortTeamMatesByBaseTravelTime(bot_state_t *bs, int *teammates, int maxteammates) {
 	int i, j, k, numteammates, traveltime;
 	char buf[MAX_INFO_STRING];
 	int traveltimes[MAX_CLIENTS];
@@ -399,7 +399,7 @@ int BotGetTeamMateTaskPreference(bot_state_t *bs, int teammate) {
 BotSortTeamMatesByTaskPreference
 =======================================================================================================================================
 */
-int BotSortTeamMatesByTaskPreference(bot_state_t *bs, int *teammates, int numteammates) {
+static int BotSortTeamMatesByTaskPreference(bot_state_t *bs, int *teammates, int numteammates) {
 	int defenders[MAX_CLIENTS], numdefenders;
 	int attackers[MAX_CLIENTS], numattackers;
 	int roamers[MAX_CLIENTS], numroamers;
@@ -437,7 +437,7 @@ int BotSortTeamMatesByTaskPreference(bot_state_t *bs, int *teammates, int numtea
 BotSayTeamOrderAlways
 =======================================================================================================================================
 */
-void BotSayTeamOrderAlways(bot_state_t *bs, int toclient) {
+static void BotSayTeamOrderAlways(bot_state_t *bs, int toclient) {
 	char teamchat[MAX_MESSAGE_SIZE];
 	char buf[MAX_MESSAGE_SIZE];
 	char name[MAX_NETNAME];
@@ -459,7 +459,7 @@ void BotSayTeamOrderAlways(bot_state_t *bs, int toclient) {
 BotSayTeamOrder
 =======================================================================================================================================
 */
-void BotSayTeamOrder(bot_state_t *bs, int toclient) {
+static void BotSayTeamOrder(bot_state_t *bs, int toclient) {
 	// voice chats only
 	char buf[MAX_MESSAGE_SIZE];
 
@@ -503,7 +503,7 @@ void BotVoiceChatOnly(bot_state_t *bs, int toclient, char *voiceChat) {
 BotSayVoiceTeamOrder
 =======================================================================================================================================
 */
-void BotSayVoiceTeamOrder(bot_state_t *bs, int toclient, char *voiceChat) {
+static void BotSayVoiceTeamOrder(bot_state_t *bs, int toclient, char *voiceChat) {
 	BotVoiceChat(bs, toclient, voiceChat);
 }
 
@@ -535,11 +535,12 @@ X% defend the base, Y% go harvest.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotHarvesterOrders(bot_state_t *bs) {
+static void BotHarvesterOrders(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -958,11 +959,12 @@ X% defend the base, Y% attack the enemy obelisk.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotObeliskOrders(bot_state_t *bs) {
+static void BotObeliskOrders(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -1381,11 +1383,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void Bot1FCTFOrders_FlagAtCenter(bot_state_t *bs) {
+static void Bot1FCTFOrders_FlagAtCenter(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -1796,11 +1799,12 @@ X% towards neutral flag, Y% go towards enemy base and accompany flag carrier if 
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
+static void Bot1FCTFOrders_TeamHasFlag(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i, other;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -2419,11 +2423,12 @@ X% defend the base, Y% towards neutral flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void Bot1FCTFOrders_EnemyHasFlag(bot_state_t *bs) {
+static void Bot1FCTFOrders_EnemyHasFlag(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -2676,11 +2681,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void Bot1FCTFOrders_FlagDropped(bot_state_t *bs) {
+static void Bot1FCTFOrders_FlagDropped(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -3076,7 +3082,7 @@ void Bot1FCTFOrders_FlagDropped(bot_state_t *bs) {
 Bot1FCTFOrders
 =======================================================================================================================================
 */
-void Bot1FCTFOrders(bot_state_t *bs) {
+static void Bot1FCTFOrders(bot_state_t *bs) {
 
 	switch (bs->neutralflagstatus) {
 		case 0:
@@ -3122,11 +3128,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotCTFOrders_BothFlagsNotAtBase(bot_state_t *bs) {
+static void BotCTFOrders_BothFlagsNotAtBase(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i, other;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -3745,11 +3752,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotCTFOrders_TeamFlagNotAtBase(bot_state_t *bs) {
+static void BotCTFOrders_TeamFlagNotAtBase(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -4002,11 +4010,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotCTFOrders_EnemyFlagNotAtBase(bot_state_t *bs) {
+static void BotCTFOrders_EnemyFlagNotAtBase(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i, other;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME], carriername[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -4547,11 +4556,12 @@ X% defend the base, Y% get the flag.
   Max. aggressive strategy:  0% in defence 100% in offence. *NEW*
 =======================================================================================================================================
 */
-void BotCTFOrders_BothFlagsAtBase(bot_state_t *bs) {
+static void BotCTFOrders_BothFlagsAtBase(bot_state_t *bs) {
 	int numteammates, defenders, attackers, i;
 	int teammates[MAX_CLIENTS] = {0};
 	char name[MAX_NETNAME];
 
+	memset(teammates, 0, sizeof(teammates));
 	// sort teammates by travel time to base
 	numteammates = BotSortTeamMatesByBaseTravelTime(bs, teammates, sizeof(teammates));
 	// sort teammates by CTF preference
@@ -4947,7 +4957,7 @@ void BotCTFOrders_BothFlagsAtBase(bot_state_t *bs) {
 BotCTFOrders
 =======================================================================================================================================
 */
-void BotCTFOrders(bot_state_t *bs) {
+static void BotCTFOrders(bot_state_t *bs) {
 	int flagstatus;
 
 	if (BotTeam(bs) != TEAM_RED) {
@@ -4985,7 +4995,7 @@ void BotCTFOrders(bot_state_t *bs) {
 BotCreateGroup
 =======================================================================================================================================
 */
-void BotCreateGroup(bot_state_t *bs, int *teammates, int groupsize) {
+static void BotCreateGroup(bot_state_t *bs, int *teammates, int groupsize) {
 	char name[MAX_NETNAME], leadername[MAX_NETNAME];
 	int i;
 
@@ -5012,7 +5022,7 @@ BotTeamOrders
 FIXME: defend key areas?
 =======================================================================================================================================
 */
-void BotTeamOrders(bot_state_t *bs) {
+static void BotTeamOrders(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS] = {0};
 	int numteammates, i;
 	char buf[MAX_INFO_STRING];
@@ -5090,7 +5100,7 @@ void BotTeamOrders(bot_state_t *bs) {
 FindHumanTeamLeader
 =======================================================================================================================================
 */
-int FindHumanTeamLeader(bot_state_t *bs) {
+static int FindHumanTeamLeader(bot_state_t *bs) {
 	int i;
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -5154,8 +5164,8 @@ void BotTeamAI(bot_state_t *bs) {
 				trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
 				BotSayVoiceTeamOrder(bs, -1, VOICECHAT_STARTLEADER);
 				ClientName(bs->client, netname, sizeof(netname));
-				strncpy(bs->teamleader, netname, sizeof(bs->teamleader));
-				bs->teamleader[sizeof(bs->teamleader) - 1] = '\0';
+				Q_strncpyz(bs->teamleader, netname, sizeof(bs->teamleader));
+
 				bs->becometeamleader_time = 0;
 			}
 

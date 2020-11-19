@@ -35,11 +35,10 @@ static char *ui_arenaInfos[MAX_ARENAS];
 UI_ParseInfos
 =======================================================================================================================================
 */
-int UI_ParseInfos(char *buf, int max, char *infos[]) {
+static int UI_ParseInfos(char *buf, int max, char *infos[]) {
 	char *token;
 	int count;
-	char key[MAX_TOKEN_CHARS];
-	char info[MAX_INFO_STRING];
+	char info[MAX_INFO_STRING], key[MAX_TOKEN_CHARS];
 
 	count = 0;
 
@@ -101,7 +100,7 @@ int UI_ParseInfos(char *buf, int max, char *infos[]) {
 UI_LoadArenasFromFile
 =======================================================================================================================================
 */
-static void UI_LoadArenasFromFile(char *filename) {
+static void UI_LoadArenasFromFile(const char *filename) {
 	int len;
 	fileHandle_t f;
 	char buf[MAX_ARENAS_TEXT];
@@ -134,13 +133,10 @@ UI_LoadArenas
 =======================================================================================================================================
 */
 void UI_LoadArenas(void) {
-	int numdirs;
+	int numdirs, i, dirlen;
 	vmCvar_t arenasFile;
-	char filename[128];
-	char dirlist[1024];
-	char *dirptr;
-	int i;
-	int dirlen;
+	char dirlist[1024], filename[128];
+	const char *dirptr;
 
 	ui_numArenas = 0;
 
@@ -152,7 +148,7 @@ void UI_LoadArenas(void) {
 		UI_LoadArenasFromFile("scripts/arenas.txt");
 	}
 	// get all arenas from .arena files
-	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, 1024);
+	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, sizeof(dirlist));
 	dirptr = dirlist;
 
 	for (i = 0; i < numdirs; i++, dirptr += dirlen + 1) {
@@ -176,7 +172,7 @@ UI_LoadArenasIntoMapList
 */
 void UI_LoadArenasIntoMapList(void) {
 	int n;
-	char *type;
+	const char *type;
 
 	uiInfo.mapCount = 0;
 
@@ -236,7 +232,7 @@ void UI_LoadArenasIntoMapList(void) {
 UI_LoadBotsFromFile
 =======================================================================================================================================
 */
-static void UI_LoadBotsFromFile(char *filename) {
+static void UI_LoadBotsFromFile(const char *filename) {
 	int len;
 	fileHandle_t f;
 	char buf[MAX_BOTS_TEXT];
@@ -271,12 +267,9 @@ UI_LoadBots
 */
 void UI_LoadBots(void) {
 	vmCvar_t botsFile;
-	int numdirs;
-	char filename[128];
-	char dirlist[1024];
-	char *dirptr;
-	int i;
-	int dirlen;
+	int numdirs, i, dirlen;
+	char dirlist[1024], filename[128];
+	const char *dirptr;
 
 	ui_numBots = 0;
 
@@ -288,7 +281,7 @@ void UI_LoadBots(void) {
 		UI_LoadBotsFromFile("scripts/bots.txt");
 	}
 	// get all bots from .bot files
-	numdirs = trap_FS_GetFileList("scripts", ".bot", dirlist, 1024);
+	numdirs = trap_FS_GetFileList("scripts", ".bot", dirlist, sizeof(dirlist));
 	dirptr = dirlist;
 
 	for (i = 0; i < numdirs; i++, dirptr += dirlen + 1) {
@@ -306,7 +299,7 @@ void UI_LoadBots(void) {
 UI_GetBotInfoByNumber
 =======================================================================================================================================
 */
-char *UI_GetBotInfoByNumber(int num) {
+static const char *UI_GetBotInfoByNumber(int num) {
 
 	if (num < 0 || num >= ui_numBots) {
 		trap_Print(va(S_COLOR_RED "Invalid bot number: %i\n", num));
@@ -351,7 +344,9 @@ UI_GetBotNameByNumber
 =======================================================================================================================================
 */
 char *UI_GetBotNameByNumber(int num) {
-	char *info = UI_GetBotInfoByNumber(num);
+	const char *info;
+
+	info = UI_GetBotInfoByNumber(num);
 
 	if (info) {
 		return Info_ValueForKey(info, "name");

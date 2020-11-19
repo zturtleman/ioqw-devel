@@ -156,7 +156,6 @@ vmCvar_t cg_thirdPersonRange;
 vmCvar_t cg_thirdPersonAngle;
 vmCvar_t cg_drawLagometer;
 vmCvar_t cg_drawAttacker;
-vmCvar_t cg_synchronousClients;
 vmCvar_t cg_singlePlayer;
 vmCvar_t cg_teamChatTime;
 vmCvar_t cg_teamChatHeight;
@@ -294,7 +293,6 @@ static const cvarTable_t cgameCvarTable[] = {
 	{&cg_buildScript, "com_buildScript", "0", 0}, // force loading of all possible data amd error on failures
 	{&cg_paused, "cl_paused", "0", CVAR_ROM},
 	{&cg_blood, "com_blood", "1", CVAR_ARCHIVE},
-	{&cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO},
 	{&cg_enableDust, "cg_enableDust", "1", 0},
 	{&cg_enableBreath, "cg_enableBreath", "1", 0},
 	{&cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO},

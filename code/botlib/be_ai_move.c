@@ -215,7 +215,7 @@ void BotInitMoveState(int movestate, bot_initmove_t *initmove) {
 BotFirstReachabilityArea
 =======================================================================================================================================
 */
-int BotFirstReachabilityArea(vec3_t origin, int *areas, int numareas, qboolean distCheck) {
+static int BotFirstReachabilityArea(vec3_t origin, int *areas, int numareas, qboolean distCheck) {
 	int i, best;
 	vec3_t center;
 	float bestDist, dist;
@@ -481,7 +481,7 @@ int BotReachabilityArea(vec3_t origin, int testground) {
 BotBSPModelMinsMaxsOrigin
 =======================================================================================================================================
 */
-qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin) {
+static qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin) {
 	int i;
 	aas_entity_t *ent;
 
@@ -519,7 +519,7 @@ qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mins, vec
 BotOnMover
 =======================================================================================================================================
 */
-int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach) {
+static int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach) {
 	int i, modelnum;
 	vec3_t mins, maxs, modelorigin, org, end;
 	vec3_t angles = {0, 0, 0};
@@ -568,7 +568,7 @@ int BotOnMover(vec3_t origin, int entnum, aas_reachability_t *reach) {
 MoverDown
 =======================================================================================================================================
 */
-int MoverDown(aas_reachability_t *reach) {
+static int MoverDown(aas_reachability_t *reach) {
 	int modelnum;
 	vec3_t mins, maxs, origin;
 	vec3_t angles = {0, 0, 0};
@@ -635,7 +635,7 @@ void BotSetBrushModelTypes(void) {
 BotOnTopOfEntity
 =======================================================================================================================================
 */
-int BotOnTopOfEntity(bot_movestate_t *ms) {
+static int BotOnTopOfEntity(bot_movestate_t *ms) {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
 
@@ -655,7 +655,7 @@ int BotOnTopOfEntity(bot_movestate_t *ms) {
 BotValidTravel
 =======================================================================================================================================
 */
-int BotValidTravel(vec3_t origin, aas_reachability_t *reach, int travelflags) {
+static int BotValidTravel(vec3_t origin, aas_reachability_t *reach, int travelflags) {
 
 	// if the reachability uses an unwanted travel type
 	if (AAS_TravelFlagForType(reach->traveltype) & ~travelflags) {
@@ -674,7 +674,7 @@ int BotValidTravel(vec3_t origin, aas_reachability_t *reach, int travelflags) {
 BotAddToAvoidReach
 =======================================================================================================================================
 */
-void BotAddToAvoidReach(bot_movestate_t *ms, int number, float avoidtime) {
+static void BotAddToAvoidReach(bot_movestate_t *ms, int number, float avoidtime) {
 	int i;
 
 	for (i = 0; i < MAX_AVOIDREACH; i++) {
@@ -736,7 +736,7 @@ float DistanceFromLineSquared(vec3_t p, vec3_t lp1, vec3_t lp2) {
 BotAvoidSpots
 =======================================================================================================================================
 */
-int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avoidspots, int numavoidspots) {
+static int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avoidspots, int numavoidspots) {
 	int checkbetween, i, type;
 	float squareddist, squaredradius;
 
@@ -943,7 +943,7 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, in
 BotAddToTarget
 =======================================================================================================================================
 */
-int BotAddToTarget(vec3_t start, vec3_t end, float maxdist, float *dist, vec3_t target) {
+static int BotAddToTarget(vec3_t start, vec3_t end, float maxdist, float *dist, vec3_t target) {
 	vec3_t dir;
 	float curdist;
 
@@ -1036,7 +1036,7 @@ int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, floa
 BotVisible
 =======================================================================================================================================
 */
-int BotVisible(int ent, vec3_t eye, vec3_t target) {
+static int BotVisible(int ent, vec3_t eye, vec3_t target) {
 	bsp_trace_t trace;
 
 	trace = AAS_Trace(eye, NULL, NULL, target, ent, CONTENTS_SOLID);
@@ -1119,7 +1119,7 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 MoverBottomCenter
 =======================================================================================================================================
 */
-qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter) {
+static qboolean MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter) {
 	int modelnum;
 	vec3_t mins, maxs, origin, mids;
 	vec3_t angles;
@@ -1194,7 +1194,7 @@ static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 BotCheckBarrierCrouch
 =======================================================================================================================================
 */
-int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
+static int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	vec3_t hordir, mins, maxs, end;
 	bsp_trace_t trace;
 
@@ -1240,7 +1240,7 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 BotCheckBarrierWalkLeft
 =======================================================================================================================================
 */
-int BotCheckBarrierWalkLeft(bot_movestate_t *ms, vec3_t dir, float speed) {
+static int BotCheckBarrierWalkLeft(bot_movestate_t *ms, vec3_t dir, float speed) {
 	vec3_t start, hordir, sideward, mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
 
@@ -1277,7 +1277,7 @@ BotCheckBarrierJump
 Tobias NOTE: Currently the Scout is not handled here... e.g.: sv_maxbarrier->value + 30.
 =======================================================================================================================================
 */
-int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean doMovement) {
+static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean doMovement) {
 	vec3_t start, hordir, mins, maxs, end;
 	bsp_trace_t trace;
 
@@ -1347,7 +1347,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 BotSwimInDirection
 =======================================================================================================================================
 */
-int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
+static int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 	vec3_t normdir;
 
 	VectorCopy(dir, normdir);
@@ -1362,7 +1362,7 @@ int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 BotWalkInDirection
 =======================================================================================================================================
 */
-int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
+static int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type) {
 	vec3_t hordir, cmdmove, tmpdir, origin;
 	int presencetype, maxframes, cmdframes, stopevent, gapdist, scoutFlag;
 	aas_clientmove_t move;
@@ -1530,7 +1530,7 @@ I can't notice any performance issues even with 64 bots). If we ever will notice
 THINKABOUTME: Is it really worth to waste CPU power for this permanent check?
 =======================================================================================================================================
 */
-void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
+static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result) {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	bsp_trace_t trace;
 	float currentspeed;
@@ -2202,7 +2202,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 BotAirControl
 =======================================================================================================================================
 */
-int BotAirControl(vec3_t origin, vec3_t velocity, vec3_t goal, vec3_t dir, float *speed) {
+static int BotAirControl(vec3_t origin, vec3_t velocity, vec3_t goal, vec3_t dir, float *speed) {
 	vec3_t org, vel;
 	int i;
 
@@ -2789,7 +2789,7 @@ bot_moveresult_t BotFinishTravel_Elevator(bot_movestate_t *ms, aas_reachability_
 BotFuncBobStartEnd
 =======================================================================================================================================
 */
-qboolean BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec3_t origin) {
+static qboolean BotFuncBobStartEnd(aas_reachability_t *reach, vec3_t start, vec3_t end, vec3_t origin) {
 	int spawnflags, modelnum;
 	vec3_t mins, maxs, mid, angles = {0, 0, 0};
 	int num0, num1;
@@ -3335,7 +3335,7 @@ BotReachabilityTime
 Time before the reachability times out.
 =======================================================================================================================================
 */
-int BotReachabilityTime(aas_reachability_t *reach) {
+static int BotReachabilityTime(aas_reachability_t *reach) {
 
 	switch (reach->traveltype & TRAVELTYPE_MASK) {
 		case TRAVEL_WALK:

@@ -81,11 +81,14 @@ float UI_ClampCvar(float min, float max, float value) {
 UI_Argv
 =======================================================================================================================================
 */
-char *UI_Argv(int arg) {
-	static char buffer[MAX_STRING_CHARS];
+const char *UI_Argv(int arg) {
+	static char buffer[2][MAX_STRING_CHARS];
+	static int index = 0;
 
-	trap_Argv(arg, buffer, sizeof(buffer));
-	return buffer;
+	index ^= 1;
+
+	trap_Argv(arg, buffer[index], sizeof(buffer[0]));
+	return buffer[index];
 }
 
 /*
@@ -105,7 +108,7 @@ char *UI_Cvar_VariableString(const char *var_name) {
 UI_SetBestScores
 =======================================================================================================================================
 */
-void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
+static void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 
 	trap_Cvar_Set("ui_scoreAccuracy", va("%i%%", newInfo->accuracy));
 	trap_Cvar_SetValue("ui_scoreImpressives", newInfo->impressives);
@@ -193,7 +196,7 @@ UI_ClearScores
 */
 void UI_ClearScores(void) {
 	char gameList[4096];
-	char *gameFile;
+	const char *gameFile;
 	int i, len, count, size;
 	fileHandle_t f;
 	postGameInfo_t newInfo;
@@ -237,14 +240,13 @@ UI_CalcPostGameStats
 =======================================================================================================================================
 */
 static void UI_CalcPostGameStats(void) {
-	char map[MAX_QPATH];
-	char fileName[MAX_QPATH];
-	char info[MAX_INFO_STRING];
+	char info[MAX_INFO_STRING], map[MAX_QPATH], fileName[MAX_QPATH];
 	fileHandle_t f;
 	int size, game, time, adjustedTime;
-	postGameInfo_t oldInfo;
-	postGameInfo_t newInfo;
-	qboolean newHigh = qfalse;
+	postGameInfo_t oldInfo, newInfo;
+	qboolean newHigh;
+
+	newHigh = qfalse;
 
 	trap_GetConfigString(CS_SERVERINFO, info, sizeof(info));
 	Q_strncpyz(map, Info_ValueForKey(info, "mapname"), sizeof(map));
@@ -340,7 +342,8 @@ UI_ConsoleCommand
 =======================================================================================================================================
 */
 qboolean UI_ConsoleCommand(int realTime) {
-	char *cmd;
+	const char *cmd;
+	char shader1[MAX_QPATH], shader2[MAX_QPATH], shader3[MAX_QPATH];
 
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
@@ -364,10 +367,6 @@ qboolean UI_ConsoleCommand(int realTime) {
 
 	if (Q_stricmp(cmd, "remapShader") == 0) {
 		if (trap_Argc() == 4) {
-			char shader1[MAX_QPATH];
-			char shader2[MAX_QPATH];
-			char shader3[MAX_QPATH];
-
 			Q_strncpyz(shader1, UI_Argv(1), sizeof(shader1));
 			Q_strncpyz(shader2, UI_Argv(2), sizeof(shader2));
 			Q_strncpyz(shader3, UI_Argv(3), sizeof(shader3));
@@ -426,10 +425,7 @@ UI_DrawPic
 =======================================================================================================================================
 */
 void UI_DrawPic(float x, float y, float w, float h, qhandle_t hShader) {
-	float s0;
-	float s1;
-	float t0;
-	float t1;
+	float s0, s1, t0, t1;
 
 	if (w < 0) { // flip about vertical
 		w = -w;

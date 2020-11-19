@@ -108,7 +108,7 @@ void BotRecordNodeSwitch(bot_state_t *bs, char *node, char *str, char *s) {
 BotGetAirGoal
 =======================================================================================================================================
 */
-int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
+static int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 	bsp_trace_t bsptrace;
 	vec3_t end, mins = {-15, -15, -2}, maxs = {15, 15, 2};
 	int areanum;
@@ -151,7 +151,7 @@ int BotGetAirGoal(bot_state_t *bs, bot_goal_t *goal) {
 BotGoForAir
 =======================================================================================================================================
 */
-int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
+static int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 	bot_goal_t goal;
 
 	// if the bot needs air
@@ -236,7 +236,7 @@ const int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, int range) {
 BotReachedGoal
 =======================================================================================================================================
 */
-int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
+static int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 
 	if (goal->flags & GFL_ITEM) {
 		// if the item is a dropped item it may no longer exist
@@ -305,7 +305,7 @@ int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 BotGetItemLongTermGoal
 =======================================================================================================================================
 */
-int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
+static int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 
 	// if the bot has no goal
 	if (!trap_BotGetTopGoal(bs->gs, goal)) {
@@ -361,7 +361,7 @@ BotGetLongTermGoal
 We could also create a separate AI node for every long term goal type. However, this saves us a lot of code.
 =======================================================================================================================================
 */
-int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
+static int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 	vec3_t target, dir;
 	char netname[MAX_NETNAME];
 	char buf[MAX_MESSAGE_SIZE];
@@ -1182,7 +1182,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 BotLongTermGoal
 =======================================================================================================================================
 */
-int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
+static int BotLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
 	aas_entityinfo_t entinfo;
 	char teammate[MAX_MESSAGE_SIZE];
 	float squaredist;
@@ -2425,7 +2425,8 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		return qfalse;
 	}
 	// if no enemy
-	if (bs->enemy < 0) {
+	if (bs->enemy < 0 || (g_gametype.integer > GT_TOURNAMENT && bs->enemy < level.maxclients && level.clients[bs->client].sess.sessionTeam == level.clients[bs->enemy].sess.sessionTeam)) {
+		bs->enemy = -1;
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
 		return qfalse;
 	}

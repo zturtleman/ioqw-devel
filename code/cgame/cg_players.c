@@ -2212,7 +2212,7 @@ CG_PlayerSprites
 Float sprites over the player's head.
 =======================================================================================================================================
 */
-static void CG_PlayerSprites(centity_t *cent, const refEntity_t *parent) {
+static void CG_PlayerSprites(const centity_t *cent, const refEntity_t *parent) {
 	int friendFlags, thirdPersonFlags, team;
 	vec3_t origin;
 // Tobias DEBUG

@@ -30,16 +30,8 @@ void BotShutdownDeathmatchAI(void);
 void BotDeathmatchAI(bot_state_t *bs, float thinktime);
 // free waypoints
 void BotFreeWaypoints(bot_waypoint_t *wp);
-// choose a weapon
-void BotChooseWeapon(bot_state_t *bs);
-// setup movement stuff
-void BotSetupForMovement(bot_state_t *bs);
-// update the inventory
-void BotUpdateInventory(bot_state_t *bs);
 // update the inventory during battle
 void BotUpdateBattleInventory(bot_state_t *bs, int enemy);
-// use holdable items during battle
-void BotBattleUseItems(bot_state_t *bs);
 // get the range for picking up items when the bot is involved in fighting
 const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs);
 // get the range for picking up items when the bot is going for his long term goal
@@ -58,10 +50,8 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo);
 qboolean EntityIsInvisible(aas_entityinfo_t *entinfo);
 // returns true if the entity is shooting
 qboolean EntityIsShooting(aas_entityinfo_t *entinfo);
-// returns true if this entity has the kamikaze
-qboolean EntityHasKamikaze(aas_entityinfo_t *entinfo);
 // set a user info key/value pair
-void BotSetUserInfo(bot_state_t *bs, char *key, char *value);
+void BotSetUserInfo(bot_state_t *bs, const char *key, const char *value);
 // set the team status (offense, defense etc.)
 void BotSetTeamStatus(bot_state_t *bs);
 // returns the name of the client
@@ -151,19 +141,9 @@ int BotOppositeTeam(bot_state_t *bs);
 int BotCTFCarryingFlag(bot_state_t *bs);
 // remember the last ordered task
 void BotRememberLastOrderedTask(bot_state_t *bs);
-// set ctf goals (defend base, get enemy flag) during seek
-void BotCTFSeekGoals(bot_state_t *bs);
-// set ctf goals (defend base, get enemy flag) during retreat
-void BotCTFRetreatGoals(bot_state_t *bs);
 int Bot1FCTFCarryingFlag(bot_state_t *bs);
 int BotHarvesterCarryingCubes(bot_state_t *bs);
-void Bot1FCTFSeekGoals(bot_state_t *bs);
-void Bot1FCTFRetreatGoals(bot_state_t *bs);
-void BotObeliskSeekGoals(bot_state_t *bs);
-void BotObeliskRetreatGoals(bot_state_t *bs);
 void BotGoHarvest(bot_state_t *bs);
-void BotHarvesterSeekGoals(bot_state_t *bs);
-void BotHarvesterRetreatGoals(bot_state_t *bs);
 int BotTeamCubeCarrierVisible(bot_state_t *bs);
 int BotEnemyCubeCarrierVisible(bot_state_t *bs);
 // get a random alternate route goal towards the given base
@@ -175,7 +155,7 @@ bot_waypoint_t *BotCreateWayPoint(char *name, vec3_t origin, int areanum);
 // find a waypoint with the given name
 bot_waypoint_t *BotFindWayPoint(bot_waypoint_t *waypoints, char *name);
 // strstr but case insensitive
-char *stristr(char *str, char *charset);
+const char *stristr(const char *str, const char *charset);
 // returns the number of the client with the given name
 int ClientFromName(const char *name);
 int ClientOnSameTeamFromName(bot_state_t *bs, const char *name);
@@ -190,6 +170,7 @@ void BotMapScripts(bot_state_t *bs);
 #define CTF_SKIN_BLUETEAM "blue"
 
 extern int gametype;	// game type
+extern char mapname[MAX_QPATH];
 extern int maxclients;	// maximum number of clients
 
 extern bot_goal_t ctf_redflag;

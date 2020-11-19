@@ -108,6 +108,7 @@ vmCvar_t bot_alt_pickup;
 vmCvar_t bot_alt_aim;
 vmCvar_t bot_alt_attack;
 // Tobias END
+char mapname[MAX_QPATH];
 void ExitLevel(void);
 
 /*
@@ -179,26 +180,31 @@ int BotAI_GetClientState(int clientNum, playerState_t *state) {
 	playerState_t *ps;
 
 	if (clientNum < 0 || clientNum >= level.num_entities) {
+		memset(state, 0, sizeof(playerState_t));
 		return qfalse;
 	}
 
 	ent = &g_entities[clientNum];
 
 	if (!ent->inuse) {
+		memset(state, 0, sizeof(playerState_t));
 		return qfalse;
 	}
 
 	if (!ent->r.linked) {
+		memset(state, 0, sizeof(playerState_t));
 		return qfalse;
 	}
 
 	if (ent->client->pers.connected != CON_CONNECTED) {
+		memset(state, 0, sizeof(playerState_t));
 		return qfalse;
 	}
 
 	ps = G_GetEntityPlayerState(ent);
 
 	if (!ps) {
+		memset(state, 0, sizeof(playerState_t));
 		return qfalse;
 	}
 
@@ -214,19 +220,20 @@ BotAI_GetEntityState
 int BotAI_GetEntityState(int entityNum, entityState_t *state) {
 	const gentity_t *ent;
 
-	ent = &g_entities[entityNum];
-
-	memset(state, 0, sizeof(entityState_t));
+	ent = g_entities + entityNum;
 
 	if (!ent->inuse) {
+		memset(state, 0, sizeof(entityState_t));
 		return qfalse;
 	}
 
 	if (!ent->r.linked) {
+		memset(state, 0, sizeof(entityState_t));
 		return qfalse;
 	}
 
 	if (ent->r.svFlags & SVF_NOCLIENT) {
+		memset(state, 0, sizeof(entityState_t));
 		return qfalse;
 	}
 
@@ -1255,6 +1262,10 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 
 	bs = botstates[client];
 
+	if (bs == NULL) {
+		return qfalse;
+	}
+
 	if (!bs) {
 		return qfalse;
 	}
@@ -1478,12 +1489,14 @@ BotAILoadMap
 =======================================================================================================================================
 */
 int BotAILoadMap(int restart) {
+	char serverinfo[MAX_INFO_STRING];
 	int i;
-	vmCvar_t mapname;
+
+	trap_GetServerinfo(serverinfo, sizeof(serverinfo));
+	Q_strncpyz(mapname, Info_ValueForKey(serverinfo, "mapname"), sizeof(mapname));
 
 	if (!restart) {
-		trap_Cvar_Register(&mapname, "mapname", "", CVAR_SERVERINFO|CVAR_ROM);
-		trap_BotLibLoadMap(mapname.string);
+		trap_BotLibLoadMap(mapname);
 	}
 
 	for (i = 0; i < level.maxclients; i++) {
@@ -1511,6 +1524,7 @@ int BotAIStartFrame(int time) {
 	static int local_time;
 	static int botlib_residual;
 	static int lastbotthink_time;
+	static qboolean skip[MAX_GENTITIES], *s;
 
 	G_CheckBotSpawn();
 // Tobias DEBUG: new bot test cvars for debugging
@@ -1631,31 +1645,36 @@ int BotAIStartFrame(int time) {
 			return qfalse;
 		}
 		// update entities in the botlib
-		for (i = 0; i < MAX_GENTITIES; i++) {
+		s = skip;
+		ent = g_entities;
+
+		for (i = 0; i < level.num_entities; i++, s++, ent++) {
 			ent = &g_entities[i];
 
-			if (!ent->inuse) {
-				trap_BotLibUpdateEntity(i, NULL);
-				continue;
-			}
+			if (!ent->inuse || !ent->r.linked || ent->r.svFlags & SVF_NOCLIENT) {
+				if (*s == qfalse) {
+					*s = qtrue;
+					trap_BotLibUpdateEntity(i, NULL);
+				}
 
-			if (!ent->r.linked) {
-				trap_BotLibUpdateEntity(i, NULL);
-				continue;
-			}
-
-			if (ent->r.svFlags & SVF_NOCLIENT) {
-				trap_BotLibUpdateEntity(i, NULL);
 				continue;
 			}
 			// do not update missiles
 			if (ent->s.eType == ET_MISSILE) {
-				trap_BotLibUpdateEntity(i, NULL);
+				if (*s == qfalse) {
+					*s = qtrue;
+					trap_BotLibUpdateEntity(i, NULL);
+				}
+
 				continue;
 			}
 			// do not update event only entities
 			if (ent->s.eType > ET_EVENTS) {
-				trap_BotLibUpdateEntity(i, NULL);
+				if (*s == qfalse) {
+					*s = qtrue;
+					trap_BotLibUpdateEntity(i, NULL);
+				}
+
 				continue;
 			}
 			// never link prox mine triggers
@@ -1697,6 +1716,8 @@ int BotAIStartFrame(int time) {
 			state.weapon = ent->s.weapon;
 			state.legsAnim = ent->s.legsAnim;
 			state.torsoAnim = ent->s.torsoAnim;
+
+			*s = qfalse;
 
 			trap_BotLibUpdateEntity(i, &state);
 		}

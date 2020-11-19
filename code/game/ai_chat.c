@@ -52,7 +52,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 BotNumActivePlayers
 =======================================================================================================================================
 */
-int BotNumActivePlayers(void) {
+static int BotNumActivePlayers(void) {
 	int i, num;
 	char buf[MAX_INFO_STRING];
 
@@ -80,7 +80,7 @@ int BotNumActivePlayers(void) {
 BotIsFirstInRankings
 =======================================================================================================================================
 */
-int BotIsFirstInRankings(bot_state_t *bs) {
+static int BotIsFirstInRankings(bot_state_t *bs) {
 	int i, score;
 	char buf[MAX_INFO_STRING];
 	playerState_t ps;
@@ -111,7 +111,7 @@ int BotIsFirstInRankings(bot_state_t *bs) {
 BotIsLastInRankings
 =======================================================================================================================================
 */
-int BotIsLastInRankings(bot_state_t *bs) {
+static int BotIsLastInRankings(bot_state_t *bs) {
 	int i, score;
 	char buf[MAX_INFO_STRING];
 	playerState_t ps;
@@ -142,7 +142,7 @@ int BotIsLastInRankings(bot_state_t *bs) {
 BotFirstClientInRankings
 =======================================================================================================================================
 */
-char *BotFirstClientInRankings(void) {
+static char *BotFirstClientInRankings(void) {
 	int i, bestscore, bestclient;
 	char buf[MAX_INFO_STRING];
 	static char name[32];
@@ -177,7 +177,7 @@ char *BotFirstClientInRankings(void) {
 BotLastClientInRankings
 =======================================================================================================================================
 */
-char *BotLastClientInRankings(void) {
+static char *BotLastClientInRankings(void) {
 	int i, worstscore, bestclient;
 	char buf[MAX_INFO_STRING];
 	static char name[32];
@@ -212,7 +212,7 @@ char *BotLastClientInRankings(void) {
 BotRandomOpponentName
 =======================================================================================================================================
 */
-char *BotRandomOpponentName(bot_state_t *bs) {
+static char *BotRandomOpponentName(bot_state_t *bs) {
 	int i, count;
 	char buf[MAX_INFO_STRING];
 	int opponents[MAX_CLIENTS], numopponents;
@@ -264,14 +264,7 @@ char *BotRandomOpponentName(bot_state_t *bs) {
 BotMapTitle
 =======================================================================================================================================
 */
-char *BotMapTitle(void) {
-	char info[1024];
-	static char mapname[128];
-
-	trap_GetServerinfo(info, sizeof(info));
-	strncpy(mapname, Info_ValueForKey(info, "mapname"), sizeof(mapname) - 1);
-
-	mapname[sizeof(mapname) - 1] = '\0';
+static const char *BotMapTitle(void) {
 	return mapname;
 }
 
@@ -280,7 +273,7 @@ char *BotMapTitle(void) {
 BotWeaponNameForMeansOfDeath
 =======================================================================================================================================
 */
-char *BotWeaponNameForMeansOfDeath(int mod) {
+static char *BotWeaponNameForMeansOfDeath(int mod) {
 
 	switch (mod) {
 		case MOD_GAUNTLET:
@@ -325,7 +318,7 @@ char *BotWeaponNameForMeansOfDeath(int mod) {
 BotRandomWeaponName
 =======================================================================================================================================
 */
-char *BotRandomWeaponName(void) {
+static char *BotRandomWeaponName(void) {
 	int rnd;
 
 	rnd = random() * 12.9;

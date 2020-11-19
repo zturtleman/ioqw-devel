@@ -49,7 +49,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define LEGACY_MASTER_GAMENAME		"Quake3Arena"
 #define LEGACY_HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 #ifndef PRODUCT_VERSION
-#define PRODUCT_VERSION				"0.06-Devel"
+#define PRODUCT_VERSION				"0.07-Devel"
 #endif
 #ifndef PRODUCT_DATE
 #define PRODUCT_DATE __DATE__
