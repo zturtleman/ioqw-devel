@@ -55,8 +55,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // added this for better walking off ledges
 #define INSIDEUNITS_WALKOFFLEDGESTART 0.1
 #define INSIDEUNITS_WALKOFFLEDGEEND 5
-#define INSIDEUNITS_SWIMSTART 1
-#define INSIDEUNITS_SWIMEND 2
+#define INSIDEUNITS_SWIM 2
 #define INSIDEUNITS_WATERJUMP 15
 // area flag used for weapon jumping
 #define AREA_WEAPONJUMP 8192 // valid area to weapon jump to
@@ -912,7 +911,7 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 	aas_lreachability_t *lreach;
 	aas_face_t *face1;
 	aas_plane_t *plane;
-	vec3_t start, end;
+	vec3_t start;
 
 	if (!AAS_AreaSwim(area1num) || !AAS_AreaSwim(area2num)) {
 		return qfalse;
@@ -961,9 +960,8 @@ int AAS_Reachability_Swim(int area1num, int area2num) {
 
 					plane = &aasworld.planes[face1->planenum ^ side1];
 
-					VectorCopy(start, end);
-					VectorMA(start, INSIDEUNITS_SWIMSTART, plane->normal, lreach->start);
-					VectorMA(end, INSIDEUNITS_SWIMEND, plane->normal, lreach->end);
+					VectorCopy(start, lreach->start);
+					VectorMA(lreach->start, INSIDEUNITS_SWIM, plane->normal, lreach->end);
 
 					lreach->traveltype = TRAVEL_SWIM;
 					lreach->traveltime = 1;

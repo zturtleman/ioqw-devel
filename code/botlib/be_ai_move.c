@@ -1899,10 +1899,19 @@ BotTravel_Swim
 */
 bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach) {
 	vec3_t dir;
+	float dist;
 	bot_moveresult_t_cleared(result);
 
-	// swim straight to reachability end
-	VectorSubtract(reach->end, ms->origin, dir);
+	// swim straight to reachability start
+	VectorSubtract(reach->start, ms->origin, dir);
+
+	dist = VectorNormalize(dir);
+
+	if (dist < 10) {
+		// swim straight to reachability end
+		VectorSubtract(reach->end, ms->origin, dir);
+		VectorNormalize(dir);
+	}
 	// check if blocked
 	BotCheckBlocked(ms, dir, qtrue, &result);
 	// elementary action move in direction
