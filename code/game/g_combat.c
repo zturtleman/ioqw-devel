@@ -283,7 +283,7 @@ void BodyDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int dam
 }
 
 // these are just for logging, the client prints its own messages
-char *modNames[] = {
+static const char *modNames[] = {
 	"MOD_GAUNTLET",
 	"MOD_MACHINEGUN",
 	"MOD_CHAINGUN",
@@ -441,7 +441,7 @@ void PlayerDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 	int contents;
 	int killer;
 	int i;
-	char *killerName, *obit;
+	const char *killerName, *obit;
 
 	if (self->client->ps.pm_type == PM_DEAD) {
 		return;

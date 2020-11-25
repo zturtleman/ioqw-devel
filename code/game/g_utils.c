@@ -496,7 +496,7 @@ Spawns an event entity that will be auto-removed. The origin will be snapped to 
 is right on a surface (snap towards start vector first).
 =======================================================================================================================================
 */
-gentity_t *G_TempEntity(vec3_t origin, int event) {
+gentity_t *G_TempEntity(const vec3_t origin, int event) {
 	gentity_t *e;
 	vec3_t snapped;
 
