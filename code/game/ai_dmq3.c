@@ -1568,7 +1568,6 @@ static int BotFirstReachabilityArea(int entnum, vec3_t origin, int *areas, int n
 					trap_Trace(&trace, origin, mins, maxs, center, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP);
 					// if no solids were found
 					if (!trace.startsolid && !trace.allsolid && trace.fraction >= 1.0f) {
-						bestDist = dist;
 						best = areas[i];
 						break;
 					}

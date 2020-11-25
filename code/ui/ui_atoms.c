@@ -246,8 +246,6 @@ static void UI_CalcPostGameStats(void) {
 	postGameInfo_t oldInfo, newInfo;
 	qboolean newHigh;
 
-	newHigh = qfalse;
-
 	trap_GetConfigString(CS_SERVERINFO, info, sizeof(info));
 	Q_strncpyz(map, Info_ValueForKey(info, "mapname"), sizeof(map));
 
@@ -343,7 +341,6 @@ UI_ConsoleCommand
 */
 qboolean UI_ConsoleCommand(int realTime) {
 	const char *cmd;
-	char shader1[MAX_QPATH], shader2[MAX_QPATH], shader3[MAX_QPATH];
 
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
@@ -367,6 +364,8 @@ qboolean UI_ConsoleCommand(int realTime) {
 
 	if (Q_stricmp(cmd, "remapShader") == 0) {
 		if (trap_Argc() == 4) {
+			char shader1[MAX_QPATH], shader2[MAX_QPATH], shader3[MAX_QPATH];
+
 			Q_strncpyz(shader1, UI_Argv(1), sizeof(shader1));
 			Q_strncpyz(shader2, UI_Argv(2), sizeof(shader2));
 			Q_strncpyz(shader3, UI_Argv(3), sizeof(shader3));

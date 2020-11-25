@@ -1140,9 +1140,7 @@ static void CG_ServerCommand(void) {
 
 	if (Q_stricmp(cmd, "remapShader") == 0) {
 		if (trap_Argc() == 4) {
-			char shader1[MAX_QPATH];
-			char shader2[MAX_QPATH];
-			char shader3[MAX_QPATH];
+			char shader1[MAX_QPATH], shader2[MAX_QPATH], shader3[MAX_QPATH];
 
 			Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
 			Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));

@@ -61,8 +61,8 @@ void BotEmptyGoalStack(int goalstate);
 void BotDumpAvoidGoals(int goalstate);
 // dump the goal stack
 void BotDumpGoalStack(int goalstate);
-// get the name name of the goal with the given number
-void BotGoalName(int number, char *name, int size);
+// get the name of the goal with the given number
+void BotGoalName(int number, char *classname, int size);
 // get the top goal from the stack
 int BotGetTopGoal(int goalstate, bot_goal_t *goal);
 // get the second goal on the stack

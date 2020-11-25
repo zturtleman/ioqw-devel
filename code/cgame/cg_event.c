@@ -109,11 +109,15 @@ static void CG_Obituary(entityState_t *ent) {
 		ca = &cgs.clientinfo[attacker];
 	}
 
+	targetgender = ci->gender;
+
+	if (ca) {
+		attackergender = ca->gender;
+	}
+
 	Q_strncpyz(targetName, ci->name, sizeof(targetName) - 2);
 	strcat(targetName, S_COLOR_WHITE);
 
-	targetgender = ci->gender;
-	attackergender = ca->gender;
 	message2 = "";
 	// check for single client messages
 	switch (mod) {

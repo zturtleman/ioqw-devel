@@ -1461,7 +1461,7 @@ qboolean trap_R_inPVS(const vec3_t p1, const vec3_t p2);
 void trap_S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int range);
 // a local sound is always played full volume
 void trap_S_StartLocalSound(sfxHandle_t sfx, int channelNum);
-void trap_S_StopLoopingSound(int entnum);
+void trap_S_StopLoopingSound(int entityNum);
 void trap_S_ClearLoopingSounds(qboolean killall);
 void trap_S_AddLoopingSound(int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx, int range);
 void trap_S_AddRealLoopingSound(int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx, int range);

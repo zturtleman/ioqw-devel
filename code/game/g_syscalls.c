@@ -1417,8 +1417,8 @@ void trap_BotDumpGoalStack(int goalstate) {
 trap_BotGoalName
 =======================================================================================================================================
 */
-void trap_BotGoalName(int number, char *name, int size) {
-	syscall(BOTLIB_AI_GOAL_NAME, number, name, size);
+void trap_BotGoalName(int number, char *classname, int size) {
+	syscall(BOTLIB_AI_GOAL_NAME, number, classname, size);
 }
 
 /*

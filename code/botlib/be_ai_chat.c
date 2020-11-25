@@ -602,7 +602,7 @@ void BotDumpSynonymList(bot_synonymlist_t *synlist) {
 	}
 
 	for (syn = synlist; syn; syn = syn->next) {
-		fprintf(fp, "%ld : [", syn->context);
+		fprintf(fp, "%lu : [", syn->context);
 
 		for (synonym = syn->firstsynonym; synonym; synonym = synonym->next) {
 			fprintf(fp, "(\"%s\", %1.2f)", synonym->string, synonym->weight);
@@ -953,7 +953,7 @@ int BotLoadChatMessage(source_t *source, char *chatmessagestring) {
 				return qfalse;
 			}
 
-			sprintf(&ptr[strlen(ptr)], "%cv%ld%c", ESCAPE_CHAR, token.intvalue, ESCAPE_CHAR);
+			sprintf(&ptr[strlen(ptr)], "%cv%lu%c", ESCAPE_CHAR, token.intvalue, ESCAPE_CHAR);
 		// random string
 		} else if (token.type == TT_NAME) {
 			if (strlen(ptr) + 7 > MAX_MESSAGE_SIZE) {

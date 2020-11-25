@@ -1091,7 +1091,7 @@ void TeamplayInfoMessage(gentity_t *ent) {
 	}
 	// figure out what client should be on the display
 	// we are limited to 8, but we want to use the top eight players but in client order (so they don't keep changing position on the overlay)
-	for (i = 0, cnt = 0; i < level.maxclients && cnt < TEAM_MAXOVERLAY; i++) {
+	for (i = 0, cnt = 0; i < MAX_CLIENTS && cnt < TEAM_MAXOVERLAY; i++) {
 		player = g_entities + level.sortedClients[i];
 
 		if (player->inuse && player->client->sess.sessionTeam == team) {
@@ -1104,7 +1104,7 @@ void TeamplayInfoMessage(gentity_t *ent) {
 	string[0] = 0;
 	stringlength = 0;
 
-	for (i = 0, cnt = 0; i < level.maxclients && cnt < TEAM_MAXOVERLAY; i++) {
+	for (i = 0, cnt = 0; i < MAX_CLIENTS && cnt < TEAM_MAXOVERLAY; i++) {
 		player = g_entities + i;
 
 		if (player->inuse && player->client->sess.sessionTeam == team) {

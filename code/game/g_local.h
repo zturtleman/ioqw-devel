@@ -650,7 +650,7 @@ void trap_BotPopGoal(int goalstate);
 void trap_BotEmptyGoalStack(int goalstate);
 void trap_BotDumpAvoidGoals(int goalstate);
 void trap_BotDumpGoalStack(int goalstate);
-void trap_BotGoalName(int number, char *name, int size);
+void trap_BotGoalName(int number, char *classname, int size);
 int trap_BotGetTopGoal(int goalstate, void /*struct bot_goal_s*/ *goal);
 int trap_BotGetSecondGoal(int goalstate, void /*struct bot_goal_s*/ *goal);
 int trap_BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelflags);
