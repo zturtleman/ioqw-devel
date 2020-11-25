@@ -1417,8 +1417,8 @@ void trap_BotDumpGoalStack(int goalstate) {
 trap_BotGoalName
 =======================================================================================================================================
 */
-void trap_BotGoalName(int number, char *classname, int size) {
-	syscall(BOTLIB_AI_GOAL_NAME, number, classname, size);
+void trap_BotGoalName(int number, char *name, int size) {
+	syscall(BOTLIB_AI_GOAL_NAME, number, name, size);
 }
 
 /*
@@ -1480,8 +1480,8 @@ int trap_BotItemGoalInVisButNotVisible(int viewer, vec3_t eye, vec3_t viewangles
 trap_BotGetLevelItemGoal
 =======================================================================================================================================
 */
-int trap_BotGetLevelItemGoal(int index, char *classname, void /*struct bot_goal_s*/ *goal) {
-	return syscall(BOTLIB_AI_GET_LEVEL_ITEM_GOAL, index, classname, goal);
+int trap_BotGetLevelItemGoal(int index, char *name, void /*struct bot_goal_s*/ *goal) {
+	return syscall(BOTLIB_AI_GET_LEVEL_ITEM_GOAL, index, name, goal);
 }
 
 /*

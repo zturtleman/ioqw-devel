@@ -61,8 +61,8 @@ void BotEmptyGoalStack(int goalstate);
 void BotDumpAvoidGoals(int goalstate);
 // dump the goal stack
 void BotDumpGoalStack(int goalstate);
-// get the name of the goal with the given number
-void BotGoalName(int number, char *classname, int size);
+// get the name name of the goal with the given number
+void BotGoalName(int number, char *name, int size);
 // get the top goal from the stack
 int BotGetTopGoal(int goalstate, bot_goal_t *goal);
 // get the second goal on the stack
@@ -80,7 +80,7 @@ int BotTouchingGoal(vec3_t origin, bot_goal_t *goal);
 int BotItemGoalInVisButNotVisible(int viewer, vec3_t eye, vec3_t viewangles, bot_goal_t *goal);
 // search for a goal for the given classname, the index can be used
 // as a start point for the search when multiple goals are available with that same classname
-int BotGetLevelItemGoal(int index, char *classname, bot_goal_t *goal);
+int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal);
 // get the next camp spot in the map
 int BotGetNextCampSpotGoal(int num, bot_goal_t *goal);
 // get the map location with the given name

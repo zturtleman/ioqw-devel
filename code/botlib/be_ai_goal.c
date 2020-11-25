@@ -671,7 +671,7 @@ void BotInitLevelItems(void) {
 BotGoalName
 =======================================================================================================================================
 */
-void BotGoalName(int number, char *classname, int size) {
+void BotGoalName(int number, char *name, int size) {
 	levelitem_t *li;
 
 	if (!itemconfig) {
@@ -680,12 +680,12 @@ void BotGoalName(int number, char *classname, int size) {
 
 	for (li = levelitems; li; li = li->next) {
 		if (li->number == number) {
-			Q_strncpyz(classname, itemconfig->iteminfo[li->iteminfo].classname, size);
+			Q_strncpyz(name, itemconfig->iteminfo[li->iteminfo].name, size);
 			return;
 		}
 	}
 
-	strcpy(classname, "");
+	strcpy(name, "");
 }
 
 /*
@@ -852,7 +852,7 @@ void BotSetAvoidGoalTime(int goalstate, int number, float avoidtime) {
 BotGetLevelItemGoal
 =======================================================================================================================================
 */
-int BotGetLevelItemGoal(int index, char *classname, bot_goal_t *goal) {
+int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal) {
 	levelitem_t *li;
 
 	if (!itemconfig) {
@@ -889,7 +889,7 @@ int BotGetLevelItemGoal(int index, char *classname, bot_goal_t *goal) {
 			continue;
 		}
 
-		if (!Q_stricmp(classname, itemconfig->iteminfo[li->iteminfo].classname)) {
+		if (!Q_stricmp(name, itemconfig->iteminfo[li->iteminfo].name)) {
 			goal->areanum = li->goalareanum;
 			VectorCopy(li->goalorigin, goal->origin);
 			goal->entitynum = li->entitynum;
@@ -903,7 +903,7 @@ int BotGetLevelItemGoal(int index, char *classname, bot_goal_t *goal) {
 			}
 
 			goal->iteminfo = li->iteminfo;
-			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].classname);
+			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].name);
 			return li->number;
 		}
 	}
