@@ -5338,10 +5338,16 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			BotEntityInfo(bs->client, &curbotinfo);
 			// if the bot is invisible and want to get the flag, ignore enemies
 			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Ignoring enemy (%s) -> I'm going for the flag and I'm invisible.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 				continue;
 			}
 			// if trying to activate an entity, ignore enemies
 			if (bs->ainode == AINode_Seek_ActivateEntity) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Ignoring enemy (%s) -> I'm activating an entity.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 				continue;
 			}
 			// check if we can avoid this enemy
@@ -5353,6 +5359,9 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				BotUpdateBattleInventory(bs, i); // Tobias CHECK: delete this after ENEMY_HEIGHT in BotAggression is replaced by real values?
 				// if the bot doesn't really want to fight
 				if (BotWantsToRetreat(bs)) {
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Ignoring enemy (%s) -> not in the fov of the enemy.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
+#endif
 					continue;
 				}
 			}
