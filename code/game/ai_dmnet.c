@@ -2659,7 +2659,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		return qfalse;
 	}
 	// if there is another enemy
-	if (BotFindEnemy(bs, -1)) {
+	if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy?
 		AIEnter_Battle_Fight(bs, "BATTLE CHASE: better enemy.");
 		return qfalse;
 	}
@@ -2918,7 +2918,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// else if the enemy is NOT visible
 	} else if (bs->enemyvisible_time < FloatTime()) {
 		// if there is another enemy
-		if (BotFindEnemy(bs, -1)) {
+		if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy?
 			AIEnter_Battle_Fight(bs, "BATTLE RETREAT: another enemy.");
 			return qfalse;
 		}
@@ -3198,7 +3198,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// attack the enemy if possible
 	BotCheckAttack(bs);
 	// if there is an enemy
-	if (BotFindEnemy(bs, -1)) {
+	if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy? moving upwards?
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, "AINode_Battle_NBG: another enemy.\n");
 #endif

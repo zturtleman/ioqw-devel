@@ -816,7 +816,7 @@ static void BotCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) {
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
 		return;
 	}
 
@@ -1085,7 +1085,7 @@ static void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) {
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
 		return;
 	}
 
@@ -1207,7 +1207,7 @@ static void BotObeliskSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) {
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
 		return;
 	}
 
@@ -1368,7 +1368,7 @@ static void BotHarvesterSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) {
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
 		return;
 	}
 
@@ -4653,7 +4653,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		}
 	}
 	// if the bot is using a close combat weapon or if the enemy is using a weapon with splash damage, go closer
-	if ((BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) || ((entinfo.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_ROCKETLAUNCHER || entinfo.weapon == WP_BFG) && dist < 200 && selfpreservation < 0.5 && movetype != MOVE_CROUCH)) {
+	if ((BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) || ((entinfo.weapon == WP_NAPALMLAUNCHER || entinfo.weapon == WP_ROCKETLAUNCHER || entinfo.weapon == WP_BFG) && dist < 200 && selfpreservation < 0.5 && movetype != MOVE_CROUCH)) { // Tobias NOTE: should we stop abusing 'BotAggression' and use a new, specific function instead?
 		attack_dist = 0;
 		attack_range = 0;
 	// if the bot is using the napalmlauncher, or the enemy is using the napalmlauncher
@@ -4711,7 +4711,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		strafechange_time += crandom() * 0.2;
 	}
 	// close combat weapons
-	if (BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) {
+	if (BotUsesCloseCombatWeapon(bs) && BotAggression(bs) > 50) { // Tobias NOTE: should we stop abusing 'BotAggression' and use a new, specific function instead?
 		bs->attackstrafe_time = 0;
 	}
 	// if the strafe direction should be changed
@@ -5273,7 +5273,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 						continue;
 					}
 					// prefer targets near the goal
-					if (enemypreference > 0.8 && BotAggression(bs) > 50 && bs->ltgtype != 0 && DistanceSquared(entinfo.origin, bs->teamgoal.origin) * 1.5 > DistanceSquared(curenemyinfo.origin, bs->teamgoal.origin)) {
+					if (enemypreference > 0.8 && BotAggression(bs) > 50 && bs->ltgtype != 0 && DistanceSquared(entinfo.origin, bs->teamgoal.origin) * 1.5 > DistanceSquared(curenemyinfo.origin, bs->teamgoal.origin)) { // Tobias NOTE: should we stop abusing 'BotAggression' and use a new, specific function instead?
 #ifdef DEBUG
 						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: CurEn (%s) NewEn (%s). Skip new enemy, prefer the enemy near goal.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)), ClientName(i, netname3, sizeof(netname3)));
 #endif
@@ -5358,7 +5358,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 				// update some stuff for this enemy
 				BotUpdateBattleInventory(bs, i); // Tobias CHECK: delete this after ENEMY_HEIGHT in BotAggression is replaced by real values?
 				// if the bot doesn't really want to fight
-				if (BotWantsToRetreat(bs)) {
+				if (BotWantsToRetreat(bs)) { // Tobias NOTE: should we stop abusing 'BotAggression' (indirectly) and use a new, specific function instead?
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Ignoring enemy (%s) -> not in the fov of the enemy.\n", netname1, ClientName(curenemy, netname2, sizeof(netname2)));
 #endif
