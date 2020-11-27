@@ -1372,6 +1372,7 @@ AINode_Stand
 int AINode_Stand(bot_state_t *bs) {
 
 	if (bs->standfindenemy_time < FloatTime()) {
+		// if there is an enemy
 		if (BotFindEnemy(bs, -1)) {
 			AIEnter_Battle_Fight(bs, "STAND: found enemy.");
 			return qfalse;
@@ -2443,7 +2444,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: found new better enemy.\n");
+		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
 #endif
 		return qtrue;
 	}
@@ -2658,9 +2659,12 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Battle_Fight(bs, "BATTLE CHASE: enemy visible.");
 		return qfalse;
 	}
-	// if there is another enemy
-	if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy?
-		AIEnter_Battle_Fight(bs, "BATTLE CHASE: better enemy.");
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) { // Tobias NOTE: we use bs->enemy now, was -1?
+		AIEnter_Battle_Fight(bs, "BATTLE CHASE: found new better enemy.");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: AINode_Battle_CHASE: found new better enemy.\n", netname);
+#endif
 		return qfalse;
 	}
 	// there is no last enemy area
@@ -2862,7 +2866,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Retreat: found new better enemy.\n");
+		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
 #endif
 		return qtrue;
 	}
@@ -2917,9 +2921,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		return qfalse;
 	// else if the enemy is NOT visible
 	} else if (bs->enemyvisible_time < FloatTime()) {
-		// if there is another enemy
-		if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy?
-			AIEnter_Battle_Fight(bs, "BATTLE RETREAT: another enemy.");
+		// if there is an enemy
+		if (BotFindEnemy(bs, -1)) {
+			AIEnter_Battle_Fight(bs, "BATTLE RETREAT: found enemy.");
 			return qfalse;
 		}
 		// check if the bot has to deactivate obstacles
@@ -3059,7 +3063,13 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	float attack_skill;
 	vec3_t target, dir;
+// Tobias DEBUG
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
 
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
+// Tobias END
 	if (BotIsObserver(bs)) {
 		AIEnter_Observer(bs, "BATTLE NBG: joined observer.");
 		return qfalse;
@@ -3093,6 +3103,13 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_NBG(bs, "BATTLE NBG: enemy dead.");
 		return qfalse;
+	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: AINode_Battle_NBG: found new better enemy.\n", netname);
+#endif
+		return qtrue;
 	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
@@ -3197,25 +3214,5 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	// attack the enemy if possible
 	BotCheckAttack(bs);
-	// if there is an enemy
-	if (BotFindEnemy(bs, -1)) { // Tobias CHECK: why not bs->enemy? moving upwards?
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_NBG: another enemy.\n");
-#endif
-		trap_BotResetLastAvoidReach(bs->ms); // Tobias NOTE: really needed?
-		// empty the goal stack
-		trap_BotEmptyGoalStack(bs->gs);
-
-		if (BotWantsToRetreat(bs)) {
-			// keep the current long term goal and retreat
-			AIEnter_Battle_Retreat(bs, "BATTLE NBG: another enemy.");
-			return qfalse;
-		} else {
-			// go fight
-			AIEnter_Battle_Fight(bs, "BATTLE NBG: another enemy.");
-			return qfalse;
-		}
-	}
-
 	return qtrue;
 }
