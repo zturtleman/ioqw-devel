@@ -6189,6 +6189,15 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				}
 			}
 		}
+		// any obstacles/walls in between? this happens when using jumppads or teleporters
+		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+
+		if (trace.fraction < 0.99f) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
+#endif
+			return;
+		}
 
 		VectorCopy(bestorigin, bs->aimtarget);
 	// if the enemy is visible
@@ -6755,6 +6764,15 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 					aim_accuracy = 1.0f;
 				}
 			}
+		}
+		// any obstacles/walls in between? this happens when using jumppads or teleporters
+		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+
+		if (trace.fraction < 0.99f) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
+#endif
+			return;
 		}
 
 		VectorCopy(bestorigin, bs->aimtarget);
