@@ -719,7 +719,14 @@ BotEntityInfo
 =======================================================================================================================================
 */
 void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
-	trap_AAS_EntityInfo(entnum, info);
+
+	if (entnum < 0 || entnum >= MAX_GENTITIES) {
+		memset(info, 0, sizeof(aas_entityinfo_t));
+
+		BotAI_Print(PRT_ERROR, "BotEntityInfo: entnum out of range: %d\n", entnum);
+	} else {
+		trap_AAS_EntityInfo(entnum, info);
+	}
 }
 
 /*
