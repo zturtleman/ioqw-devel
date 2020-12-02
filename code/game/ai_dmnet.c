@@ -2425,8 +2425,8 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE FIGHT: bot dead.");
 		return qfalse;
 	}
-	// if no enemy
-	if (bs->enemy < 0 || (g_gametype.integer > GT_TOURNAMENT && bs->enemy < level.maxclients && level.clients[bs->client].sess.sessionTeam == level.clients[bs->enemy].sess.sessionTeam)) {
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		bs->enemy = -1;
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
 		return qfalse;
@@ -2634,8 +2634,8 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE CHASE: bot dead.");
 		return qfalse;
 	}
-	// if no enemy
-	if (bs->enemy < 0) {
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy.");
 		return qfalse;
 	}
@@ -2843,8 +2843,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE RETREAT: bot dead.");
 		return qfalse;
 	}
-	// if no enemy
-	if (bs->enemy < 0) {
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: no enemy.");
 		return qfalse;
 	}
@@ -3084,8 +3084,8 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE NBG: bot dead.");
 		return qfalse;
 	}
-	// if no enemy
-	if (bs->enemy < 0) {
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		AIEnter_Seek_NBG(bs, "BATTLE NBG: no enemy.");
 		return qfalse;
 	}

@@ -5374,7 +5374,8 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	}
 
 	if (foundEnemy) {
-		if (bs->enemy < 0) {
+		// if the bot has no enemy
+		if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 			bs->enemysight_time = FloatTime();
 		}
 
@@ -5917,7 +5918,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	// if the bot has no enemy
-	if (bs->enemy < 0) {
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		return;
 	}
 
@@ -5928,6 +5929,10 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
+		return;
+	}
+	// if the entity isn't dead
+	if (EntityIsDead(&entinfo)) {
 		return;
 	}
 	// if this is not a player (could be an obelisk)
@@ -6498,7 +6503,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 	ClientName(bs->client, netname, sizeof(netname));
 #endif
 	// if the bot has no enemy
-	if (bs->enemy < 0) {
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
 		return;
 	}
 
@@ -6509,6 +6514,10 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
 	if (!entinfo.valid) {
+		return;
+	}
+	// if the entity isn't dead
+	if (EntityIsDead(&entinfo)) {
 		return;
 	}
 	// if this is not a player (could be an obelisk)
