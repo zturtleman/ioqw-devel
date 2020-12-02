@@ -5899,7 +5899,7 @@ BotAimAtEnemy
 */
 void BotAimAtEnemy(bot_state_t *bs) {
 	int i, mask;
-	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight;
+	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight, battle_sense;
 	vec3_t origin, dir, bestorigin, end, start, target, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
 	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
@@ -6189,14 +6189,19 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				}
 			}
 		}
-		// any obstacles/walls in between? this happens when using jumppads or teleporters
-		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
 
-		if (trace.fraction < 0.99f) {
+		battle_sense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+
+		if (battle_sense > 0.9f) {
+			// any obstacles/walls in between? this happens when using jumppads or teleporters
+			BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+
+			if (trace.fraction < 0.99f) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
 #endif
-			return;
+				return;
+			}
 		}
 
 		VectorCopy(bestorigin, bs->aimtarget);
@@ -6475,7 +6480,7 @@ BotAimAtEnemy_New
 */
 void BotAimAtEnemy_New(bot_state_t *bs) {
 	int i, mask;
-	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight;
+	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight, battle_sense;
 	vec3_t origin, dir, bestorigin, end, start, target, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
 	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
 //	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
@@ -6765,14 +6770,19 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 				}
 			}
 		}
-		// any obstacles/walls in between? this happens when using jumppads or teleporters
-		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
 
-		if (trace.fraction < 0.99f) {
+		battle_sense = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_BATTLE_SENSE, 0, 1);
+
+		if (battle_sense > 0.9f) {
+			// any obstacles/walls in between? this happens when using jumppads or teleporters
+			BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+
+			if (trace.fraction < 0.99f) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: discarding aimtarget.. trace fraction is %.1f\n", netname, trace.fraction);
 #endif
-			return;
+				return;
+			}
 		}
 
 		VectorCopy(bestorigin, bs->aimtarget);
