@@ -8772,9 +8772,22 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		return;
 	}
 
+	VectorSubtract(entinfo.origin, bs->origin, dir1);
+
 	ent = &g_entities[moveresult->blockentity];
 	// if blocked by a bsp model
 	if (!ent->client) {
+		// if the blocking entity is an obelisk, and if the obelisk is farther away than 8 units
+		if (moveresult->blockentity >= MAX_CLIENTS && (moveresult->blockentity == redobelisk.entitynum || moveresult->blockentity == blueobelisk.entitynum)) {
+			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+			VectorMA(bs->origin, 2, dir1, end);
+			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			// if nothing is hit
+			if (trace.fraction >= 1.0f) {
+				return;
+			}
+		}
+
 		if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
 			// a closed door without a targetname will operate automatically
 			if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
@@ -8821,7 +8834,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		}
 	// if blocked by a player
 	} else {
-		VectorSubtract(entinfo.origin, bs->origin, dir1);
 		// Tobias HACK?: accompanying teammates are less concerned about blocking teammates
 		// Tobias NOTE: also do this for multiple teammates trying to camp at the same spot (camp_dist)
 		if (bs->ltgtype == LTG_TEAMACCOMPANY && BotSameTeam(bs, moveresult->blockentity) && VectorLengthSquared(dir1) > Square(bs->formation_dist) * 1.25) { // Tobias NOTE: repalac 1.25 by a more advanced value (in fov etc.)

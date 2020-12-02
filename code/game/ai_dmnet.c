@@ -570,7 +570,7 @@ static int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t 
 		// if very close... go away for some time
 		VectorSubtract(goal->origin, bs->origin, dir);
 
-		if (VectorLengthSquared(dir) < Square(70)) {
+		if (VectorLengthSquared(dir) < Square(256)) {
 			trap_BotResetAvoidReach(bs->ms);
 			bs->defendaway_time = FloatTime() + 3 + 3 * random();
 
