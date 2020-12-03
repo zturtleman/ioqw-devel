@@ -2782,6 +2782,8 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
 		bs->weaponnum = moveresult.weapon;
 	}
+	// attack the enemy if possible
+	BotCheckAttack(bs);
 	// if the bot is in the area the enemy was last seen in
 	if (bs->areanum == bs->lastenemyareanum) {
 		bs->chase_time = 0;
