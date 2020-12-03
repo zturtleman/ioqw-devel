@@ -2023,11 +2023,6 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "SEEK NBG: bot dead.");
 		return qfalse;
 	}
-	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal)) {
-		AIEnter_Wait(bs, "SEEK NBG: waiting.");
-		return qfalse;
-	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2039,6 +2034,11 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
+	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal)) {
+		AIEnter_Wait(bs, "SEEK NBG: waiting.");
+		return qfalse;
 	}
 	// map specific code
 	BotMapScripts(bs);
@@ -2870,11 +2870,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 #endif
 		return qtrue;
 	}
-	// if the bot is waiting for something
-	if (BotAIWaiting(bs, &goal)) {
-		AIEnter_Wait(bs, "BATTLE RETREAT: waiting.");
-		return qfalse;
-	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
 		bs->tfl |= TFL_LAVA|TFL_SLIME;
@@ -2882,6 +2877,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if the bot has the scout powerup
 	if (BotHasScout(bs)) {
 		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
+	}
+	// if the bot is waiting for something
+	if (BotAIWaiting(bs, &goal)) {
+		AIEnter_Wait(bs, "BATTLE RETREAT: waiting.");
+		return qfalse;
 	}
 	// map specific code
 	BotMapScripts(bs);
