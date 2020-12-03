@@ -2834,13 +2834,12 @@ BotCanCamp
 =======================================================================================================================================
 */
 qboolean BotCanCamp(bot_state_t *bs) {
+	int enemyHeight;
+	vec3_t dir;
+	aas_entityinfo_t entinfo;
 
 	// if the bot's team does not lead
 	if (gametype > GT_TOURNAMENT && bs->ownteamscore < bs->enemyteamscore) {
-		return qfalse;
-	}
-	// if the enemy is located way higher than the bot
-	if (bs->inventory[ENEMY_HEIGHT] > 200) {
 		return qfalse;
 	}
 	// if the bot is very low on health
@@ -2874,6 +2873,23 @@ qboolean BotCanCamp(bot_state_t *bs) {
 		&& !(bs->inventory[INVENTORY_BFG10K] > 0 && bs->inventory[INVENTORY_BFG_AMMO] > 10)) {
 		return qfalse;
 	}
+	// current enemy
+	if (bs->enemy >= 0) {
+		// get the entity information
+		BotEntityInfo(bs->enemy, &entinfo);
+		// if the entity information is valid
+		if (!entinfo.valid) {
+			return qfalse;
+		}
+
+		VectorSubtract(bs->origin, entinfo.origin, dir);
+
+		enemyHeight = dir[2];
+		// if the enemy is located way higher than the bot
+		if (enemyHeight > 200) {
+			return qfalse;
+		}
+	}
 
 	return qtrue;
 }
@@ -2889,7 +2905,7 @@ qtrue  -> bots can decide what to do.
 */
 const int BotAggression(bot_state_t *bs) {
 	float aggression, selfpreservation;
-	int value;
+	int value, enemyHeight, enemyDistance;
 	aas_entityinfo_t entinfo;
 	vec3_t dir, angles;
 #ifdef DEBUG
@@ -2901,10 +2917,6 @@ const int BotAggression(bot_state_t *bs) {
 	selfpreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_SELFPRESERVATION, 0, 1);
 
 	if (!bot_alt_aggressive.integer) {
-		// if the enemy is located way higher than the bot
-		if (bs->inventory[ENEMY_HEIGHT] > 200) {
-			return 0;
-		}
 		// if the bot is using the napalmlauncher
 		if (bs->weaponnum == WP_NAPALMLAUNCHER) {
 			return 0;
@@ -2922,69 +2934,79 @@ const int BotAggression(bot_state_t *bs) {
 			// get the entity information
 			BotEntityInfo(bs->enemy, &entinfo);
 			// if the entity information is valid
-			if (entinfo.valid) {
-				// if the bot is using the gauntlet
-				if (bs->weaponnum == WP_GAUNTLET) {
-					// if attacking an obelisk
-					if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
-						return 0;
-					}
-					// if the enemy is located higher than the bot can jump on
-					if (bs->inventory[ENEMY_HEIGHT] > 42) {
-						return 0;
-					}
-					// an extremely aggressive bot will less likely retreat
-					if (aggression > 0.9) {
-						return 100;
-					}
-					// if the enemy is really near
-					if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-						return 100;
-					}
-					// if the enemy is far away, check if we can attack the enemy from behind
-					if (aggression > 0.5 && bs->inventory[ENEMY_HORIZONTAL_DIST] < 500) {
-						VectorSubtract(bs->origin, entinfo.origin, dir);
-						VectorToAngles(dir, angles);
-						// if not in the enemy's field of vision, attack!
-						if (!InFieldOfVision(entinfo.angles, 180, angles)) {
-							return 100;
-						}
-					}
-					// if currently using the gauntlet, retreat!
+			if (!entinfo.valid) {
+				return 0;
+			}
+
+			VectorSubtract(bs->origin, entinfo.origin, dir);
+
+			enemyHeight = dir[2];
+			dir[2] = 0;
+			enemyDistance = VectorLength(dir);
+			// if the bot is using the gauntlet
+			if (bs->weaponnum == WP_GAUNTLET) {
+				// if attacking an obelisk
+				if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
 					return 0;
 				}
-				// if the enemy is using the gauntlet
-				if (entinfo.weapon == WP_GAUNTLET) {
-					return 100;
+				// if the enemy is located higher than the bot can jump on
+				if (enemyHeight > 42) {
+					return 0;
 				}
 				// an extremely aggressive bot will less likely retreat
-				if (aggression > 0.9 && bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
+				if (aggression > 0.9) {
 					return 100;
 				}
-				// if the enemy is using the bfg
-				if (entinfo.weapon == WP_BFG) {
-					return 0;
-				}
-				// if the enemy is using the napalmlauncher
-				if (entinfo.weapon == WP_NAPALMLAUNCHER) {
-					return 0;
-				}
-				// if the enemy is using the grenadelauncher
-				if (entinfo.weapon == WP_GRENADELAUNCHER) {
-					return 0;
-				}
-				// if the enemy is using the proxylauncher
-				if (entinfo.weapon == WP_PROXLAUNCHER) {
-					return 0;
-				}
-				// if the enemy has the quad damage
-				if (entinfo.powerups & (1 << PW_QUAD)) {
-					return 0;
-				}
-				// if the bot is out for revenge
-				if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+				// if the enemy is really near
+				if (enemyDistance < 200) {
 					return 100;
 				}
+				// if the enemy is far away, check if we can attack the enemy from behind
+				if (aggression > 0.5 && enemyDistance < 500) {
+					VectorToAngles(dir, angles);
+					// if not in the enemy's field of vision, attack!
+					if (!InFieldOfVision(entinfo.angles, 180, angles)) {
+						return 100;
+					}
+				}
+				// if currently using the gauntlet, retreat!
+				return 0;
+			}
+			// if the enemy is located way higher than the bot
+			if (enemyHeight > 200) {
+				return 0;
+			}
+			// if the enemy is using the gauntlet
+			if (entinfo.weapon == WP_GAUNTLET) {
+				return 100;
+			}
+			// an extremely aggressive bot will less likely retreat
+			if (aggression > 0.9 && enemyDistance < 200) {
+				return 100;
+			}
+			// if the enemy is using the bfg
+			if (entinfo.weapon == WP_BFG) {
+				return 0;
+			}
+			// if the enemy is using the napalmlauncher
+			if (entinfo.weapon == WP_NAPALMLAUNCHER) {
+				return 0;
+			}
+			// if the enemy is using the grenadelauncher
+			if (entinfo.weapon == WP_GRENADELAUNCHER) {
+				return 0;
+			}
+			// if the enemy is using the proxylauncher
+			if (entinfo.weapon == WP_PROXLAUNCHER) {
+				return 0;
+			}
+			// if the enemy has the quad damage
+			if (entinfo.powerups & (1 << PW_QUAD)) {
+				return 0;
+			}
+			// if the bot is out for revenge
+			if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+				return 100;
 			}
 		}
 		// if the bot has the quad damage powerup
@@ -3066,13 +3088,6 @@ const int BotAggression(bot_state_t *bs) {
 		return 0;
 	} else {
 		value = 0;
-		// if the enemy is located way higher than the bot
-		if (bs->inventory[ENEMY_HEIGHT] > 200) {
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy higher than 200 (%i).\n", netname, value);
-#endif
-			return 0;
-		}
 		// if the bot is using the napalmlauncher
 		if (bs->weaponnum == WP_NAPALMLAUNCHER) {
 #ifdef DEBUG
@@ -3099,116 +3114,129 @@ const int BotAggression(bot_state_t *bs) {
 			// get the entity information
 			BotEntityInfo(bs->enemy, &entinfo);
 			// if the entity information is valid
-			if (entinfo.valid) {
-				// if the bot is using the gauntlet
-				if (bs->weaponnum == WP_GAUNTLET) {
-					// if attacking an obelisk
-					if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
+			if (!entinfo.valid) {
+				return 0;
+			}
+
+			VectorSubtract(bs->origin, entinfo.origin, dir);
+
+			enemyHeight = dir[2];
+			dir[2] = 0;
+			enemyDistance = VectorLength(dir);
+			// if the bot is using the gauntlet
+			if (bs->weaponnum == WP_GAUNTLET) {
+				// if attacking an obelisk
+				if (bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) {
 #ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Using Gauntlet enemy Obelisk (%i).\n", netname, value);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Using Gauntlet enemy Obelisk (%i).\n", netname, value);
 #endif
-						return 0;
-					}
-					// if the enemy is located higher than the bot can jump on
-					if (bs->inventory[ENEMY_HEIGHT] > 42) {
-#ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Using Gauntlet enemy higher 42 (%i).\n", netname, value);
-#endif
-						return 0;
-					}
-					// an extremely aggressive bot will less likely retreat
-					if (aggression > 0.9) {
-						value += 50;
-#ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet char aggression +50 (%i).\n", netname, value);
-#endif
-					}
-					// if the enemy is really near
-					if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-						value += 50;
-#ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet dist < 200 +50 (%i).\n", netname, value);
-#endif
-					}
-					// if the enemy is far away, check if we can attack the enemy from behind
-					if (aggression > 0.5 && bs->inventory[ENEMY_HORIZONTAL_DIST] < 500) {
-						VectorSubtract(bs->origin, entinfo.origin, dir);
-						VectorToAngles(dir, angles);
-						// if not in the enemy's field of vision, attack!
-						if (!InFieldOfVision(entinfo.angles, 180, angles)) {
-							value += 50;
-#ifdef DEBUG
-							BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet attacking from behind +50 (%i).\n", netname, value);
-#endif
-						}
-					}
+					return 0;
 				}
-				// if the enemy is using the gauntlet
-				if (entinfo.weapon == WP_GAUNTLET) {
-					value += 50;
+				// if the enemy is located higher than the bot can jump on
+				if (enemyHeight > 42) {
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy Gauntlet +50 (%i).\n", netname, value);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Using Gauntlet enemy higher 42 (%i).\n", netname, value);
 #endif
+					return 0;
 				}
 				// an extremely aggressive bot will less likely retreat
-				if (aggression > 0.9 && bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
+				if (aggression > 0.9) {
 					value += 50;
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy Gauntlet char aggression +50 (%i).\n", netname, value);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet char aggression +50 (%i).\n", netname, value);
 #endif
 				}
-				// if the enemy is using the bfg
-				if (entinfo.weapon == WP_BFG) {
-					// if the enemy is really near
-					if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-						value += 100;
+				// if the enemy is really near
+				if (enemyDistance < 200) {
+					value += 50;
 #ifdef DEBUG
-						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy BFG < 200 +100 (%i).\n", netname, value);
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet dist < 200 +50 (%i).\n", netname, value);
 #endif
-					} else {
+				}
+				// if the enemy is far away, check if we can attack the enemy from behind
+				if (aggression > 0.5 && enemyDistance < 500) {
+					VectorToAngles(dir, angles);
+					// if not in the enemy's field of vision, attack!
+					if (!InFieldOfVision(entinfo.angles, 180, angles)) {
+						value += 50;
+#ifdef DEBUG
+						BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet attacking from behind +50 (%i).\n", netname, value);
+#endif
+					}
+				}
+			}
+			// if the enemy is located way higher than the bot
+			if (enemyHeight > 200) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy higher than 200 (%i).\n", netname, value);
+#endif
+				return 0;
+			}
+			// if the enemy is using the gauntlet
+			if (entinfo.weapon == WP_GAUNTLET) {
+				value += 50;
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy Gauntlet +50 (%i).\n", netname, value);
+#endif
+			}
+			// an extremely aggressive bot will less likely retreat
+			if (aggression > 0.9 && enemyDistance < 200) {
+				value += 50;
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy Gauntlet char aggression +50 (%i).\n", netname, value);
+#endif
+			}
+			// if the enemy is using the bfg
+			if (entinfo.weapon == WP_BFG) {
+				// if the enemy is really near
+				if (enemyDistance < 200) {
+					value += 100;
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Enemy BFG < 200 +100 (%i).\n", netname, value);
+#endif
+				} else {
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy BFG > 200 (%i).\n", netname, value);
 #endif
-						return 0;
-					}
-				}
-				// if the enemy is using the napalmlauncher
-				if (entinfo.weapon == WP_NAPALMLAUNCHER) {
-					// if the enemy is really near
-					if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-						value += 100;
-					} else {
-						return 0;
-					}
-				}
-				// if the enemy is using the grenadelauncher
-				if (entinfo.weapon == WP_GRENADELAUNCHER) {
-#ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Grenadelauncher (%i).\n", netname, value);
-#endif
 					return 0;
 				}
-				// if the enemy is using the proxylauncher
-				if (entinfo.weapon == WP_PROXLAUNCHER) {
-#ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Proxylauncher (%i).\n", netname, value);
-#endif
+			}
+			// if the enemy is using the napalmlauncher
+			if (entinfo.weapon == WP_NAPALMLAUNCHER) {
+				// if the enemy is really near
+				if (enemyDistance < 200) {
+					value += 100;
+				} else {
 					return 0;
 				}
-				// if the enemy has the quad damage
-				if (entinfo.powerups & (1 << PW_QUAD)) {
+			}
+			// if the enemy is using the grenadelauncher
+			if (entinfo.weapon == WP_GRENADELAUNCHER) {
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Quad (%i).\n", netname, value);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Grenadelauncher (%i).\n", netname, value);
 #endif
-					return 0;
-				}
-				// if the bot is out for revenge
-				if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
-					value += 20;
+				return 0;
+			}
+			// if the enemy is using the proxylauncher
+			if (entinfo.weapon == WP_PROXLAUNCHER) {
 #ifdef DEBUG
-					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Out for revenge +20 (%i).\n", netname, value);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Proxylauncher (%i).\n", netname, value);
 #endif
-				}
+				return 0;
+			}
+			// if the enemy has the quad damage
+			if (entinfo.powerups & (1 << PW_QUAD)) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy Quad (%i).\n", netname, value);
+#endif
+				return 0;
+			}
+			// if the bot is out for revenge
+			if (bs->enemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+				value += 20;
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Out for revenge +20 (%i).\n", netname, value);
+#endif
 			}
 		}
 		// if the bot has the quad damage powerup
@@ -3678,7 +3706,7 @@ Used for AI node 'BATTLE FIGHT' and AI node 'BATTLE CHASE'.
 */
 const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs) {
 	float selfpreservation, nbg_multiplier;
-	int range;
+	int range, enemyDistance;
 	aas_entityinfo_t entinfo;
 	vec3_t dir, angles;
 // Tobias DEBUG
@@ -3717,9 +3745,12 @@ const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs) {
 		if (entinfo.valid) {
 			// if the bot is using the gauntlet
 			if (bs->weaponnum == WP_GAUNTLET) {
+				VectorSubtract(bs->origin, entinfo.origin, dir);
+
+				dir[2] = 0;
+				enemyDistance = VectorLength(dir);
 				// if the enemy is near enough, check if we can attack the enemy from behind
-				if (bs->inventory[ENEMY_HORIZONTAL_DIST] < 200) {
-					VectorSubtract(bs->origin, entinfo.origin, dir);
+				if (enemyDistance < 200) {
 					VectorToAngles(dir, angles);
 					// if not in the enemy's field of vision, attack!
 					if (!InFieldOfVision(entinfo.angles, 180, angles)) {

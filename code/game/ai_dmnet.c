@@ -2492,8 +2492,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			bs->lastenemyareanum = areanum;
 		}
 	}
-	// update the attack inventory values
-	BotUpdateBattleInventory(bs, bs->enemy); // Tobias FIXME: delete this after ENEMY_HEIGHT and ENEMY_HORIZONTAL_DIST in BotAggression are replaced by real values (needed for 'BotWantsToChase')?
 	// if the enemy is NOT visible
 	if (bs->enemyvisible_time < FloatTime()) {
 		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
@@ -2887,8 +2885,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// map specific code
 	BotMapScripts(bs);
-	// update the attack inventory values
-	BotUpdateBattleInventory(bs, bs->enemy); // Tobias FIXME: delete this after ENEMY_HEIGHT and ENEMY_HORIZONTAL_DIST in BotAggression are replaced by real values (needed for 'BotWantsToChase')?
 	// if the bot doesn't want to retreat anymore... probably picked up some nice items
 	if (BotWantsToChase(bs)) {
 		// empty the goal stack, when chasing, only the enemy is the goal
