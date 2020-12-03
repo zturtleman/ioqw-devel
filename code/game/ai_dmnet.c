@@ -2472,6 +2472,14 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			bs->enemydeath_time = FloatTime();
 		}
 	}
+	// if in lava or slime the bot should be able to get out
+	if (BotInLavaOrSlime(bs)) {
+		bs->tfl |= TFL_LAVA|TFL_SLIME;
+	}
+	// if the bot has the scout powerup
+	if (BotHasScout(bs)) {
+		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
+	}
 	// update the last time the enemy was visible
 	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
 		bs->enemyvisible_time = FloatTime();
@@ -2506,14 +2514,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			AIEnter_Seek_LTG(bs, "BATTLE FIGHT: enemy out of sight.");
 			return qfalse;
 		}
-	}
-	// if in lava or slime the bot should be able to get out
-	if (BotInLavaOrSlime(bs)) {
-		bs->tfl |= TFL_LAVA|TFL_SLIME;
-	}
-	// if the bot has the scout powerup
-	if (BotHasScout(bs)) {
-		bs->tfl |= TFL_SCOUTBARRIER|TFL_SCOUTJUMP;
 	}
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
