@@ -5356,7 +5356,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			// if the bot isn't in the fov of the enemy
 			if (!InFieldOfVision(entinfo.angles, 90, angles)) {
 				// update some stuff for this enemy
-				BotUpdateBattleInventory(bs, i); // Tobias CHECK: delete this after ENEMY_HEIGHT in BotAggression is replaced by real values?
+				BotUpdateBattleInventory(bs, i); // Tobias FIXME: delete this after ENEMY_HEIGHT and ENEMY_HORIZONTAL_DIST in BotAggression are replaced by real values (needed for 'BotWantsToRetreat')?
 				// if the bot doesn't really want to fight
 				if (BotWantsToRetreat(bs)) { // Tobias NOTE: should we stop abusing 'BotAggression' (indirectly) and use a new, specific function instead?
 #ifdef DEBUG

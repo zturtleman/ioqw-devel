@@ -2493,7 +2493,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		}
 	}
 	// update the attack inventory values
-	BotUpdateBattleInventory(bs, bs->enemy);
+	BotUpdateBattleInventory(bs, bs->enemy); // Tobias FIXME: delete this after ENEMY_HEIGHT and ENEMY_HORIZONTAL_DIST in BotAggression are replaced by real values (needed for 'BotWantsToChase')?
 	// if the enemy is NOT visible
 	if (bs->enemyvisible_time < FloatTime()) {
 		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
@@ -2553,6 +2553,8 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, NULL);
+	// update the attack inventory values
+	BotUpdateBattleInventory(bs, bs->enemy);
 	// aim at the enemy
 // Tobias DEBUG
 	if (!bot_alt_aim.integer) {
@@ -2732,8 +2734,6 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
-	// update the attack inventory values
-	BotUpdateBattleInventory(bs, bs->enemy);
 	// predict obstacles
 	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Chase)) {
 		return qfalse;
@@ -2751,6 +2751,8 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Chase);
 	// check if the bot has to deactivate obstacles
 	BotClearPath(bs, &moveresult);
+	// update the attack inventory values
+	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2886,7 +2888,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// map specific code
 	BotMapScripts(bs);
 	// update the attack inventory values
-	BotUpdateBattleInventory(bs, bs->enemy);
+	BotUpdateBattleInventory(bs, bs->enemy); // Tobias FIXME: delete this after ENEMY_HEIGHT and ENEMY_HORIZONTAL_DIST in BotAggression are replaced by real values (needed for 'BotWantsToChase')?
 	// if the bot doesn't want to retreat anymore... probably picked up some nice items
 	if (BotWantsToChase(bs)) {
 		// empty the goal stack, when chasing, only the enemy is the goal
@@ -2992,6 +2994,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Retreat);
+	// update the attack inventory values
+	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
