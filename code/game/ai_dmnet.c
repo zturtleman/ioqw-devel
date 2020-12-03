@@ -2540,6 +2540,10 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
+	// predict obstacles
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Fight)) { // Tobias NOTE: added but obsolet?
+		return qfalse;
+	}
 	// do attack movements
 	moveresult = BotAttackMove(bs, bs->tfl);
 	// if the movement failed
