@@ -2044,6 +2044,21 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	BotMapScripts(bs);
 	// no enemy
 	bs->enemy = -1;
+	// if there is an enemy
+	if (BotFindEnemy(bs, -1)) {
+		if (BotWantsToRetreat(bs)) {
+			// keep the current long term goal and retreat
+			AIEnter_Battle_NBG(bs, "SEEK NBG: found enemy.");
+			return qfalse;
+		} else {
+			trap_BotResetLastAvoidReach(bs->ms);
+			// empty the goal stack
+			trap_BotEmptyGoalStack(bs->gs);
+			// go fight
+			AIEnter_Battle_Fight(bs, "SEEK NBG: found enemy.");
+			return qfalse;
+		}
+	}
 	// if the bot has no goal
 	if (!trap_BotGetTopGoal(bs->gs, &goal)) {
 		bs->nbg_time = 0;
@@ -2108,21 +2123,6 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	// if the weapon is used for the bot movement
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
 		bs->weaponnum = moveresult.weapon;
-	}
-	// if there is an enemy
-	if (BotFindEnemy(bs, -1)) {
-		if (BotWantsToRetreat(bs)) {
-			// keep the current long term goal and retreat
-			AIEnter_Battle_NBG(bs, "SEEK NBG: found enemy.");
-			return qfalse;
-		} else {
-			trap_BotResetLastAvoidReach(bs->ms);
-			// empty the goal stack
-			trap_BotEmptyGoalStack(bs->gs);
-			// go fight
-			AIEnter_Battle_Fight(bs, "SEEK NBG: found enemy.");
-			return qfalse;
-		}
 	}
 
 	return qtrue;
@@ -2232,11 +2232,11 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	if (!BotLongTermGoal(bs, bs->tfl, qfalse, &goal)) {
 		return qtrue;
 	}
+	// check if the bot wants to camp
+	BotWantsToCamp(bs);
 	// check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + checkcvar; // Tobias DEBUG
-		// check if the bot wants to camp
-		BotWantsToCamp(bs);
 		// get the range to check for picking up nearby goal items
 // Tobias DEBUG
 		if (!bot_alt_pickup.integer) {
@@ -2427,7 +2427,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// if the bot has no enemy
 	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
-		bs->enemy = -1;
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
 		return qfalse;
 	}
@@ -2567,7 +2566,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 // Tobias END
 	// attack the enemy if possible
 	BotCheckAttack(bs);
-	// if the bot wants to retreat
+	// if the bot wants to retreat (the bot could have been damage during the fight)
 	if (!(bs->flags & BFL_FIGHTSUICIDAL)) {
 		if (BotWantsToRetreat(bs)) {
 			AIEnter_Battle_Retreat(bs, "BATTLE FIGHT: wants to retreat.");
@@ -2930,8 +2929,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			AIEnter_Battle_Fight(bs, "BATTLE RETREAT: found enemy.");
 			return qfalse;
 		}
-		// check if the bot has to deactivate obstacles
-		BotClearPath(bs, &moveresult);
 	}
 	// check the team scores
 	BotCheckTeamScores(bs);
@@ -2996,6 +2993,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	// check if the bot is blocked
 	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Retreat);
+	// check if the bot has to deactivate obstacles
+	BotClearPath(bs, &moveresult);
 	// update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	// if the view is fixed for the movement
