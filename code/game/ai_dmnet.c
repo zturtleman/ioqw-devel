@@ -3235,8 +3235,13 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	// if the enemy is NOT visible
 	if (bs->enemyvisible_time < FloatTime()) {
-		AIEnter_Seek_NBG(bs, "BATTLE NBG: enemy out of sight.");
-		return qfalse;
+		if (BotWantsToChase(bs)) {
+			AIEnter_Battle_Chase(bs, "BATTLE NBG: enemy out of sight.");
+			return qfalse;
+		} else {
+			AIEnter_Seek_NBG(bs, "BATTLE NBG: enemy out of sight.");
+			return qfalse;
+		}
 	}
 	// if the bot has no goal or touches the current goal
 	if (!trap_BotGetTopGoal(bs->gs, &goal)) {
