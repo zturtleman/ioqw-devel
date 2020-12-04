@@ -3225,6 +3225,11 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			bs->lastenemyareanum = areanum;
 		}
 	}
+	// if the enemy is NOT visible
+	if (bs->enemyvisible_time < FloatTime()) {
+		AIEnter_Seek_NBG(bs, "BATTLE NBG: enemy out of sight.");
+		return qfalse;
+	}
 	// if the bot has no goal or touches the current goal
 	if (!trap_BotGetTopGoal(bs->gs, &goal)) {
 		bs->nbg_time = 0;
