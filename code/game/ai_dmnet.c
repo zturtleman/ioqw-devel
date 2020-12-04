@@ -2500,17 +2500,17 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE FIGHT: bot dead.");
 		return qfalse;
 	}
-	// if the bot has no enemy
-	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
-		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
-		return qfalse;
-	}
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
 #endif
 		return qtrue;
+	}
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
+		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
@@ -2712,17 +2712,17 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE CHASE: bot dead.");
 		return qfalse;
 	}
-	// if the bot has no enemy
-	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
-		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy.");
-		return qfalse;
-	}
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) { // Tobias NOTE: we use bs->enemy now, was -1?
 		AIEnter_Battle_Fight(bs, "BATTLE CHASE: found new better enemy.");
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: AINode_Battle_CHASE: found new better enemy.\n", netname);
 #endif
+		return qfalse;
+	}
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
+		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy.");
 		return qfalse;
 	}
 	// get the entity information
@@ -2923,17 +2923,17 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE RETREAT: bot dead.");
 		return qfalse;
 	}
-	// if the bot has no enemy
-	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
-		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: no enemy.");
-		return qfalse;
-	}
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
 #endif
 		return qtrue;
+	}
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
+		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: no enemy.");
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
@@ -3164,17 +3164,17 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "BATTLE NBG: bot dead.");
 		return qfalse;
 	}
-	// if the bot has no enemy
-	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
-		AIEnter_Seek_NBG(bs, "BATTLE NBG: no enemy.");
-		return qfalse;
-	}
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: AINode_Battle_NBG: found new better enemy.\n", netname);
 #endif
 		return qtrue;
+	}
+	// if the bot has no enemy
+	if (bs->enemy < 0 || BotSameTeam(bs, bs->enemy)) {
+		AIEnter_Seek_NBG(bs, "BATTLE NBG: no enemy.");
+		return qfalse;
 	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
