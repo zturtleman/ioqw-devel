@@ -5190,7 +5190,6 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 #endif
 		// less aggressive bots will immediatly stop firing if the enemy is dead
 		if (EntityIsDead(&curenemyinfo) && aggression < 0.5) {
-			//bs->enemy = -1; // Tobias CECK: Added but outcommented, because this causes an error now!?
 			curenemy = -1;
 			cursquaredist = 0;
 #ifdef DEBUG

@@ -2505,6 +2505,13 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: no enemy.");
 		return qfalse;
 	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
+#endif
+		return qtrue;
+	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
@@ -2514,13 +2521,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: entity invalid -> seek ltg.\n");
 #endif
 		return qfalse;
-	}
-	// if there is another better enemy
-	if (BotFindEnemy(bs, bs->enemy)) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
-#endif
-		return qtrue;
 	}
 	// if the enemy is dead
 	if (bs->enemydeath_time) {
@@ -2717,6 +2717,14 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy.");
 		return qfalse;
 	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) { // Tobias NOTE: we use bs->enemy now, was -1?
+		AIEnter_Battle_Fight(bs, "BATTLE CHASE: found new better enemy.");
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: AINode_Battle_CHASE: found new better enemy.\n", netname);
+#endif
+		return qfalse;
+	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
@@ -2730,14 +2738,6 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// if the entity isn't dead
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: enemy dead.");
-		return qfalse;
-	}
-	// if there is another better enemy
-	if (BotFindEnemy(bs, bs->enemy)) { // Tobias NOTE: we use bs->enemy now, was -1?
-		AIEnter_Battle_Fight(bs, "BATTLE CHASE: found new better enemy.");
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: AINode_Battle_CHASE: found new better enemy.\n", netname);
-#endif
 		return qfalse;
 	}
 	// if in lava or slime the bot should be able to get out
@@ -2928,6 +2928,13 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: no enemy.");
 		return qfalse;
 	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
+#endif
+		return qtrue;
+	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
@@ -2942,13 +2949,6 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: enemy dead.");
 		return qfalse;
-	}
-	// if there is another better enemy
-	if (BotFindEnemy(bs, bs->enemy)) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
-#endif
-		return qtrue;
 	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
@@ -3169,6 +3169,13 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		AIEnter_Seek_NBG(bs, "BATTLE NBG: no enemy.");
 		return qfalse;
 	}
+	// if there is another better enemy
+	if (BotFindEnemy(bs, bs->enemy)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: AINode_Battle_NBG: found new better enemy.\n", netname);
+#endif
+		return qtrue;
+	}
 	// get the entity information
 	BotEntityInfo(bs->enemy, &entinfo);
 	// if the entity information is valid
@@ -3183,13 +3190,6 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	if (EntityIsDead(&entinfo)) {
 		AIEnter_Seek_NBG(bs, "BATTLE NBG: enemy dead.");
 		return qfalse;
-	}
-	// if there is another better enemy
-	if (BotFindEnemy(bs, bs->enemy)) {
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: AINode_Battle_NBG: found new better enemy.\n", netname);
-#endif
-		return qtrue;
 	}
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) {
