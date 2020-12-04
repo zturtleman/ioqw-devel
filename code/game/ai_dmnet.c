@@ -2657,22 +2657,12 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: enemy dead.");
 		return qfalse;
 	}
-	// if the enemy is visible
-	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
-		AIEnter_Battle_Fight(bs, "BATTLE CHASE: enemy visible.");
-		return qfalse;
-	}
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) { // Tobias NOTE: we use bs->enemy now, was -1?
 		AIEnter_Battle_Fight(bs, "BATTLE CHASE: found new better enemy.");
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: AINode_Battle_CHASE: found new better enemy.\n", netname);
 #endif
-		return qfalse;
-	}
-	// there is no last enemy area
-	if (!bs->lastenemyareanum) {
-		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy area.");
 		return qfalse;
 	}
 	// if in lava or slime the bot should be able to get out
@@ -2694,6 +2684,16 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	}
 	// map specific code
 	BotMapScripts(bs);
+	// if the enemy is visible
+	if (BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+		AIEnter_Battle_Fight(bs, "BATTLE CHASE: enemy visible.");
+		return qfalse;
+	}
+	// there is no last enemy area
+	if (!bs->lastenemyareanum) {
+		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy area.");
+		return qfalse;
+	}
 	// create the chase goal
 	goal.entitynum = bs->enemy;
 	goal.areanum = bs->lastenemyareanum;
