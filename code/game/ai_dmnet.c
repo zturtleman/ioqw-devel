@@ -2764,6 +2764,14 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		AIEnter_Battle_Fight(bs, "BATTLE CHASE: enemy visible.");
 		return qfalse;
 	}
+// Tobias DEBUG: Genau hier liegt das Hauptproblem!
+// Wieder wurde keine Option festgelegt, wir brauchen da eine gute Endlösung für alle solchen Situationen, und keine komischen Halblösungen (=> HACKS, wie in Battle_NBG?)!
+#ifdef DEBUG
+	else {
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Enemy (%i) is NOT visible!\n", netname, bs->enemy);
+	}
+#endif
+// Tobias END
 	// there is no last enemy area
 	if (!bs->lastenemyareanum) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: no enemy area.");
