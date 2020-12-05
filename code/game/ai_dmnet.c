@@ -1892,14 +1892,14 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		if (!entinfo.valid) {
 			AIEnter_Seek_LTG(bs, "ACTIVATE ENTITY: entity invalid.");
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, "AINode_Seek_ActivateEntity: entity invalid enter seek ltg.\n");
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "AINode_Seek_ActivateEntity: entity invalid enter seek ltg.\n");
 #endif
 			return qfalse;
 		}
 		// if the entity the bot shoots at moved
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 #ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, "AINode_Seek_ActivateEntity: hit shootable button or trigger.\n");
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "AINode_Seek_ActivateEntity: hit shootable button or trigger.\n");
 #endif // DEBUG
 			bs->activatestack->time = 0;
 			activated = qtrue;
@@ -1937,7 +1937,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			// if the bot touches the current goal
 			if (trap_BotTouchingGoal(bs->origin, goal)) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, "AINode_Seek_ActivateEntity: touched button or trigger.\n");
+				BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "AINode_Seek_ActivateEntity: touched button or trigger.\n");
 #endif // DEBUG
 				bs->activatestack->time = 0;
 				activated = qtrue;
@@ -2342,7 +2342,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 
 			if (tt_ltg && tt_ltg < range) {
 #ifdef DEBUG
-				BotAI_Print(PRT_MESSAGE, "AINode_Seek_LTG (%s): tt_ltg < range -> range = tt_ltg.\n", netname);
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "AINode_Seek_LTG (%s): tt_ltg < range -> range = tt_ltg.\n", netname);
 #endif
 				range = tt_ltg;
 			}
@@ -2503,7 +2503,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: AINode_Battle_Fight: found new better enemy.\n", netname);
 #endif
 		return qtrue;
 	}
@@ -2518,7 +2518,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	if (!entinfo.valid) {
 		AIEnter_Seek_LTG(bs, "BATTLE FIGHT: enemy invalid.");
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Fight: entity invalid -> seek ltg.\n");
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "AINode_Battle_Fight: entity invalid -> seek ltg.\n");
 #endif
 		return qfalse;
 	}
@@ -2598,7 +2598,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		}
 #ifdef DEBUG
 		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: NBG Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: NBG Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
 #endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
@@ -2726,7 +2726,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	if (!entinfo.valid) {
 		AIEnter_Seek_LTG(bs, "BATTLE CHASE: entity invalid.");
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Chase: entity invalid -> seek ltg.\n");
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "AINode_Battle_Chase: entity invalid -> seek ltg.\n");
 #endif
 		return qfalse;
 	}
@@ -2802,7 +2802,7 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 		}
 #ifdef DEBUG
 		tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: Traveltime: %i Range: %i.\n", netname, tt_nbg, range);
 #endif
 // Tobias END
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
@@ -2929,7 +2929,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: AINode_Battle_Retreat: found new better enemy.\n", netname);
 #endif
 		return qtrue;
 	}
@@ -2944,7 +2944,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	if (!entinfo.valid) {
 		AIEnter_Seek_LTG(bs, "BATTLE RETREAT: entity invalid.");
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_Retreat: entity invalid -> seek ltg.\n");
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "AINode_Battle_Retreat: entity invalid -> seek ltg.\n");
 #endif
 		return qfalse;
 	}
@@ -3185,7 +3185,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	if (!entinfo.valid) {
 		AIEnter_Seek_NBG(bs, "BATTLE NBG: entity invalid.");
 #ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "AINode_Battle_NBG: entity invalid -> seek nbg.\n");
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "AINode_Battle_NBG: entity invalid -> seek nbg.\n");
 #endif
 		return qfalse;
 	}
