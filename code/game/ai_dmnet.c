@@ -63,12 +63,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
 | AIEnter_Respawn            | AIEnter_Respawn           | AIEnter_Respawn         | AIEnter_Respawn           | AIEnter_Respawn          | AIEnter_Respawn          | AIEnter_Respawn          |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
-|                            |                           |                         |                           | BotFindEnemy             |                          |                          |
-|                            |                           |                         | AIEnter_Seek_NBG          | -> AIEnter_Battle_LTG    | AIEnter_Battle_LTG       | AIEnter_Seek_LTG         |
-|----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
+|                            |                           |                         | BotFind(New)Enemy         | BotFind(New)Enemy        | BotFind(New)Enemy        | BotFind(New)Enemy        |
 |                            |                           |                         |                           |                          | -> AIEnter_Battle_Fight  |                          |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
-|                            |                           |                         |                           |                          |                          |                          |
+|                            |                           |                         | AIEnter_Seek_NBG          | AIEnter_Battle_LTG       | AIEnter_Battle_LTG       | AIEnter_Seek_LTG         |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
 | TFL_                       | TFL_                      | TFL_                    | TFL_                      | TFL_                     | TFL_                     | TFL_                     |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
@@ -76,9 +74,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
 | bs->enemy = -1             | bs->enemy = -1            | bs->enemy = -1          |                           |                          |                          | AIEnter_Battle_Chase     |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
-|                            | BotFindEnemy              | BotFindEnemy            |                           | BotFindEnemy             |                          | BotFindEnemy             |
-| AIEnter_Seek_NBG           | -> AIEnter_Battle_Retreat | -> AIEnter_Battle_NBG   |                           | -> AIEnter_Battle_Chase  | AIEnter_Seek_LTG         | -> AIEnter_Battle_Fight  |
-|                            | -> AIEnter_Battle_Fight   | -> AIEnter_Battle_Fight |                           | -> AIEnter_Seek_LTG      |                          | -> AIEnter_Seek_LTG      |
+|                            | BotFindEnemy              | BotFindEnemy            | BotEntityVisible          | BotEntityVisible         |BotEntityVisible          | BotEntityVisible         |
+| AIEnter_Seek_NBG           | -> AIEnter_Battle_Retreat | -> AIEnter_Battle_NBG   | -> AIEnter_Battle_Chase   | -> AIEnter_Battle_Chase  | -> AIEnter_Battle_Fight  | -> AIEnter_Battle_Fight  |
+|                            | -> AIEnter_Battle_Fight   | -> AIEnter_Battle_Fight | -> AIEnter_Seek_NBG       | -> AIEnter_Seek_LTG      | -> AIEnter_Seek_LTG      | -> AIEnter_Seek_LTG      |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
 |                            | BotCheckTeamScores        |                         |                           |                          |                          | BotCheckTeamScores       |
 |----------------------------|---------------------------|-------------------------|---------------------------|--------------------------|--------------------------|--------------------------|
