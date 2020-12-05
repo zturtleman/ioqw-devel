@@ -4141,7 +4141,7 @@ const int BotWantsToRetreat(bot_state_t *bs) {
 
 				return qfalse;
 			}
-
+			// Tobias FIXME: add enemies attacking our Obelisk (LTG_DEFENDKEYAREA)!
 			break;
 		case GT_HARVESTER:
 			// if carrying cubes then always retreat
@@ -4233,7 +4233,7 @@ const int BotWantsToChase(bot_state_t *bs) {
 
 				return qfalse;
 			}
-
+			// Tobias FIXME: add enemies attacking our Obelisk (LTG_DEFENDKEYAREA)!
 			break;
 		case GT_HARVESTER:
 			// never chase if carrying cubes

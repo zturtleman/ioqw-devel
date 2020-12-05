@@ -2576,11 +2576,6 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	}
 	// if the enemy is NOT visible
 	if (bs->enemyvisible_time < FloatTime()) {
-		if (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum) {
-			AIEnter_Battle_Chase(bs, "BATTLE FIGHT: obelisk out of sight.");
-			return qfalse;
-		}
-
 		if (BotWantsToChase(bs)) {
 			AIEnter_Battle_Chase(bs, "BATTLE FIGHT: enemy out of sight.");
 			return qfalse;
@@ -3236,6 +3231,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// if the enemy is NOT visible
 	if (bs->enemyvisible_time < FloatTime()) {
 		if (BotWantsToChase(bs)) {
+			// empty the goal stack, when chasing, only the enemy is the goal
+			trap_BotEmptyGoalStack(bs->gs); // Tobias NOTE: really needed? What's about Obelisks?
+			// go chase the enemy
 			AIEnter_Battle_Chase(bs, "BATTLE NBG: enemy out of sight.");
 			return qfalse;
 		} else {
