@@ -6786,7 +6786,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (aim_skill > 0.5) {
 			// do prediction shots around corners
-			if (!wi.speed) {
+			if (wi.speed) {
 				// create the chase goal
 				goal.entitynum = bs->client;
 				goal.areanum = bs->areanum;
@@ -6860,7 +6860,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 			}
 		}
 		// if it is not an instant hit weapon the bot might want to predict the enemy
-		if (!wi.speed) {
+		if (wi.speed) {
 			// direction towards the enemy
 			VectorSubtract(bestorigin, bs->origin, dir);
 			// distance towards the enemy
@@ -7041,7 +7041,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 //#ifdef DEBUG
 	if (!bot_noaccerror.integer) {
 //#endif
-		if (wi.speed) {
+		if (!wi.speed) {
 			// distance towards the enemy
 			dist = VectorLength(dir);
 
