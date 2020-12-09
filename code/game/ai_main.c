@@ -1988,7 +1988,7 @@ int BotAISetup(int restart) {
 	trap_Cvar_Register(&bot_alt_aggressive, "bot_alt_aggressive", "1", 0);
 	trap_Cvar_Register(&bot_alt_pickup, "bot_alt_pickup", "1", 0);
 	trap_Cvar_Register(&bot_alt_aim, "bot_alt_aim", "1", 0);
-	trap_Cvar_Register(&bot_alt_attack, "bot_alt_attack", "0", 0);
+	trap_Cvar_Register(&bot_alt_attack, "bot_alt_attack", "1", 0);
 
 	level.botReportModificationCount = bot_report.modificationCount;
 // Tobias END

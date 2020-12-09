@@ -565,7 +565,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_alt_aggressive", "1", 0);
 	Cvar_Get("bot_alt_pickup", "1", 0);
 	Cvar_Get("bot_alt_aim", "1", 0);
-	Cvar_Get("bot_alt_attack", "0", 0);
+	Cvar_Get("bot_alt_attack", "1", 0);
 	// server info
 	Cvar_Get("bot_minplayers", "0", CVAR_SERVERINFO);	// minimum players in a team or the game
 // Tobias END

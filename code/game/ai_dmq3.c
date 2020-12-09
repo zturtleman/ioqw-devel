@@ -7511,6 +7511,332 @@ void BotCheckAttack(bot_state_t *bs) {
 
 /*
 =======================================================================================================================================
+BotCheckAttack_New
+
+Tobias TODO: Add a quick 'qtrue' check for instant shooting (carrier near base, obelisk splash dmg, low 'attack_accuracy' value etc.).
+Tobias TODO: Adjust weaponfov (via attack_accuracy, self preservation) narrow fov for safety sake, wider fov for aiming prediction.
+Tobias TODO: Adjust 'aimnotperfect_time' for thinktime 100 (was calculated for thinktime 10).
+Tobias TODO: Adjust 'end' and 'mins'/'maxs' (default was 8).
+=======================================================================================================================================
+*/
+void BotCheckAttack_New(bot_state_t *bs) {
+	float points, attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	int attackentity, fov, weaponfov, mask;
+	//float selfpreservation;
+	vec3_t forward, right, start, end, dir, angles;
+	weaponinfo_t wi;
+	weapon_t weapon;
+	bsp_trace_t bsptrace;
+	aas_entityinfo_t entinfo;
+	static vec3_t rmins = {-2, -2, -2}, rmaxs = {2, 2, 2}; // rockets/missiles
+//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
+//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
+#ifdef DEBUG
+	char netname[MAX_NETNAME];
+
+	ClientName(bs->client, netname, sizeof(netname));
+#endif
+	attackentity = bs->enemy;
+
+	if (attackentity < 0) {
+		return;
+	}
+
+	if (bs->weaponnum <= WP_NONE || bs->weaponnum >= WP_NUM_WEAPONS) {
+		return;
+	}
+
+	weapon = bs->cur_ps.weapon;
+
+	if (weapon >= WP_MACHINEGUN && weapon <= WP_BFG && !bs->cur_ps.ammo[weapon]) {
+		return;
+	}
+/*
+	// don't attack with the flamethrower if moving faster than normal
+	if (bs->weaponnum == WP_FLAMETHROWER && VectorLengthSquared(bs->cur_ps.velocity) > 160000) {
+		return;
+	}
+*/
+	// get the entity information
+	BotEntityInfo(attackentity, &entinfo);
+	// if the entity information is valid
+	if (!entinfo.valid) {
+		return;
+	}
+	// if the entity isn't dead
+	if (EntityIsDead(&entinfo)) {
+		return;
+	}
+	// if attacking an obelisk
+	if (attackentity >= MAX_CLIENTS && (entinfo.number == redobelisk.entitynum || entinfo.number == blueobelisk.entitynum)) {
+		// if the obelisk is respawning
+		if (g_entities[entinfo.number].activator && g_entities[entinfo.number].activator->s.frame == 2) {
+			return;
+		}
+	}
+
+	attack_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_ACCURACY, 0, 1);
+	// get the reaction time
+	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 5);
+	// if the enemy is invisible
+	if (EntityIsInvisible(&entinfo)) {
+		reactiontime += 1.5f;
+		// limit the reactiontime
+		if (reactiontime > 2.5f) {
+			reactiontime = 2.5f;
+		}
+	}
+	// consider enemy model specific attributes
+	if (BotEqualizeWeakestHumanTeamScore(bs) || BotEqualizeTeamScore(bs)) {
+		reactiontime += bot_equalizer_react.value; // DEBUG: bot_equalizer_react
+#ifdef DEBUG
+		if (BotTeam(bs) == TEAM_RED) {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Camouflage skin: EQUALIZE for BLUE! RED score = %i, BLUE score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+		} else {
+			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: Camouflage skin: EQUALIZE for RED! BLUE score = %i, RED score = %i, reactiontime = %f.\n", netname, bs->ownteamscore, bs->enemyteamscore, reactiontime);
+		}
+#endif
+	}
+	// wait until we have had time to react
+	if (bs->enemysight_time > FloatTime() - reactiontime) {
+		bs->aimnotperfect_time = FloatTime();
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->enemysight_time > FloatTime!\n", netname);
+#endif
+		return;
+	}
+
+	if (bs->teleport_time > FloatTime() - reactiontime) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "%s: No attack: bs->teleport_time > FloatTime!\n", netname);
+#endif
+		return;
+	}
+	// if changing weapons
+	if (bs->weaponchange_time > FloatTime() - 0.1) {
+		return;
+	}
+	// check fire throttle characteristic
+	if (bs->firethrottlewait_time > FloatTime()) {
+		return;
+	}
+
+	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
+	// if attacking an obelisk or if the bot wants to retreat and using the grenadelauncher
+	if ((bs->enemy >= MAX_CLIENTS && (bs->enemy == redobelisk.entitynum || bs->enemy == blueobelisk.entitynum)) || (bs->weaponnum == WP_GRENADELAUNCHER && BotWantsToRetreat(bs))) {
+		firethrottle = 0;
+	}
+
+	if (bs->firethrottleshoot_time < FloatTime()) {
+		if (random() > firethrottle) {
+			bs->firethrottlewait_time = FloatTime() + firethrottle;
+			bs->firethrottleshoot_time = 0;
+		} else {
+			bs->firethrottleshoot_time = FloatTime() + 1 - firethrottle;
+			bs->firethrottlewait_time = 0;
+		}
+	}
+
+	VectorSubtract(bs->aimtarget, bs->eye, dir);
+	// if using a close combat weapon and the enemy is too far away
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+		return;
+	}
+	// get some weapon specific attack values
+	switch (bs->weaponnum) {
+		case WP_GAUNTLET:
+			weaponfov = 90;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_MACHINEGUN:
+			weaponfov = 20;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_CHAINGUN:
+			weaponfov = 80;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_SHOTGUN:
+			weaponfov = 20;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_NAILGUN:
+			weaponfov = 40; // 30 (pre-aiming?)
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_PROXLAUNCHER:
+		case WP_GRENADELAUNCHER:
+			weaponfov = 120;
+			mins = rmins;
+			maxs = rmaxs;
+			//mask = MASK_MISSILESHOT;
+			mask = MASK_SHOT;
+			break;
+		case WP_NAPALMLAUNCHER:
+		case WP_ROCKETLAUNCHER:
+			weaponfov = 50;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		case WP_BEAMGUN:
+			weaponfov = 80;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_RAILGUN:
+			weaponfov = 20;
+			mins = NULL;
+			maxs = NULL;
+			mask = MASK_SHOT;
+			break;
+		case WP_PLASMAGUN:
+			weaponfov = 20;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		case WP_BFG:
+			weaponfov = 20;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+		default:
+			weaponfov = 50;
+			mins = rmins;
+			maxs = rmaxs;
+			mask = MASK_SHOT;
+			break;
+	}
+
+	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
+		fov = 120;
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
+#endif
+	} else {
+		fov = weaponfov;
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Dist > 100, FOV: %i.\n", netname, fov);
+#endif
+	}
+
+	VectorToAngles(dir, angles);
+
+	if (attack_accuracy > 0.6) {
+		// some weapons don't accept inprecision (could be dangerous for ourself etc.)
+		if (!InFieldOfVision(bs->viewangles, 0.5 * fov, angles)) {
+			bs->aimnotperfect_time = FloatTime();
+		}
+		// so don't shoot too early with those weapons
+		if (bs->weaponnum == WP_RAILGUN && (bs->aimnotperfect_time > FloatTime() - 0.1)) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: (> 0.6) No attack: aimnotperfect_time!\n", netname);
+#endif
+			return;
+		}
+	}
+
+	if (!InFieldOfVision(bs->viewangles, fov, angles)) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "%s: No attack: not in fov!\n", netname);
+#endif
+		return;
+	}
+	// get the start point shooting from
+	VectorCopy(bs->origin, start);
+
+	start[2] += bs->cur_ps.viewheight;
+
+	AngleVectorsForwardRight(bs->viewangles, forward, right);
+	// get the weapon info
+	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+
+	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
+	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
+	start[2] += forward[2] * wi.offset[0] + right[2] * wi.offset[1] + wi.offset[2];
+	// a little back to make sure not inside a very close enemy
+	VectorMA(start, -8, forward, start);
+	BotAI_Trace(&bsptrace, start, NULL, NULL, bs->aimtarget, bs->client, mask); // Tobias CHECK: why do higher mins/max values stop bots from shooting rockets etc. near walls?
+
+	if (bsptrace.fraction < 1.0f && bsptrace.entityNum != attackentity) {
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: trace.ent is NOT attackentity!\n", netname);
+#endif
+		return;
+	}
+	// end point aiming at
+	VectorMA(start, 1000, forward, end);
+	BotAI_Trace(&bsptrace, start, mins, maxs, end, bs->entitynum, mask);
+	// if the entity is a client
+	if (bsptrace.entityNum >= 0 && bsptrace.entityNum < MAX_CLIENTS) {
+		if (bsptrace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
+			// if a teammate is hit
+			if (BotSameTeam(bs, bsptrace.entityNum)) {
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "%s: No attack: trace.ent is a teammate!\n", netname);
+#endif
+				return;
+			}
+		}
+	}
+	// if won't hit the enemy or not attacking a player (obelisk)
+	if (bsptrace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
+		// if the projectile does radial damage
+		if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+			if (bsptrace.fraction * 1000 < wi.proj.radius) {
+				points = (wi.proj.damage - 0.5 * bsptrace.fraction * 1000) * 0.5;
+
+				if (points > 0) {
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: No attack: Radial damage (%f)!\n", netname, points);
+#endif
+					return;
+				}
+			}
+			// FIXME: check if a teammate gets radial damage
+		}
+	}
+	// check if a teammate gets radial damage
+	if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
+		if (BotMayRadiusDamageTeamMate(bs, bsptrace.endpos, wi.proj.radius)) {
+			return;
+		}
+	}
+// Tobias DEBUG
+	if (bot_noshoot.integer) {
+		return;
+	}
+#ifdef DEBUG
+	BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "%s: Final Reactiontime = %f.\n", netname, reactiontime);
+#endif
+// DEBUG
+	// if fire has to be release to activate weapon
+	if (wi.flags & WFL_FIRERELEASED) {
+		if (bs->flags & BFL_ATTACKED) {
+			trap_EA_Attack(bs->client);
+		}
+	} else {
+		trap_EA_Attack(bs->client);
+	}
+
+	bs->flags ^= BFL_ATTACKED;
+}
+
+/*
+=======================================================================================================================================
 BotMapScripts
 =======================================================================================================================================
 */
