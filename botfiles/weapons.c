@@ -42,6 +42,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 projectileinfo
 {
 	name			"gauntletdamage"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			50
 	damagetype		DAMAGETYPE_IMPACT
@@ -64,6 +66,8 @@ weaponinfo
 projectileinfo
 {
 	name			"machinegunbullet"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			5
 	damagetype		DAMAGETYPE_IMPACT
@@ -86,6 +90,8 @@ weaponinfo
 projectileinfo
 {
 	name			"chaingunbullet"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			7
 	damagetype		DAMAGETYPE_IMPACT
@@ -108,6 +114,8 @@ weaponinfo
 projectileinfo
 {
 	name			"shotgunbullet"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			10
 	damagetype		DAMAGETYPE_IMPACT
@@ -130,6 +138,8 @@ weaponinfo
 projectileinfo
 {
 	name			"nail"
+	mins			{-1, -1, -1}
+	maxs			{1, 1, 1}
 	gravity			0.0
 	damage			20
 	damagetype		DAMAGETYPE_IMPACT
@@ -152,6 +162,8 @@ weaponinfo
 projectileinfo
 {
 	name			"prox mine"
+	mins			{-1, -1, -1}
+	maxs			{1, 1, 1}
 	gravity			0.45 // 0.06
 	damage			0
 	damagetype		DAMAGETYPE_IMPACT
@@ -174,6 +186,8 @@ weaponinfo
 projectileinfo
 {
 	name			"grenade"
+	mins			{-2, -2, -2}
+	maxs			{2, 2, 2}
 	gravity			0.39 // 0.35
 	damage			0
 	radius			200
@@ -197,6 +211,8 @@ weaponinfo
 projectileinfo
 {
 	name			"napalm"
+	mins			{-2, -2, -2}
+	maxs			{2, 2, 2}
 	gravity			0.08 // 0.04
 	damage			0
 	radius			300
@@ -220,6 +236,8 @@ weaponinfo
 projectileinfo
 {
 	name			"rocket"
+	mins			{-2, -2, -2}
+	maxs			{2, 2, 2}
 	gravity			0.0
 	damage			100
 	radius			120
@@ -243,6 +261,8 @@ weaponinfo
 projectileinfo
 {
 	name			"beam"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			8
 	damagetype		DAMAGETYPE_IMPACT
@@ -265,6 +285,8 @@ weaponinfo
 projectileinfo
 {
 	name			"rail"
+	mins			{-0, -0, -0}
+	maxs			{0, 0, 0}
 	gravity			0.0
 	damage			100
 	damagetype		DAMAGETYPE_IMPACT
@@ -287,6 +309,8 @@ weaponinfo
 projectileinfo
 {
 	name			"plasma"
+	mins			{-2, -2, -2}
+	maxs			{2, 2, 2}
 	gravity			0.0
 	damage			20
 	radius			20
@@ -310,6 +334,8 @@ weaponinfo
 projectileinfo
 {
 	name			"bfg"
+	mins			{-2, -2, -2}
+	maxs			{2, 2, 2}
 	gravity			0.0
 	damage			100
 	radius			120

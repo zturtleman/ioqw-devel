@@ -6517,10 +6517,6 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 	int i, mask;
 	float dist, f, aim_skill, aim_accuracy, speed, reactiontime, viewType, enemyHeight, battle_sense;
 	vec3_t origin, dir, bestorigin, end, start, target, groundtarget, cmdmove, enemyvelocity, middleOfArc, topOfArc;
-	static vec3_t rmins = {-4, -4, -4}, rmaxs = {4, 4, 4}; // rockets/missiles
-//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
-//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
-	float *mins, *maxs;
 	weaponinfo_t wi;
 	aas_entityinfo_t entinfo;
 	aas_clientmove_t move;
@@ -6575,96 +6571,70 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 		case WP_MACHINEGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_CHAINGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_CHAINGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_SHOTGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAILGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_NAILGUN, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAILGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PROXLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PROXLAUNCHER, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_GRENADELAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAPALMLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_NAPALMLAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_NAPALMLAUNCHER, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_ROCKETLAUNCHER:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_BEAMGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BEAMGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PLASMAGUN:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BFG:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		default:
 			aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 	}
@@ -6841,7 +6811,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 			bestorigin[2] += ps.viewheight;
 		}
 
-		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
 		// if the enemy is NOT hit
 		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
@@ -6849,7 +6819,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
-			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
+			BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
 			// if the enemy is still NOT hit
 			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 				// aim a bit lower
@@ -6917,7 +6887,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 
 				end[2] -= 64;
 
-				BotAI_Trace(&trace, entinfo.origin, mins, maxs, end, entinfo.number, mask);
+				BotAI_Trace(&trace, entinfo.origin, wi.proj.mins, wi.proj.maxs, end, entinfo.number, mask);
 				VectorCopy(bestorigin, groundtarget); // Tobias CHECK: is 'bestorigin' wrong now (changed above), or was it always strange to use 'bestorigin' instead of 'end' ?
 
 				if (trace.startsolid) {
@@ -6926,7 +6896,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 					groundtarget[2] = trace.endpos[2] - 8;
 				}
 				// trace a line from projectile start to ground target
-				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->entitynum, mask);
+				BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, groundtarget, bs->entitynum, mask);
 				// if hitpoint is not vertically too far from the ground target
 				if (fabs(trace.endpos[2] - groundtarget[2]) < 50) {
 					VectorSubtract(trace.endpos, groundtarget, dir);
@@ -6938,7 +6908,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 							// check if the bot is visible from the ground target
 							trace.endpos[2] += 1;
 
-							BotAI_Trace(&trace, trace.endpos, mins, maxs, entinfo.origin, entinfo.number, mask);
+							BotAI_Trace(&trace, trace.endpos, wi.proj.mins, wi.proj.maxs, entinfo.origin, entinfo.number, mask);
 							// if the projectile will not be blocked
 							if (trace.fraction >= 1.0f) {
 #ifdef DEBUG
@@ -6960,7 +6930,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 //#ifdef DEBUG
 		}
 //#endif
-		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, bs->eye, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	}
 // Tobias NOTE: for developers...
@@ -7017,7 +6987,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 
 		topOfArc[2] += (dist * wi.proj.gravity) + (enemyHeight > 0 ? enemyHeight * 0.1 : 0);
 		// trace from start to middle, check if the projectile will be blocked by something
-		BotAI_Trace(&trace, start, mins, maxs, topOfArc, entinfo.number, mask);
+		BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, topOfArc, entinfo.number, mask);
 		// if the projectile will not be blocked
 		if (trace.fraction >= 1.0f) {
 			// get the end point (the projectiles impact point), for safety sake take overhead ledges into account (so we trace along the highest point of the arc, from middle to end)
@@ -7025,7 +6995,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 
 			end[2] += 20;
 			// trace from middle to end, check if the projectile will be blocked by something
-			BotAI_Trace(&trace, topOfArc, mins, maxs, end, entinfo.number, mask);
+			BotAI_Trace(&trace, topOfArc, wi.proj.mins, wi.proj.maxs, end, entinfo.number, mask);
 			// if the projectile will not be blocked
 			if (trace.fraction >= 1.0f) {
 				// take projectile speed, gravity and enemy height into account
@@ -7521,7 +7491,7 @@ Tobias TODO: Adjust 'end' and 'mins'/'maxs' (default was 8).
 =======================================================================================================================================
 */
 void BotCheckAttack_New(bot_state_t *bs) {
-	float points, attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float points, attack_accuracy, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
@@ -7529,9 +7499,6 @@ void BotCheckAttack_New(bot_state_t *bs) {
 	weapon_t weapon;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
-	static vec3_t rmins = {-2, -2, -2}, rmaxs = {2, 2, 2}; // rockets/missiles
-//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
-//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -7647,77 +7614,53 @@ void BotCheckAttack_New(bot_state_t *bs) {
 	switch (bs->weaponnum) {
 		case WP_GAUNTLET:
 			weaponfov = 90;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_MACHINEGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_CHAINGUN:
 			weaponfov = 80;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_SHOTGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAILGUN:
 			weaponfov = 40; // 30 (pre-aiming?)
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PROXLAUNCHER:
 		case WP_GRENADELAUNCHER:
 			weaponfov = 120;
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAPALMLAUNCHER:
 		case WP_ROCKETLAUNCHER:
 			weaponfov = 50;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BEAMGUN:
 			weaponfov = 80;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PLASMAGUN:
 			weaponfov = 20;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BFG:
 			weaponfov = 20;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		default:
 			weaponfov = 50;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 	}
@@ -7780,7 +7723,7 @@ void BotCheckAttack_New(bot_state_t *bs) {
 	}
 	// end point aiming at
 	VectorMA(start, 1000, forward, end);
-	BotAI_Trace(&bsptrace, start, mins, maxs, end, bs->entitynum, mask);
+	BotAI_Trace(&bsptrace, start, wi.proj.mins, wi.proj.maxs, end, bs->entitynum, mask);
 	// if the entity is a client
 	if (bsptrace.entityNum >= 0 && bsptrace.entityNum < MAX_CLIENTS) {
 		if (bsptrace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
