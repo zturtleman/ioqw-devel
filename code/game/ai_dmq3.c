@@ -6565,8 +6565,9 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 		VectorCopy(target, bs->aimtarget);
 		return;
 	}
-
-	//BotAI_Print(PRT_MESSAGE, "%s: Aiming at client %d.\n", netname, bs->enemy);
+#ifdef DEBUG
+	BotAI_Print(PRT_MESSAGE, "%s: Aiming at client %d.\n", netname, bs->enemy);
+#endif
 	// get the weapon information
 	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	// get the weapon specific aim accuracy and or aim skill
@@ -6785,7 +6786,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 		// if the bot is skilled enough
 		if (aim_skill > 0.5) {
 			// do prediction shots around corners
-			if (!BotUsesInstantHitWeapon(bs)) {
+			if (!wi.speed) {
 				// create the chase goal
 				goal.entitynum = bs->client;
 				goal.areanum = bs->areanum;
@@ -6859,7 +6860,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 			}
 		}
 		// if it is not an instant hit weapon the bot might want to predict the enemy
-		if (!BotUsesInstantHitWeapon(bs)) {
+		if (!wi.speed) {
 			// direction towards the enemy
 			VectorSubtract(bestorigin, bs->origin, dir);
 			// distance towards the enemy
@@ -6999,7 +7000,7 @@ NOTE: 6. This code becomes more precise the faster the projectile moves. Grenade
 WARNING 1: Accuracy is nearly 100% even with very fast projectiled weapons (e.g.: speed 20000 etc.), this means bots will always hit their opponents, even with a bow (eventually decrease the bots individual aim_accuracy)
 WARNING 2: Bots will also throw grenades through windows even from distance, so be careful!
 */
-	if (BotUsesGravityAffectedProjectileWeapon(bs)) {
+	if (wi.proj.gravity) {
 		// direction towards the enemy
 		VectorSubtract(bestorigin, bs->origin, dir);
 
@@ -7040,7 +7041,7 @@ WARNING 2: Bots will also throw grenades through windows even from distance, so 
 //#ifdef DEBUG
 	if (!bot_noaccerror.integer) {
 //#endif
-		if (BotUsesInstantHitWeapon(bs)) {
+		if (wi.speed) {
 			// distance towards the enemy
 			dist = VectorLength(dir);
 
