@@ -6785,7 +6785,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 
 		if (battle_sense > 0.9f) {
 			// any obstacles/walls in between? this happens when using jumppads or teleporters
-			BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+			BotAI_Trace(&trace, bs->origin, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
 
 			if (trace.fraction < 0.99f) {
 #ifdef DEBUG
@@ -7604,6 +7604,17 @@ void BotCheckAttack_New(bot_state_t *bs) {
 			bs->firethrottlewait_time = 0;
 		}
 	}
+	// get the weapon info
+	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
+
+	if (!wi.speed) {
+		if (attack_accuracy > 0.2 && !BotEntityVisible(&bs->cur_ps, 360, bs->enemy)) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: No attack: enemy not visible!\n", netname);
+#endif
+			return;
+		}
+	}
 
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
@@ -7705,8 +7716,6 @@ void BotCheckAttack_New(bot_state_t *bs) {
 	start[2] += bs->cur_ps.viewheight;
 
 	AngleVectorsForwardRight(bs->viewangles, forward, right);
-	// get the weapon info
-	trap_BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 
 	start[0] += forward[0] * wi.offset[0] + right[0] * wi.offset[1];
 	start[1] += forward[1] * wi.offset[0] + right[1] * wi.offset[1];
