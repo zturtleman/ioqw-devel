@@ -590,6 +590,7 @@ static void BotMatch_HelpAccompany(bot_state_t *bs, bot_match_t *match) {
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
 			bs->teamgoal.entitynum = client;
 			bs->teamgoal.areanum = areanum;
+
 			VectorCopy(entinfo.origin, bs->teamgoal.origin);
 			VectorSet(bs->teamgoal.mins, -8, -8, -8);
 			VectorSet(bs->teamgoal.maxs, 8, 8, 8);

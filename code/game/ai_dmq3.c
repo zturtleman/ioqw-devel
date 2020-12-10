@@ -2882,7 +2882,7 @@ qboolean BotCanCamp(bot_state_t *bs) {
 			return qfalse;
 		}
 
-		VectorSubtract(bs->origin, entinfo.origin, dir);
+		VectorSubtract(entinfo.origin, bs->origin, dir);
 
 		enemyHeight = dir[2];
 		// if the enemy is located way higher than the bot

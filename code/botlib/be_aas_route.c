@@ -486,7 +486,7 @@ unsigned short int AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end) {
 	float dist;
 	vec3_t dir;
 
-	VectorSubtract(start, end, dir);
+	VectorSubtract(end, start, dir);
 
 	dist = VectorLength(dir);
 	// if crouch only area
