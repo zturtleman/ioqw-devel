@@ -985,7 +985,7 @@ typedef enum {
 #define MAX_MODELS 256 // max model filenames set by game VM
 #define MAX_SOUNDS 256 // this is sent over the net as 8 bits (in eventParm) so they cannot be blindly increased
 
-#define MAX_CONFIGSTRINGS 1024
+#define MAX_CONFIGSTRINGS 2048 // Tobias DEBUG
 // these are the only configstrings that the system reserves, all the other ones are strictly for servergame to clientgame communication
 #define CS_SERVERINFO 0 // an info string with all the serverinfo cvars
 #define CS_SYSTEMINFO 1 // an info string for server system to client system configuration (timescale, etc.)
