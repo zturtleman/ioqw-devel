@@ -820,7 +820,7 @@ static void S_AL_NewLoopMaster(src_t *rmSource, qboolean iskilled) {
 		} else if (curSfx->masterLoopSrc != -1 && rmSource == &srcList[curSfx->masterLoopSrc]) {
 			int firstInactive = -1;
 
-			// only if rmSource was the master and if there are still playing loops for this sound will we need to find a new master.
+			// only if rmSource was the master and if there are still playing loops for this sound will we need to find a new master
 			if (iskilled || curSfx->loopActiveCnt) {
 				for (index = 0; index < srcCount; index++) {
 					curSource = &srcList[index];
@@ -2308,14 +2308,14 @@ qboolean S_AL_Init(soundInterface_t *si) {
 #endif
 		int curlen;
 
-		// get all available devices + the default device name.
+		// get all available devices + the default device name
 		if (enumeration_all_ext) {
 			devicelist = qalcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
 #ifdef _WIN32
 			defaultdevice = qalcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
 #endif
 		} else {
-			// we don't have ALC_ENUMERATE_ALL_EXT but normal enumeration.
+			// we don't have ALC_ENUMERATE_ALL_EXT but normal enumeration
 			devicelist = qalcGetString(NULL, ALC_DEVICE_SPECIFIER);
 #ifdef _WIN32
 			defaultdevice = qalcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
@@ -2324,7 +2324,7 @@ qboolean S_AL_Init(soundInterface_t *si) {
 		}
 #ifdef _WIN32
 		// check whether the default device is generic hardware. If it is, change to generic software as that one works more reliably with various sound systems.
-		// if it's not, use OpenAL's default selection as we don't want to ignore native hardware acceleration.
+		// if it's not, use OpenAL's default selection as we don't want to ignore native hardware acceleration
 		if (!device && defaultdevice && !strcmp(defaultdevice, "Generic Hardware")) {
 			device = "Generic Software";
 		}
@@ -2373,9 +2373,9 @@ qboolean S_AL_Init(soundInterface_t *si) {
 	qalDopplerFactor(s_alDopplerFactor->value);
 	qalSpeedOfSound(s_alDopplerSpeed->value);
 #ifdef USE_VOIP
-	// !!! FIXME: some of these alcCaptureOpenDevice() values should be cvars.
-	// !!! FIXME: add support for capture device enumeration.
-	// !!! FIXME: add some better error reporting.
+	// !!! FIXME: some of these alcCaptureOpenDevice() values should be cvars
+	// !!! FIXME: add support for capture device enumeration
+	// !!! FIXME: add some better error reporting
 	s_alCapture = Cvar_Get("s_alCapture", "1", CVAR_ARCHIVE|CVAR_LATCH);
 
 	if (!s_alCapture->integer) {

@@ -154,7 +154,7 @@ static void CL_UpdateMumble(void) {
 	if (!cl_useMumble->integer) {
 		return;
 	}
-	// !!! FIXME: not sure if this is even close to correct.
+	// !!! FIXME: not sure if this is even close to correct
 	AngleVectors(cl.snap.ps.viewangles, forward, NULL, up);
 
 	pos[0] = cl.snap.ps.origin[0] * scale;
@@ -1199,6 +1199,7 @@ void CL_MapLoading(void) {
 		Com_Memset(&cl.gameState, 0, sizeof(cl.gameState));
 
 		clc.lastPacketSentTime = -9999;
+
 		SCR_UpdateScreen();
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
@@ -1290,6 +1291,7 @@ void CL_Disconnect(qboolean showMainMenu) {
 	}
 
 	*clc.downloadTempName = *clc.downloadName = 0;
+
 	Cvar_Set("cl_downloadName", "");
 #ifdef USE_MUMBLE
 	if (cl_useMumble->integer && mumble_islinked()) {
@@ -1301,8 +1303,8 @@ void CL_Disconnect(qboolean showMainMenu) {
 	if (cl_voipSend->integer) {
 		int tmp = cl_voipUseVAD->integer;
 
-		cl_voipUseVAD->integer = 0; // disable this for a moment.
-		clc.voipOutgoingDataSize = 0; // dump any pending VoIP transmission.
+		cl_voipUseVAD->integer = 0; // disable this for a moment
+		clc.voipOutgoingDataSize = 0; // dump any pending VoIP transmission
 
 		Cvar_Set("cl_voipSend", "0");
 		CL_CaptureVoip(); // clean up any state...
@@ -2973,6 +2975,7 @@ static void CL_GenerateQKey(void) {
 	fileHandle_t f;
 
 	len = FS_SV_FOpenFileRead(QKEY_FILE, &f);
+
 	FS_FCloseFile(f);
 
 	if (len == QKEY_SIZE) {
@@ -3184,7 +3187,7 @@ void CL_Init(void) {
 #endif
 	// cgame might not be initialized before menu is used
 	Cvar_Get("cg_viewsize", "100", CVAR_ARCHIVE);
-	// make sure cg_stereoSeparation is zero as that variable is deprecated and should not be used anymore.
+	// make sure cg_stereoSeparation is zero as that variable is deprecated and should not be used anymore
 	Cvar_Get("cg_stereoSeparation", "0", CVAR_ROM);
 	// register our commands
 	Cmd_AddCommand("cmd", CL_ForwardToServer_f);
@@ -3236,7 +3239,7 @@ CL_Shutdown
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit) {
 	static qboolean recursive = qfalse;
 
-	// check whether the client is running at all.
+	// check whether the client is running at all
 	if (!(com_cl_running && com_cl_running->integer)) {
 		return;
 	}

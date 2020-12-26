@@ -65,7 +65,7 @@ static void CG_TransitionEntity(centity_t *cent) {
 	if (!cent->interpolate) {
 		CG_ResetEntity(cent);
 	}
-	// clear the next state. if will be set by the next CG_SetNextSnap
+	// clear the next state, it will be set by the next CG_SetNextSnap
 	cent->interpolate = qfalse;
 	// check for events
 	CG_CheckEvents(cent);

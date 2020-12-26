@@ -1191,6 +1191,7 @@ Called by CL_KeyEvent to handle a keypress.
 =======================================================================================================================================
 */
 void CL_KeyDownEvent(int key, unsigned time) {
+
 	keys[key].down = qtrue;
 	keys[key].repeats++;
 

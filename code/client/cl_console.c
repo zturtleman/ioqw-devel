@@ -81,6 +81,7 @@ Con_ToggleMenu_f
 =======================================================================================================================================
 */
 void Con_ToggleMenu_f(void) {
+
 	CL_KeyEvent(K_ESCAPE, qtrue, Sys_Milliseconds());
 	CL_KeyEvent(K_ESCAPE, qfalse, Sys_Milliseconds());
 }
@@ -654,7 +655,7 @@ void Con_DrawSolidConsole(float frac) {
 	short *text;
 	int row;
 	int lines;
-//	qhandle_t conShader;
+	//qhandle_t conShader;
 	int currentColor;
 	vec4_t color;
 
