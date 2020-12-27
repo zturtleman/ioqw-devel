@@ -2028,7 +2028,7 @@ PmoveSingle
 void PmoveSingle(pmove_t *pmove) {
 
 	pm = pmove;
-	// this counter lets us debug movement problems with a journal by setting a conditional breakpoint fot the previous frame
+	// this counter lets us debug movement problems with a journal by setting a conditional breakpoint for the previous frame
 	c_pmove++;
 	// clear results
 	pm->numtouch = 0;

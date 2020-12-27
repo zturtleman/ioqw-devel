@@ -2869,10 +2869,10 @@ void FS_AddGameDirectory(const char *path, const char *dir) {
 	while ((pakfilesi < numfiles) || (pakdirsi < numdirs)) {
 		// check if a pakfile or pakdir comes next
 		if (pakfilesi >= numfiles) {
-			// we've used all the pakfiles, it must be a pakdir.
+			// we've used all the pakfiles, it must be a pakdir
 			pakwhich = 0;
 		} else if (pakdirsi >= numdirs) {
-			// we've used all the pakdirs, it must be a pakfile.
+			// we've used all the pakdirs, it must be a pakfile
 			pakwhich = 1;
 		} else {
 			// could be either, compare to see which name comes first
@@ -2904,7 +2904,7 @@ void FS_AddGameDirectory(const char *path, const char *dir) {
 			pakfilesi++;
 		} else {
 			// the next .pk3dir is before the next .pk3 file
-			// but wait, this could be any directory, we're filtering to only ending with ".pk3dir" here.
+			// but wait, this could be any directory, we're filtering to only ending with ".pk3dir" here
 			len = strlen(pakdirs[pakdirsi]);
 
 			if (!FS_IsExt(pakdirs[pakdirsi], ".pk3dir", len)) {
