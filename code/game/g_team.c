@@ -454,7 +454,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	VectorSubtract(targ->r.currentOrigin, flag->r.currentOrigin, v1);
 	VectorSubtract(attacker->r.currentOrigin, flag->r.currentOrigin, v2);
 
-	if (((VectorLength(v1) < CTF_TARGET_PROTECT_RADIUS && trap_InPVS(flag->r.currentOrigin, targ->r.currentOrigin)) || (VectorLength(v2) < CTF_TARGET_PROTECT_RADIUS && trap_InPVS(flag->r.currentOrigin, attacker->r.currentOrigin))) && attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
+	if (((VectorLengthSquared(v1) < Square(CTF_TARGET_PROTECT_RADIUS) && trap_InPVS(flag->r.currentOrigin, targ->r.currentOrigin)) || (VectorLengthSquared(v2) < Square(CTF_TARGET_PROTECT_RADIUS) && trap_InPVS(flag->r.currentOrigin, attacker->r.currentOrigin))) && attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
 		// we defended the base flag
 		AddScore(attacker, targ->r.currentOrigin, CTF_FLAG_DEFENSE_BONUS);
 
@@ -467,7 +467,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		VectorSubtract(targ->r.currentOrigin, carrier->r.currentOrigin, v1);
 		VectorSubtract(attacker->r.currentOrigin, carrier->r.currentOrigin, v2);
 
-		if (((VectorLength(v1) < CTF_ATTACKER_PROTECT_RADIUS && trap_InPVS(carrier->r.currentOrigin, targ->r.currentOrigin)) || (VectorLength(v2) < CTF_ATTACKER_PROTECT_RADIUS && trap_InPVS(carrier->r.currentOrigin, attacker->r.currentOrigin))) && attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
+		if (((VectorLengthSquared(v1) < Square(CTF_ATTACKER_PROTECT_RADIUS) && trap_InPVS(carrier->r.currentOrigin, targ->r.currentOrigin)) || (VectorLengthSquared(v2) < Square(CTF_ATTACKER_PROTECT_RADIUS) && trap_InPVS(carrier->r.currentOrigin, attacker->r.currentOrigin))) && attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam) {
 			AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_PROTECT_BONUS);
 
 			attacker->client->ps.persistant[PERS_DEFEND_COUNT]++;

@@ -1257,7 +1257,7 @@ static void PM_CrashLand(void) {
 	// Tobias END
 	}
 	// when landing from launch ramps don't stop so abruptly
-	if (VectorLength(pm->ps->velocity) > 400) {
+	if (VectorLengthSquared(pm->ps->velocity) > 160000) {
 		stunTime = 0;
 	}
 

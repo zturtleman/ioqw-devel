@@ -816,7 +816,7 @@ static void BotCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just checked once (just after joining a team)
 		return;
 	}
 
@@ -1085,7 +1085,7 @@ static void Bot1FCTFSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just checked once (just after joining a team)
 		return;
 	}
 
@@ -1207,7 +1207,7 @@ static void BotObeliskSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just checked once (just after joining a team)
 		return;
 	}
 
@@ -1368,7 +1368,7 @@ static void BotHarvesterSeekGoals(bot_state_t *bs) {
 		return;
 	}
 	// if the bot has enough aggression to decide what to do
-	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just ckecd once (just after joining a team)
+	if (BotAggression(bs) < 50) { // Tobias CHECK: was this ever necessary? It is just checked once (just after joining a team)
 		return;
 	}
 
@@ -2032,6 +2032,7 @@ static const qboolean BotUsesMidRangeWeapon(bot_state_t *bs) {
 BotUsesGravityAffectedProjectileWeapon
 =======================================================================================================================================
 */
+/*
 static const qboolean BotUsesGravityAffectedProjectileWeapon(bot_state_t *bs) {
 
 	switch (bs->weaponnum) {
@@ -2043,12 +2044,13 @@ static const qboolean BotUsesGravityAffectedProjectileWeapon(bot_state_t *bs) {
 			return qfalse;
 	}
 }
-
+*/
 /*
 =======================================================================================================================================
 BotUsesInstantHitWeapon
 =======================================================================================================================================
 */
+/*
 static const qboolean BotUsesInstantHitWeapon(bot_state_t *bs) {
 
 	switch (bs->weaponnum) {
@@ -2063,7 +2065,7 @@ static const qboolean BotUsesInstantHitWeapon(bot_state_t *bs) {
 			return qfalse;
 	}
 }
-
+*/
 /*
 =======================================================================================================================================
 BotUsesCloseCombatWeapon
@@ -2166,7 +2168,7 @@ static void BotSetupForMovement(bot_state_t *bs) {
 
 	memset(&initmove, 0, sizeof(bot_initmove_t));
 
-	initmove.entitynum = bs->entitynum;
+	initmove.entitynum = bs->client;
 	initmove.client = bs->client;
 	initmove.thinktime = bs->thinktime;
 	// set presence type
@@ -2396,7 +2398,7 @@ static qboolean BotWantsToUseKamikaze(bot_state_t *bs) {
 
 	if (gametype == GT_OBELISK) {
 		// if the bot is low on health and recently hurt
-		if (bs->inventory[INVENTORY_HEALTH] < 60 && g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
+		if (bs->inventory[INVENTORY_HEALTH] < 60 && g_entities[bs->client].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
 			return qtrue;
 		}
 		// if the bot has the ammoregen powerup
@@ -2453,7 +2455,7 @@ static qboolean BotWantsToUseKamikaze(bot_state_t *bs) {
 		}
 	} else {
 		// if the bot is low on health and recently hurt
-		if (bs->inventory[INVENTORY_HEALTH] < 80 && g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
+		if (bs->inventory[INVENTORY_HEALTH] < 80 && g_entities[bs->client].client->lasthurt_time > level.time - 1000) { // Tobias NOTE: exclude falling damage
 			return qtrue;
 		}
 	}
@@ -2942,7 +2944,7 @@ const int BotAggression(bot_state_t *bs) {
 
 			enemyHeight = dir[2];
 			dir[2] = 0;
-			enemyDistance = VectorLength(dir);
+			enemyDistance = VectorLengthSquared(dir);
 			// if the bot is using the gauntlet
 			if (bs->weaponnum == WP_GAUNTLET) {
 				// if attacking an obelisk
@@ -2958,7 +2960,7 @@ const int BotAggression(bot_state_t *bs) {
 					return 100;
 				}
 				// if the enemy is really near
-				if (enemyDistance < 200) {
+				if (enemyDistance < 40000) {
 					return 100;
 				}
 				// if the enemy is far away, check if we can attack the enemy from behind
@@ -3122,7 +3124,7 @@ const int BotAggression(bot_state_t *bs) {
 
 			enemyHeight = dir[2];
 			dir[2] = 0;
-			enemyDistance = VectorLength(dir);
+			enemyDistance = VectorLengthSquared(dir);
 			// if the bot is using the gauntlet
 			if (bs->weaponnum == WP_GAUNTLET) {
 				// if attacking an obelisk
@@ -3147,7 +3149,7 @@ const int BotAggression(bot_state_t *bs) {
 #endif
 				}
 				// if the enemy is really near
-				if (enemyDistance < 200) {
+				if (enemyDistance < 40000) {
 					value += 50;
 #ifdef DEBUG
 					BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Using Gauntlet dist < 200 +50 (%i).\n", netname, value);
@@ -3506,7 +3508,7 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if the entity isn't dead
@@ -3572,7 +3574,7 @@ static qboolean BotAvoidItemPickup(bot_state_t *bs, bot_goal_t *goal) {
 		}
 
 		if (!BotEntityVisible(&bs->cur_ps, 90, i)) {
-			if (VectorLength(dir) > 200) {
+			if (VectorLengthSquared(dir) > 40000) {
 				continue;
 			}
 		} else {
@@ -3748,9 +3750,9 @@ const int BotNearbyGoalPickupRange_NoLTG(bot_state_t *bs) {
 				VectorSubtract(bs->origin, entinfo.origin, dir);
 
 				dir[2] = 0;
-				enemyDistance = VectorLength(dir);
+				enemyDistance = VectorLengthSquared(dir);
 				// if the enemy is near enough, check if we can attack the enemy from behind
-				if (enemyDistance < 200) {
+				if (enemyDistance < 40000) {
 					VectorToAngles(dir, angles);
 					// if not in the enemy's field of vision, attack!
 					if (!InFieldOfVision(entinfo.angles, 180, angles)) {
@@ -4541,7 +4543,7 @@ void BotRoamGoal(bot_state_t *bs, vec3_t goal) {
 		// add a random value to the z-coordinate (NOTE: 48 = maxjump?)
 		bestorg[2] += 96 * crandom();
 		// trace a line from the origin to the roam target
-		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorg, bs->entitynum, MASK_SOLID);
+		BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorg, bs->client, MASK_SOLID);
 		// direction and length towards the roam target
 		VectorSubtract(trace.endpos, bs->origin, dir);
 
@@ -4556,12 +4558,12 @@ void BotRoamGoal(bot_state_t *bs, vec3_t goal) {
 			belowbestorg[1] = bestorg[1];
 			belowbestorg[2] = bestorg[2] - 800;
 
-			BotAI_Trace(&trace, bestorg, NULL, NULL, belowbestorg, bs->entitynum, MASK_SOLID);
+			BotAI_Trace(&trace, bestorg, NULL, NULL, belowbestorg, bs->client, MASK_SOLID);
 
 			if (!trace.startsolid) {
 				trace.endpos[2]++;
 
-				pc = trap_PointContents(trace.endpos, bs->entitynum);
+				pc = trap_PointContents(trace.endpos, bs->client);
 
 				if (!(pc & (CONTENTS_LAVA|CONTENTS_SLIME))) {
 					VectorCopy(bestorg, goal);
@@ -4900,7 +4902,7 @@ qboolean BotEntityVisible(playerState_t *ps, float fov, int ent) {
 		return qfalse;
 	}
 
-	if (EntityIsInvisible(&entinfo) && VectorLength(dir) > 300) {
+	if (EntityIsInvisible(&entinfo) && VectorLengthSquared(dir) > 90000) {
 		return qfalse;
 	}
 	// set the right vector
@@ -5103,7 +5105,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
 	aggression = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AGGRESSION, 0, 1);
 	// check if the health decreased by a reliable method (consider automatic decrease if health > max. health!)
-	healthdecrease = g_entities[bs->entitynum].client->lasthurt_time > level.time - 1000;
+	healthdecrease = g_entities[bs->client].client->lasthurt_time > level.time - 1000;
 	// remember the current health value
 	bs->lasthealth = bs->inventory[INVENTORY_HEALTH];
 
@@ -5152,7 +5154,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			return qfalse;
 		}
 		// if the entity isn't the bot self
-		if (curenemyinfo.number == bs->entitynum) {
+		if (curenemyinfo.number == bs->client) {
 			return qfalse;
 		}
 		// only concentrate on flag carrier if not carrying a flag
@@ -5228,7 +5230,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if the entity isn't dead
@@ -5247,7 +5249,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (lastteleport_time > FloatTime() - 3) {
 			VectorSubtract(entinfo.origin, lastteleport_origin, dir);
 
-			if (VectorLengthSquared(dir) < Square(70)) {
+			if (VectorLengthSquared(dir) < 4900) {
 				continue;
 			}
 		}
@@ -5294,7 +5296,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			// if the bot already has an enemy, compare both enemies
 			if (curenemy >= 0) {
 				// if this enemy is not too far away, is carrying no flags or skulls, and the bot has a precise weapon
-				if (enemypreference > 0.6 && squaredist < Square(700) && BotUsesMidRangeWeapon(bs) && !BotCTFCarryingFlag(bs) && !BotHarvesterCarryingCubes(bs)/* && bs->lasthealth - 40 > g_entities[curenemy].health*/) { // Tobias NOTE: care must be taken -> BEAMGUN range!
+				if (enemypreference > 0.6 && squaredist < 490000 && BotUsesMidRangeWeapon(bs) && !BotCTFCarryingFlag(bs) && !BotHarvesterCarryingCubes(bs)/* && bs->lasthealth - 40 > g_entities[curenemy].health*/) { // Tobias NOTE: care must be taken -> BEAMGUN range!
 					// if the current enemy is lower on health than this one
 					if (g_entities[i].health > g_entities[curenemy].health + 20) {
 #ifdef DEBUG
@@ -5363,7 +5365,7 @@ const int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			}
 		}
 		// if the enemy is quite far away and doesn't have a flag or cubes and the bot is not damaged try to ignore this enemy
-		if (curenemy < 0 && squaredist > Square(100) && !healthdecrease && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
+		if (curenemy < 0 && squaredist > 10000 && !healthdecrease && !EntityCarriesFlag(&entinfo) && !EntityCarriesCubes(&entinfo)) {
 			// get the entity information
 			BotEntityInfo(bs->client, &curbotinfo);
 			// if the bot is invisible and want to get the flag, ignore enemies
@@ -5449,7 +5451,7 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if this player is carrying cubes
@@ -5491,7 +5493,7 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if this player is carrying cubes
@@ -5533,7 +5535,7 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -5575,7 +5577,7 @@ int BotTeamFlagCarrier(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -5613,7 +5615,7 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if this player is carrying a flag
@@ -5656,7 +5658,7 @@ void BotCountVisibleEnemies(bot_state_t *bs, int *enemies, float range) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if not within range
@@ -5705,7 +5707,7 @@ void BotCountVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *en
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 
@@ -5768,7 +5770,7 @@ int BotCountAllTeamMates(bot_state_t *bs, vec3_t origin, float range) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if not within range
@@ -5860,7 +5862,7 @@ static qboolean BotEqualizeWeakestHumanTeamScore(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 
@@ -6110,7 +6112,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	if (aim_skill < 0.9) {
 		VectorSubtract(entinfo.origin, bs->enemyorigin, dir);
 		// if the enemy moved a bit
-		if (VectorLengthSquared(dir) > Square(48)) {
+		if (VectorLengthSquared(dir) > 2304) {
 			// if the enemy changed direction
 			if (DotProduct(bs->enemyvelocity, enemyvelocity) < 0) {
 				// aim accuracy should be worse now
@@ -6212,7 +6214,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
 					VectorSubtract(target, bs->eye, dir);
 					// if the hitpoint is far enough from the bot
-					if (VectorLengthSquared(dir) > Square(100)) {
+					if (VectorLengthSquared(dir) > 10000) {
 						VectorCopy(target, bestorigin);
 						// if the projectile does large radial damage try to aim at the ground in front of the enemy
 						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
@@ -6229,7 +6231,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 
 		if (battle_sense > 0.9f) {
 			// any obstacles/walls in between? this happens when using jumppads or teleporters
-			BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->entitynum, mask); // Tobias NOTE: don't set mins/max here!
+			BotAI_Trace(&trace, bs->origin, NULL, NULL, bestorigin, bs->client, mask); // Tobias NOTE: don't set mins/max here!
 
 			if (trace.fraction < 0.99f) {
 #ifdef DEBUG
@@ -6255,7 +6257,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			bestorigin[2] += ps.viewheight;
 		}
 
-		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->client, mask);
 		// if the enemy is NOT hit
 		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
@@ -6263,7 +6265,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
-			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, mask);
+			BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->client, mask);
 			// if the enemy is still NOT hit
 			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 				// aim a bit lower
@@ -6278,11 +6280,11 @@ void BotAimAtEnemy(bot_state_t *bs) {
 			// direction towards the enemy
 			VectorSubtract(bestorigin, bs->origin, dir);
 			// distance towards the enemy
-			dist = VectorLength(dir);
+			dist = VectorLengthSquared(dir);
 			// direction the enemy is moving in
 			VectorSubtract(entinfo.origin, bs->enemyorigin, dir);
 			// if the enemy is NOT pretty far away and strafing just small steps left and right
-			if (!(dist > 100 && VectorLengthSquared(dir) < Square(32))) {
+			if (!(dist > 10000 && VectorLengthSquared(dir) < 1024)) {
 				// if skilled enough and if the weapon is ready to fire, do exact prediction
 				if (aim_skill > 0.8 && bs->cur_ps.weaponstate == WEAPON_READY) {
 					VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -6340,15 +6342,15 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					groundtarget[2] = trace.endpos[2] - 8;
 				}
 				// trace a line from projectile start to ground target
-				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->entitynum, mask);
+				BotAI_Trace(&trace, start, mins, maxs, groundtarget, bs->client, mask);
 				// if hitpoint is not vertically too far from the ground target
 				if (fabs(trace.endpos[2] - groundtarget[2]) < 50) {
 					VectorSubtract(trace.endpos, groundtarget, dir);
 					// if the hitpoint is near enough the ground target
-					if (VectorLengthSquared(dir) < Square(60)) {
+					if (VectorLengthSquared(dir) < 3600) {
 						VectorSubtract(trace.endpos, start, dir);
 						// if the hitpoint is far enough from the bot
-						if (VectorLengthSquared(dir) > Square(100)) {
+						if (VectorLengthSquared(dir) > 10000) {
 							// check if the bot is visible from the ground target
 							trace.endpos[2] += 1;
 
@@ -6374,7 +6376,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 //#ifdef DEBUG
 		}
 //#endif
-		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, bs->eye, mins, maxs, bestorigin, bs->client, mask);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	}
 // Tobias NOTE: for developers...
@@ -6666,7 +6668,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 	if (aim_skill < 0.9) {
 		VectorSubtract(entinfo.origin, bs->enemyorigin, dir);
 		// if the enemy moved a bit
-		if (VectorLengthSquared(dir) > Square(48)) {
+		if (VectorLengthSquared(dir) > 2304) {
 			// if the enemy changed direction
 			if (DotProduct(bs->enemyvelocity, enemyvelocity) < 0) {
 				// aim accuracy should be worse now
@@ -6768,7 +6770,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 				if (trap_BotPredictVisiblePosition(bs->lastenemyorigin, bs->lastenemyareanum, &goal, TFL_DEFAULT, target)) {
 					VectorSubtract(target, bs->eye, dir);
 					// if the hitpoint is far enough from the bot
-					if (VectorLengthSquared(dir) > Square(100)) {
+					if (VectorLengthSquared(dir) > 10000) {
 						VectorCopy(target, bestorigin);
 						// if the projectile does large radial damage try to aim at the ground in front of the enemy
 						if (wi.proj.damagetype & DAMAGETYPE_RADIAL) {
@@ -6785,7 +6787,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 
 		if (battle_sense > 0.9f) {
 			// any obstacles/walls in between? this happens when using jumppads or teleporters
-			BotAI_Trace(&trace, bs->origin, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
+			BotAI_Trace(&trace, bs->origin, wi.proj.mins, wi.proj.maxs, bestorigin, bs->client, mask);
 
 			if (trace.fraction < 0.99f) {
 #ifdef DEBUG
@@ -6811,7 +6813,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 			bestorigin[2] += ps.viewheight;
 		}
 
-		BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->client, mask);
 		// if the enemy is NOT hit
 		if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 			// aim a bit higher
@@ -6819,7 +6821,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "%s: Enemy NOT hit. Aiming higher!\n", netname);
 #endif
-			BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
+			BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, bestorigin, bs->client, mask);
 			// if the enemy is still NOT hit
 			if (trace.fraction < 1.0f && trace.entityNum != entinfo.number) {
 				// aim a bit lower
@@ -6834,11 +6836,11 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 			// direction towards the enemy
 			VectorSubtract(bestorigin, bs->origin, dir);
 			// distance towards the enemy
-			dist = VectorLength(dir);
+			dist = VectorLengthSquared(dir);
 			// direction the enemy is moving in
 			VectorSubtract(entinfo.origin, bs->enemyorigin, dir);
 			// if the enemy is NOT pretty far away and strafing just small steps left and right
-			if (!(dist > 100 && VectorLengthSquared(dir) < Square(32))) {
+			if (!(dist > 10000 && VectorLengthSquared(dir) < 1024)) {
 				// if skilled enough and if the weapon is ready to fire, do exact prediction
 				if (aim_skill > 0.8 && bs->cur_ps.weaponstate == WEAPON_READY) {
 					VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -6896,15 +6898,15 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 					groundtarget[2] = trace.endpos[2] - 8;
 				}
 				// trace a line from projectile start to ground target
-				BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, groundtarget, bs->entitynum, mask);
+				BotAI_Trace(&trace, start, wi.proj.mins, wi.proj.maxs, groundtarget, bs->client, mask);
 				// if hitpoint is not vertically too far from the ground target
 				if (fabs(trace.endpos[2] - groundtarget[2]) < 50) {
 					VectorSubtract(trace.endpos, groundtarget, dir);
 					// if the hitpoint is near enough the ground target
-					if (VectorLengthSquared(dir) < Square(60)) {
+					if (VectorLengthSquared(dir) < 3600) {
 						VectorSubtract(trace.endpos, start, dir);
 						// if the hitpoint is far enough from the bot
-						if (VectorLengthSquared(dir) > Square(100)) {
+						if (VectorLengthSquared(dir) > 10000) {
 							// check if the bot is visible from the ground target
 							trace.endpos[2] += 1;
 
@@ -6930,7 +6932,7 @@ void BotAimAtEnemy_New(bot_state_t *bs) {
 //#ifdef DEBUG
 		}
 //#endif
-		BotAI_Trace(&trace, bs->eye, wi.proj.mins, wi.proj.maxs, bestorigin, bs->entitynum, mask);
+		BotAI_Trace(&trace, bs->eye, wi.proj.mins, wi.proj.maxs, bestorigin, bs->client, mask);
 		VectorCopy(trace.endpos, bs->aimtarget);
 	}
 // Tobias NOTE: for developers...
@@ -7098,7 +7100,7 @@ static qboolean BotMayRadiusDamageTeamMate(bot_state_t *bs, vec3_t origin, float
 	}
 
 	numListedEntities = trap_EntitiesInBox(mins, maxs, entityList, MAX_GENTITIES);
-	team = g_entities[bs->entitynum].client->sess.sessionTeam;
+	team = g_entities[bs->client].client->sess.sessionTeam;
 	teampreservation = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_TEAMPRESERVATION, 0, 1);
 
 	for (e = 0; e < numListedEntities; e++) {
@@ -7165,7 +7167,7 @@ Tobias TODO: Adjust 'end' and 'mins'/'maxs' (default was 8).
 =======================================================================================================================================
 */
 void BotCheckAttack(bot_state_t *bs) {
-	float points, attack_accuracy, reactiontime, firethrottle, *mins, *maxs;
+	float points, attack_accuracy, reactiontime, firethrottle;
 	int attackentity, fov, weaponfov, mask;
 	//float selfpreservation;
 	vec3_t forward, right, start, end, dir, angles;
@@ -7173,9 +7175,6 @@ void BotCheckAttack(bot_state_t *bs) {
 	weapon_t weapon;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
-	static vec3_t rmins = {-2, -2, -2}, rmaxs = {2, 2, 2}; // rockets/missiles
-//	static vec3_t bmins = {-6, -6, -6}, bmaxs = {6, 6, 6}; // satchel/dynamite/bombs
-//	static vec3_t fmins = {-30, -30, -30}, fmaxs = {30, 30, 30}; // flame chunks
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
 
@@ -7284,89 +7283,65 @@ void BotCheckAttack(bot_state_t *bs) {
 
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > 3600) {
 		return;
 	}
 	// get some weapon specific attack values
 	switch (bs->weaponnum) {
 		case WP_GAUNTLET:
 			weaponfov = 90;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_MACHINEGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_CHAINGUN:
 			weaponfov = 80;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_SHOTGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAILGUN:
 			weaponfov = 40; // 30 (pre-aiming?)
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PROXLAUNCHER:
 		case WP_GRENADELAUNCHER:
 			weaponfov = 120;
-			mins = rmins;
-			maxs = rmaxs;
 			//mask = MASK_MISSILESHOT;
 			mask = MASK_SHOT;
 			break;
 		case WP_NAPALMLAUNCHER:
 		case WP_ROCKETLAUNCHER:
 			weaponfov = 50;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BEAMGUN:
 			weaponfov = 80;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_RAILGUN:
 			weaponfov = 20;
-			mins = NULL;
-			maxs = NULL;
 			mask = MASK_SHOT;
 			break;
 		case WP_PLASMAGUN:
 			weaponfov = 20;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		case WP_BFG:
 			weaponfov = 20;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 		default:
 			weaponfov = 50;
-			mins = rmins;
-			maxs = rmaxs;
 			mask = MASK_SHOT;
 			break;
 	}
 
-	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
+	if (VectorLengthSquared(dir) < 10000) {
 		fov = 120;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
@@ -7424,7 +7399,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	}
 	// end point aiming at
 	VectorMA(start, 1000, forward, end);
-	BotAI_Trace(&bsptrace, start, mins, maxs, end, bs->entitynum, mask);
+	BotAI_Trace(&bsptrace, start, mins, maxs, end, bs->client, mask);
 	// if the entity is a client
 	if (bsptrace.entityNum >= 0 && bsptrace.entityNum < MAX_CLIENTS) {
 		if (bsptrace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
@@ -7618,7 +7593,7 @@ void BotCheckAttack_New(bot_state_t *bs) {
 
 	VectorSubtract(bs->aimtarget, bs->eye, dir);
 	// if using a close combat weapon and the enemy is too far away
-	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > Square(60)) {
+	if (BotUsesCloseCombatWeapon(bs) && BotWantsToRetreat(bs) && VectorLengthSquared(dir) > 3600) {
 		return;
 	}
 	// get some weapon specific attack values
@@ -7676,7 +7651,7 @@ void BotCheckAttack_New(bot_state_t *bs) {
 			break;
 	}
 
-	if (VectorLengthSquared(dir) < Square(100)) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
+	if (VectorLengthSquared(dir) < 10000) { // Tobias NOTE: hmm, I still don't see a reason for this (keep it for spin-up weapons)?
 		fov = 120;
 #ifdef DEBUG
 		BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "%s: Dist < 100, FOV: %i.\n", netname, fov);
@@ -7732,7 +7707,7 @@ void BotCheckAttack_New(bot_state_t *bs) {
 	}
 	// end point aiming at
 	VectorMA(start, 1000, forward, end);
-	BotAI_Trace(&bsptrace, start, wi.proj.mins, wi.proj.maxs, end, bs->entitynum, mask);
+	BotAI_Trace(&bsptrace, start, wi.proj.mins, wi.proj.maxs, end, bs->client, mask);
 	// if the entity is a client
 	if (bsptrace.entityNum >= 0 && bsptrace.entityNum < MAX_CLIENTS) {
 		if (bsptrace.entityNum != attackentity) { // Tobias CHECK: isn't this already checked above? Remove this twice?
@@ -7832,7 +7807,7 @@ void BotMapScripts(bot_state_t *bs) {
 				continue;
 			}
 			// if the entity isn't the bot self
-			if (entinfo.number == bs->entitynum) {
+			if (entinfo.number == bs->client) {
 				continue;
 			}
 			// if the entity isn't dead
@@ -7988,7 +7963,7 @@ static int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activatego
 
 		activategoal->shoot = qtrue;
 
-		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, goalorigin, bs->entitynum, MASK_SHOT);
+		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, goalorigin, bs->client, MASK_SHOT);
 		// if the button is visible from the current position
 		if (bsptrace.fraction >= 1.0f || bsptrace.entityNum == entitynum) {
 			activategoal->goal.entitynum = entitynum; // NOTE: this is the entity number of the shootable button
@@ -8730,7 +8705,7 @@ void BotObstacleAvoidanceMoveExt(bot_state_t *bs, bot_moveresult_t *moveresult, 
 			VectorMA(bs->origin, 32, sideward, start);
 			VectorMA(ent->client->ps.origin, 32, sideward, end);
 
-			BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			BotAI_Trace(&trace, start, mins, maxs, end, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if something is hit
 			if (trace.startsolid || trace.fraction < 1.0f) {
 				// flip the direction
@@ -8776,7 +8751,7 @@ void BotObstacleAvoidanceMoveExt(bot_state_t *bs, bot_moveresult_t *moveresult, 
 
 			AngleVectorsForward(avoidAngles, avoidRight_dir);
 			VectorMA(bs->origin, blocked_dist, avoidRight_dir, block_pos);
-			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 
 			if (!trace.allsolid && !trace.startsolid) {
 				if (trace.fraction >= 1.0f) {
@@ -8804,7 +8779,7 @@ void BotObstacleAvoidanceMoveExt(bot_state_t *bs, bot_moveresult_t *moveresult, 
 
 			AngleVectorsForward(avoidAngles, avoidLeft_dir);
 			VectorMA(bs->origin, blocked_dist, avoidLeft_dir, block_pos);
-			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			BotAI_Trace(&trace, bs->origin, mins, maxs, block_pos, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 
 			if (!trace.allsolid && !trace.startsolid) {
 				if (trace.fraction >= 1.0f) {
@@ -9090,7 +9065,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		if (moveresult->blockentity >= MAX_CLIENTS && (moveresult->blockentity == redobelisk.entitynum || moveresult->blockentity == blueobelisk.entitynum)) {
 			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 			VectorMA(bs->origin, 2, dir1, end);
-			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if nothing is hit
 			if (trace.fraction >= 1.0f) {
 				return;
@@ -9162,7 +9137,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		if (DotProduct(dir2, dir1) > 0.0 || !BotSameTeam(bs, moveresult->blockentity)) {
 			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 			VectorMA(bs->origin, 24, dir1, end);
-			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if nothing is hit
 			if (trace.fraction >= 1.0f) {
 				return;
@@ -9406,7 +9381,7 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if the entity isn't dead
@@ -9463,7 +9438,7 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 		// now check if the teammate is blocked, increase the distance accordingly
 		trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 		VectorMA(bs->origin, mindist, v2, end);
-		BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		BotAI_TraceEntities(&trace, bs->origin, mins, maxs, end, bs->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 		// if the teammate is too close (blocked)
 		if (trace.entityNum == i && (trace.startsolid || trace.fraction < 1.0f)) {
 			// stop crouching to gain speed
@@ -10177,7 +10152,7 @@ void BotSetEntityNumForGoalWithModel(bot_goal_t *goal, int eType, char *modelnam
 
 		VectorSubtract(goal->origin, ent->s.origin, dir);
 
-		if (VectorLengthSquared(dir) < Square(10)) {
+		if (VectorLengthSquared(dir) < 100) {
 			goal->entitynum = i;
 			return;
 		}
@@ -10207,7 +10182,7 @@ void BotSetEntityNumForGoal(bot_goal_t *goal, char *classname) {
 
 		VectorSubtract(goal->origin, ent->s.origin, dir);
 
-		if (VectorLengthSquared(dir) < Square(10)) {
+		if (VectorLengthSquared(dir) < 100) {
 			goal->entitynum = i;
 			return;
 		}
@@ -10237,7 +10212,7 @@ static void BotSetEntityNumForGoalWithActivator(bot_goal_t *goal, char *classnam
 
 		VectorSubtract(goal->origin, ent->s.origin, dir);
 
-		if (VectorLengthSquared(dir) < Square(10)) {
+		if (VectorLengthSquared(dir) < 100) {
 			goal->entitynum = i;
 			return;
 		}

@@ -801,7 +801,7 @@ static void BotMatch_Camp(bot_state_t *bs, bot_match_t *match) {
 	// in CTF it could be the base
 	if (match->subtype & ST_THERE) {
 		// camp at the spot the bot is currently standing
-		bs->teamgoal.entitynum = bs->entitynum;
+		bs->teamgoal.entitynum = bs->client;
 		bs->teamgoal.areanum = bs->areanum;
 
 		VectorCopy(bs->origin, bs->teamgoal.origin);

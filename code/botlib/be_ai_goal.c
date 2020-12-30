@@ -1008,7 +1008,7 @@ void BotFindEntityForLevelItem(levelitem_t *li) {
 			// check if the entity is very close
 			VectorSubtract(li->origin, entinfo.origin, dir);
 
-			if (VectorLength(dir) < 30) {
+			if (VectorLengthSquared(dir) < 900) {
 				// found an entity for this level item
 				li->entitynum = ent;
 			}
@@ -1119,7 +1119,7 @@ void BotUpdateEntityItems(void) {
 				// check if the entity is very close
 				VectorSubtract(li->origin, entinfo.origin, dir);
 
-				if (VectorLength(dir) < 30) {
+				if (VectorLengthSquared(dir) < 900) {
 					// found an entity for this level item
 					li->entitynum = ent;
 					// if the origin is different

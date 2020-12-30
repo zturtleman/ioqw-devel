@@ -172,7 +172,6 @@ void BotInitMoveState(int movestate, bot_initmove_t *initmove) {
 	VectorCopy(initmove->origin, ms->origin);
 	VectorCopy(initmove->velocity, ms->velocity);
 
-	ms->entitynum = initmove->entitynum;
 	ms->client = initmove->client;
 	ms->thinktime = initmove->thinktime;
 	ms->presencetype = initmove->presencetype;
@@ -640,7 +639,7 @@ static int BotOnTopOfEntity(bot_movestate_t *ms) {
 
 	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 	VectorMA(ms->origin, -4, up, end);
-	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and hitting an entity
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 		return trace.entityNum;
@@ -1164,7 +1163,7 @@ static int BotGapDistance(bot_movestate_t *ms, vec3_t origin, vec3_t hordir) {
 		end[2] -= 48 + sv_maxbarrier->value;
 
 		AAS_PresenceTypeBoundingBox(PRESENCE_CROUCH, mins, maxs);
-		trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		trace = AAS_Trace(start, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 		// if solid is found the bot can't walk any further and fall into a gap
 		if (!trace.startsolid) {
 			// if it is a gap
@@ -1207,7 +1206,7 @@ static int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	// a stepheight higher to avoid low ceiling
 	maxs[2] += sv_maxstep->value;
 	// trace horizontally in the move direction
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// this shouldn't happen... but we check anyway
 	if (trace.startsolid) {
 		return qfalse;
@@ -1221,7 +1220,7 @@ static int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed) {
 	// ignore obstacles if the bot can step on
 	mins[2] += sv_maxstep->value;
 	// trace horizontally in the move direction again
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// again this shouldn't happen
 	if (trace.startsolid) {
 		return qfalse;
@@ -1256,7 +1255,7 @@ static int BotCheckBarrierWalkLeft(bot_movestate_t *ms, vec3_t dir, float speed)
 	// a stepheight higher to avoid low ceiling
 	maxs[2] += sv_maxstep->value;
 	// trace horizontally in the move direction
-	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(start, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// this shouldn't happen... but we check anyway
 	if (trace.startsolid) {
 		return qtrue;
@@ -1286,7 +1285,7 @@ static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qbo
 
 	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
 	// trace right up
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// this shouldn't happen... but we check anyway
 	if (trace.startsolid) {
 		return qfalse;
@@ -1306,7 +1305,7 @@ static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qbo
 
 	end[2] = trace.endpos[2];
 	// trace from previous trace end pos horizontally in the move direction
-	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(start, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// again this shouldn't happen
 	if (trace.startsolid) {
 		return qfalse;
@@ -1317,7 +1316,7 @@ static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qbo
 
 	end[2] = ms->origin[2];
 	// trace down from the previous trace end pos
-	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(start, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if solid
 	if (trace.startsolid) {
 		return qfalse;
@@ -1367,7 +1366,7 @@ static int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int 
 	aas_clientmove_t move;
 	qboolean predictSuccess;
 
-	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) {
+	if (AAS_OnGround(ms->origin, ms->presencetype, ms->client)) {
 		ms->moveflags |= MFL_ONGROUND;
 	}
 	// if the bot is on the ground
@@ -1433,7 +1432,7 @@ static int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int 
 			scoutFlag = qfalse;
 		}
 		// movement prediction
-		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue, scoutFlag, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
+		predictSuccess = AAS_PredictClientMovement(&move, ms->client, origin, presencetype, qtrue, scoutFlag, ms->velocity, cmdmove, cmdframes, maxframes, 0.1f, stopevent, 0, qfalse);
 		// check if prediction failed
 		if (!predictSuccess) {
 #ifdef DEBUG
@@ -1552,7 +1551,7 @@ static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bo
 	currentspeed = DotProduct(ms->velocity, dir) + 32;
 	// do a full trace to check for distant obstacles to avoid, depending on current speed
 	VectorMA(ms->origin, currentspeed * 1.4f, dir, end); // Tobias NOTE: tweak this (replaced thinktime dependency)
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 	// if not started in solid and NOT hitting the world entity
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
 		result->blocked = qtrue;
@@ -1563,7 +1562,7 @@ static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bo
 	// if no blocking obstacle was found, check for nearby entities only (sometimes world entity is hit before hitting nearby entities... this can cause entities to go unnoticed)
 	} else {
 		VectorMA(ms->origin, 4, dir, end);
-		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+		trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 		// if not started in solid and hitting an entity
 		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 			result->blocked = qtrue;
@@ -1575,7 +1574,7 @@ static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bo
 		// also check bottom
 		if (checkbottom) {
 			VectorMA(ms->origin, -4, up, end);
-			trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
+			trace = AAS_TraceEntities(ms->origin, mins, maxs, end, ms->client, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BOTCLIP|CONTENTS_BODY|CONTENTS_CORPSE);
 			// if not started in solid and hitting an entity
 			if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE) {
 				result->blocked = qtrue;
@@ -1673,8 +1672,6 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach) 
 	hordir[2] = 0;
 
 	dist = VectorNormalize(hordir);
-	// check if blocked
-	BotCheckBlocked(ms, hordir, qtrue, &result); // Tobias NOTE: checking for blocked movement without doing a move?
 
 	if (dist < 10) {
 		// move straight to the reachability end
@@ -1826,7 +1823,7 @@ bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t *ms, aas_reachability_t *
 		scoutFlag = qfalse;
 	}
 	// movement prediction
-	predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
+	predictSuccess = AAS_PredictClientMovement(&move, ms->client, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse);
 	// check if prediction failed
 	if (!predictSuccess) {
 #ifdef DEBUG
@@ -2106,13 +2103,11 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 	// check if the bot is blocked by anything
 	VectorSubtract(reach->start, ms->origin, dir);
 	VectorNormalize(dir);
-	// check if blocked
-	BotCheckBlocked(ms, dir, qtrue, &result); // Tobias NOTE: checking for blocked movement without doing a move?
 	// if the reachability start and end are practically above each other
 	VectorSubtract(reach->end, reach->start, dir);
 
 	dir[2] = 0;
-	reachhordist = VectorLength(dir);
+	reachhordist = VectorLengthSquared(dir);
 	// move straight to the reachability start
 	hordir[0] = reach->start[0] - ms->origin[0];
 	hordir[1] = reach->start[1] - ms->origin[1];
@@ -2136,7 +2131,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 			scoutFlag = qfalse;
 		}
 		// movement prediction
-		predictSuccess = AAS_PredictClientMovement(&move, ms->entitynum, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
+		predictSuccess = AAS_PredictClientMovement(&move, ms->client, reach->end, PRESENCE_NORMAL, qtrue, scoutFlag, ms->velocity, cmdmove, 2, 2, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, 0, qfalse); //qtrue
 		// check if prediction failed
 		if (!predictSuccess) {
 #ifdef DEBUG
@@ -2147,7 +2142,7 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		// check for nearby gap behind the current ledge
 		gapdist = BotGapDistance(ms, reach->end, hordir);
 		// if there is no gap under the current ledge
-		if (reachhordist < 20) {
+		if (reachhordist < 400) {
 			// if there is a jumpad, lava or slime under the current ledge or if the bot is walking
 			if (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP) || ms->moveflags & MFL_WALK) {
 				speed = 200;
@@ -2593,7 +2588,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 		return result;
 	}
 	// if standing on the plat
-	if (BotOnMover(ms->origin, ms->entitynum, reach)) {
+	if (BotOnMover(ms->origin, ms->client, reach)) {
 #ifdef DEBUG_ELEVATOR
 		botimport.Print(PRT_MESSAGE, "bot on elevator\n");
 #endif // DEBUG_ELEVATOR
@@ -2882,14 +2877,14 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 		return result;
 	}
 	// if standing ontop of the func_bobbing
-	if (BotOnMover(ms->origin, ms->entitynum, reach)) {
+	if (BotOnMover(ms->origin, ms->client, reach)) {
 #ifdef DEBUG_FUNCBOB
 		botimport.Print(PRT_MESSAGE, "bot on func_bobbing\n");
 #endif // DEBUG_FUNCBOB
 		// if near end point of reachability
 		VectorSubtract(bob_origin, bob_end, dir);
 
-		if (VectorLength(dir) < 24) {
+		if (VectorLengthSquared(dir) < 576) {
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "bot moving to reachability end\n");
 #endif // DEBUG_FUNCBOB
@@ -2983,7 +2978,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 		// if the func_bobbing is NOT in its start position
 		VectorSubtract(bob_origin, bob_start, dir);
 
-		if (VectorLength(dir) > 16) {
+		if (VectorLengthSquared(dir) > 256) {
 #ifdef DEBUG_FUNCBOB
 			botimport.Print(PRT_MESSAGE, "func_bobbing not at start\n");
 #endif
@@ -3413,7 +3408,7 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal) {
 	//float dist, speed;
 	int speed;
 #ifdef DEBUG
-	//botimport.Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->entitynum - 1));
+	//botimport.Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->client - 1));
 	//AAS_ClearShownDebugLines();
 	//AAS_DebugLine(ms->origin, goal->origin, LINECOLOR_RED);
 #endif // DEBUG
@@ -3517,7 +3512,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	ms->moveflags &= ~(MFL_SWIMMING|MFL_AGAINSTLADDER);
 	// set some of the move flags
 	// NOTE: the MFL_ONGROUND flag is also set in the higher AI
-	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) {
+	if (AAS_OnGround(ms->origin, ms->presencetype, ms->client)) {
 		ms->moveflags |= MFL_ONGROUND;
 	}
 
@@ -3609,7 +3604,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	}
 	// if the bot is on the ground, swimming or against a ladder
 	if (ms->moveflags & (MFL_ONGROUND|MFL_SWIMMING|MFL_AGAINSTLADDER)) {
-		//botimport.Print(PRT_MESSAGE, "%s: onground, swimming or against ladder\n", ClientName(ms->entitynum - 1));
+		//botimport.Print(PRT_MESSAGE, "%s: onground, swimming or against ladder\n", ClientName(ms->client - 1));
 		AAS_ReachabilityFromNum(ms->lastreachnum, &lastreach);
 		// reachability area the bot is in
 		//ms->areanum = BotReachabilityArea(ms->origin, ((lastreach.traveltype & TRAVELTYPE_MASK) != TRAVEL_ELEVATOR));
@@ -3848,7 +3843,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		}
 
 		if (ms->lastreachnum) {
-			//botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum - 1));
+			//botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->client - 1));
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
 #ifdef DEBUG
 			result->traveltype = reach.traveltype;

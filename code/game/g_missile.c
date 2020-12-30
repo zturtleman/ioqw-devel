@@ -58,7 +58,7 @@ static qboolean G_BounceMissile(gentity_t *ent, trace_t *trace) {
 		} else {
 			VectorScale(ent->s.pos.trDelta, 0.65, ent->s.pos.trDelta);
 			// check for stop
-			if (trace->plane.normal[2] > 0.2 && VectorLength(ent->s.pos.trDelta) < 40) {
+			if (trace->plane.normal[2] > 0.2 && VectorLengthSquared(ent->s.pos.trDelta) < 1600) {
 				G_SetOrigin(ent, trace->endpos);
 				ent->s.time = level.time / 4;
 				return qfalse;

@@ -837,7 +837,7 @@ void ClientThink_Real(gentity_t *ent) {
 	Pmove(&pm);
 // Tobias HACK: find a better, more natural-looking solution
 	// prevent players from standing ontop of each other
-	if (ent->client->ps.groundEntityNum >= 0 && ent->client->ps.groundEntityNum < MAX_CLIENTS && VectorLength(ent->client->ps.velocity) < 200) {
+	if (ent->client->ps.groundEntityNum >= 0 && ent->client->ps.groundEntityNum < MAX_CLIENTS && VectorLengthSquared(ent->client->ps.velocity) < 40000) {
 		// give them some random velocity
 		ent->client->ps.velocity[0] += crandom() * 100;
 		ent->client->ps.velocity[1] += crandom() * 100;

@@ -377,7 +377,7 @@ int BotVisibleEnemies(bot_state_t *bs) {
 			continue;
 		}
 		// if the entity isn't the bot self
-		if (entinfo.number == bs->entitynum) {
+		if (entinfo.number == bs->client) {
 			continue;
 		}
 		// if the entity isn't dead

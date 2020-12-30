@@ -1345,7 +1345,6 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 
 	bs->inuse = qtrue;
 	bs->client = client;
-	bs->entitynum = client;
 	bs->setupcount = 4;
 	bs->entergame_time = FloatTime();
 	bs->ms = trap_BotAllocMoveState();
@@ -1429,7 +1428,7 @@ Called when a bot enters the intermission or observer mode and when the level is
 =======================================================================================================================================
 */
 void BotResetState(bot_state_t *bs) {
-	int client, entitynum, inuse;
+	int client, inuse;
 	int movestate, goalstate, chatstate, weaponstate;
 	bot_settings_t settings;
 	int character;
@@ -1442,7 +1441,6 @@ void BotResetState(bot_state_t *bs) {
 
 	inuse = bs->inuse;
 	client = bs->client;
-	entitynum = bs->entitynum;
 	character = bs->character;
 	movestate = bs->ms;
 	goalstate = bs->gs;
@@ -1465,7 +1463,6 @@ void BotResetState(bot_state_t *bs) {
 
 	bs->inuse = inuse;
 	bs->client = client;
-	bs->entitynum = entitynum;
 	bs->character = character;
 	bs->entergame_time = entergame_time;
 	// reset several states

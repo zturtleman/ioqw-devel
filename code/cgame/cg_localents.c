@@ -406,9 +406,9 @@ static void CG_AddMoveScaleFade(localEntity_t *le) {
 	// if the view would be "inside" the sprite, kill the sprite so it doesn't add too much overdraw
 	VectorSubtract(re->origin, cg.refdef.vieworg, delta);
 
-	len = VectorLength(delta);
+	len = VectorLengthSquared(delta);
 
-	if (len < le->radius) {
+	if (len < le->radius * le->radius) {
 		CG_FreeLocalEntity(le);
 		return;
 	}
@@ -832,9 +832,9 @@ void CG_AddScorePlum(localEntity_t *le) {
 	// if the view would be "inside" the sprite, kill the sprite so it doesn't add too much overdraw
 	VectorSubtract(origin, cg.refdef.vieworg, delta);
 
-	len = VectorLength(delta);
+	len = VectorLengthSquared(delta);
 
-	if (len < 20) {
+	if (len < 400) {
 		CG_FreeLocalEntity(le);
 		return;
 	}
