@@ -2215,8 +2215,23 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		if (!trap_BotGetSecondGoal(bs->gs, &goal)) {
 			trap_BotGetTopGoal(bs->gs, &goal);
 		}
+		// look towards our future direction (like looking around a corner as we approach it)
+		if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
+			if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
+				bs->ideal_viewangles[1] -= 45;
+			} else if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1]) < -45) {
+				bs->ideal_viewangles[1] += 45;
+			} else {
+				bs->ideal_viewangles[1] = moveresult.ideal_viewangles[1];
+			}
 
-		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			bs->ideal_viewangles[1] = AngleNormalize360(bs->ideal_viewangles[1]);
+			bs->ideal_viewangles[0] = moveresult.ideal_viewangles[0];
+			bs->ideal_viewangles[0] = 0.5 * AngleNormalize180(bs->ideal_viewangles[0]);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK NBG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
+#endif
+		} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
@@ -2437,7 +2452,23 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #endif
 		}
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+		// look towards our future direction (like looking around a corner as we approach it)
+		if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
+			if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
+				bs->ideal_viewangles[1] -= 45;
+			} else if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1]) < -45) {
+				bs->ideal_viewangles[1] += 45;
+			} else {
+				bs->ideal_viewangles[1] = moveresult.ideal_viewangles[1];
+			}
+
+			bs->ideal_viewangles[1] = AngleNormalize360(bs->ideal_viewangles[1]);
+			bs->ideal_viewangles[0] = moveresult.ideal_viewangles[0];
+			bs->ideal_viewangles[0] = 0.5 * AngleNormalize180(bs->ideal_viewangles[0]);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK LTG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
+#endif
+		} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
@@ -2909,7 +2940,23 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE CHASE: AIMING!\n");
 #endif
 		} else {
-			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			// look towards our future direction (like looking around a corner as we approach it)
+			if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
+				if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
+					bs->ideal_viewangles[1] -= 45;
+				} else if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1]) < -45) {
+					bs->ideal_viewangles[1] += 45;
+				} else {
+					bs->ideal_viewangles[1] = moveresult.ideal_viewangles[1];
+				}
+
+				bs->ideal_viewangles[1] = AngleNormalize360(bs->ideal_viewangles[1]);
+				bs->ideal_viewangles[0] = moveresult.ideal_viewangles[0];
+				bs->ideal_viewangles[0] = 0.5 * AngleNormalize180(bs->ideal_viewangles[0]);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE CHASE: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
+#endif
+			} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
@@ -3394,7 +3441,23 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE NBG: AIMING!\n");
 #endif
 		} else {
-			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			// look towards our future direction (like looking around a corner as we approach it)
+			if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
+				if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
+					bs->ideal_viewangles[1] -= 45;
+				} else if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1]) < -45) {
+					bs->ideal_viewangles[1] += 45;
+				} else {
+					bs->ideal_viewangles[1] = moveresult.ideal_viewangles[1];
+				}
+
+				bs->ideal_viewangles[1] = AngleNormalize360(bs->ideal_viewangles[1]);
+				bs->ideal_viewangles[0] = moveresult.ideal_viewangles[0];
+				bs->ideal_viewangles[0] = 0.5 * AngleNormalize180(bs->ideal_viewangles[0]);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE NBG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
+#endif
+			} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
