@@ -1755,6 +1755,9 @@ int AINode_Wait(bot_state_t *bs) {
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "WAIT: MOVERESULT View angles are used for the movement.\n");
+#endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
 		if (random() < bs->thinktime * 0.8) {
@@ -1763,13 +1766,22 @@ int AINode_Wait(bot_state_t *bs) {
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
 		}
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "WAIT: WAITING for something.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "WAIT:!BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 		// FIXME: look at cluster portals?
 		} else if (VectorLengthSquared(moveresult.movedir)) {
 			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "WAIT:!BFL_IDEALVIEWSET: VectorLengthSquared(moveresult.movedir).\n");
+#endif
 		} else if (random() < bs->thinktime * 0.8) {
 			BotRoamGoal(bs, target);
 			VectorSubtract(target, bs->origin, dir);
@@ -2002,6 +2014,9 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "ACTIVATE ENTITY: MOVERESULT View angles are used for the movement.\n");
+#endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
 		if (random() < bs->thinktime * 0.8) {
@@ -2010,12 +2025,21 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
 		}
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "ACTIVATE ENTITY: WAITING for something.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (trap_BotMovementViewTarget(bs->ms, goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "ACTIVATE ENTITY: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 		} else {
 			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "ACTIVATE ENTITY: !BFL_IDEALVIEWSET: Default else.\n");
+#endif
 		}
 
 		bs->ideal_viewangles[2] *= 0.5;
@@ -2170,6 +2194,9 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK NBG: MOVERESULT View angles are used for the movement.\n");
+#endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
 		if (random() < bs->thinktime * 0.8) {
@@ -2178,6 +2205,9 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
 		}
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "SEEK NBG: WAITING for something.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (!trap_BotGetSecondGoal(bs->gs, &goal)) {
 			trap_BotGetTopGoal(bs->gs, &goal);
@@ -2186,9 +2216,15 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK NBG: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 		// FIXME: look at cluster portals?
 		} else {
 			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "SEEK NBG: !BFL_IDEALVIEWSET: Default else.\n");
+#endif
 		}
 
 		bs->ideal_viewangles[2] *= 0.5;
@@ -2383,6 +2419,9 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK LTG: MOVERESULT View angles are used for the movement.\n");
+#endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
 		if (random() < bs->thinktime * 0.8) {
@@ -2391,13 +2430,22 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
 		}
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "SEEK LTG: WAITING for something.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK LTG: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 		// FIXME: look at cluster portals?
 		} else if (VectorLengthSquared(moveresult.movedir)) {
 			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK LTG: VectorLengthSquared(moveresult.movedir).\n");
+#endif
 		} else if (random() < bs->thinktime * 0.8) {
 			BotRoamGoal(bs, target);
 			VectorSubtract(target, bs->origin, dir);
@@ -2839,6 +2887,9 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 	// if the view angles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE CHASE: MOVERESULT View angles are used for the movement.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
 		if (bs->chase_time > FloatTime() - 2) {
 // Tobias DEBUG
@@ -2848,12 +2899,21 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 				BotAimAtEnemy_New(bs);
 			}
 // Tobias END
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE CHASE: AIMING!\n");
+#endif
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BATTLE CHASE: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 			} else {
 				VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "BATTLE CHASE: !BFL_IDEALVIEWSET: Default else.\n");
+#endif
 			}
 		}
 
@@ -3088,6 +3148,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE RETREAT: MOVERESULT View angles are used for the movement.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET) && !(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)) {
 		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		// if the bot is skilled enough
@@ -3100,12 +3163,21 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 				BotAimAtEnemy_New(bs);
 			}
 // Tobias END
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE RETREAT: AIMING!\n");
+#endif
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BATTLE RETREAT: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 			} else {
 				VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "BATTLE RETREAT: !BFL_IDEALVIEWSET: Default else.\n");
+#endif
 			}
 
 			bs->ideal_viewangles[2] *= 0.5;
@@ -3297,6 +3369,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	// if the view is fixed for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE NBG: MOVERESULT View angles are used for the movement.\n");
+#endif
 	} else if (!(bs->flags & BFL_IDEALVIEWSET) && !(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)) {
 		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		// if the bot is skilled enough
@@ -3309,12 +3384,21 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 				BotAimAtEnemy_New(bs);
 			}
 // Tobias END
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE NBG: AIMING!\n");
+#endif
 		} else {
 			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "BATTLE NBG: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
+#endif
 			} else {
 				VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "BATTLE NBG: !BFL_IDEALVIEWSET: Default else.\n");
+#endif
 			}
 
 			bs->ideal_viewangles[2] *= 0.5;
