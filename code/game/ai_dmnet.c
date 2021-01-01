@@ -565,8 +565,7 @@ static int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t 
 				}
 			}
 			// look strategically around for enemies
-			if (random() < bs->thinktime * 0.8) {
-				BotRoamGoal(bs, target);
+			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
 				bs->ideal_viewangles[2] *= 0.5;
@@ -764,8 +763,7 @@ static int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t 
 				bs->arrive_time = FloatTime();
 			}
 			// look strategically around for enemies
-			if (random() < bs->thinktime * 0.8) {
-				BotRoamGoal(bs, target);
+			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
 				bs->ideal_viewangles[2] *= 0.5;
@@ -1752,8 +1750,7 @@ int AINode_Wait(bot_state_t *bs) {
 	// check if the bot is blocking teammates
 	BotCheckBlockedTeammates(bs);
 	// look strategically around for enemies
-	if (random() < bs->thinktime * 0.8) {
-		BotRoamGoal(bs, target);
+	if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 		VectorSubtract(target, bs->origin, dir);
 		VectorToAngles(dir, bs->ideal_viewangles);
 		bs->ideal_viewangles[2] *= 0.5;
@@ -1989,8 +1986,8 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 #endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
-		if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
+		// look strategically around for enemies
+		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
@@ -2169,8 +2166,8 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 #endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
-		if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
+		// look strategically around for enemies
+		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
@@ -2179,6 +2176,15 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 #endif
 		}
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
+		// look strategically around for enemies
+		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
+			VectorSubtract(target, bs->origin, dir);
+			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK NBG: !BFL_IDEALVIEWSET: BotRoamGoal *** DYNAMIC ***.\n");
+#endif
+		}
+
 		if (!trap_BotGetSecondGoal(bs->gs, &goal)) {
 			trap_BotGetTopGoal(bs->gs, &goal);
 		}
@@ -2409,8 +2415,8 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #endif
 	// if waiting for something
 	} else if (moveresult.flags & MOVERESULT_WAITING) {
-		if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
+		// look strategically around for enemies
+		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
@@ -2435,7 +2441,44 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK LTG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
 #endif
-		} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+/*
+		// look around if nearly reached the long term goal
+		} else if (LTGNearlyFulfilled(bs)) {
+			// look strategically around for enemies
+			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
+				bs->roamgoalcnt--;
+
+				if (bs->roamgoalcnt < 0) {
+					bs->roamgoalcnt = 1 + (rand() & 1);
+				}
+
+				if (bs->roamgoalcnt > 0) {
+					VectorSubtract(target, bs->origin, dir);
+					VectorToAngles(dir, bs->ideal_viewangles);
+					bs->ideal_viewangles[2] *= 0.5;
+				}
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "SEEK LTG: !BFL_IDEALVIEWSET: LTGNearlyFulfilled *** NOT DYNAMIC ***.\n");
+#endif
+			} else if (bs->roamgoalcnt > 0) {
+				if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
+					bs->weaponnum = moveresult.weapon;
+#ifdef DEBUG
+					BotAI_Print(PRT_MESSAGE, S_COLOR_BLACK "SEEK LTG: !BFL_IDEALVIEWSET: MOVERESULT_MOVEMENTWEAPON *** NOT DYNAMIC ***.\n");
+#endif
+				}
+			}
+*/
+		} else {
+			// look strategically around for enemies
+			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
+				VectorSubtract(target, bs->origin, dir);
+				VectorToAngles(dir, bs->ideal_viewangles);
+				bs->ideal_viewangles[2] *= 0.5;
+			}
+		}
+
+		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
@@ -2447,8 +2490,8 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "SEEK LTG: !BFL_IDEALVIEWSET: VectorLengthSquared(moveresult.movedir).\n");
 #endif
-		} else if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
+		// look strategically around for enemies
+		} else if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 			bs->ideal_viewangles[2] *= 0.5;
@@ -2922,6 +2965,14 @@ int AINode_Battle_Chase(bot_state_t *bs) {
 				bs->ideal_viewangles[0] = 0.5 * AngleNormalize180(bs->ideal_viewangles[0]);
 #ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE CHASE: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
+#endif
+			}
+			// look strategically around for enemies
+			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
+				VectorSubtract(target, bs->origin, dir);
+				VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+				BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE CHASE: chase_time *** DYNAMIC ***.\n");
 #endif
 			} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);

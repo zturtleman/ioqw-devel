@@ -218,6 +218,11 @@ typedef struct bot_state_s {
 	vec3_t viewangles;						// current view angles
 	vec3_t ideal_viewangles;				// ideal view angles
 	vec3_t viewanglespeed;
+	float dynamicroamgoal_time;				// next time the roaming view goal for dynamic targets is to be determined
+	qboolean hasDynamicRoamGoal;
+	vec3_t dynamicRoamGoal;					// only used if solely looking for dynamic roam goals
+	float roamgoal_time;					// next time the roaming view goal is to be determined
+	int roamgoalcnt;						// do not roam view if this is zero
 	int ltgtype;							// long term goal type
 	// team goals
 	int teammate;							// teammate involved in this team goal

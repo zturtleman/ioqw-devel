@@ -112,8 +112,10 @@ void BotCountVisibleEnemies(bot_state_t *bs, int *enemies, float range);
 qboolean InFieldOfVision(vec3_t viewangles, int fov, vec3_t angles);
 // returns true and sets the .enemy field when an enemy is found
 const int BotFindEnemy(bot_state_t *bs, int curenemy);
+// true if the bot should choose a new roam goal
+qboolean BotChooseRoamGoal(bot_state_t *bs);
 // returns a roam goal
-void BotRoamGoal(bot_state_t *bs, vec3_t goal);
+qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly);
 // returns entity visibility in the range [0, 1]
 qboolean BotEntityVisible(playerState_t *ps, float fov, int ent);
 // the bot will aim at the current enemy

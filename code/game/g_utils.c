@@ -644,6 +644,61 @@ playerState_t *G_GetEntityPlayerState(const gentity_t *ent) {
 
 /*
 =======================================================================================================================================
+G_EntityAudible
+=======================================================================================================================================
+*/
+qboolean G_EntityAudible(const gentity_t* ent) {
+
+	if (ent->s.eType < ET_EVENTS) {
+		switch (ent->s.eType) {
+			case ET_PLAYER:
+			case ET_MOVER:
+				break;
+			case ET_MISSILE:
+				switch (ent->s.weapon) {
+					case WP_ROCKETLAUNCHER:
+					case WP_PLASMAGUN:
+					case WP_BFG:
+						return qtrue;
+				}
+
+				break;
+			default:
+				return qfalse;
+		}
+	}
+
+	if (ent->client) {
+		if (ent->s.eFlags & EF_FIRING) {
+			return qtrue;
+		}
+
+		switch (ent->s.weapon) {
+			case WP_BEAMGUN:
+			case WP_RAILGUN:
+			case WP_BFG:
+				return qtrue;
+		}
+	}
+
+	if (ent->eventTime < level.time - 900) {
+		return qfalse;
+	}
+
+	switch (ent->s.event & ~EV_EVENT_BITS) {
+		case EV_NONE:
+		case EV_STEP_4:
+		case EV_STEP_8:
+		case EV_STEP_12:
+		case EV_STEP_16:
+			return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
 DebugLine
 
 Debug polygons only work when running a local game with r_debugSurface set to 2.

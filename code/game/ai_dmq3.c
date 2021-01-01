@@ -4511,11 +4511,120 @@ static void BotGoForPowerups(bot_state_t *bs) {
 BotRoamGoal
 =======================================================================================================================================
 */
-void BotRoamGoal(bot_state_t *bs, vec3_t goal) {
-	int pc, i;
-	float len, rnd;
-	vec3_t dir, bestorg, belowbestorg;
+qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
+	float alertness, len, rnd, maxdistanceSqr, totalWeight, distanceSqr, weight;
+	vec3_t dir, angles, bestorg, belowbestorg, origin;
+	gentity_t *ent;
+	playerState_t *ps;
+	int pc, i, f;
 	bsp_trace_t trace;
+	qboolean found;
+
+	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+	f = trap_Characteristic_BInteger(bs->character, CHARACTERISTIC_FOV, 0, 360);
+
+	if (alertness >= 0.2) {
+		// search a dynamic roam goal
+		if (dynamicOnly && bs->ltgtype != 0 && DistanceSquared(bs->origin, bs->teamgoal.origin) < 300 * 300) {
+			return qfalse;
+		}
+
+		if (bs->dynamicroamgoal_time > FloatTime()) {
+			if (dynamicOnly && bs->hasDynamicRoamGoal) {
+				VectorCopy(bs->dynamicRoamGoal, goal);
+				return qtrue;
+			}
+
+			return qfalse;
+		}
+
+		bs->dynamicroamgoal_time = FloatTime() + 0.4 + 0.4 * random();
+		found = qfalse;
+		maxdistanceSqr = Square(1200.0);
+		f -= 90;
+
+		if (f < 90) {
+			f = 90;
+		}
+/*
+		if (bs->cur_ps.powerups[PW_CHARGE]) {
+			maxdistanceSqr = Square(600.0);
+		}
+*/
+		totalWeight = 0;
+
+		for (i = 0; i < level.num_entities; i++) {
+			ent = &g_entities[i];
+
+			if (!ent->inuse) {
+				continue;
+			}
+
+			if (!ent->r.linked) {
+				continue;
+			}
+
+			if (!G_EntityAudible(ent)) {
+				continue;
+			}
+
+			if (bs->client == i) {
+				continue;
+			}
+
+			ps = G_GetEntityPlayerState(ent);
+
+			if (ps) {
+				VectorCopy(ps->origin, origin);
+			} else {
+				VectorAdd(ent->r.absmin, ent->r.absmax, origin);
+				VectorScale(origin, 0.5, origin);
+			}
+
+			VectorSubtract(origin, bs->origin, dir);
+
+			distanceSqr = VectorLengthSquared(dir);
+
+			if (distanceSqr > maxdistanceSqr) {
+				continue;
+			}
+
+			VectorToAngles(dir, angles);
+
+			if (InFieldOfVision(bs->viewangles, f, angles)) {
+				continue;
+			}
+
+			if (!trap_InPVSIgnorePortals(bs->origin, g_entities[i].s.pos.trBase)) {
+				continue;
+			}
+
+			weight = 1.0 / (distanceSqr + 100);
+			totalWeight += weight;
+
+			if (random() <= weight / totalWeight) {
+				found = qtrue;
+				VectorCopy(origin, goal);
+			}
+		}
+
+		if (found) {
+			bs->roamgoal_time = FloatTime() + 1 + 2 * random();
+			VectorCopy(goal, bs->dynamicRoamGoal);
+			bs->hasDynamicRoamGoal = qtrue;
+			return qtrue;
+		}
+
+		bs->hasDynamicRoamGoal = qfalse;
+		// check if a new roam goal should be determined
+		if (dynamicOnly) {
+			return qfalse;
+		}
+
+		if (bs->roamgoal_time > FloatTime()) {
+			return qfalse;
+		}
+	}
 
 	for (i = 0; i < 10; i++) {
 		// start at the bot origin
@@ -4547,6 +4656,15 @@ void BotRoamGoal(bot_state_t *bs, vec3_t goal) {
 		// direction and length towards the roam target
 		VectorSubtract(trace.endpos, bs->origin, dir);
 
+		if (alertness >= 0.2) {
+			// check if the goal is already in the field of vision
+			VectorToAngles(dir, angles);
+
+			if (InFieldOfVision(bs->viewangles, f, angles)) {
+				continue;
+			}
+		}
+
 		len = VectorNormalize(dir);
 		// if the roam target is far away enough
 		if (len > 200) {
@@ -4567,13 +4685,45 @@ void BotRoamGoal(bot_state_t *bs, vec3_t goal) {
 
 				if (!(pc & (CONTENTS_LAVA|CONTENTS_SLIME))) {
 					VectorCopy(bestorg, goal);
-					return;
+
+					if (alertness >= 0.2) {
+						bs->roamgoal_time = FloatTime() + 0.5 + 2 * random();
+					}
+
+					return qtrue;
 				}
 			}
 		}
 	}
 
-	VectorCopy(bestorg, goal);
+	if (alertness >= 0.2) {
+		bs->roamgoalcnt = 0; // do not use a roam goal
+	} else {
+		VectorCopy(bestorg, goal);
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
+BotRoamGoal
+=======================================================================================================================================
+*/
+qboolean BotChooseRoamGoal(bot_state_t *bs) {
+	float alertness;
+
+	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+
+	if (alertness < 0.2) {
+		if (random() < bs->thinktime * 0.8) {
+			return qtrue;
+		}
+
+		return qfalse;
+	}
+
+	return qtrue;
 }
 
 /*
@@ -9304,7 +9454,7 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 	gentity_t *ent;
 	float obtrusiveness;
-	vec3_t dir, viewangles, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
+	vec3_t dir, viewangles, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1}, target;
 	bsp_trace_t trace;
 #ifdef DEBUG
 	char netname[MAX_NETNAME];
@@ -9456,6 +9606,14 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 				}
 			}
 		}
+		// don't bother about other team mates for now
+		break;
+	}
+	// look around
+	if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
+		VectorSubtract(target, bs->origin, dir);
+		VectorToAngles(dir, bs->ideal_viewangles);
+		bs->ideal_viewangles[2] *= 0.5;
 	}
 }
 
