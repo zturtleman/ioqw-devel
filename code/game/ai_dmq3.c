@@ -9606,14 +9606,6 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 				}
 			}
 		}
-		// don't bother about other team mates for now
-		break;
-	}
-	// look around
-	if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
-		VectorSubtract(target, bs->origin, dir);
-		VectorToAngles(dir, bs->ideal_viewangles);
-		bs->ideal_viewangles[2] *= 0.5;
 	}
 }
 
