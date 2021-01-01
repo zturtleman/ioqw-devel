@@ -47,6 +47,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // the field of view of the bot
 #define CHARACTERISTIC_FOV							 7 // int [0, 360]
 // overreaction view model etc.
+// > 0.0 && <= 0.5 = over reaction view model
+// > 0.5 && <= 1.0 = smooth slowdown view model
+// > 0.9 && <= 1.0 = set the view angles directly
 #define CHARACTERISTIC_VIEW_TYPE					 8 // float [0, 1]
 // view angle difference to angle change factor
 #define CHARACTERISTIC_VIEW_FACTOR					 9 // float [0, 1]
