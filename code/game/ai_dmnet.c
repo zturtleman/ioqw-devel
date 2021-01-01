@@ -1699,7 +1699,6 @@ AINode_Wait
 =======================================================================================================================================
 */
 int AINode_Wait(bot_state_t *bs) {
-	bot_goal_t goal;
 	vec3_t target, dir;
 	bot_moveresult_t moveresult;
 
@@ -1752,47 +1751,15 @@ int AINode_Wait(bot_state_t *bs) {
 	BotClearPath(bs, &moveresult);
 	// check if the bot is blocking teammates
 	BotCheckBlockedTeammates(bs);
-	// if the view angles are used for the movement
-	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEW|MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_SWIMVIEW)) {
-		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "WAIT: MOVERESULT_MOVEMENTVIEW View angles are used for the movement.\n");
-#endif
-	// if waiting for something
-	} else if (moveresult.flags & MOVERESULT_WAITING) {
-		if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
-			VectorSubtract(target, bs->origin, dir);
-			VectorToAngles(dir, bs->ideal_viewangles);
-			bs->ideal_viewangles[2] *= 0.5;
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE "WAIT: MOVERESULT_WAITING BotRoamGoal: waiting for something.\n");
-#endif
-		}
-	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
-			VectorSubtract(target, bs->origin, dir);
-			VectorToAngles(dir, bs->ideal_viewangles);
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "WAIT: !BFL_IDEALVIEWSET: BotMovementViewTarget 300.\n");
-#endif
-		// FIXME: look at cluster portals?
-		} else if (VectorLengthSquared(moveresult.movedir)) {
-			VectorToAngles(moveresult.movedir, bs->ideal_viewangles);
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_GREEN "WAIT: !BFL_IDEALVIEWSET: VectorLengthSquared(moveresult.movedir).\n");
-#endif
-		} else if (random() < bs->thinktime * 0.8) {
-			BotRoamGoal(bs, target);
-			VectorSubtract(target, bs->origin, dir);
-			VectorToAngles(dir, bs->ideal_viewangles);
-			bs->ideal_viewangles[2] *= 0.5;
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "WAIT: !BFL_IDEALVIEWSET: else BotRoamGoal.\n");
-#endif
-		}
-
+	// look strategically around for enemies
+	if (random() < bs->thinktime * 0.8) {
+		BotRoamGoal(bs, target);
+		VectorSubtract(target, bs->origin, dir);
+		VectorToAngles(dir, bs->ideal_viewangles);
 		bs->ideal_viewangles[2] *= 0.5;
+#ifdef DEBUG
+		BotAI_Print(PRT_MESSAGE, S_COLOR_CYAN "WAIT: !BFL_IDEALVIEWSET: BotRoamGoal.\n");
+#endif
 	}
 	// if the weapon is used for the bot movement
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) {
