@@ -9454,7 +9454,7 @@ void BotCheckBlockedTeammates(bot_state_t *bs) {
 	aas_entityinfo_t entinfo;
 	gentity_t *ent;
 	float obtrusiveness;
-	vec3_t dir, viewangles, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1}, target;
+	vec3_t dir, viewangles, mins, maxs, end, v3, v2, v1, sideward, angles, up = {0, 0, 1};
 	bsp_trace_t trace;
 #ifdef DEBUG
 	char netname[MAX_NETNAME];

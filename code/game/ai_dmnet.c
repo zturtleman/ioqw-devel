@@ -2176,18 +2176,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 #endif
 		}
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
-		// look strategically around for enemies
-		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
-			VectorSubtract(target, bs->origin, dir);
-			VectorToAngles(dir, bs->ideal_viewangles);
-#ifdef DEBUG
-			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK NBG: !BFL_IDEALVIEWSET: BotRoamGoal *** DYNAMIC ***.\n");
-#endif
-		}
-
-		if (!trap_BotGetSecondGoal(bs->gs, &goal)) {
-			trap_BotGetTopGoal(bs->gs, &goal);
-		}
+/* // Tobias NOTE: currently only used for AI node 'chase'!
 		// look towards our future direction (like looking around a corner as we approach it)
 		if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
 			if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
@@ -2204,7 +2193,22 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK NBG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
 #endif
-		} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+		}
+*/
+		// look strategically around for enemies
+		if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
+			VectorSubtract(target, bs->origin, dir);
+			VectorToAngles(dir, bs->ideal_viewangles);
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, S_COLOR_YELLOW "SEEK NBG: !BFL_IDEALVIEWSET: BotRoamGoal *** DYNAMIC ***.\n");
+#endif
+		}
+
+		if (!trap_BotGetSecondGoal(bs->gs, &goal)) {
+			trap_BotGetTopGoal(bs->gs, &goal);
+		}
+
+		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
@@ -2425,6 +2429,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #endif
 		}
 	} else if (!(bs->flags & BFL_IDEALVIEWSET)) {
+/* // Tobias NOTE: currently only used for AI node 'chase'!
 		// look towards our future direction (like looking around a corner as we approach it)
 		if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
 			if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
@@ -2441,9 +2446,11 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #ifdef DEBUG
 			BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "SEEK LTG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
 #endif
+		}
+*/
 /*
 		// look around if nearly reached the long term goal
-		} else if (LTGNearlyFulfilled(bs)) {
+		if (LTGNearlyFulfilled(bs)) {
 			// look strategically around for enemies
 			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qfalse)) {
 				bs->roamgoalcnt--;
@@ -2468,7 +2475,6 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 #endif
 				}
 			}
-*/
 		} else {
 			// look strategically around for enemies
 			if (BotChooseRoamGoal(bs) && BotRoamGoal(bs, target, qtrue)) {
@@ -2477,7 +2483,7 @@ int AINode_Seek_LTG(bot_state_t *bs) {
 				bs->ideal_viewangles[2] *= 0.5;
 			}
 		}
-
+*/
 		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			VectorToAngles(dir, bs->ideal_viewangles);
@@ -3459,6 +3465,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "BATTLE NBG: AIMING!\n");
 #endif
 		} else {
+/* // Tobias NOTE: currently only used for AI node 'chase'!
 			// look towards our future direction (like looking around a corner as we approach it)
 			if (moveresult.flags & MOVERESULT_FUTUREVIEW) {
 				if (AngleDifference(bs->ideal_viewangles[1], moveresult.ideal_viewangles[1] ) > 45) {
@@ -3475,7 +3482,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 #ifdef DEBUG
 				BotAI_Print(PRT_MESSAGE, S_COLOR_MAGENTA "BATTLE NBG: !BFL_IDEALVIEWSET: MOVERESULT_FUTUREVIEW.\n");
 #endif
-			} else if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
+			}
+*/
+			if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 				VectorSubtract(target, bs->origin, dir);
 				VectorToAngles(dir, bs->ideal_viewangles);
 #ifdef DEBUG
