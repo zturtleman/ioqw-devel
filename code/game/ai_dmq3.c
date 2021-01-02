@@ -4512,11 +4512,11 @@ BotRoamGoal
 =======================================================================================================================================
 */
 qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
-	float alertness, len, rnd, maxdistanceSqr, totalWeight, distanceSqr, weight;
+	float alertness, len, rnd, totalWeight, weight;
 	vec3_t dir, angles, bestorg, belowbestorg, origin;
 	gentity_t *ent;
 	playerState_t *ps;
-	int pc, i, f;
+	int pc, i, f, dist, audibilityRange;
 	bsp_trace_t trace;
 	qboolean found;
 
@@ -4540,17 +4540,12 @@ qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
 
 		bs->dynamicroamgoal_time = FloatTime() + 0.4 + 0.4 * random();
 		found = qfalse;
-		maxdistanceSqr = Square(1200.0);
 		f -= 90;
 
 		if (f < 90) {
 			f = 90;
 		}
-/*
-		if (bs->cur_ps.powerups[PW_CHARGE]) {
-			maxdistanceSqr = Square(600.0);
-		}
-*/
+
 		totalWeight = 0;
 
 		for (i = 0; i < level.num_entities; i++) {
@@ -4564,11 +4559,21 @@ qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
 				continue;
 			}
 
-			if (!G_EntityAudible(ent)) {
+			if (bs->client == i) {
 				continue;
 			}
+			// get the audibility range
+			audibilityRange = G_GetEntityEventSoundCoefficient(ent);
 
-			if (bs->client == i) {
+			if (!audibilityRange) {
+				continue;
+			}
+/*
+			if (bs->cur_ps.powerups[PW_CHARGE]) {
+				audibilityRange *= 0.5;
+			}
+*/
+			if (audibilityRange < 10) {
 				continue;
 			}
 
@@ -4583,9 +4588,9 @@ qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
 
 			VectorSubtract(origin, bs->origin, dir);
 
-			distanceSqr = VectorLengthSquared(dir);
-
-			if (distanceSqr > maxdistanceSqr) {
+			dist = VectorLengthSquared(dir);
+			// outside audibility range
+			if (dist > Square(audibilityRange)) {
 				continue;
 			}
 
@@ -4599,7 +4604,7 @@ qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
 				continue;
 			}
 
-			weight = 1.0 / (distanceSqr + 100);
+			weight = 1.0 / (dist + 100);
 			totalWeight += weight;
 
 			if (random() <= weight / totalWeight) {
@@ -4707,7 +4712,7 @@ qboolean BotRoamGoal(bot_state_t *bs, vec3_t goal, qboolean dynamicOnly) {
 
 /*
 =======================================================================================================================================
-BotRoamGoal
+BotChooseRoamGoal
 =======================================================================================================================================
 */
 qboolean BotChooseRoamGoal(bot_state_t *bs) {

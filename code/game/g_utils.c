@@ -644,57 +644,158 @@ playerState_t *G_GetEntityPlayerState(const gentity_t *ent) {
 
 /*
 =======================================================================================================================================
-G_EntityAudible
+G_GetEntityEventSoundCoefficient
+
+Return a value for how loud events are.
+
+FIXME: WHY CAN'T WE USE 'BotCheckEvents'? is there any easier access to events? It seems like id planned to add the sounds in
+       'BotCheckEvents'. If using 'BotCheckEvents' "event only entity" events aren't working.
+FIXME: Why are closing doors not heard?
+
+TODO: Adjust the sound distances.
+      Ignore some sounds from teammates.
+      Don't let us inspect EVERY projectile :)
+      Enable the footstep sounds.
+
+NOTE: Another approach of a similar function is 'BotGetEntitySurfaceSoundCoefficient' from ET (wasn't used there). This function will
+      support all methods of 'hearing' awareness for different AI (Wolfenstein - Enemy Territory (broken by default),
+      Return to Castle Wolfenstein (cs->attributes), and even HUNT monsters. OmniBot isn't tested...
 =======================================================================================================================================
 */
-qboolean G_EntityAudible(const gentity_t* ent) {
+int G_GetEntityEventSoundCoefficient(const gentity_t *ent) {
 
 	if (ent->s.eType < ET_EVENTS) {
 		switch (ent->s.eType) {
 			case ET_PLAYER:
 			case ET_MOVER:
+				// FIXME: why are closing doors not heard?
 				break;
 			case ET_MISSILE:
 				switch (ent->s.weapon) {
 					case WP_ROCKETLAUNCHER:
 					case WP_PLASMAGUN:
+					case WP_GRENADELAUNCHER:
+					case WP_NAILGUN:
 					case WP_BFG:
-						return qtrue;
+						return 1000;
 				}
 
 				break;
 			default:
-				return qfalse;
+				return 0;
 		}
 	}
 
 	if (ent->client) {
 		if (ent->s.eFlags & EF_FIRING) {
-			return qtrue;
+			return 1000;
 		}
-
+		// weapon 'hum' sounds
 		switch (ent->s.weapon) {
 			case WP_BEAMGUN:
 			case WP_RAILGUN:
 			case WP_BFG:
-				return qtrue;
+				return 500;
+			default:
+				return 0;
 		}
 	}
 
 	if (ent->eventTime < level.time - 900) {
-		return qfalse;
+		return 0;
 	}
 
 	switch (ent->s.event & ~EV_EVENT_BITS) {
-		case EV_NONE:
+		case EV_KAMIKAZE:
+			return 10000;
+		case EV_MISSILE_MISS:
+			// explosions are really loud (FIXME: Explosions without impact, e.g.: Proxy mine)
+			return 5000;
+		case EV_BULLET_HIT_WALL:
+			// bullet impacts should attract the bot to inspect (FIXME: only, if the shooter isn't seen or heard)
+			return 1750;
+		case EV_PLAYER_TELEPORT_IN:
+		case EV_PLAYER_TELEPORT_OUT:
+			return 1000;
+		case EV_PROXIMITY_MINE_STICK:
+		case EV_GRENADE_BOUNCE:
+		case EV_PAIN:
+		case EV_DEATH1:
+		case EV_DEATH2:
+		case EV_DEATH3:
+		case EV_FALL_DIE:
+		case EV_FALL_DMG_50:
+		case EV_FALL_DMG_25:
+		case EV_FALL_DMG_15:
+		case EV_FALL_DMG_10:
+		case EV_FALL_DMG_5:
+		case EV_FALL_SHORT:
+		case EV_JUMP:
+			return 500;
 		case EV_STEP_4:
 		case EV_STEP_8:
 		case EV_STEP_12:
 		case EV_STEP_16:
-			return qfalse;
+			return 400;
+/*
+		case EV_NOAMMO:
+		case EV_CHANGE_WEAPON:
+		case EV_FOOTSTEP_HARD:
+		case EV_FOOTSTEP_HARD_FROZEN:
+		case EV_FOOTSTEP_HARD_SNOW:
+		case EV_FOOTSTEP_HARD_SLUSH:
+		case EV_FOOTSTEP_PUDDLE:
+		case EV_FOOTSTEP_LEAVES:
+		case EV_FOOTSTEP_BUSH:
+		case EV_FOOTSTEP_GRASS:
+		case EV_FOOTSTEP_LONGGRASS:
+		case EV_FOOTSTEP_LONGGRASS_MUD:
+		case EV_FOOTSTEP_SAND:
+		case EV_FOOTSTEP_GRAVEL:
+		case EV_FOOTSTEP_RUBBLE:
+		case EV_FOOTSTEP_RUBBLE_WET:
+		case EV_FOOTSTEP_SOIL:
+		case EV_FOOTSTEP_MUD:
+		case EV_FOOTSTEP_SNOW_DEEP:
+		case EV_FOOTSTEP_ICE:
+		case EV_FOOTSTEP_METAL_HOLLOW:
+		case EV_FOOTSTEP_METAL_HOLLOW_FROZEN:
+		case EV_FOOTSTEP_METAL_HOLLOW_SNOW:
+		case EV_FOOTSTEP_METAL_HOLLOW_SLUSH:
+		case EV_FOOTSTEP_METAL_HOLLOW_SPLASH:
+		case EV_FOOTSTEP_GRATE_01:
+		case EV_FOOTSTEP_GRATE_02:
+		case EV_FOOTSTEP_DUCT:
+		case EV_FOOTSTEP_PLATE:
+		case EV_FOOTSTEP_FENCE:
+		case EV_FOOTSTEP_WOOD_HOLLOW:
+		case EV_FOOTSTEP_WOOD_HOLLOW_FROZEN:
+		case EV_FOOTSTEP_WOOD_HOLLOW_SNOW:
+		case EV_FOOTSTEP_WOOD_HOLLOW_SLUSH:
+		case EV_FOOTSTEP_WOOD_HOLLOW_SPLASH:
+		case EV_FOOTSTEP_WOOD_SOLID:
+		case EV_FOOTSTEP_WOOD_CREAKING:
+		case EV_FOOTSTEP_ROOF:
+		case EV_FOOTSTEP_SHINGLES:
+		case EV_FOOTSTEP_SOFT:
+		case EV_FOOTSTEP_GLASS_SHARDS:
+		case EV_FOOTSTEP_TRASH_GLASS:
+		case EV_FOOTSTEP_TRASH_DEBRIS:
+		case EV_FOOTSTEP_TRASH_WIRE:
+		case EV_FOOTSTEP_TRASH_PACKING:
+		case EV_FOOTSTEP_TRASH_PLASTIC:
+		case EV_FOOTSPLASH:
+		case EV_FOOTWADE:
+		case EV_SWIM:
+		case EV_WATER_TOUCH:			// foot touches
+		case EV_WATER_LEAVE:			// foot leaves
+		case EV_WATER_UNDER:			// head touches
+		case EV_WATER_CLEAR:			// head leaves
+			return 200;
+*/
+		default:
+			return 0;
 	}
-
-	return qtrue;
 }
 
 /*

@@ -337,7 +337,7 @@ gentity_t *G_PickTarget(const char *targetname);
 void G_UseTargets(gentity_t *ent, gentity_t *activator);
 void G_SetMovedir(vec3_t angles, vec3_t movedir);
 void G_InitGentity(gentity_t *e);
-qboolean G_EntityAudible(const gentity_t *ent);
+int G_GetEntityEventSoundCoefficient(const gentity_t *ent); // get the distance how far an entity event is audible
 playerState_t *G_GetEntityPlayerState(const gentity_t *ent);
 gentity_t *G_Spawn(void);
 gentity_t *G_TempEntity(const vec3_t origin, int event);
