@@ -43,10 +43,14 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // reaction time in seconds, the lower the number the better
 #define CHARACTERISTIC_REACTIONTIME					 5 // float [0, 5]
 // how alert the bot is
+// > 0.0 && <= 0.1 = the bot can't hear anything
+// > 0.1 && <= 2.0 = the bot don't get dynamic roam goals
+// > 0.2 && <= 1.0 = search for dynamic roam goals
+// > TODO = the ability of the bot to hear sounds over distance
 #define CHARACTERISTIC_ALERTNESS					 6 // float [0, 1]
 // the field of view of the bot
 #define CHARACTERISTIC_FOV							 7 // int [0, 360]
-// overreaction view model etc.
+// the view model of the bot
 // > 0.0 && <= 0.5 = over reaction view model
 // > 0.5 && <= 1.0 = smooth slowdown view model
 // > 0.9 && <= 1.0 = set the view angles directly
