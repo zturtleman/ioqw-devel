@@ -24,10 +24,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #include "q_shared.h"
 #include "qcommon.h"
-// Max number of arguments to pass from engine to vm's vmMain function.
+// max number of arguments to pass from engine to vm's vmMain function
 // command number + 12 arguments
 #define MAX_VMMAIN_ARGS 13
-// Max number of arguments to pass from a vm to engine's syscall handler function for the vm.
+// max number of arguments to pass from a vm to engine's syscall handler function for the vm
 // Tobias CHECK: Warning!
 /*
 // syscall number + 15 arguments
@@ -40,7 +40,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define OPSTACK_SIZE 1024
 #define OPSTACK_MASK (OPSTACK_SIZE - 1)
 // don't change
-// Hardcoded in q3asm a reserved at end of bss
+// hardcoded in q3asm a reserved at end of bss
 #define PROGRAM_STACK_SIZE 0x10000
 #define PROGRAM_STACK_MASK (PROGRAM_STACK_SIZE - 1)
 
@@ -56,6 +56,7 @@ typedef enum {
 	OP_CONST,
 	OP_LOCAL,
 	OP_JUMP,
+	//-------------------
 	OP_EQ,
 	OP_NE,
 	OP_LTI,
@@ -72,6 +73,7 @@ typedef enum {
 	OP_LEF,
 	OP_GTF,
 	OP_GEF,
+	//-------------------
 	OP_LOAD1,
 	OP_LOAD2,
 	OP_LOAD4,
@@ -80,6 +82,7 @@ typedef enum {
 	OP_STORE4, // *(stack[top - 1]) = stack[top]
 	OP_ARG,
 	OP_BLOCK_COPY,
+	//-------------------
 	OP_SEX8,
 	OP_SEX16,
 	OP_NEGI,

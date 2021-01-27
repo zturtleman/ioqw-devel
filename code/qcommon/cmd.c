@@ -500,7 +500,7 @@ Parses the given string into command line tokens. The text is copied to a separa
 appropriate place. The argv array will point into this temporary buffer.
 =======================================================================================================================================
 */
-// NOTE TTimo define that to track tokenization issues
+// NOTE: define that to track tokenization issues
 //#define TKN_DBG
 static void Cmd_TokenizeString2(const char *text_in, qboolean ignoreQuotes) {
 	const char *text;
@@ -845,6 +845,7 @@ void Cmd_List_f(void) {
 		}
 
 		Com_Printf("%s\n", cmd->name);
+
 		i++;
 	}
 

@@ -37,7 +37,7 @@ void S_Base_StopBackgroundTrack(void);
 snd_stream_t *s_backgroundStream = NULL;
 
 static char s_backgroundLoop[MAX_QPATH];
-// static char s_backgroundMusic[MAX_QPATH]; // TTimo: unused
+//static char s_backgroundMusic[MAX_QPATH]; // unused
 
 // ===========================================================================
 // Internal sound data & structures
@@ -1283,7 +1283,7 @@ void S_Base_Update(void) {
 	channel_t *ch;
 
 	if (!s_soundStarted || s_soundMuted) {
-//		Com_DPrintf("not started or muted\n");
+		//Com_DPrintf("not started or muted\n");
 		return;
 	}
 	// debugging output

@@ -273,6 +273,7 @@ void CL_ParseSnapshot(msg_t *msg) {
 	}
 	// read packet entities
 	SHOWNET(msg, "packet entities");
+
 	CL_ParsePacketEntities(msg, old, &newSnap);
 	// if not valid, dump the entire thing now that it has been properly read
 	if (!newSnap.valid) {
@@ -313,7 +314,6 @@ void CL_ParseSnapshot(msg_t *msg) {
 
 int cl_connectedToPureServer;
 int cl_connectedToCheatServer;
-
 /*
 =======================================================================================================================================
 CL_SystemInfoChanged
@@ -330,8 +330,7 @@ void CL_SystemInfoChanged(void) {
 	qboolean gameSet;
 
 	systemInfo = cl.gameState.stringData + cl.gameState.stringOffsets[CS_SYSTEMINFO];
-	// NOTE TTimo:
-	// when the serverId changes, any further messages we send to the server will use this new serverId
+	// NOTE: when the serverId changes, any further messages we send to the server will use this new serverId
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
 	// in some cases, outdated cp commands might get sent with this news serverId
 	cl.serverId = atoi(Info_ValueForKey(systemInfo, "sv_serverid"));
@@ -684,6 +683,7 @@ static void CL_ParseVoip(msg_t *msg, qboolean ignoreData) {
 			}
 
 			MSG_ReadData(msg, encoded, br);
+
 			bytesleft -= br;
 		}
 

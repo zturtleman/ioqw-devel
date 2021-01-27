@@ -418,7 +418,7 @@ extern void (QDECL *Q_SnapVector)(vec3_t vec);
 	} while (0)
 #endif
 /*
-// if your system does not have lrintf() and round() you can try this block. Please also open a bug report at bugzilla.icculus.org or write a mail to the ioq3 mailing list.
+// if your system does not have lrintf() and round() you can try this block. Please also open a bug report at bugzilla.icculus.org or write a mail to the ioq3 mailing list
 #else
 #define Q_ftol(v) ((long)(v))
 #define Q_round(v) do { if ((v) < 0) (v) -= 0.5f; else (v) += 0.5f; (v) = Q_ftol((v)); } while (0)
@@ -763,7 +763,7 @@ void Q_strcat(char *dest, int size, const char *src);
 int Q_PrintStrlen(const char *string);
 // removes color sequences from string
 char *Q_CleanStr(char *string);
-// Count the number of char tocount encountered in string
+// count the number of char tocount encountered in string
 int Q_CountChar(const char *string, char tocount);
 // 64-bit integers for global rankings interface
 // implemented as a struct for qvm compatibility
@@ -1013,50 +1013,50 @@ typedef struct {
 
 // playerState_t is a full superset of entityState_t as it is used by players, so if a playerState_t is transmitted, the entityState_t can be fully derived from it.
 typedef struct playerState_s {
-	int commandTime;		// cmd->serverTime of last executed command
+	int commandTime;				// cmd->serverTime of last executed command
 	int pm_time;
 	int pm_type;
-	int pm_flags;			// ducked, jump_held, etc.
+	int pm_flags;					// ducked, jump_held, etc.
 	vec3_t origin;
 	vec3_t velocity;
 	int gravity;
 	int speed;
-	int delta_angles[3];	// add to command angles to get view direction, changed by spawns, rotating objects, and teleporters
-	int groundEntityNum;	// ENTITYNUM_NONE = in air
-	int movementDir;		// a number 0 to 7 that represents the relative angle of movement to the view angle (axial and diagonals) when at rest, the value will remain unchanged used to twist the legs during strafing
-	int clientNum;			// ranges from 0 to MAX_CLIENTS - 1
-	int legsTimer;			// don't change low priority animations until this runs out
-	int torsoTimer;			// don't change low priority animations until this runs out
-	int legsAnim;			// mask off ANIM_TOGGLEBIT
-	int torsoAnim;			// mask off ANIM_TOGGLEBIT
-	int eFlags;				// copied to entityState_t->eFlags
-	int eventSequence;		// pmove generated events
+	int delta_angles[3];			// add to command angles to get view direction, changed by spawns, rotating objects, and teleporters
+	int groundEntityNum;			// ENTITYNUM_NONE = in air
+	int movementDir;				// a number 0 to 7 that represents the relative angle of movement to the view angle (axial and diagonals) when at rest, the value will remain unchanged used to twist the legs during strafing
+	int clientNum;					// ranges from 0 to MAX_CLIENTS - 1
+	int legsTimer;					// don't change low priority animations until this runs out
+	int torsoTimer;					// don't change low priority animations until this runs out
+	int legsAnim;					// mask off ANIM_TOGGLEBIT
+	int torsoAnim;					// mask off ANIM_TOGGLEBIT
+	int eFlags;						// copied to entityState_t->eFlags
+	int eventSequence;				// pmove generated events
 	int events[MAX_PS_EVENTS];
 	int eventParms[MAX_PS_EVENTS];
-	int externalEvent;		// events set on player from another source
+	int externalEvent;				// events set on player from another source
 	int externalEventParm;
 	int externalEventTime;
 	// weapon info
-	int weapon;				// copied to entityState_t->weapon
+	int weapon;						// copied to entityState_t->weapon
 	int weaponstate;
 	int weaponTime;
-	vec3_t viewangles;		// for fixed views
+	vec3_t viewangles;				// for fixed views
 	int viewheight;
-	int bobCycle;			// for view bobbing and footstep generation
+	int bobCycle;					// for view bobbing and footstep generation
 	// damage feedback
-	int damageEvent;		// when it changes, latch the other parms
+	int damageEvent;				// when it changes, latch the other parms
 	int damageYaw;
 	int damagePitch;
 	int damageCount;
-	int tokens;				// harvester skulls
-	int jumppad_ent;		// jumppad entity hit this frame
+	int tokens;						// harvester skulls
+	int jumppad_ent;				// jumppad entity hit this frame
 	int loopSound;
 	int stats[MAX_STATS];
 	int persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
 	int powerups[MAX_POWERUPS];		// level.time that the powerup runs out
 	int ammo[MAX_WEAPONS];
 	// not communicated over the net at all
-	int ping;				// server to game info for scoreboard
+	int ping;						// server to game info for scoreboard
 	int pmove_framecount;
 	int jumppad_frame;
 	int entityEventSequence;
@@ -1109,40 +1109,40 @@ typedef struct {
 // different eTypes may use the information in different ways
 // the messages are delta compressed, so it doesn't really matter if the structure size is fairly large
 typedef struct entityState_s {
-	int number;			// entity index
-	int eType;			// entityType_t
+	int number;				// entity index
+	int eType;				// entityType_t
 	int eFlags;
-	trajectory_t pos;	// for calculating position
-	trajectory_t apos;	// for calculating angles
+	trajectory_t pos;		// for calculating position
+	trajectory_t apos;		// for calculating angles
 	int time;
 	int time2;
 	vec3_t origin;
 	vec3_t origin2;
 	vec3_t angles;
 	vec3_t angles2;
-	int otherEntityNum;	// shotgun sources, etc.
+	int otherEntityNum;		// shotgun sources, etc.
 	int otherEntityNum2;
-	int groundEntityNum; // ENTITYNUM_NONE = in air
+	int groundEntityNum;	// ENTITYNUM_NONE = in air
 	int modelindex;
 	int modelindex2;
-	float skinFraction;	// 0 = full health, 1 = dead
-	int constantLight;	// r + (g << 8) + (b << 16) + (intensity << 24)
-	int dl_intensity;	// used for coronas
+	float skinFraction;		// 0 = full health, 1 = dead
+	int constantLight;		// r + (g << 8) + (b << 16) + (intensity << 24)
+	int dl_intensity;		// used for coronas
 	int frame;
-	int solid;			// for client side prediction, trap_linkentity sets this properly
-	int event;			// impulse events -- muzzle flashes, footsteps, etc.
+	int solid;				// for client side prediction, trap_linkentity sets this properly
+	int event;				// impulse events -- muzzle flashes, footsteps, etc.
 	int eventParm;
-	int clientNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
+	int clientNum;			// 0 to (MAX_CLIENTS - 1), for players and corpses
 	int team;
-	int density;		// for particle effects
+	int density;			// for particle effects
 	// for players
-	int powerups;		// bit flags
-	int weapon;			// determines weapon and flash model, etc.
-	int legsAnim;		// mask off ANIM_TOGGLEBIT
-	int torsoAnim;		// mask off ANIM_TOGGLEBIT
+	int powerups;			// bit flags
+	int weapon;				// determines weapon and flash model, etc.
+	int legsAnim;			// mask off ANIM_TOGGLEBIT
+	int torsoAnim;			// mask off ANIM_TOGGLEBIT
 	int soundRange;
-	int loopSound;		// constantly loop this sound
-	int tokens;			// harvester skulls
+	int loopSound;			// constantly loop this sound
+	int tokens;				// harvester skulls
 } entityState_t;
 // entityState_t->eType
 typedef enum {

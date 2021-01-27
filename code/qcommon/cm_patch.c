@@ -1380,6 +1380,7 @@ void CM_TracePointThroughPatchCollide(traceWork_t *tw, const struct patchCollide
 			}
 
 			VectorCopy(planes->plane, tw->trace.plane.normal);
+
 			tw->trace.plane.dist = planes->plane[3];
 		}
 	}
@@ -1677,6 +1678,9 @@ qboolean CM_PositionTestInPatchCollide(traceWork_t *tw, const struct patchCollid
 =======================================================================================================================================
 */
 
+#ifndef BSPC
+void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *points), int value);
+#endif
 /*
 =======================================================================================================================================
 CM_DrawDebugSurface
@@ -1684,9 +1688,6 @@ CM_DrawDebugSurface
 Called from the renderer.
 =======================================================================================================================================
 */
-#ifndef BSPC
-void BotDrawDebugPolygons(void (*DrawPoly)(int color, int numPoints, float *points), int value);
-#endif
 void CM_DrawDebugSurface(void (*DrawPoly)(int color, int numPoints, float *points)) {
 	static cvar_t *cv;
 #ifndef BSPC

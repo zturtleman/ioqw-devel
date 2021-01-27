@@ -321,15 +321,15 @@ static ID_INLINE float _vmf(intptr_t x) {
 void Cbuf_Init(void);
 // allocates an initial text buffer that will grow as needed
 void Cbuf_AddText(const char *text);
-// Adds command text at the end of the buffer, does NOT add a final \n
+// adds command text at the end of the buffer, does NOT add a final \n
 void Cbuf_ExecuteText(int exec_when, const char *text);
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 void Cbuf_ExecuteTextSafe(int exec_when, const char *text);
 // used by VMs with special handling for unsafe calls
 void Cbuf_Execute(void);
-// Pulls off \n terminated lines of text from the command buffer and sends them through Cmd_ExecuteString. Stops when the buffer is empty.
-// Normally called once per frame, but may be explicitly invoked.
-// Do not call inside a command function, or current args will be destroyed.
+// pulls off \n terminated lines of text from the command buffer and sends them through Cmd_ExecuteString. Stops when the buffer is empty
+// normally called once per frame, but may be explicitly invoked
+// do not call inside a command function, or current args will be destroyed
 
 /**************************************************************************************************************************************
 	Command execution takes a null terminated string, breaks it into tokens, then searches for a command or variable that matches the
@@ -340,7 +340,7 @@ typedef void (*xcommand_t)(void);
 void Cmd_Init(void);
 void Cmd_AddCommand(const char *cmd_name, xcommand_t function);
 // called by the init functions of other parts of the program to register commands and functions to call for them
-// The cmd_name is referenced later, so it should not be in temp memory
+// the cmd_name is referenced later, so it should not be in temp memory
 // if function is NULL, the command will be forwarded to the server as a clc_clientCommand instead of executed locally
 void Cmd_RemoveCommand(const char *cmd_name);
 typedef void (*completionFunc_t)(char *args, int argNum);
@@ -359,13 +359,13 @@ char *Cmd_ArgsFrom(int arg);
 void Cmd_ArgsBuffer(char *buffer, int bufferLength);
 char *Cmd_Cmd(void);
 void Cmd_Args_Sanitize(void);
-// The functions that execute commands get their parameters with these functions. Cmd_Argv() will return an empty string, not a NULL
-// if arg > argc, so string operations are always safe.
+// the functions that execute commands get their parameters with these functions. Cmd_Argv() will return an empty string, not a NULL
+// if arg > argc, so string operations are always safe
 void Cmd_TokenizeString(const char *text);
 void Cmd_TokenizeStringIgnoreQuotes(const char *text_in);
-// Takes a null terminated string. Does not need to be /n terminated. Breaks the string up into arg tokens
+// takes a null terminated string. Does not need to be /n terminated. Breaks the string up into arg tokens
 void Cmd_ExecuteString(const char *text);
-// Parses a single line of text into arguments and tries to execute it as if it was typed at the console
+// parses a single line of text into arguments and tries to execute it as if it was typed at the console
 
 /*
 =======================================================================================================================================
@@ -510,7 +510,7 @@ long FS_ReadFile(const char *qpath, void **buffer);
 // returns the length of the file
 // a null buffer will just return the file length without loading
 // as a quick check for existence. -1 length == not present
-// A 0 byte will always be appended at the end, so string ops are safe.
+// a 0 byte will always be appended at the end, so string ops are safe.
 // the buffer should be considered read-only, because it may be cached for other uses
 void FS_ForceFlush(fileHandle_t f);
 // forces flush on files we're writing to.
@@ -533,19 +533,19 @@ qboolean FS_FilenameCompare(const char *s1, const char *s2);
 const char *FS_LoadedPakNames(void);
 const char *FS_LoadedPakChecksums(void);
 const char *FS_LoadedPakPureChecksums(void);
-// Returns a space separated string containing the checksums of all loaded pk3 files.
-// Servers with sv_pure set will get this string and pass it to clients.
+// returns a space separated string containing the checksums of all loaded pk3 files
+// servers with sv_pure set will get this string and pass it to clients
 const char *FS_ReferencedPakNames(void);
 const char *FS_ReferencedPakChecksums(void);
 const char *FS_ReferencedPakPureChecksums(void);
-// Returns a space separated string containing the checksums of all loaded AND referenced pk3 files.
-// Servers with sv_pure set will get this string back from clients for pure validation.
+// returns a space separated string containing the checksums of all loaded AND referenced pk3 files
+// servers with sv_pure set will get this string back from clients for pure validation
 void FS_ClearPakReferences(int flags);
 // clears referenced booleans on loaded pk3s
 void FS_PureServerSetReferencedPaks(const char *pakSums, const char *pakNames);
 void FS_PureServerSetLoadedPaks(const char *pakSums, const char *pakNames);
-// If the string is empty, all data sources will be allowed.
-// If not empty, only pk3 files that match one of the space separated checksums will be checked for files, with the sole exception of .cfg files.
+// if the string is empty, all data sources will be allowed
+// if not empty, only pk3 files that match one of the space separated checksums will be checked for files, with the sole exception of .cfg files
 qboolean FS_CheckDirTraversal(const char *checkdir);
 qboolean FS_InvalidGameDir(const char *gamedir);
 qboolean FS_qwPak(char *pak, char *base, int numPaks);
@@ -608,7 +608,7 @@ typedef enum {
 	SE_NONE = 0,		// evTime is still valid
 	SE_KEY,				// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,			// evValue is an ascii char
-	SE_MOUSE,			// evValue and evValue2 are relative signed x / y moves
+	SE_MOUSE,			// evValue and evValue2 are relative signed x/y moves
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE			// evPtr is a char *
 } sysEventType_t;
@@ -645,7 +645,7 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 qboolean Com_GameIsSinglePlayer(void);
 void Com_StartupVariable(const char *match);
 // checks for and removes command line "+set var arg" constructs
-// if match is NULL, all set commands will be executed, otherwise only a set with the exact name. Only used during startup.
+// if match is NULL, all set commands will be executed, otherwise only a set with the exact name. Only used during startup
 qboolean Com_PlayerNameToFieldString(char *str, int length, const char *name);
 qboolean Com_FieldStringToPlayerName(char *name, int length, const char *rawname);
 int QDECL Com_strCompare(const void *a, const void *b);
@@ -780,8 +780,8 @@ void CL_MapLoading(void);
 // do a screen update before starting to load a map when the server is going to load a new map, the entire hunk
 // will be cleared, so the client must shutdown cgame, ui, and the renderer
 void CL_ForwardCommandToServer(const char *string);
-// adds the current command line as a clc_clientCommand to the client message.
-// things like godmode, noclip, etc., are commands directed to the server, so when they are typed in at the console, they will need to be forwarded.
+// adds the current command line as a clc_clientCommand to the client message
+// things like godmode, noclip, etc., are commands directed to the server, so when they are typed in at the console, they will need to be forwarded
 void CL_FlushMemory(void);
 // dump all memory on an error
 void CL_ShutdownAll(qboolean shutdownRef);
@@ -889,8 +889,8 @@ dialogResult_t Sys_Dialog(dialogType_t type, const char *message, const char *ti
 
 void Sys_RemovePIDFile(const char *gamedir);
 void Sys_InitPIDFile(const char *gamedir);
-// This is based on the Adaptive Huffman algorithm described in Sayood's Data Compression book.
-// The ranks are not actually stored, but implicitly defined by the location of a node within a doubly-linked list
+// this is based on the Adaptive Huffman algorithm described in Sayood's Data Compression book
+// the ranks are not actually stored, but implicitly defined by the location of a node within a doubly-linked list
 #define NYT HMAX // NYT = Not Yet Transmitted
 #define INTERNAL_NODE (HMAX + 1)
 

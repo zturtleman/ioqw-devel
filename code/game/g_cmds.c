@@ -953,6 +953,7 @@ static void Cmd_Tell_f(gentity_t *ent) {
 	}
 
 	trap_Argv(1, arg, sizeof(arg));
+
 	targetNum = ClientNumberFromString(ent, arg, qtrue, qtrue);
 
 	if (targetNum == -1) {
@@ -1216,6 +1217,7 @@ void Cmd_GameCommand_f(gentity_t *ent) {
 	}
 
 	trap_Argv(2, arg, sizeof(arg));
+
 	order = atoi(arg);
 
 	if (order < 0 || order >= numgc_orders) {
@@ -1224,6 +1226,7 @@ void Cmd_GameCommand_f(gentity_t *ent) {
 	}
 
 	trap_Argv(1, arg, sizeof(arg));
+
 	targetNum = ClientNumberFromString(ent, arg, qtrue, qtrue);
 
 	if (targetNum == -1) {

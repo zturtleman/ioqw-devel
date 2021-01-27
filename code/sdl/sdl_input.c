@@ -538,26 +538,42 @@ static void IN_DeactivateMouse(qboolean isFullscreen) {
 
 // we translate axes movement into keypresses
 static int joy_keys[16] = {
-	K_LEFTARROW, K_RIGHTARROW,
-	K_UPARROW, K_DOWNARROW,
-	K_JOY17, K_JOY18,
-	K_JOY19, K_JOY20,
-	K_JOY21, K_JOY22,
-	K_JOY23, K_JOY24,
-	K_JOY25, K_JOY26,
-	K_JOY27, K_JOY28
+	K_LEFTARROW,
+	K_RIGHTARROW,
+	K_UPARROW,
+	K_DOWNARROW,
+	K_JOY17,
+	K_JOY18,
+	K_JOY19,
+	K_JOY20,
+	K_JOY21,
+	K_JOY22,
+	K_JOY23,
+	K_JOY24,
+	K_JOY25,
+	K_JOY26,
+	K_JOY27,
+	K_JOY28
 };
 
 // translate hat events into keypresses, the 4 highest buttons are used for the first hat ...
 static int hat_keys[16] = {
-	K_JOY29, K_JOY30,
-	K_JOY31, K_JOY32,
-	K_JOY25, K_JOY26,
-	K_JOY27, K_JOY28,
-	K_JOY21, K_JOY22,
-	K_JOY23, K_JOY24,
-	K_JOY17, K_JOY18,
-	K_JOY19, K_JOY20
+	K_JOY29,
+	K_JOY30,
+	K_JOY31,
+	K_JOY32,
+	K_JOY25,
+	K_JOY26,
+	K_JOY27,
+	K_JOY28,
+	K_JOY21,
+	K_JOY22,
+	K_JOY23,
+	K_JOY24,
+	K_JOY17,
+	K_JOY18,
+	K_JOY19,
+	K_JOY20
 };
 
 struct {

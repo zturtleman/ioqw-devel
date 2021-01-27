@@ -290,7 +290,9 @@ gentity_t *SelectSpawnPoint(vec3_t avoidPoint, vec3_t origin, vec3_t angles, qbo
 	}
 
 	VectorCopy(spot->s.origin, origin);
+
 	origin[2] += 9;
+
 	VectorCopy(spot->s.angles, angles);
 
 	return spot;

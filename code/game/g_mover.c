@@ -983,7 +983,7 @@ void SP_func_door(gentity_t *ent) {
 	distance = DotProduct(abs_movedir, size) - lip;
 
 	VectorMA(ent->pos1, distance, ent->movedir, ent->pos2);
-	// if "start_open", reverse position 1 and 2
+	// if "START_OPEN", reverse position 1 and 2
 	if (ent->spawnflags & 1) {
 		vec3_t temp;
 

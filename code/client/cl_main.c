@@ -1997,7 +1997,7 @@ void CL_NextDownload(void) {
 		if ((s = strchr(s, '@')) != NULL) {
 			*s++ = 0;
 		} else {
-			s = localName + strlen(localName); // point at the nul byte
+			s = localName + strlen(localName); // point at the null byte
 		}
 #ifdef USE_CURL
 		if (!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
@@ -2047,7 +2047,7 @@ void CL_InitDownloads(void) {
 	if (!(cl_allowDownload->integer & DLF_ENABLE)) {
 		// autodownload is disabled on the client but it's possible that some referenced files on the server are missing
 		if (FS_ComparePaks(missingfiles, sizeof(missingfiles), qfalse)) {
-			// NOTE TTimo I would rather have that printed as a modal message box
+			// NOTE: I would rather have that printed as a modal message box
 			// but at this point while joining the game we don't know whether we will successfully join or not
 			Com_Printf("\nWARNING: You are missing some files referenced by the server:\n%s"
 					"You might not be able to join the game.\n"
@@ -3739,6 +3739,7 @@ void CL_GlobalServers_f(void) {
 	}
 
 	sprintf(command, "sv_master%d", masterNum);
+
 	masteraddress = Cvar_VariableString(command);
 
 	if (!*masteraddress) {

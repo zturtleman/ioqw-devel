@@ -1366,7 +1366,7 @@ void CG_NewClientInfo(int clientNum) {
 =======================================================================================================================================
 CG_LoadDeferredPlayers
 
-Called each frame when a player is dead and the scoreboard is up, so deferred players can be loaded.
+Called each frame when a player is dead and the scoreboard is up so deferred players can be loaded.
 =======================================================================================================================================
 */
 void CG_LoadDeferredPlayers(void) {

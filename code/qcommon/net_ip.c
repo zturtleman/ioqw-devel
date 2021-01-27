@@ -106,7 +106,7 @@ static SOCKET socks_socket = INVALID_SOCKET;
 static SOCKET multicast6_socket = INVALID_SOCKET;
 // keep track of currently joined multicast group
 static struct ipv6_mreq curgroup;
-// and the currently bound address.
+// and the currently bound address
 static struct sockaddr_in6 boundto;
 #ifndef IF_NAMESIZE
 #define IF_NAMESIZE 16

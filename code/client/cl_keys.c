@@ -58,7 +58,6 @@ keyname_t keynames[] = {
 	{"SHIFT", K_SHIFT},
 	{"COMMAND", K_COMMAND},
 	{"CAPSLOCK", K_CAPSLOCK},
-
 	{"F1", K_F1},
 	{"F2", K_F2},
 	{"F3", K_F3},
@@ -74,23 +73,19 @@ keyname_t keynames[] = {
 	{"F13", K_F13},
 	{"F14", K_F14},
 	{"F15", K_F15},
-
 	{"INS", K_INS},
 	{"DEL", K_DEL},
 	{"PGDN", K_PGDN},
 	{"PGUP", K_PGUP},
 	{"HOME", K_HOME},
 	{"END", K_END},
-
 	{"MOUSE1", K_MOUSE1},
 	{"MOUSE2", K_MOUSE2},
 	{"MOUSE3", K_MOUSE3},
 	{"MOUSE4", K_MOUSE4},
 	{"MOUSE5", K_MOUSE5},
-
 	{"MWHEELUP", K_MWHEELUP},
 	{"MWHEELDOWN", K_MWHEELDOWN},
-
 	{"JOY1", K_JOY1},
 	{"JOY2", K_JOY2},
 	{"JOY3", K_JOY3},
@@ -123,7 +118,6 @@ keyname_t keynames[] = {
 	{"JOY30", K_JOY30},
 	{"JOY31", K_JOY31},
 	{"JOY32", K_JOY32},
-
 	{"AUX1", K_AUX1},
 	{"AUX2", K_AUX2},
 	{"AUX3", K_AUX3},
@@ -140,7 +134,6 @@ keyname_t keynames[] = {
 	{"AUX14", K_AUX14},
 	{"AUX15", K_AUX15},
 	{"AUX16", K_AUX16},
-
 	{"KP_HOME", K_KP_HOME},
 	{"KP_UPARROW", K_KP_UPARROW},
 	{"KP_PGUP", K_KP_PGUP},
@@ -159,10 +152,8 @@ keyname_t keynames[] = {
 	{"KP_NUMLOCK", K_KP_NUMLOCK},
 	{"KP_STAR", K_KP_STAR},
 	{"KP_EQUALS", K_KP_EQUALS},
-
 	{"PAUSE", K_PAUSE},
 	{"SEMICOLON", ';'}, // because a raw semicolon separates commands
-
 	{"WORLD_0", K_WORLD_0},
 	{"WORLD_1", K_WORLD_1},
 	{"WORLD_2", K_WORLD_2},
@@ -259,7 +250,6 @@ keyname_t keynames[] = {
 	{"WORLD_93", K_WORLD_93},
 	{"WORLD_94", K_WORLD_94},
 	{"WORLD_95", K_WORLD_95},
-
 	{"WINDOWS", K_SUPER},
 	{"COMPOSE", K_COMPOSE},
 	{"MODE", K_MODE},
@@ -272,7 +262,6 @@ keyname_t keynames[] = {
 	{"POWER", K_POWER},
 	{"EURO", K_EURO},
 	{"UNDO", K_UNDO},
-
 	{"PAD0_A", K_PAD0_A},
 	{"PAD0_B", K_PAD0_B},
 	{"PAD0_X", K_PAD0_X},
@@ -1292,7 +1281,7 @@ void CL_KeyUpEvent(int key, unsigned time) {
 		return;
 	}
 	// key up events only perform actions if the game key binding is a button command (leading + sign). These will be processed even in
-	// console mode and menu mode, to keep the character from continuing an action started before a mode switch.
+	// console mode and menu mode, to keep the character from continuing an action started before a mode switch
 	CL_ParseBinding(key, qfalse, time);
 
 	if (Key_GetCatcher() & KEYCATCH_UI && uivm) {

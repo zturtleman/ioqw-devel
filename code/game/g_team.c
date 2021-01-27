@@ -735,7 +735,7 @@ static int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 		}
 
 		if (ent->flags & FL_DROPPED_ITEM) {
-			// hey, it's not home. return it by teleporting it back
+			// hey, it's not home. Return it by teleporting it back
 			PrintMsg(NULL, "%s" S_COLOR_WHITE " returned the %s flag!\n", cl->pers.netname, TeamName(team));
 			AddScore(other, ent->r.currentOrigin, CTF_RECOVERY_BONUS);
 
@@ -745,7 +745,7 @@ static int Team_TouchOurFlag(gentity_t *ent, gentity_t *other, int team) {
 			return 0;
 		}
 	}
-	// the flag is at home base. if the player has the enemy flag, he's just won!
+	// the flag is at home base. If the player has the enemy flag, he's just won!
 	if (!cl->ps.powerups[enemy_flag]) {
 		return 0; // we don't have the flag
 	}

@@ -2288,7 +2288,6 @@ void CG_ShowResponseHead(void) {
 	y = w = h = 0;
 
 	CG_AdjustFrom640(&x, &y, &w, &h);
-
 	Menus_OpenByName("voiceMenu");
 	trap_Cvar_SetValue("cl_conXOffset", (int)x);
 

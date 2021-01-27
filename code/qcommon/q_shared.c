@@ -921,7 +921,7 @@ int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap) {
 
 	if (retval < 0 || retval == size) {
 		// Microsoft doesn't adhere to the C99 standard of vsnprintf, which states that the return value must be the number of
-		// bytes written if the output string had sufficient length.
+		// bytes written if the output string had sufficient length
 		// obviously we cannot determine that value from Microsoft's implementation, so we have no choice but to return size.
 		str[size - 1] = '\0';
 		return size;

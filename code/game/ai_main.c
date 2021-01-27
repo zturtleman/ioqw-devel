@@ -710,6 +710,7 @@ void BotInterbreeding(void) {
 	}
 
 	trap_Cvar_Set("bot_interbreedchar", "");
+
 	bot_interbreed = qtrue;
 }
 

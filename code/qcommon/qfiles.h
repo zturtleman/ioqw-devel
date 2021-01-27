@@ -210,7 +210,7 @@ typedef struct {
 	int ofsVerts;
 	int numTriangles;
 	int ofsTriangles;
-	// Bone references are a set of ints representing all the bones present in any vertex weights for this surface. This is
+	// bone references are a set of ints representing all the bones present in any vertex weights for this surface. This is
 	// needed because a model may have surfaces that need to be drawn at different sort times, and we don't want to have
 	// to re-interpolate all the bones for each surface.
 	int numBoneReferences;
@@ -223,11 +223,11 @@ typedef struct {
 } mdrBone_t;
 
 typedef struct {
-	vec3_t bounds[2];		// bounds of all surfaces of all LOD's for this frame
-	vec3_t localOrigin;		// midpoint of bounds, used for sphere cull
-	float radius;			// dist from localOrigin to corner
+	vec3_t bounds[2];	// bounds of all surfaces of all LOD's for this frame
+	vec3_t localOrigin;	// midpoint of bounds, used for sphere cull
+	float radius;		// dist from localOrigin to corner
 	char name[16];
-	mdrBone_t bones[1];		// [numBones]
+	mdrBone_t bones[1];	// [numBones]
 } mdrFrame_t;
 
 typedef struct {

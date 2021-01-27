@@ -141,7 +141,7 @@ void S_PaintChannelFrom16_altivec(portable_samplepair_t paintbuffer[PAINTBUFFER_
 				vector unsigned char loadPermute0, loadPermute1;
 
 				// rather than permute the vectors after we load them to do the sample replication and rearrangement, we permute the alignment vector so
-				// we do everything in one step below and avoid data shuffling.
+				// we do everything in one step below and avoid data shuffling
 				tmp = vec_lvsl(0, &samples[sampleOffset]);
 				loadPermute0 = vec_perm(tmp, tmp, samplePermute0);
 				loadPermute1 = vec_perm(tmp, tmp, samplePermute1);

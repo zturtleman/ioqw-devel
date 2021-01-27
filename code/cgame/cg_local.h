@@ -212,7 +212,7 @@ typedef struct {
 typedef struct {
 	lerpFrame_t legs, torso, flag;
 	int painTime;
-	int painDirection; // flip from 0 to 1
+	int painDirection;							// flip from 0 to 1
 	qboolean painIgnore;
 	int beamgunFiring;
 	int railFireTime;
@@ -317,16 +317,16 @@ typedef struct localEntity_s {
 	int startTime;
 	int endTime;
 	int fadeInTime;
-	float lifeRate;				// 1.0 / (endTime - startTime)
+	float lifeRate;					// 1.0 / (endTime - startTime)
 	trajectory_t pos;
 	trajectory_t angles;
 	int groundEntityNum;
-	float bounceFactor;			// 0.0 = no bounce, 1.0 = perfect
+	float bounceFactor;				// 0.0 = no bounce, 1.0 = perfect
 	float color[4];
 	float radius;
 	float light;
 	vec3_t lightColor;
-	leMarkType_t leMarkType;	// mark to leave on fragment impact
+	leMarkType_t leMarkType;		// mark to leave on fragment impact
 	leBounceSoundType_t leBounceSoundType;
 	refEntity_t refEntity;
 } localEntity_t;
@@ -362,24 +362,24 @@ typedef struct {
 	qboolean infoValid;
 	char name[MAX_QPATH];
 	team_t team;
-	int botSkill;			// 0 = not bot, 1-5 = bot
+	int botSkill;					// 0 = not bot, 1-5 = bot
 	vec3_t color1;
 	vec3_t color2;
 	byte c1RGBA[4];
 	byte c2RGBA[4];
-	int score;				// updated by score servercmds
-	int location;			// location index for team mode
-	int health;				// you only get this info about your teammates
+	int score;						// updated by score servercmds
+	int location;					// location index for team mode
+	int health;						// you only get this info about your teammates
 	int armor;
 	int curWeapon;
-	int wins, losses;		// in tourney mode
-	int teamTask;			// task in teamplay (offence/defence)
+	int wins, losses;				// in tourney mode
+	int teamTask;					// task in teamplay (offence/defence)
 // Tobias DEBUG
 	int obstacleMove;
 	int aiNode;
 // Tobias END
-	qboolean teamLeader;	// true when this is a team leader
-	int powerups;			// so can display quad/flag status
+	qboolean teamLeader;			// true when this is a team leader
+	int powerups;					// so can display quad/flag status
 	int medkitUsageTime;
 	int breathPuffTime;
 	// when clientinfo is changed, the loading of models/skins/sounds can be deferred until you are dead, to prevent hitches in gameplay
@@ -390,14 +390,14 @@ typedef struct {
 	char redTeam[MAX_TEAMNAME];
 	char blueTeam[MAX_TEAMNAME];
 	qboolean deferred;
-	qboolean newAnims;		// true if using the new mission pack animations
-	qboolean fixedlegs;		// true if legs yaw is always the same as torso yaw
-	qboolean fixedtorso;	// true if torso never changes yaw
-	vec3_t headOffset;		// move head in icon views
+	qboolean newAnims;				// true if using the new mission pack animations
+	qboolean fixedlegs;				// true if legs yaw is always the same as torso yaw
+	qboolean fixedtorso;			// true if torso never changes yaw
+	vec3_t headOffset;				// move head in icon views
 	footstep_t foottype;
 	footstep_t footsteps4;
 	footstep_t footsteps8;
-	gender_t gender;		// from model
+	gender_t gender;				// from model
 	qhandle_t legsModel;
 	qhandle_t torsoModel;
 	qhandle_t headModel;
@@ -416,14 +416,14 @@ typedef struct {
 typedef struct weaponInfo_s {
 	qboolean registered;
 	gitem_t *item;
-	qhandle_t handsModel;		// the hands don't actually draw, they just position the weapon
+	qhandle_t handsModel;				// the hands don't actually draw, they just position the weapon
 	qhandle_t weaponModel;
 	qhandle_t barrelModel;
 	qhandle_t flashModel;
-	vec3_t weaponMidpoint;		// so it will rotate centered instead of by tag
+	vec3_t weaponMidpoint;				// so it will rotate centered instead of by tag
 	float flashDlight;
 	vec3_t flashDlightColor;
-	sfxHandle_t flashSound[4];	// fast firing weapons randomly choose
+	sfxHandle_t flashSound[4];			// fast firing weapons randomly choose
 	qhandle_t weaponIcon;
 	qhandle_t ammoIcon;
 	qhandle_t ammoModel;
@@ -472,44 +472,44 @@ typedef struct {
 #define NUM_SAVED_STATES (CMD_BACKUP + 2)
 
 typedef struct {
-	int clientFrame;				// incremented each frame
+	int clientFrame;						// incremented each frame
 	int clientNum;
 	qboolean demoPlayback;
-	qboolean levelShot;				// taking a level menu screenshot
+	qboolean levelShot;						// taking a level menu screenshot
 	int deferredPlayerLoading;
-	qboolean loading;				// don't defer players at initial startup
-	qboolean intermissionStarted;	// don't play voice rewards, because game will end shortly
+	qboolean loading;						// don't defer players at initial startup
+	qboolean intermissionStarted;			// don't play voice rewards, because game will end shortly
 	// there are only one or two snapshot_t that are relevant at a time
-	int latestSnapshotNum;			// the number of snapshots the client system has received
-	int latestSnapshotTime;			// the time from latestSnapshotNum, so we don't need to read the snapshot yet
-	snapshot_t *snap;				// cg.snap->serverTime <= cg.time
-	snapshot_t *nextSnap;			// cg.nextSnap->serverTime > cg.time, or NULL
+	int latestSnapshotNum;					// the number of snapshots the client system has received
+	int latestSnapshotTime;					// the time from latestSnapshotNum, so we don't need to read the snapshot yet
+	snapshot_t *snap;						// cg.snap->serverTime <= cg.time
+	snapshot_t *nextSnap;					// cg.nextSnap->serverTime > cg.time, or NULL
 	snapshot_t activeSnapshots[2];
-	float frameInterpolation;		// (float)(cg.time - cg.frame->serverTime) / (cg.nextFrame->serverTime - cg.frame->serverTime)
+	float frameInterpolation;				// (float)(cg.time - cg.frame->serverTime) / (cg.nextFrame->serverTime - cg.frame->serverTime)
 	qboolean thisFrameTeleport;
 	qboolean nextFrameTeleport;
-	int frametime;					// cg.time - cg.oldTime
-	int time;						// this is the server time value that the client is rendering at
-	int oldTime;					// time at last frame, used for missile trails and prediction checking
-	int physicsTime;				// either cg.snap->time or cg.nextSnap->time
-	int timelimitWarnings;			// 5 min, 1 min, overtime
+	int frametime;							// cg.time - cg.oldTime
+	int time;								// this is the server time value that the client is rendering at
+	int oldTime;							// time at last frame, used for missile trails and prediction checking
+	int physicsTime;						// either cg.snap->time or cg.nextSnap->time
+	int timelimitWarnings;					// 5 min, 1 min, overtime
 	int fraglimitWarnings;
-	qboolean mapRestart;			// set on a map restart to set back the weapon
-	qboolean renderingThirdPerson;	// during deaths, chasecams, etc.
+	qboolean mapRestart;					// set on a map restart to set back the weapon
+	qboolean renderingThirdPerson;			// during deaths, chasecams, etc.
 	// prediction state
-	qboolean hyperspace;			// true if prediction has hit a trigger_teleport
+	qboolean hyperspace;					// true if prediction has hit a trigger_teleport
 	playerState_t predictedPlayerState;
 	centity_t predictedPlayerEntity;
-	qboolean validPPS;				// clear until the first call to CG_PredictPlayerState
+	qboolean validPPS;						// clear until the first call to CG_PredictPlayerState
 	int predictedErrorTime;
 	vec3_t predictedError;
 	int eventSequence;
 	int predictableEvents[MAX_PREDICTED_EVENTS];
-	float stepChange;				// for stair up smoothing
+	float stepChange;						// for stair up smoothing
 	int stepTime;
-	float duckChange;				// for duck viewheight smoothing
+	float duckChange;						// for duck viewheight smoothing
 	int duckTime;
-	float landChange;				// for landing hard
+	float landChange;						// for landing hard
 	int landTime;
 	// input state sent to server
 	int weaponSelect;
@@ -520,12 +520,12 @@ typedef struct {
 	vec3_t autoAxisFast[3];
 	// view rendering
 	refdef_t refdef;
-	vec3_t refdefViewAngles;		// will be converted to refdef.viewaxis
-	float fov;						// either range checked cg_fov or forced value
+	vec3_t refdefViewAngles;				// will be converted to refdef.viewaxis
+	float fov;								// either range checked cg_fov or forced value
 	// spawn variables
-	qboolean spawning;				// the CG_Spawn *() functions are valid
+	qboolean spawning;						// the CG_Spawn *() functions are valid
 	int numSpawnVars;
-	char *spawnVars[MAX_SPAWN_VARS][2]; // key/value pairs
+	char *spawnVars[MAX_SPAWN_VARS][2];		// key/value pairs
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
 	int spawnEntityOffset;
@@ -1429,7 +1429,7 @@ qhandle_t trap_R_RegisterModel(const char *name); // returns rgb axis if not fou
 qhandle_t trap_R_RegisterShaderEx(const char *name, int lightmapIndex, qboolean mipRawImage); // returns all white if not found
 qhandle_t trap_R_RegisterShader(const char *name); // returns all white if not found
 qhandle_t trap_R_RegisterShaderNoMip(const char *name); // returns all white if not found
-// a scene is built up by calls to R_ClearScene and the various R_Add functions.
+// a scene is built up by calls to R_ClearScene and the various R_Add functions
 // nothing is drawn until R_RenderScene is called
 void trap_R_RenderScene(const refdef_t *fd);
 void trap_R_ClearScene(void);
@@ -1480,7 +1480,7 @@ void trap_Key_SetCatcher(int catcher);
 int trap_Key_GetKey(const char *binding);
 // this returns a handle. arg0 is the name in the format "idlogo.roq", set arg1 to NULL, altered states to qfalse (do not alter gamestate)
 int trap_CIN_PlayCinematic(const char *arg0, int xpos, int ypos, int width, int height, int bits);
-// stops playing the cinematic and ends it. should always return FMV_EOF
+// stops playing the cinematic and ends it. Should always return FMV_EOF
 // cinematics must be stopped in reverse order of when they are started
 e_status trap_CIN_StopCinematic(int handle);
 // will run a frame of the cinematic but will not draw it. Will return FMV_EOF if the end of the cinematic has been reached

@@ -144,7 +144,7 @@ typedef struct {
 	int checksumFeed;											// from the server for checksum calculations
 	// these are our reliable messages that go to the server
 	int reliableSequence;
-	int reliableAcknowledge;		// the last one the server has executed
+	int reliableAcknowledge;									// the last one the server has executed
 	char reliableCommands[MAX_RELIABLE_COMMANDS][MAX_STRING_CHARS];
 	// server message (unreliable) and command (reliable) sequence numbers are NOT cleared at level changes, but continue to
 	// increase as long as the connection is valid
@@ -195,7 +195,7 @@ typedef struct {
 	qboolean voipEnabled;
 	qboolean voipCodecInitialized;
 	// incoming data...
-	// !!! FIXME: convert from parallel arrays to array of a struct.
+	// !!! FIXME: convert from parallel arrays to array of a struct
 	OpusDecoder *opusDecoder[MAX_CLIENTS];
 	byte voipIncomingGeneration[MAX_CLIENTS];
 	int voipIncomingSequence[MAX_CLIENTS];
@@ -369,7 +369,7 @@ extern cvar_t *cl_mumbleScale;
 #endif
 #ifdef USE_VOIP
 // cl_voipSendTarget is a string: "all" to broadcast to everyone, "none" to send to no one, or a comma-separated list of client numbers:
-// "0, 7, 2, 23" ... an empty string is treated like "all".
+// "0, 7, 2, 23" ... an empty string is treated like "all"
 extern cvar_t *cl_voipUseVAD;
 extern cvar_t *cl_voipVADThreshold;
 extern cvar_t *cl_voipSend;

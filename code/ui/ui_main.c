@@ -500,7 +500,9 @@ void Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const cha
 				memcpy(newColor, g_color_table[ColorIndex(*(s + 1))], sizeof(newColor));
 
 				newColor[3] = color[3];
+
 				trap_R_SetColor(newColor);
+
 				s += 2;
 				continue;
 			} else {
@@ -2454,7 +2456,7 @@ static void UI_DrawGLInfo(rectDef_t *rect, float scale, vec4_t color, int textSt
 	Text_Paint(rect->x + 2, rect->y + 15, scale, color, va("VERSION: %s: %s", uiInfo.uiDC.glconfig.version_string, uiInfo.uiDC.glconfig.renderer_string), 0, 30, textStyle);
 	Text_Paint(rect->x + 2, rect->y + 30, scale, color, va("PIXELFORMAT: color(%d-bits) Z(%d-bits) stencil(%d-bits)", uiInfo.uiDC.glconfig.colorBits, uiInfo.uiDC.glconfig.depthBits, uiInfo.uiDC.glconfig.stencilBits), 0, 30, textStyle);
 	// build null terminated extension strings
-	// TTimo: https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=399
+	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=399
 	// in Team Arena this was not directly crashing, but displaying a nasty broken shader right in the middle
 	// brought down the string size to 1024, there's not much that can be shown on the screen anyway
 	Q_strncpyz(buff, uiInfo.uiDC.glconfig.extensions_string, sizeof(buff));
@@ -4731,7 +4733,7 @@ UI_BuildServerDisplayList
 static void UI_BuildServerDisplayList(int force) {
 	int i, count, clients, maxClients, ping, game, len, visible, lanSource;
 	char info[MAX_STRING_CHARS];
-	//qboolean startRefresh = qtrue; TTimo: unused
+	//qboolean startRefresh = qtrue;
 	static int numinvisible;
 
 	if (!(force || uiInfo.uiDC.realTime > uiInfo.serverStatus.nextDisplayRefresh)) {
@@ -5197,7 +5199,7 @@ static void UI_BuildFindPlayerList(qboolean force) {
 		if (!uiInfo.numFoundPlayerServers) {
 			Com_sprintf(uiInfo.foundPlayerServerNames[0], sizeof(uiInfo.foundPlayerServerNames[0]), "no servers found");
 		} else {
-			Com_sprintf(uiInfo.foundPlayerServerNames[uiInfo.numFoundPlayerServers - 1], sizeof(uiInfo.foundPlayerServerNames[0]), "%d server%s found with player %s", uiInfo.numFoundPlayerServers - 1, uiInfo.numFoundPlayerServers == 2 ? "":"s", uiInfo.findPlayerName);
+			Com_sprintf(uiInfo.foundPlayerServerNames[uiInfo.numFoundPlayerServers - 1], sizeof(uiInfo.foundPlayerServerNames[0]), "%d server%s found with player %s", uiInfo.numFoundPlayerServers - 1, uiInfo.numFoundPlayerServers == 2 ? "" : "s", uiInfo.findPlayerName);
 		}
 
 		uiInfo.nextFindPlayerRefresh = 0;
@@ -5816,7 +5818,7 @@ static void UI_ParseTeamInfo(const char *teamFile) {
 	const char *token;
 	char *p;
 	char *buff = NULL;
-	//static int mode = 0; TTimo: unused
+	//static int mode = 0;
 
 	buff = UI_GetMenuBuffer(teamFile);
 
@@ -6021,7 +6023,6 @@ static void UI_ParseGameInfo(const char *teamFile) {
 	const char *token;
 	char *p;
 	char *buff = NULL;
-	//int mode = 0; TTimo: unused
 
 	buff = UI_GetMenuBuffer(teamFile);
 

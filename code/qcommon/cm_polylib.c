@@ -524,6 +524,7 @@ void ChopWindingInPlace(winding_t **inout, vec3_t normal, vec_t dist, vec_t epsi
 	}
 
 	FreeWinding(in);
+
 	*inout = f;
 }
 

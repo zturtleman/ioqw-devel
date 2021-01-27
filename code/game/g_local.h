@@ -60,26 +60,26 @@ typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
 
 struct gentity_s {
-	entityState_t s;			// communicated by server to clients
-	entityShared_t r;			// shared by both the server system and game
+	entityState_t s;					// communicated by server to clients
+	entityShared_t r;					// shared by both the server system and game
 	//=================================================================================================================================
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER EXPECTS THE FIELDS IN THAT ORDER!
 	//=================================================================================================================================
-	struct gclient_s *client;	// NULL if not a client
+	struct gclient_s *client;			// NULL if not a client
 	qboolean inuse;
-	const char *classname;		// set in QuakeEd
-	int spawnflags;				// set in QuakeEd
-	qboolean neverFree;			// if true, FreeEntity will only unlink, bodyque uses this
-	int flags;					// FL_* variables
+	const char *classname;				// set in QuakeEd
+	int spawnflags;						// set in QuakeEd
+	qboolean neverFree;					// if true, FreeEntity will only unlink, bodyque uses this
+	int flags;							// FL_* variables
 	const char *model;
 	const char *model2;
-	int freetime;				// level.time when the object was freed
-	int eventTime;				// events will be cleared EVENT_VALID_MSEC after set
+	int freetime;						// level.time when the object was freed
+	int eventTime;						// events will be cleared EVENT_VALID_MSEC after set
 	qboolean freeAfterEvent;
 	qboolean unlinkAfterEvent;
-	qboolean physicsObject;		// if true, it can be pushed by movers and fall off edges, all game items are physicsObjects
-	float physicsBounce;		// 1.0 = continuous bounce, 0.0 = no bounce
-	int clipmask;				// brushes with this content value will be collided against when moving. items and corpses do not collide against players, for instance
+	qboolean physicsObject;				// if true, it can be pushed by movers and fall off edges, all game items are physicsObjects
+	float physicsBounce;				// 1.0 = continuous bounce, 0.0 = no bounce
+	int clipmask;						// brushes with this content value will be collided against when moving. Items and corpses do not collide against players, for instance
 	// movers
 	moverState_t moverState;
 	int soundPos1;
@@ -92,7 +92,7 @@ struct gentity_s {
 	gentity_t *prevTrain;
 	vec3_t pos1, pos2;
 	char *message;
-	int timestamp;				// body queue sinking, etc.
+	int timestamp;						// body queue sinking, etc.
 	const char *target;
 	const char *targetname;
 	const char *team;
@@ -103,18 +103,18 @@ struct gentity_s {
 	vec3_t movedir;
 	int nextthink;
 	void (*think)(gentity_t *self);
-	void (*reached)(gentity_t *self); // movers call this when hitting endpoint
+	void (*reached)(gentity_t *self);	// movers call this when hitting endpoint
 	void (*blocked)(gentity_t *self, gentity_t *other);
 	void (*touch)(gentity_t *self, gentity_t *other, trace_t *trace);
 	void (*use)(gentity_t *self, gentity_t *other, gentity_t *activator);
 	void (*pain)(gentity_t *self, gentity_t *attacker, int damage);
 	void (*die)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
 	int pain_debounce_time;
-	int fly_sound_debounce_time; // wind tunnel
+	int fly_sound_debounce_time;		// wind tunnel
 	int health;
 	qboolean takedamage;
 	int damage;
-	int splashDamage;			// quad will increase this without increasing radius
+	int splashDamage;					// quad will increase this without increasing radius
 	int splashRadius;
 	int methodOfDeath;
 	int splashMethodOfDeath;
@@ -122,8 +122,8 @@ struct gentity_s {
 	gentity_t *chain;
 	gentity_t *enemy;
 	gentity_t *activator;
-	gentity_t *teamchain;		// next entity in team
-	gentity_t *teammaster;		// master of the team
+	gentity_t *teamchain;				// next entity in team
+	gentity_t *teammaster;				// master of the team
 	int kamikazeTime;
 	int kamikazeShockTime;
 	int watertype;
@@ -133,13 +133,13 @@ struct gentity_s {
 	// timing variables
 	float wait;
 	float random;
-	gitem_t *item;				// for bonus items
+	gitem_t *item;						// for bonus items
 	// dlights
 	vec3_t dl_color;
 	char *dl_stylestring;
 	char *dl_shader;
 	int dl_atten;
-	int botAreaNum;				// last checked area num
+	int botAreaNum;						// last checked area num
 	vec3_t botAreaPos;
 };
 
@@ -169,15 +169,15 @@ typedef struct {
 	float lastfraggedcarrier;
 } playerTeamState_t;
 // client data that stays across multiple levels or tournament restarts
-// this is achieved by writing all the data to cvar strings at game shutdown time and reading them back at connection time.
+// this is achieved by writing all the data to cvar strings at game shutdown time and reading them back at connection time
 // anything added here MUST be dealt with in G_InitSessionData()/G_ReadClientSessionData()/G_WriteSessionData()
 typedef struct {
 	team_t sessionTeam;
-	int spectatorNum;		// for determining next-in-line to play
+	int spectatorNum;			// for determining next-in-line to play
 	spectatorState_t spectatorState;
-	int spectatorClient;	// for chasecam and follow mode
-	int wins, losses;		// tournament stats
-	qboolean teamLeader;	// true when this client is a team leader
+	int spectatorClient;		// for chasecam and follow mode
+	int wins, losses;			// tournament stats
+	qboolean teamLeader;		// true when this client is a team leader
 } clientSession_t;
 
 #define MAX_NETNAME 36
@@ -199,39 +199,39 @@ typedef struct {
 // this structure is cleared on each ClientSpawn(), except for 'client->pers' and 'client->sess'
 struct gclient_s {
 	// ps MUST be the first element, because the server expects it
-	playerState_t ps;		// communicated by server to clients
+	playerState_t ps;			// communicated by server to clients
 	// the rest of the structure is private to game
 	clientPersistant_t pers;
 	clientSession_t sess;
-	qboolean readyToExit;	// wishes to leave the intermission
+	qboolean readyToExit;		// wishes to leave the intermission
 	qboolean noclip;
-	int lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION we can't just use pers.lastCommand.time, because of the g_sycronousclients case
+	int lastCmdTime;			// level.time of last usercmd_t, for EF_CONNECTION we can't just use pers.lastCommand.time, because of the g_sycronousclients case
 	int buttons;
 	int oldbuttons;
 	int latched_buttons;
 	vec3_t oldOrigin;
 	// sum up damage over an entire frame, so shotgun blasts give a single big kick
-	int damage_armor;		// damage absorbed by armor
-	int damage_blood;		// damage taken out of health
-	int damage_knockback;	// impact damage
-	vec3_t damage_from;		// origin for vector calculation
+	int damage_armor;			// damage absorbed by armor
+	int damage_blood;			// damage taken out of health
+	int damage_knockback;		// impact damage
+	vec3_t damage_from;			// origin for vector calculation
 	qboolean damage_fromWorld;	// if true, don't use the damage_from vector
-	int accurateCount;		// for "impressive" reward sound
-	int accuracy_shots;		// total number of shots
-	int accuracy_hits;		// total number of hits
-	int lastkilled_client;	// last client that this client killed
-	int lasthurt_client;	// last client that damaged this client
-	int lasthurt_time;		// time of the last damage
-	int lasthurt_mod;		// type of damage the client did
+	int accurateCount;			// for "impressive" reward sound
+	int accuracy_shots;			// total number of shots
+	int accuracy_hits;			// total number of hits
+	int lastkilled_client;		// last client that this client killed
+	int lasthurt_client;		// last client that damaged this client
+	int lasthurt_time;			// time of the last damage
+	int lasthurt_mod;			// type of damage the client did
 	// timers
-	int respawnTime;		// can respawn when time > this, force after g_forcerespwan
-	int inactivityTime;		// kick players when time > this
+	int respawnTime;			// can respawn when time > this, force after g_forcerespwan
+	int inactivityTime;			// kick players when time > this
 	qboolean inactivityWarning;	// qtrue if the five seoond warning has been given
 	int rewardTime;
 	int airOutTime;
-	int lastKillTime;		// for multiple kill rewards
-	qboolean fireHeld;		// used for hook
-	int switchTeamTime;		// time the player switched teams
+	int lastKillTime;			// for multiple kill rewards
+	qboolean fireHeld;			// used for hook
+	int switchTeamTime;			// time the player switched teams
 	// timeResidual is used to handle events that happen every second like health/armor countdowns and regeneration
 	int timeResidual;
 	gentity_t *persistantPowerup;
@@ -240,63 +240,63 @@ struct gclient_s {
 };
 // this structure is cleared as each map is entered
 typedef struct {
-	struct gclient_s *clients;		// [maxclients]
+	struct gclient_s *clients;						// [maxclients]
 	struct gentity_s *gentities;
 	int gentitySize;
-	int num_entities;				// MAX_CLIENTS <= num_entities <= ENTITYNUM_MAX_NORMAL
-	int warmupTime;					// restart match at this time
+	int num_entities;								// MAX_CLIENTS <= num_entities <= ENTITYNUM_MAX_NORMAL
+	int warmupTime;									// restart match at this time
 	fileHandle_t logFile;
 	// store latched cvars here that we want to get at often
 	int maxclients;
 	qboolean mapcoordsValid, tracemapLoaded;
 	vec2_t mapcoordsMins, mapcoordsMaxs;
 	int framenum;
-	int time;						// in msec
-	int previousTime;				// so movers can back up when blocked
-	int startTime;					// level.time the map was started
+	int time;										// in msec
+	int previousTime;								// so movers can back up when blocked
+	int startTime;									// level.time the map was started
 	int teamScores[TEAM_NUM_TEAMS];
-	int lastTeamLocationTime;		// last time of client team location update
-	qboolean newSession;			// don't use any old session data, because we changed gametype
-	qboolean restarted;				// waiting for a map_restart to fire
+	int lastTeamLocationTime;						// last time of client team location update
+	qboolean newSession;							// don't use any old session data, because we changed gametype
+	qboolean restarted;								// waiting for a map_restart to fire
 	int numConnectedClients;
-	int numNonSpectatorClients;		// includes connecting clients
-	int numPlayingClients;			// connected, non-spectators
-	int sortedClients[MAX_CLIENTS];	// sorted by score
-	int follow1, follow2;			// clientNums for auto-follow spectators
-	int snd_fry;					// sound index for standing in lava
-	int warmupModificationCount;	// for detecting if g_warmup is changed
-	int botReportModificationCount; // Tobias DEBUG
+	int numNonSpectatorClients;						// includes connecting clients
+	int numPlayingClients;							// connected, non-spectators
+	int sortedClients[MAX_CLIENTS];					// sorted by score
+	int follow1, follow2;							// clientNums for auto-follow spectators
+	int snd_fry;									// sound index for standing in lava
+	int warmupModificationCount;					// for detecting if g_warmup is changed
+	int botReportModificationCount;					// Tobias DEBUG
 	// voting state
 	char voteString[MAX_STRING_CHARS];
 	char voteDisplayString[MAX_STRING_CHARS];
-	int voteTime;					// level.time vote was called
-	int voteExecuteTime;			// time the vote is executed
+	int voteTime;									// level.time vote was called
+	int voteExecuteTime;							// time the vote is executed
 	int voteYes;
 	int voteNo;
-	int numVotingClients;			// set by CalculateRanks
+	int numVotingClients;							// set by CalculateRanks
 	// team voting state
 	char teamVoteString[2][MAX_STRING_CHARS];
-	int teamVoteTime[2];			// level.time vote was called
+	int teamVoteTime[2];							// level.time vote was called
 	int teamVoteYes[2];
 	int teamVoteNo[2];
-	int numteamVotingClients[2];	// set by CalculateRanks
+	int numteamVotingClients[2];					// set by CalculateRanks
 	// spawn variables
-	qboolean spawning;				// the G_Spawn*() functions are valid
+	qboolean spawning;								// the G_Spawn*() functions are valid
 	int numSpawnVars;
-	char *spawnVars[MAX_SPAWN_VARS][2];	// key/value pairs
+	char *spawnVars[MAX_SPAWN_VARS][2];				// key/value pairs
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
 	// intermission state
-	int intermissionQueued;			// intermission was qualified, but wait INTERMISSION_DELAY_TIME before actually going there so the last frag can be watched. Disable future kills during this delay
-	int intermissiontime;			// time the intermission was started
+	int intermissionQueued;							// intermission was qualified, but wait INTERMISSION_DELAY_TIME before actually going there so the last frag can be watched. Disable future kills during this delay
+	int intermissiontime;							// time the intermission was started
 	char *changemap;
-	qboolean readyToExit;			// at least one client wants to exit
+	qboolean readyToExit;							// at least one client wants to exit
 	int exitTime;
-	vec3_t intermission_origin;		// also used for spectator spawns
+	vec3_t intermission_origin;						// also used for spectator spawns
 	vec3_t intermission_angle;
-	qboolean locationLinked;		// target_locations get linked
-	gentity_t *locationHead;		// head of the location list
-	int bodyQueIndex;				// dead bodies
+	qboolean locationLinked;						// target_locations get linked
+	gentity_t *locationHead;						// head of the location list
+	int bodyQueIndex;								// dead bodies
 	gentity_t *bodyQue[BODY_QUEUE_SIZE];
 } level_locals_t;
 // g_spawn.c
@@ -489,8 +489,8 @@ extern gentity_t g_entities[MAX_GENTITIES];
 extern vmCvar_t g_gametype;
 extern vmCvar_t g_dedicated;
 extern vmCvar_t g_cheats;
-extern vmCvar_t g_maxclients;		// allow this many total, including spectators
-extern vmCvar_t g_maxGameClients;	// allow this many active
+extern vmCvar_t g_maxclients; // allow this many total, including spectators
+extern vmCvar_t g_maxGameClients; // allow this many active
 extern vmCvar_t g_restarted;
 extern vmCvar_t g_dmflags;
 extern vmCvar_t g_fraglimit;

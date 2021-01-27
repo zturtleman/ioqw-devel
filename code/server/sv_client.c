@@ -757,7 +757,7 @@ int SV_WriteDownloadToClient(client_t *cl, msg_t *msg) {
 					Com_sprintf(errorMessage, sizeof(errorMessage), "Could not download \"%s\" because autodownloading is disabled on the server.\nThe server you are connecting to is not a pure server, set autodownload to No in your settings and you might be able to join the game anyway.\n", cl->downloadName);
 				}
 			} else {
-				// NOTE TTimo this is NOT supposed to happen unless bug in our filesystem scheme?
+				// NOTE: this is NOT supposed to happen unless bug in our filesystem scheme?
 				// if the pk3 is referenced, it must have been found somewhere in the filesystem
 				Com_Printf("clientDownload: %d : \"%s\" file not found on server\n", (int)(cl - svs.clients), cl->downloadName);
 				Com_sprintf(errorMessage, sizeof(errorMessage), "File \"%s\" not found on server for autodownloading.\n", cl->downloadName);

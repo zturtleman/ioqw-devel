@@ -694,7 +694,6 @@ static int propMapB[26][3] = {
 #define PROPB_GAP_WIDTH 4
 #define PROPB_SPACE_WIDTH 12
 #define PROPB_HEIGHT 36
-
 /*
 =======================================================================================================================================
 UI_DrawBannerString2

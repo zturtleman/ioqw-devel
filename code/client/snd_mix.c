@@ -70,7 +70,6 @@ void S_WriteLinearBlastStereo16(void) {
 }
 #elif defined(__GNUC__)
 // uses snd_mixa.s
-
 /*
 =======================================================================================================================================
 S_WriteLinearBlastStereo16

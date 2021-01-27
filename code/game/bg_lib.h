@@ -26,10 +26,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
  Standard C library replacement routines used by code compiled for the virtual machine.
 **************************************************************************************************************************************/
 
-// This file is NOT included on native builds
+// this file is NOT included on native builds
 #if !defined(BG_LIB_H) && defined(Q3_VM)
 #define BG_LIB_H
-// Ignore __attribute__ on non-gcc platforms
+// ignore __attribute__ on non-gcc platforms
 #ifndef __GNUC__
 #ifndef __attribute__
 #define __attribute__(x)
@@ -74,13 +74,13 @@ typedef char *va_list;
 #define isxdigit(c) (isxupper(c) || isxlower(c))
 #define isxlower(c) (isdigit(c) || (c >= 'a' && c <= 'f'))
 #define isxupper(c) (isdigit(c) || (c >= 'A' && c <= 'F'))
-// Misc functions
+// misc functions
 typedef int cmp_t(const void *, const void *);
 void qsort(void *a, size_t n, size_t es, cmp_t *cmp);
 void srand(unsigned seed);
 int rand(void);
 void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, cmp_t *compar);
-// String functions
+// string functions
 size_t strlen(const char *string);
 char *strcat(char *strDestination, const char *strSource);
 char *strcpy(char *strDestination, const char *strSource);
@@ -99,11 +99,11 @@ int _atoi(const char **stringPtr);
 long strtol(const char *nptr, char **endptr, int base);
 int Q_vsnprintf(char *buffer, size_t length, const char *fmt, va_list argptr);
 int sscanf(const char *buffer, const char *fmt, ...) __attribute__((format(scanf, 2, 3)));
-// Memory functions
+// memory functions
 void *memmove(void *dest, const void *src, size_t count);
 void *memset(void *dest, int c, size_t count);
 void *memcpy(void *dest, const void *src, size_t count);
-// Math functions
+// math functions
 double ceil(double x);
 double floor(double x);
 double sqrt(double x);

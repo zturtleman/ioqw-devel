@@ -181,7 +181,7 @@ void QDECL Com_Printf(const char *fmt, ...) {
 		}
 
 		Q_strcat(rd_buffer, rd_buffersize, msg);
-		// TTimo nooo .. that would defeat the purpose
+		// nooo .. that would defeat the purpose
 		//rd_flush(rd_buffer);
 		//*rd_buffer = 0;
 		return;
@@ -193,7 +193,7 @@ void QDECL Com_Printf(const char *fmt, ...) {
 	Sys_Print(msg);
 	// logfile
 	if (com_logfile && com_logfile->integer) {
-		// TTimo: only open the console.log if the filesystem is in an initialized state
+		// only open the console.log if the filesystem is in an initialized state
 		// also, avoid recursing in the console.log opening (i.e. if fs_debug is on)
 		if (!logfile && FS_Initialized() && !opening_qconsole) {
 			struct tm *newtime;
@@ -341,7 +341,6 @@ void QDECL Com_Error(int code, const char *fmt, ...) {
 	}
 
 	Com_Shutdown();
-
 	Sys_Error("%s", com_errorMessage);
 }
 
@@ -2724,6 +2723,7 @@ void Com_ReadFromPipe(void) {
 			Cbuf_ExecuteText(EXEC_APPEND, buf);
 			*brk = tmp;
 			accu -= brk - buf;
+
 			memmove(buf, brk, accu + 1);
 		} else if (accu >= sizeof(buf) - 1) { // full
 			Cbuf_ExecuteText(EXEC_APPEND, buf);

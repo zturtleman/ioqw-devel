@@ -382,7 +382,7 @@ int BotNextConsoleMessage(int chatstate, bot_consolemessage_t *cm) {
 		Q_strncpyz(cm->message, firstmsg->message, sizeof(cm->message));
 		// we omit setting the two pointers in cm because pointer size in the VM differs between the size in the engine on 64 bit
 		// machines, which would lead to a buffer overflow if this functions is called from the VM. The pointers are of no interest
-		// to functions calling BotNextConsoleMessage anyways.
+		// to functions calling BotNextConsoleMessage anyways
 		return cm->handle;
 	}
 

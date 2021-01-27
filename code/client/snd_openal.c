@@ -1096,6 +1096,7 @@ static void S_AL_StartLocalSound(sfxHandle_t sfx, int channel) {
 	S_AL_SrcSetup(src, sfx, SRCPRI_LOCAL, -1, channel, qtrue);
 	// start it playing
 	srcList[src].isPlaying = qtrue;
+
 	qalSourcePlay(srcList[src].alSource);
 }
 
@@ -1155,6 +1156,7 @@ static void S_AL_StartSound(vec3_t origin, int entnum, int entchannel, sfxHandle
 	S_AL_ScaleGain(curSource, sorigin);
 	// start it playing
 	curSource->isPlaying = qtrue;
+
 	qalSourcePlay(curSource->alSource);
 }
 
@@ -1384,7 +1386,6 @@ static void S_AL_SrcUpdate(void) {
 							if (master->lastTimePos >= 0) {
 								secofs = master->lastTimePos + (Sys_Milliseconds() - master->lastSampleTime) / 1000.0f;
 								secofs = fmodf(secofs, (float)curSfx->info.samples / curSfx->info.rate);
-
 								qalSourcef(curSource->alSource, AL_SEC_OFFSET, secofs);
 							}
 							// I be the master now
@@ -1685,8 +1686,8 @@ static void S_AL_StreamDie(int stream) {
 	}
 
 	streamPlaying[stream] = qfalse;
-	qalSourceStop(streamSources[stream]);
 
+	qalSourceStop(streamSources[stream]);
 	S_AL_FreeStreamChannel(stream);
 }
 
@@ -2406,10 +2407,10 @@ qboolean S_AL_Init(soundInterface_t *si) {
 			int curlen;
 
 			capture_ext = qtrue;
-			// get all available input devices + the default input device name.
+			// get all available input devices + the default input device name
 			inputdevicelist = qalcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 			defaultinputdevice = qalcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
-			// dump a list of available devices to a cvar for the user to see.
+			// dump a list of available devices to a cvar for the user to see
 			if (inputdevicelist) {
 				while ((curlen = strlen(inputdevicelist))) {
 					Q_strcat(inputdevicenames, sizeof(inputdevicenames), inputdevicelist);

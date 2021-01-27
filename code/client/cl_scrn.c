@@ -1318,7 +1318,7 @@ void SCR_DrawScreenField(stereoFrame_t stereoFrame) {
 				VM_Call(uivm, UI_DRAW_CONNECT_SCREEN, qtrue);
 				break;
 			case CA_ACTIVE:
-				// always supply STEREO_CENTER as vieworg offset is now done by the engine.
+				// always supply STEREO_CENTER as vieworg offset is now done by the engine
 				CL_CGameRendering(stereoFrame);
 				SCR_DrawDemoRecording();
 #ifdef USE_VOIP

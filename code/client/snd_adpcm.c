@@ -87,7 +87,7 @@ void S_AdpcmEncode(short indata[], char outdata[], int len, struct adpcm_state *
 		//    vpdiff = (delta + 0.5) * step / 4;
 		// but in shift step bits are dropped. The net result of this is
 		// that even if you have fast mul/div hardware you cannot put it to
-		// good use since the fixup would be too expensive.
+		// good use since the fixup would be too expensive
 		delta = 0;
 		vpdiff = (step >> 3);
 

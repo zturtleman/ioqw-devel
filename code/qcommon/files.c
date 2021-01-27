@@ -149,7 +149,7 @@ When building a pak file, make sure a config.cfg isn't present in it, or configs
 =======================================================================================================================================
 */
 
-// every time a new pk3 file is built, this checksum must be updated.
+// every time a new pk3 file is built, this checksum must be updated
 // the easiest way to get it is to just run the game and see what it spits out
 static const unsigned int pak_checksums[] = {
 	4087071573u,
@@ -242,7 +242,7 @@ typedef struct {
 } fileHandleData_t;
 
 static fileHandleData_t fsh[MAX_FILE_HANDLES];
-// TTimo - https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
+// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
 // whether we did a reorder on the current search path when joining the server
 static qboolean fs_reordered;
 // never load anything from pk3 files that are not present at the server when pure
@@ -289,7 +289,7 @@ qboolean FS_PakIsPure(pack_t *pack) {
 	if (fs_numServerPaks) {
 		for (i = 0; i < fs_numServerPaks; i++) {
 			// FIXME: also use hashed file names
-			// NOTE TTimo: a pk3 with same checksum but different name would be validated too
+			// NOTE: a pk3 with same checksum but different name would be validated too
 			// I don't see this as allowing for any exploit, it would only happen if the client does manips of its file names 'not a bug'
 			if (pack->checksum == fs_serverPaks[i]) {
 				return qtrue; // on the approved list
@@ -1216,7 +1216,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 		// check a file in the directory tree
 		// if we are running restricted, the only files we will allow to come from the directory are .cfg files
 		len = strlen(filename);
-		// FIXME TTimo I'm not sure about the fs_numServerPaks test if you are using FS_ReadFile to find out if a file exists,
+		// FIXME: I'm not sure about the fs_numServerPaks test if you are using FS_ReadFile to find out if a file exists,
 		// this test can make the search fail although the file is in the directory
 		// I had the problem on https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=8
 		// turned out I used FS_FileExists instead

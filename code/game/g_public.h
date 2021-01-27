@@ -61,7 +61,7 @@ typedef struct {
 	vec3_t mins, maxs;
 	int contents;			// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc., a non-solid entity should set to 0
 	vec3_t absmin, absmax;	// derived from mins/maxs and origin + rotation
-	// currentOrigin will be used for all collision detection and world linking.
+	// currentOrigin will be used for all collision detection and world linking
 	// it will not necessarily be the same as the trajectory evaluation for the current time, because each entity must be moved one at a
 	// time after time is advanced to avoid simultanious collision issues
 	vec3_t currentOrigin;

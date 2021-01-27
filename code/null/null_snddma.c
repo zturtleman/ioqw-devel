@@ -89,6 +89,7 @@ SNDDMA_AvailableCaptureSamples
 int SNDDMA_AvailableCaptureSamples(void) {
 	return 0;
 }
+
 /*
 =======================================================================================================================================
 SNDDMA_Capture

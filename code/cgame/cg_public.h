@@ -44,15 +44,15 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_ENTITIES_IN_SNAPSHOT 256
 
 typedef struct {
-	int snapFlags;						// SNAPFLAG_RATE_DELAYED, etc.
+	int snapFlags;										// SNAPFLAG_RATE_DELAYED, etc.
 	int ping;
-	int serverTime;						// server time the message is valid for (in msec)
-	byte areamask[MAX_MAP_AREA_BYTES];	// portalarea visibility bits
-	playerState_t ps;					// complete information about the current player at this time
+	int serverTime;										// server time the message is valid for (in msec)
+	byte areamask[MAX_MAP_AREA_BYTES];					// portalarea visibility bits
+	playerState_t ps;									// complete information about the current player at this time
 	int numEntities;
-	entityState_t entities[MAX_ENTITIES_IN_SNAPSHOT]; // all of the entities that need to be presented at the time of this snapshot
-	int numServerCommands;				// text based server commands to execute when this
-	int serverCommandSequence;			// snapshot becomes current
+	entityState_t entities[MAX_ENTITIES_IN_SNAPSHOT];	// all of the entities that need to be presented at the time of this snapshot
+	int numServerCommands;								// text based server commands to execute when this
+	int serverCommandSequence;							// snapshot becomes current
 } snapshot_t;
 
 enum {
@@ -217,11 +217,11 @@ typedef enum {
 	// opportunity to flush and close any open files
 	CG_CONSOLE_COMMAND,
 //	qboolean (*CG_ConsoleCommand)(void);
-	// a console command has been issued locally that is not recognized by the main game system.
+	// a console command has been issued locally that is not recognized by the main game system
 	// use Cmd_Argc() / Cmd_Argv() to read the command, return qfalse if the command is not known to the game
 	CG_DRAW_ACTIVE_FRAME,
 //	void (*CG_DrawActiveFrame)(int serverTime, stereoFrame_t stereoView, qboolean demoPlayback);
-	// generates and draws a game scene and status information at the given time.
+	// generates and draws a game scene and status information at the given time
 	// if demoPlayback is set, local movement prediction will not be enabled
 	CG_CROSSHAIR_PLAYER,
 //	int (*CG_CrosshairPlayer)(void);

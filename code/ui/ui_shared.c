@@ -2922,6 +2922,7 @@ static void Scroll_ListBox_ThumbFunc(void *p) {
 		// this is done a bit sideways as the autoscroll "knows" that the item is a listbox
 		// so it calls it directly
 		Item_ListBox_HandleKey(si->item, si->scrollKey, qtrue, qfalse);
+
 		si->nextScrollTime = DC->realTime + si->adjustValue;
 	}
 
