@@ -391,13 +391,7 @@ void Touch_Item(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			break;
 		case IT_POWERUP:
 			respawn = Pickup_Powerup(ent, other);
-			// allow prediction for some powerups
-			if (ent->item->giTag == PW_QUAD) {
-				predict = qtrue;
-			} else {
-				predict = qfalse;
-			}
-
+			predict = qfalse;
 			break;
 		case IT_PERSISTANT_POWERUP:
 			respawn = Pickup_PersistantPowerup(ent, other);
@@ -584,12 +578,6 @@ void FinishSpawningItem(gentity_t *ent) {
 	ent->touch = Touch_Item;
 	// using an item causes it to respawn
 	ent->use = Use_Item;
-	// for pickup prediction
-	if (ent->count) {
-		ent->s.time2 = ent->count;
-	} else if (ent->item) {
-		ent->s.time2 = ent->item->quantity;
-	}
 
 	if (ent->spawnflags & 1) {
 		// suspended

@@ -478,12 +478,6 @@ void CG_PainEvent(centity_t *cent, int health) {
 
 	// don't do more than two pain sounds a second
 	if (cg.time - cent->pe.painTime < 500) {
-		cent->pe.painIgnore = qfalse;
-		return;
-	}
-
-	if (cent->pe.painIgnore) {
-		cent->pe.painIgnore = qfalse;
 		return;
 	}
 	// default pain sounds
@@ -519,25 +513,19 @@ An entity has an event value. Also called by CG_CheckPlayerstateEvents.
 =======================================================================================================================================
 */
 #define DEBUGNAME(x) if (cg_debugEvents.integer) {CG_Printf(x"\n");}
-void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
+void CG_EntityEvent(centity_t *cent, vec3_t position) {
 	entityState_t *es;
-	entity_event_t event;
+	int event;
 	vec3_t dir;
 	const char *s;
 	int clientNum;
 	clientInfo_t *ci;
-	centity_t *ce;
 
 	es = &cent->currentState;
 	event = es->event & ~EV_EVENT_BITS;
 
-	if ((unsigned) event >= EV_MAX) {
-		CG_Error("Unknown event: %i", event);
-		return;
-	}
-
 	if (cg_debugEvents.integer) {
-		CG_Printf("ent:%3i  event:%3i %s", es->number, event, eventnames[event]);
+		CG_Printf("ent:%3i  event:%3i ", es->number, event);
 	}
 
 	if (!event) {
@@ -829,14 +817,12 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			DEBUGNAME("EV_FALL_DIE");
 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*df1.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 			break;
 		case EV_FALL_DMG_50:
 			DEBUGNAME("EV_FALL_DMG_50");
 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff5.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 
 			if (clientNum == cg.predictedPlayerState.clientNum) {
@@ -850,7 +836,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			DEBUGNAME("EV_FALL_DMG_25");
 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff4.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 
 			if (clientNum == cg.predictedPlayerState.clientNum) {
@@ -864,7 +849,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			DEBUGNAME("EV_FALL_DMG_15");
 			trap_S_StartSound(NULL, es->number, CHAN_AUTO, CG_CustomSound(es->number, "*ff3.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 
 			if (clientNum == cg.predictedPlayerState.clientNum) {
@@ -879,7 +863,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			// use normal pain sound
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*ff2.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 
 			if (clientNum == cg.predictedPlayerState.clientNum) {
@@ -894,7 +877,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			// use normal pain sound
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*ff1.wav"), 64);
 
-			cent->pe.painIgnore = qtrue;
 			cent->pe.painTime = cg.time; // don't play a pain sound right after this
 
 			if (clientNum == cg.predictedPlayerState.clientNum) {
@@ -917,11 +899,7 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 			break;
 		case EV_JUMP:
 			DEBUGNAME("EV_JUMP");
-			// pain event with fast sequential jump just creates sound distortion
-			if (cg.time - cent->pe.painTime > 50) {
-				trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*jd1.wav"), 64);
-			}
-
+			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*jd1.wav"), 64);
 			break;
 		case EV_JUMP_PAD:
 			DEBUGNAME("EV_JUMP_PAD");
@@ -1464,7 +1442,7 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 					break;
 				}
 				// if we are interpolating, we don't need to smooth steps
-				if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cgs.synchronousClients) {
+				if (cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg_nopredict.integer || cg_synchronousClients.integer) {
 					break;
 				}
 				// check for stepping up before a previous step is completed
@@ -1511,17 +1489,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 					break;
 				}
 
-				if (entityNum >= 0) {
-					// our predicted entity
-					ce = cg_entities + entityNum;
-
-					if (ce->delaySpawn > cg.time && ce->delaySpawnPlayed) {
-						break; // delay item pickup
-					}
-				} else {
-					ce = NULL;
-				}
-
 				item = &bg_itemlist[index];
 				// powerups and team items will have a separate global sound, this one will be played at prediction time
 				if (item->giType == IT_POWERUP || item->giType == IT_TEAM) {
@@ -1548,10 +1515,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 				if (es->number == cg.snap->ps.clientNum) {
 					CG_ItemPickup(index);
 				}
-
-				if (ce) {
-					ce->delaySpawnPlayed = qtrue;
-				}
 			}
 
 			break;
@@ -1565,17 +1528,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 				if (index < 1 || index >= bg_numItems) {
 					break;
 				}
-
-				if (entityNum >= 0) {
-					// our predicted entity
-					ce = cg_entities + entityNum;
-
-					if (ce->delaySpawn > cg.time && ce->delaySpawnPlayed) {
-						break;
-					}
-				} else {
-					ce = NULL;
-				}
 				// powerup pickups aren't global if an announcer sound is already playing
 				if (cg.soundPlaying) {
 					trap_S_StartSound(NULL, es->number, CHAN_AUTO, cgs.media.pickupSound, 52);
@@ -1586,10 +1538,6 @@ void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum) {
 				// show icon and name on status bar
 				if (es->number == cg.snap->ps.clientNum) {
 					CG_ItemPickup(index);
-				}
-
-				if (ce) {
-					ce->delaySpawnPlayed = qtrue;
 				}
 			}
 
@@ -1732,5 +1680,5 @@ void CG_CheckEvents(centity_t *cent) {
 	// calculate the position at exactly the frame time
 	BG_EvaluateTrajectory(&cent->currentState.pos, cg.snap->serverTime, cent->lerpOrigin);
 	CG_SetEntitySoundPosition(cent);
-	CG_EntityEvent(cent, cent->lerpOrigin, -1);
+	CG_EntityEvent(cent, cent->lerpOrigin);
 }

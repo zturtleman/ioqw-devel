@@ -1707,30 +1707,6 @@ lagometer_t lagometer;
 
 /*
 =======================================================================================================================================
-CG_CalculatePing
-=======================================================================================================================================
-*/
-static void CG_CalculatePing(void) {
-	int count, i, v;
-
-	cg.meanPing = 0;
-
-	for (i = 0, count = 0; i < LAG_SAMPLES; i++) {
-		v = lagometer.snapshotSamples[i];
-
-		if (v >= 0) {
-			cg.meanPing += v;
-			count++;
-		}
-	}
-
-	if (count) {
-		cg.meanPing /= count;
-	}
-}
-
-/*
-=======================================================================================================================================
 CG_AddLagometerFrameInfo
 
 Adds the current interpolate/extrapolate bar for this frame.
@@ -1918,12 +1894,8 @@ static void CG_DrawLagometer(void) {
 
 	trap_R_SetColor(NULL);
 
-	if (cg_nopredict.integer || cgs.synchronousClients) {
+	if (cg_nopredict.integer || cg_synchronousClients.integer) {
 		CG_DrawBigString(x, y, "snc", 1.0);
-	}
-
-	if (!cg.demoPlayback) {
-		CG_DrawBigString(x + 1, y, va("%ims", cg.meanPing), 1.0);
 	}
 
 	CG_DrawDisconnect();
@@ -2906,10 +2878,6 @@ void CG_DrawActive(stereoFrame_t stereoView) {
 	if (!cg.snap) {
 		CG_DrawInformation();
 		return;
-	}
-
-	if (!cg.demoPlayback) {
-		CG_CalculatePing();
 	}
 	// clear around the rendered view if sized down
 	CG_TileClear();

@@ -552,13 +552,13 @@ Use for non-pmove events that would also be predicted on the client side: jumppa
 Adds an event + parm and twiddles the event counter.
 =======================================================================================================================================
 */
-void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm) {
+void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm) {
 
 	if (!ent->client) {
 		return;
 	}
 
-	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps, -1);
+	BG_AddPredictableEventToPlayerstate(event, eventParm, &ent->client->ps);
 }
 
 /*

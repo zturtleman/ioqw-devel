@@ -189,6 +189,7 @@ typedef struct {
 	qboolean localClient;			// true if "ip" info key is "localhost"
 	qboolean initialSpawn;			// the first spawn should be at a cool location
 	qboolean predictItemPickup;		// based on cg_predictItems userinfo
+	qboolean pmoveFixed;
 	char netname[MAX_NETNAME];
 	int enterTime;					// level.time the client entered the game
 	playerTeamState_t teamState;	// status in teamplay games
@@ -348,7 +349,7 @@ void G_TouchTriggers(gentity_t *ent);
 float *TempVector(float x, float y, float z);
 char *VectorToString(const vec3_t v);
 float VectorToYaw(const vec3_t vec);
-void G_AddPredictableEvent(gentity_t *ent, entity_event_t event, int eventParm);
+void G_AddPredictableEvent(gentity_t *ent, int event, int eventParm);
 void G_AddEvent(gentity_t *ent, int event, int eventParm);
 void G_SetOrigin(gentity_t *ent, vec3_t origin);
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);

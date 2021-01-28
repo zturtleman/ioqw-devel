@@ -156,6 +156,7 @@ vmCvar_t cg_thirdPersonRange;
 vmCvar_t cg_thirdPersonAngle;
 vmCvar_t cg_drawLagometer;
 vmCvar_t cg_drawAttacker;
+vmCvar_t cg_synchronousClients;
 vmCvar_t cg_singlePlayer;
 vmCvar_t cg_teamChatTime;
 vmCvar_t cg_teamChatHeight;
@@ -175,6 +176,10 @@ vmCvar_t cg_noVoiceText;
 vmCvar_t cg_hudFiles;
 vmCvar_t cg_scorePlum;
 vmCvar_t cg_smoothClients;
+vmCvar_t pmove_fixed;
+//vmCvar_t cg_pmove_fixed;
+vmCvar_t pmove_msec;
+vmCvar_t cg_pmove_msec;
 vmCvar_t cg_cameraMode;
 vmCvar_t cg_cameraOrbit;
 vmCvar_t cg_timescaleFadeEnd;
@@ -293,6 +298,7 @@ static const cvarTable_t cgameCvarTable[] = {
 	{&cg_buildScript, "com_buildScript", "0", 0}, // force loading of all possible data amd error on failures
 	{&cg_paused, "cl_paused", "0", CVAR_ROM},
 	{&cg_blood, "com_blood", "1", CVAR_ARCHIVE},
+	{&cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO},
 	{&cg_enableDust, "cg_enableDust", "1", 0},
 	{&cg_enableBreath, "cg_enableBreath", "1", 0},
 	{&cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO},
@@ -311,6 +317,8 @@ static const cvarTable_t cgameCvarTable[] = {
 	{&cg_scorePlum, "cg_scorePlum", "0", CVAR_USERINFO|CVAR_ARCHIVE},
 	{&cg_smoothClients, "cg_smoothClients", "1", CVAR_USERINFO|CVAR_ARCHIVE},
 	{&cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
+	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO},
+	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO},
 	{&cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
 	{&cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE},
 	{&cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE},
@@ -2232,7 +2240,6 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum) {
 	cgs.levelStartTime = atoi(s);
 
 	CG_ParseServerinfo();
-	CG_ParseSysteminfo();
 	// load the new map
 	CG_LoadingString("collision map");
 	trap_CM_LoadMap(cgs.mapname);

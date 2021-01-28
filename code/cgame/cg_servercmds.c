@@ -180,28 +180,6 @@ void CG_ParseServerinfo(void) {
 
 /*
 =======================================================================================================================================
-CG_ParseSysteminfo
-=======================================================================================================================================
-*/
-void CG_ParseSysteminfo(void) {
-	const char *info;
-
-	info = CG_ConfigString(CS_SYSTEMINFO);
-
-	cgs.pmove_fixed = (atoi(Info_ValueForKey(info, "pmove_fixed"))) ? qtrue : qfalse;
-	cgs.pmove_msec = atoi(Info_ValueForKey(info, "pmove_msec"));
-
-	if (cgs.pmove_msec < 8) {
-		cgs.pmove_msec = 8;
-	} else if (cgs.pmove_msec > 33) {
-		cgs.pmove_msec = 33;
-	}
-
-	cgs.synchronousClients = (atoi(Info_ValueForKey(info, "g_synchronousClients"))) ? qtrue : qfalse;
-}
-
-/*
-=======================================================================================================================================
 CG_ParseWarmup
 =======================================================================================================================================
 */
@@ -305,8 +283,6 @@ static void CG_ConfigStringModified(void) {
 	// do something with it if necessary
 	if (num == CS_MUSIC) {
 		CG_StartMusic();
-	} else if (num == CS_SYSTEMINFO) {
-		CG_ParseSysteminfo();
 	} else if (num == CS_SERVERINFO) {
 		CG_ParseServerinfo();
 	} else if (num == CS_WARMUP) {

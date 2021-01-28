@@ -213,7 +213,6 @@ typedef struct {
 	lerpFrame_t legs, torso, flag;
 	int painTime;
 	int painDirection;							// flip from 0 to 1
-	qboolean painIgnore;
 	int beamgunFiring;
 	int railFireTime;
 	// machinegun spinning
@@ -238,8 +237,6 @@ typedef struct centity_s {
 	int trailTime;				// so missile trails can handle dropped initial packets
 	int dustTrailTime;
 	int miscTime;
-	int delaySpawn;
-	qboolean delaySpawnPlayed;
 	int snapShotTime;			// last time this entity was found in a snapshot
 	playerEntity_t pe;
 	int errorTime;				// decay the error from this time
@@ -468,8 +465,6 @@ typedef struct {
 **************************************************************************************************************************************/
 
 #define MAX_PREDICTED_EVENTS 16
-#define PICKUP_PREDICTION_DELAY 200
-#define NUM_SAVED_STATES (CMD_BACKUP + 2)
 
 typedef struct {
 	int clientFrame;						// incremented each frame
@@ -622,14 +617,6 @@ typedef struct {
 	refEntity_t testModelEntity;
 	char testModelName[MAX_QPATH];
 	qboolean testGun;
-	// optimized prediction
-	int lastPredictedCommand;
-	int lastServerTime;
-	playerState_t savedPmoveStates[NUM_SAVED_STATES];
-	int stateHead, stateTail;
-	int meanPing;
-	int timeResidual;
-	int allowPickupPrediction;
 } cg_t;
 
 /**************************************************************************************************************************************
@@ -1009,9 +996,6 @@ typedef struct {
 	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 	// media
 	cgMedia_t media;
-	qboolean pmove_fixed;
-	int pmove_msec;
-	qboolean synchronousClients;
 } cgs_t;
 
 extern cgs_t cgs;
@@ -1090,6 +1074,7 @@ extern vmCvar_t cg_thirdPersonAngle;
 extern vmCvar_t cg_thirdPerson;
 extern vmCvar_t cg_drawLagometer;
 extern vmCvar_t cg_drawAttacker;
+extern vmCvar_t cg_synchronousClients;
 extern vmCvar_t cg_singlePlayer;
 extern vmCvar_t cg_teamChatTime;
 extern vmCvar_t cg_teamChatHeight;
@@ -1106,6 +1091,9 @@ extern vmCvar_t cg_noVoiceChats;
 extern vmCvar_t cg_noVoiceText;
 extern vmCvar_t cg_scorePlum;
 extern vmCvar_t cg_smoothClients;
+extern vmCvar_t pmove_fixed;
+extern vmCvar_t pmove_msec;
+//extern vmCvar_t cg_pmove_fixed;
 extern vmCvar_t cg_cameraOrbit;
 extern vmCvar_t cg_timescaleFadeEnd;
 extern vmCvar_t cg_timescaleFadeSpeed;
@@ -1133,8 +1121,6 @@ extern vmCvar_t cg_currentSelectedPlayer;
 extern vmCvar_t cg_currentSelectedPlayerName;
 extern vmCvar_t cg_recordSPDemo;
 extern vmCvar_t cg_recordSPDemoName;
-
-extern const char *eventnames[EV_MAX];
 // cg_main.c
 const char *CG_ConfigString(int index);
 const char *CG_Argv(int arg);
@@ -1287,11 +1273,10 @@ int CG_PointContents(const vec3_t point, int passEntityNum);
 void CG_Trace(trace_t *result, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int skipNumber, int mask);
 void CG_PredictPlayerState(void);
 void CG_LoadDeferredPlayers(void);
-void CG_PlayDroppedEvents(playerState_t *ps, playerState_t *ops);
 // cg_events.c
 void CG_CheckEvents(centity_t *cent);
 const char *CG_PlaceString(int rank);
-void CG_EntityEvent(centity_t *cent, vec3_t position, int entityNum);
+void CG_EntityEvent(centity_t *cent, vec3_t position);
 void CG_PainEvent(centity_t *cent, int health);
 // cg_ents.c
 void CG_SetEntitySoundPosition(const centity_t *cent);
@@ -1359,7 +1344,6 @@ void CG_InitConsoleCommands(void);
 // cg_servercmds.c
 void CG_ExecuteNewServerCommands(int latestSequence);
 void CG_ParseServerinfo(void);
-void CG_ParseSysteminfo(void);
 void CG_SetConfigValues(void);
 void CG_ShaderStateChanged(void);
 void CG_LoadVoiceChats(void);

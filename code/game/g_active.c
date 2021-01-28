@@ -724,7 +724,9 @@ void ClientThink_Real(gentity_t *ent) {
 	if (ucmd->serverTime > level.time + 200) {
 		ucmd->serverTime = level.time + 200;
 //		G_Printf("serverTime <<<<<\n");
-	} else if (ucmd->serverTime < level.time - 1000) {
+	}
+
+	if (ucmd->serverTime < level.time - 1000) {
 		ucmd->serverTime = level.time - 1000;
 //		G_Printf("serverTime >>>>>\n");
 	}
@@ -747,7 +749,7 @@ void ClientThink_Real(gentity_t *ent) {
 		trap_Cvar_Update(&pmove_msec);
 	}
 
-	if (pmove_fixed.integer) {
+	if (pmove_fixed.integer || client->pers.pmoveFixed) {
 		ucmd->serverTime = ((ucmd->serverTime + pmove_msec.integer - 1) / pmove_msec.integer) * pmove_msec.integer;
 		//if (ucmd->serverTime - client->ps.commandTime <= 0)
 		//	return;
@@ -814,7 +816,7 @@ void ClientThink_Real(gentity_t *ent) {
 	pm.trace = trap_Trace;
 	pm.pointcontents = trap_PointContents;
 	pm.debugLevel = g_debugMove.integer;
-	pm.pmove_fixed = pmove_fixed.integer;
+	pm.pmove_fixed = pmove_fixed.integer|client->pers.pmoveFixed;
 	pm.pmove_msec = pmove_msec.integer;
 
 	VectorCopy(client->ps.origin, client->oldOrigin);
@@ -1013,7 +1015,7 @@ void ClientEndFrame(gentity_t *ent) {
 	}
 	// turn off any expired powerups
 	for (i = 0; i < MAX_POWERUPS; i++) {
-		if (ent->client->ps.powerups[i] < ent->client->pers.cmd.serverTime) {
+		if (ent->client->ps.powerups[i] < level.time) {
 			ent->client->ps.powerups[i] = 0;
 		}
 	}

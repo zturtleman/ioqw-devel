@@ -226,8 +226,6 @@ typedef enum {
 #define EF_CONNECTION		0x00001000 // draw a connection trouble sprite
 #define EF_TALK				0x00002000 // draw a talk balloon
 
-#define EF_NOPREDICT (/*EF_AWARDS|EF_PERSISTANT|*/EF_TALK)
-
 /**************************************************************************************************************************************
 
 	player_state->powerup[] indexes
@@ -421,8 +419,7 @@ typedef enum {
 	EV_USE_ITEM15,
 	EV_SCOREPLUM,			// score plum
 	EV_LIGHTNINGBOLT,
-	EV_DEBUG_LINE,
-	EV_MAX
+	EV_DEBUG_LINE
 } entity_event_t;
 
 typedef enum {
@@ -688,7 +685,7 @@ void FinalizeTracemapClamp(int *x, int *y);
 
 void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result);
 void BG_EvaluateTrajectoryDelta(const trajectory_t *tr, int atTime, vec3_t result);
-void BG_AddPredictableEventToPlayerstate(entity_event_t newEvent, int eventParm, playerState_t *ps, int entityNum);
+void BG_AddPredictableEventToPlayerstate(int newEvent, int eventParm, playerState_t *ps);
 void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad);
 void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *s, qboolean snap);
 void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s, int time, qboolean snap);
