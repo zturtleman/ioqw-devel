@@ -40,7 +40,58 @@ teamgame_t teamgame;
 
 gentity_t *neutralObelisk;
 
-static void Team_SetFlagStatus(int team, flagStatus_t status);
+static char ctfFlagStatusRemap[] = {'0', '1', '*', '*', '2'};
+static char oneFlagStatusRemap[] = {'0', '1', '2', '3', '4'};
+
+/*
+=======================================================================================================================================
+Team_SetFlagStatus
+=======================================================================================================================================
+*/
+static void Team_SetFlagStatus(int team, flagStatus_t status) {
+	qboolean modified = qfalse;
+
+	switch (team) {
+		case TEAM_RED: // CTF
+			if (teamgame.redStatus != status) {
+				teamgame.redStatus = status;
+				modified = qtrue;
+			}
+
+			break;
+		case TEAM_BLUE: // CTF
+			if (teamgame.blueStatus != status) {
+				teamgame.blueStatus = status;
+				modified = qtrue;
+			}
+
+			break;
+		case TEAM_FREE: // One Flag CTF
+			if (teamgame.flagStatus != status) {
+				teamgame.flagStatus = status;
+				modified = qtrue;
+			}
+
+			break;
+		default:
+			return;
+	}
+
+	if (modified) {
+		char st[4];
+
+		if (g_gametype.integer == GT_CTF) {
+			st[0] = ctfFlagStatusRemap[teamgame.redStatus];
+			st[1] = ctfFlagStatusRemap[teamgame.blueStatus];
+			st[2] = 0;
+		} else { // GT_1FCTF
+			st[0] = oneFlagStatusRemap[teamgame.flagStatus];
+			st[1] = 0;
+		}
+
+		trap_SetConfigstring(CS_FLAGSTATUS, st);
+	}
+}
 
 /*
 =======================================================================================================================================
@@ -208,59 +259,6 @@ qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2) {
 	}
 
 	return qfalse;
-}
-
-static char ctfFlagStatusRemap[] = {'0', '1', '*', '*', '2'};
-static char oneFlagStatusRemap[] = {'0', '1', '2', '3', '4'};
-
-/*
-=======================================================================================================================================
-Team_SetFlagStatus
-=======================================================================================================================================
-*/
-static void Team_SetFlagStatus(int team, flagStatus_t status) {
-	qboolean modified = qfalse;
-
-	switch (team) {
-		case TEAM_RED: // CTF
-			if (teamgame.redStatus != status) {
-				teamgame.redStatus = status;
-				modified = qtrue;
-			}
-
-			break;
-		case TEAM_BLUE: // CTF
-			if (teamgame.blueStatus != status) {
-				teamgame.blueStatus = status;
-				modified = qtrue;
-			}
-
-			break;
-		case TEAM_FREE: // One Flag CTF
-			if (teamgame.flagStatus != status) {
-				teamgame.flagStatus = status;
-				modified = qtrue;
-			}
-
-			break;
-		default:
-			return;
-	}
-
-	if (modified) {
-		char st[4];
-
-		if (g_gametype.integer == GT_CTF) {
-			st[0] = ctfFlagStatusRemap[teamgame.redStatus];
-			st[1] = ctfFlagStatusRemap[teamgame.blueStatus];
-			st[2] = 0;
-		} else { // GT_1FCTF
-			st[0] = oneFlagStatusRemap[teamgame.flagStatus];
-			st[1] = 0;
-		}
-
-		trap_SetConfigstring(CS_FLAGSTATUS, st);
-	}
 }
 
 /*

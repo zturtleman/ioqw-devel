@@ -77,8 +77,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define FACE_GAP			0x00000004 // gap in the ground
 #define FACE_LIQUID			0x00000008 // face separating two areas with liquid
 #define FACE_LIQUIDSURFACE	0x00000010 // face separating liquid and air
-#define FACE_BRIDGE			0x00000020 // can walk over this face if bridge is closed
-#define FACE_LADDER			0x00000040 // ladder
+#define FACE_LADDER			0x00000020 // ladder
+#define FACE_BRIDGE			0x00000040 // can walk over this face if bridge is closed
 // area contents
 #define AREACONTENTS_CLUSTERPORTAL		0x00000001
 #define AREACONTENTS_VIEWPORTAL			0x00000002
@@ -102,8 +102,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define AREA_GROUNDED	0x00000001 // bot can stand on the ground
 #define AREA_DISABLED	0x00000002 // area is disabled for routing when set
 #define AREA_LIQUID		0x00000004 // area contains a liquid
-#define AREA_BRIDGE		0x00000008 // area ontop of a bridge
-#define AREA_LADDER		0x00000010 // area contains one or more ladder faces
+#define AREA_LADDER		0x00000008 // area contains one or more ladder faces
+#define AREA_BRIDGE		0x00000010 // area ontop of a bridge
 // aas file header lumps
 #define AAS_LUMPS 14
 
