@@ -2584,8 +2584,8 @@ static void R_CreateDlightImage( void ) {
 		for (y = 0; y < dlightSize; y++) {
 			float	d;
 
-			d = ( dlightSize/2 - 0.5f - x ) * ( dlightSize/2 - 0.5f - x ) +
-				( dlightSize/2 - 0.5f - y ) * ( dlightSize/2 - 0.5f - y );
+			d = ( dlightSize*0.5 - 0.5f - x ) * ( dlightSize*0.5 - 0.5f - x ) +
+				( dlightSize*0.5 - 0.5f - y ) * ( dlightSize*0.5 - 0.5f - y );
 			b = dlightSize * dlightSize * 15.625f / d;
 
 			if (dlightSize >= 64) {

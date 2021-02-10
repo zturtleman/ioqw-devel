@@ -282,7 +282,7 @@ void R_ImageList_f( void ) {
 
 		// mipmap adds about 50%
 		if (image->flags & IMGFLAG_MIPMAP)
-			estSize += estSize / 2;
+			estSize += estSize * 0.5;
 
 		sizeSuffix = "b ";
 		displaySize = estSize;
@@ -1072,12 +1072,12 @@ static void ExpandHalfTextureToGrid( byte *data, int width, int height)
 {
 	int x, y;
 
-	for (y = height / 2; y > 0; y--)
+	for (y = height * 0.5; y > 0; y--)
 	{
 		byte *outbyte = data + ((y * 2 - 1) * (width)     - 2) * 4;
 		byte *inbyte  = data + (y           * (width / 2) - 1) * 4;
 
-		for (x = width / 2; x > 0; x--)
+		for (x = width * 0.5; x > 0; x--)
 		{
 			COPYSAMPLE(outbyte, inbyte);
 
@@ -1820,7 +1820,7 @@ static void CompressMonoBlock(byte outdata[8], const byte indata[16])
 		return;
 	}
 
-	bias = diff / 2 - lo * 7;
+	bias = diff * 0.5 - lo * 7;
 	outbyte = shift = 0;
 	for (i = 0; i < 16; i++)
 	{
@@ -2883,12 +2883,12 @@ void R_CreateBuiltinImages( void ) {
 		}
 		for (x = 0; x < 2; x++)
 		{
-			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
+			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width * 0.5, height * 0.5, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
 		if (r_ssao->integer)
 		{
-			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
+			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width * 0.5, height * 0.5, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
 		for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)

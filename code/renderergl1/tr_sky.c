@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "tr_local.h"
 
 #define SKY_SUBDIVISIONS		8
-#define HALF_SKY_SUBDIVISIONS	(SKY_SUBDIVISIONS/2)
+#define HALF_SKY_SUBDIVISIONS	4
 
 static float s_cloudTexCoords[6][SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1][2];
 static float s_cloudTexP[6][SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1];

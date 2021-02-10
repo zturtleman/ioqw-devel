@@ -31,7 +31,13 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "snd_codec.h"
 // includes for the Ogg Opus codec
 #include <errno.h>
+#ifdef USE_LOCAL_HEADERS
+#include "../opus-1.3.1/include/opus.h"
+#include "../opusfile-0.12/include/opusfile.h"
+#else
+#include <opus.h>
 #include <opusfile.h>
+#endif
 // samples are 16 bit
 #define OPUS_SAMPLEWIDTH 2
 // Q3 Ogg Opus codec

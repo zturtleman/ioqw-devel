@@ -1092,8 +1092,11 @@ static void RoQReset(void) {
 	if (currentHandle < 0) {
 		return;
 	}
-
+	// properly close file so we don't run out of handles
 	FS_FCloseFile(cinTable[currentHandle].iFile);
+
+	cinTable[currentHandle].iFile = 0;
+
 	FS_FOpenFileRead(cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue);
 	// let the background thread start reading ahead
 	FS_Read(cin.file, 16, cinTable[currentHandle].iFile);
@@ -1442,7 +1445,7 @@ int CIN_PlayCinematic(const char *arg, int x, int y, int w, int h, int systemBit
 
 	if (!(systemBits & CIN_system)) {
 		for (i = 0; i < MAX_VIDEO_HANDLES; i++) {
-			if (!strcmp(cinTable[i].fileName, name)) {
+			if (!Q_stricmp(cinTable[i].fileName, name)) {
 				return i;
 			}
 		}

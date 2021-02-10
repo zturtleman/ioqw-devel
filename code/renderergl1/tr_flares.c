@@ -93,7 +93,7 @@ typedef struct flare_s {
 	shader_t	*shader;
 } flare_t;
 
-#define		MAX_FLARES		128
+#define		MAX_FLARES		256
 
 flare_t		r_flareStructs[MAX_FLARES];
 flare_t		*r_activeFlares, *r_inactiveFlares;

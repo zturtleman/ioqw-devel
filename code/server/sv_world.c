@@ -572,7 +572,7 @@ Moves the given mins/maxs volume through the world from start to end. passEntity
 not checked.
 =======================================================================================================================================
 */
-void SV_Trace(trace_t *results, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule) {
+void SV_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule) {
 	moveclip_t clip;
 	int i;
 

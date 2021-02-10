@@ -32,7 +32,11 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // includes for the OGG codec
 #include <errno.h>
 #define OV_EXCLUDE_STATIC_CALLBACKS
+#ifdef USE_LOCAL_HEADERS
+#include "../libvorbis-1.3.7/include/vorbis/vorbisfile.h"
+#else
 #include <vorbis/vorbisfile.h>
+#endif
 // the OGG codec can return the samples in a number of different formats, we use the standard signed short format
 #define OGG_SAMPLEWIDTH 2
 // Q3 OGG codec

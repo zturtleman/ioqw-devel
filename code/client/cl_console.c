@@ -27,7 +27,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 int g_console_field_width = 78;
 
 #define NUM_CON_TIMES 4
-#define CON_TEXTSIZE 32768
+#define CON_TEXTSIZE 65536
 
 typedef struct {
 	qboolean initialized;
@@ -734,6 +734,7 @@ void Con_DrawSolidConsole(float frac) {
 		text = con.text + (row % con.totallines) * con.linewidth;
 
 		for (x = 0; x < con.linewidth; x++) {
+			// skip rendering whitespace
 			if ((text[x] & 0xff) == ' ') {
 				continue;
 			}

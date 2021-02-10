@@ -1208,7 +1208,7 @@ void R_Register( void )
 	r_colorbits = ri.Cvar_Get( "r_colorbits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_depthbits = ri.Cvar_Get( "r_depthbits", "24", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "4", CVAR_ARCHIVE | CVAR_LATCH );
+	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH ); // Tobias NOTE: enabling this will stop the sunrays from working...
 	ri.Cvar_CheckRange( r_ext_multisample, 0, 4, qtrue );
 	r_overBrightBits = ri.Cvar_Get ("r_overBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1473,7 +1473,7 @@ void R_Init( void ) {
 		tr.inverseSawToothTable[i] = 1.0f - tr.sawToothTable[i];
 		tr.noiseTable[i]	= R_NoiseGet4f(0, 0, 0, i);
 
-		if ( i < FUNCTABLE_SIZE / 2 )
+		if ( i < FUNCTABLE_SIZE * 0.5 )
 		{
 			if ( i < FUNCTABLE_SIZE / 4 )
 			{

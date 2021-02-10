@@ -114,7 +114,7 @@ void MSG_ReportChangeVectors_f(void);
 #define MAX_PACKET_USERCMDS 32 // max number of usercmd_t in a packet
 #define MAX_SNAPSHOT_ENTITIES 512
 #define PORT_ANY -1
-#define MAX_RELIABLE_COMMANDS 64 // max string commands buffered for restransmit
+#define MAX_RELIABLE_COMMANDS 256 // max string commands buffered for restransmit
 
 typedef enum {
 	NA_BAD = 0, // an address lookup failed
@@ -162,7 +162,7 @@ void NET_JoinMulticast6(void);
 void NET_LeaveMulticast6(void);
 void NET_Sleep(int msec);
 
-#define MAX_MSGLEN 16384 // max length of a message, which may be fragmented into multiple packets
+#define MAX_MSGLEN 32768 // max length of a message, which may be fragmented into multiple packets
 #define MAX_DOWNLOAD_WINDOW 48 // ACK window of 48 download chunks. Cannot set this higher, or clients will overflow the reliable commands buffer
 #define MAX_DOWNLOAD_BLKSIZE 1024 // 896 byte block chunks
 #define NETCHAN_GENCHECKSUM(challenge, sequence) ((challenge) ^ ((sequence) * (challenge)))

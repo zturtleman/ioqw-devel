@@ -2389,7 +2389,7 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 	}
 	count = l->filelen / sizeof(*fogs);
 
-	// create fog strucutres for them
+	// create fog structures for them
 	s_worldData.numfogs = count + 2;
 	s_worldData.fogs = ri.Hunk_Alloc ( s_worldData.numfogs*sizeof(*out), h_low);
 	out = s_worldData.fogs + 1;
@@ -3137,7 +3137,7 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// swap all the lumps
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
+	for (i=0 ; i<sizeof(dheader_t)*0.25 ; i++) {
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 	}
 

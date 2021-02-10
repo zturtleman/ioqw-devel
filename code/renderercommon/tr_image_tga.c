@@ -296,7 +296,7 @@ void R_LoadTGA ( const char *name, byte **pic, int *width, int *height)
     unsigned char *flip = (unsigned char*)malloc (columns*4);
     unsigned char *src, *dst;
 
-    for (row = 0; row < rows/2; row++) {
+    for (row = 0; row < rows*0.5; row++) {
       src = targa_rgba + row * 4 * columns;
       dst = targa_rgba + (rows - row - 1) * 4 * columns;
 

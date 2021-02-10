@@ -1132,7 +1132,7 @@ void CM_TraceThroughTree(traceWork_t *tw, int num, float p1f, float p2f, vec3_t 
 CM_Trace
 =======================================================================================================================================
 */
-void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, clipHandle_t model, const vec3_t origin, int brushmask, int capsule, sphere_t *sphere) {
+void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, const vec3_t origin, int brushmask, int capsule, sphere_t *sphere) {
 	int i;
 	traceWork_t tw;
 	vec3_t offset;
@@ -1144,7 +1144,7 @@ void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t min
 	// fill in a default trace
 	Com_Memset(&tw, 0, sizeof(tw));
 
-	tw.trace.fraction = 1; // assume it goes the entire distance until shown otherwise
+	tw.trace.fraction = 1.0f; // assume it goes the entire distance until shown otherwise
 
 	VectorCopy(origin, tw.modelOrigin);
 
@@ -1307,7 +1307,7 @@ void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t min
 	// if allsolid is set (was entirely inside something solid), the plane is not valid
 	// if fraction == 1.0, we never hit anything, and thus the plane is not valid
 	// otherwise, the normal on the plane should have unit length
-	assert(tw.trace.allsolid || tw.trace.fraction == 1.0f || VectorLengthSquared(tw.trace.plane.normal) > 0.9999);
+	assert(tw.trace.allsolid || tw.trace.fraction == 1.0f || VectorLengthSquared(tw.trace.plane.normal) > 0.9999f);
 	*results = tw.trace;
 }
 
@@ -1316,7 +1316,7 @@ void CM_Trace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t min
 CM_BoxTrace
 =======================================================================================================================================
 */
-void CM_BoxTrace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, clipHandle_t model, int brushmask, int capsule) {
+void CM_BoxTrace(trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, int capsule) {
 	CM_Trace(results, start, end, mins, maxs, model, vec3_origin, brushmask, capsule, NULL);
 }
 
@@ -1327,7 +1327,7 @@ CM_TransformedBoxTrace
 Handles offseting and rotation of the end points for moving and rotating entities.
 =======================================================================================================================================
 */
-void CM_TransformedBoxTrace(trace_t *results, const vec3_t start, const vec3_t end, vec3_t mins, vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles, int capsule) {
+void CM_TransformedBoxTrace(trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles, int capsule) {
 	trace_t trace;
 	vec3_t start_l, end_l;
 	qboolean rotated;

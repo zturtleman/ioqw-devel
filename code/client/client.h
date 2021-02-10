@@ -38,7 +38,13 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "cl_curl.h"
 #endif // USE_CURL
 #ifdef USE_VOIP
+#ifdef USE_LOCAL_HEADERS
+#include "../opus-1.3.1/include/opus.h"
+#include "../opusfile-0.12/include/opusfile.h"
+#else
 #include <opus.h>
+#include <opusfile.h>
+#endif
 #endif
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"

@@ -309,7 +309,7 @@ static void InvertCtrl( int width, int height, srfVert_t ctrl[MAX_GRID_SIZE][MAX
 	srfVert_t	temp;
 
 	for ( i = 0 ; i < height ; i++ ) {
-		for ( j = 0 ; j < width/2 ; j++ ) {
+		for ( j = 0 ; j < width*0.5 ; j++ ) {
 			temp = ctrl[i][j];
 			ctrl[i][j] = ctrl[i][width-1-j];
 			ctrl[i][width-1-j] = temp;

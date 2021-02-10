@@ -249,14 +249,14 @@ void SV_DirectConnect(netadr_t from) {
 		if (!Sys_IsLANAddress(from)) {
 			if (sv_minPing->value && ping < sv_minPing->value) {
 				NET_OutOfBandPrint(NS_SERVER, from, "print\nServer is for high pings only\n");
-				Com_DPrintf("Client %i rejected on a too low ping\n", i);
+				Com_DPrintf("Client %i rejected on a too low ping: %i\n", i, ping);
 				challengeptr->wasrefused = qtrue;
 				return;
 			}
 
 			if (sv_maxPing->value && ping > sv_maxPing->value) {
 				NET_OutOfBandPrint(NS_SERVER, from, "print\nServer is for low pings only\n");
-				Com_DPrintf("Client %i rejected on a too high ping\n", i);
+				Com_DPrintf("Client %i rejected on a too high ping: %i\n", i, ping);
 				challengeptr->wasrefused = qtrue;
 				return;
 			}

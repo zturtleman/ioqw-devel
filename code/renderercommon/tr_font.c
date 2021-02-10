@@ -443,7 +443,7 @@ static void WriteTGA (char *filename, byte *data, int width, int height) {
 
 	// flip upside down
 	flip = (unsigned char *)ri.Malloc(width*4);
-	for(row = 0; row < height/2; row++)
+	for(row = 0; row < height*0.5; row++)
 	{
 		src = buffer + 18 + row * 4 * width;
 		dst = buffer + 18 + (height - row - 1) * 4 * width;
