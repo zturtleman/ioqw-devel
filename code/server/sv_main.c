@@ -329,6 +329,7 @@ void SV_MasterShutdown(void) {
 
 	// send a heartbeat right now
 	svs.nextHeartbeatTime = -9999;
+
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);
 	// send it again to minimize chance of drops
 	svs.nextHeartbeatTime = -9999;

@@ -4023,7 +4023,6 @@ void AAS_Reachability_FuncBobbing(void) {
 					VectorMA(startreach->start, 16, dir, end);
 
 					end[2] += 1;
-
 					numareas = AAS_TraceAreas(start, end, areas, points, 10);
 
 					if (numareas <= 0) {

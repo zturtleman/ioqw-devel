@@ -3076,7 +3076,7 @@ void CL_Init(void) {
 	cls.realtime = 0;
 
 	CL_InitInput();
-	// register our variables
+	// register client variables
 	cl_noprint = Cvar_Get("cl_noprint", "0", 0);
 #ifdef UPDATE_SERVER_NAME
 	cl_motd = Cvar_Get("cl_motd", "1", 0);
@@ -3189,7 +3189,7 @@ void CL_Init(void) {
 	Cvar_Get("cg_viewsize", "100", CVAR_ARCHIVE);
 	// make sure cg_stereoSeparation is zero as that variable is deprecated and should not be used anymore
 	Cvar_Get("cg_stereoSeparation", "0", CVAR_ROM);
-	// register our commands
+	// register client commands
 	Cmd_AddCommand("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand("configstrings", CL_Configstrings_f);
 	Cmd_AddCommand("clientinfo", CL_Clientinfo_f);
@@ -3911,7 +3911,7 @@ ping_t *CL_GetFreePing(void) {
 		}
 		// clear it
 		pingptr->adr.port = 0;
-		return (pingptr);
+		return pingptr;
 	}
 	// use oldest entry
 	pingptr = cl_pinglist;
@@ -3928,7 +3928,7 @@ ping_t *CL_GetFreePing(void) {
 		}
 	}
 
-	return (best);
+	return best;
 }
 
 /*
