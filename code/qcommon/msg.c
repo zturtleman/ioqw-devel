@@ -540,24 +540,6 @@ int MSG_ReadByte(msg_t *msg) {
 
 /*
 =======================================================================================================================================
-MSG_LookaheadByte
-=======================================================================================================================================
-*/
-int MSG_LookaheadByte(msg_t *msg) {
-	const int bloc = Huff_getBloc();
-	const int readcount = msg->readcount;
-	const int bit = msg->bit;
-	int c = MSG_ReadByte(msg);
-
-	Huff_setBloc(bloc);
-
-	msg->readcount = readcount;
-	msg->bit = bit;
-	return c;
-}
-
-/*
-=======================================================================================================================================
 MSG_ReadShort
 =======================================================================================================================================
 */
@@ -1327,7 +1309,9 @@ netField_t playerStateFields[] = {
 	{PSF(eventParms[1]), 8},
 	{PSF(externalEvent), 10},
 	{PSF(externalEventParm), 8},
-	{PSF(weapon), 5},
+	{PSF(weapons[0]), 32},
+	{PSF(weapons[1]), 32},
+	{PSF(weapon), 7},
 	{PSF(weaponstate), 4},
 	{PSF(weaponTime), -16},
 	{PSF(viewangles[0]), 0},
@@ -1350,21 +1334,38 @@ MSG_WriteDeltaPlayerstate
 =======================================================================================================================================
 */
 void MSG_WriteDeltaPlayerstate(msg_t *msg, struct playerState_s *from, struct playerState_s *to) {
-	int i;
+	int i, j, lc;
 	playerState_t dummy;
 	int statsbits;
 	int persistantbits;
-	int ammobits;
+	int ammobits[4];
+	int clipbits;
 	int powerupbits;
+	int holdablebits;
 	int numFields;
 	netField_t *field;
 	int *fromF, *toF;
 	float fullFloat;
-	int trunc, lc;
+	int trunc;
+	int startBit, endBit;
+	int print;
 
 	if (!from) {
 		from = &dummy;
 		Com_Memset(&dummy, 0, sizeof(dummy));
+	}
+
+	if (msg->bit == 0) {
+		startBit = msg->cursize * 8 - GENTITYNUM_BITS;
+	} else {
+		startBit = (msg->cursize - 1) * 8 + msg->bit - GENTITYNUM_BITS;
+	}
+	// shownet 2/3 will interleave with other printed info, -2 will just print the delta records
+	if (cl_shownet && (cl_shownet->integer >= 2 || cl_shownet->integer == -2)) {
+		print = 1;
+		Com_Printf("W|%3i: playerstate ", msg->cursize);
+	} else {
+		print = 0;
 	}
 
 	numFields = ARRAY_LEN(playerStateFields);
@@ -1430,14 +1431,6 @@ void MSG_WriteDeltaPlayerstate(msg_t *msg, struct playerState_s *from, struct pl
 		}
 	}
 
-	ammobits = 0;
-
-	for (i = 0; i < MAX_WEAPONS; i++) {
-		if (to->ammo[i] != from->ammo[i]) {
-			ammobits |= 1 << i;
-		}
-	}
-
 	powerupbits = 0;
 
 	for (i = 0; i < MAX_POWERUPS; i++) {
@@ -1446,63 +1439,142 @@ void MSG_WriteDeltaPlayerstate(msg_t *msg, struct playerState_s *from, struct pl
 		}
 	}
 
-	if (!statsbits && !persistantbits && !ammobits && !powerupbits) {
-		MSG_WriteBits(msg, 0, 1); // no change
-		return;
+	holdablebits = 0;
+
+	for (i = 0; i < MAX_HOLDABLE; i++) {
+		if (to->holdable[i] != from->holdable[i]) {
+			holdablebits |= 1 << i;
+		}
 	}
 
-	MSG_WriteBits(msg, 1, 1); // changed
+	if (statsbits || persistantbits || powerupbits || holdablebits) {
+		MSG_WriteBits(msg, 1, 1); // something changed
 
-	if (statsbits) {
+		if (statsbits) {
+			MSG_WriteBits(msg, 1, 1); // changed
+			MSG_WriteBits(msg, statsbits, MAX_STATS);
+
+			for (i = 0; i < MAX_STATS; i++) {
+				if (statsbits & (1 << i)) {
+					MSG_WriteShort(msg, to->stats[i]);
+				}
+			}
+		} else {
+			MSG_WriteBits(msg, 0, 1); // no change to stats
+		}
+
+		if (persistantbits) {
+			MSG_WriteBits(msg, 1, 1); // changed
+			MSG_WriteBits(msg, persistantbits, MAX_PERSISTANT);
+
+			for (i = 0; i < MAX_PERSISTANT; i++) {
+				if (persistantbits & (1 << i)) {
+					MSG_WriteShort(msg, to->persistant[i]);
+				}
+			}
+		} else {
+			MSG_WriteBits(msg, 0, 1); // no change to persistant
+		}
+
+		if (powerupbits) {
+			MSG_WriteBits(msg, 1, 1); // changed
+			MSG_WriteBits(msg, powerupbits, MAX_POWERUPS);
+
+			for (i = 0; i < MAX_POWERUPS; i++) {
+				if (powerupbits & (1 << i)) {
+					MSG_WriteLong(msg, to->powerups[i]);
+				}
+			}
+		} else {
+			MSG_WriteBits(msg, 0, 1); // no change to powerups
+		}
+
+		if (holdablebits) {
+			MSG_WriteBits(msg, 1, 1); // changed
+			MSG_WriteBits(msg, holdablebits, MAX_HOLDABLE);
+
+			for (i = 0; i < MAX_HOLDABLE; i++) {
+				if (holdablebits & (1 << i)) {
+					MSG_WriteShort(msg, to->holdable[i]);
+				}
+			}
+		} else {
+			MSG_WriteBits(msg, 0, 1); // no change to holdables
+		}
+	} else {
+		MSG_WriteBits(msg, 0, 1); // no change to any
+	}
+	// we split this into two groups using shorts so it wouldn't have to use a long every time ammo changed for any weap
+	// this seemed like a much friendlier option than making it read/write a long for any ammo change
+
+	// j == 0: weaps 0-15
+	// j == 1: weaps 16-31
+	// j == 2: weaps 32-47 // now up to 64 (but still pretty net-friendly)
+	// j == 3: weaps 48-63
+
+	// ammo stored
+	for (j = 0; j < 4; j++) { // modified for 64 weaps
+		ammobits[j] = 0;
+
+		for (i = 0; i < 16; i++) {
+			if (to->ammo[i + (j * 16)] != from->ammo[i + (j * 16)]) {
+				ammobits[j] |= 1 << i;
+			}
+		}
+	}
+	// also encapsulated ammo changes into one check. Clip values will change frequently, but ammo will not (only when you get ammo/reload rather than each shot)
+	if (ammobits[0] || ammobits[1] || ammobits[2] || ammobits[3]) { // if any were set...
 		MSG_WriteBits(msg, 1, 1); // changed
-		MSG_WriteBits(msg, statsbits, MAX_STATS);
 
-		for (i = 0; i < MAX_STATS; i++) {
-			if (statsbits & (1 << i)) {
-				MSG_WriteShort(msg, to->stats[i]);
+		for (j = 0; j < 4; j++) {
+			if (ammobits[j]) {
+				MSG_WriteBits(msg, 1, 1); // changed
+				MSG_WriteShort(msg, ammobits[j]);
+
+				for (i = 0; i < 16; i++) {
+					if (ammobits[j] & (1 << i)) {
+						MSG_WriteShort(msg, to->ammo[i + (j * 16)]);
+					}
+				}
+			} else {
+				MSG_WriteBits(msg, 0, 1); // no change
 			}
 		}
 	} else {
 		MSG_WriteBits(msg, 0, 1); // no change
 	}
+	// ammo in clip
+	for (j = 0; j < 4; j++) { // modified for 64 weaps
+		clipbits = 0;
 
-	if (persistantbits) {
-		MSG_WriteBits(msg, 1, 1); // changed
-		MSG_WriteBits(msg, persistantbits, MAX_PERSISTANT);
-
-		for (i = 0; i < MAX_PERSISTANT; i++) {
-			if (persistantbits & (1 << i)) {
-				MSG_WriteShort(msg, to->persistant[i]);
+		for (i = 0; i < 16; i++) {
+			if (to->ammoclip[i + (j * 16)] != from->ammoclip[i + (j * 16)]) {
+				clipbits |= 1 << i;
 			}
 		}
-	} else {
-		MSG_WriteBits(msg, 0, 1); // no change
+
+		if (clipbits) {
+			MSG_WriteBits(msg, 1, 1); // changed
+			MSG_WriteShort(msg, clipbits);
+
+			for (i = 0; i < 16; i++) {
+				if (clipbits & (1 << i)) {
+					MSG_WriteShort(msg, to->ammoclip[i + (j * 16)]);
+				}
+			}
+		} else {
+			MSG_WriteBits(msg, 0, 1); // no change
+		}
 	}
 
-	if (ammobits) {
-		MSG_WriteBits(msg, 1, 1); // changed
-		MSG_WriteBits(msg, ammobits, MAX_WEAPONS);
-
-		for (i = 0; i < MAX_WEAPONS; i++) {
-			if (ammobits & (1 << i)) {
-				MSG_WriteShort(msg, to->ammo[i]);
-			}
+	if (print) {
+		if (msg->bit == 0) {
+			endBit = msg->cursize * 8 - GENTITYNUM_BITS;
+		} else {
+			endBit = (msg->cursize - 1) * 8 + msg->bit - GENTITYNUM_BITS;
 		}
-	} else {
-		MSG_WriteBits(msg, 0, 1); // no change
-	}
 
-	if (powerupbits) {
-		MSG_WriteBits(msg, 1, 1); // changed
-		MSG_WriteBits(msg, powerupbits, MAX_POWERUPS);
-
-		for (i = 0; i < MAX_POWERUPS; i++) {
-			if (powerupbits & (1 << i)) {
-				MSG_WriteLong(msg, to->powerups[i]);
-			}
-		}
-	} else {
-		MSG_WriteBits(msg, 0, 1); // no change
+		Com_Printf(" (%i bits)\n", endBit - startBit);
 	}
 }
 
@@ -1512,7 +1584,7 @@ MSG_ReadDeltaPlayerstate
 =======================================================================================================================================
 */
 void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to) {
-	int i, lc;
+	int i, j, lc;
 	int bits;
 	netField_t *field;
 	int numFields;
@@ -1618,17 +1690,6 @@ void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to
 				}
 			}
 		}
-		// parse ammo
-		if (MSG_ReadBits(msg, 1)) {
-			LOG("PS_AMMO");
-			bits = MSG_ReadBits(msg, MAX_WEAPONS);
-
-			for (i = 0; i < MAX_WEAPONS; i++) {
-				if (bits & (1 << i)) {
-					to->ammo[i] = MSG_ReadShort(msg);
-				}
-			}
-		}
 		// parse powerups
 		if (MSG_ReadBits(msg, 1)) {
 			LOG("PS_POWERUPS");
@@ -1637,6 +1698,55 @@ void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to
 			for (i = 0; i < MAX_POWERUPS; i++) {
 				if (bits & (1 << i)) {
 					to->powerups[i] = MSG_ReadLong(msg);
+				}
+			}
+		}
+		// parse holdable stats
+		if (MSG_ReadBits(msg, 1)) {
+			LOG("PS_HOLDABLE");
+			bits = MSG_ReadBits(msg, MAX_HOLDABLE);
+
+			for (i = 0; i < 16; i++) {
+				if (bits & (1 << i)) {
+					to->holdable[i] = MSG_ReadShort(msg);
+				}
+			}
+		}
+	}
+	// we split this into two groups using shorts so it wouldn't have to use a long every time ammo changed for any weap
+	// this seemed like a much friendlier option than making it read/write a long for any ammo change
+
+	// parse ammo
+
+	// j == 0: weaps 0-15
+	// j == 1: weaps 16-31
+	// j == 2: weaps 32-47 // now up to 64 (but still pretty net-friendly)
+	// j == 3: weaps 48-63
+
+	// ammo stored
+	if (MSG_ReadBits(msg, 1)) { // check for any ammo change (0-63)
+		for (j = 0; j < 4; j++) {
+			if (MSG_ReadBits(msg, 1)) {
+				LOG("PS_AMMO");
+				bits = MSG_ReadShort(msg);
+
+				for (i = 0; i < 16; i++) {
+					if (bits & (1 << i)) {
+						to->ammo[i + (j * 16)] = MSG_ReadShort(msg);
+					}
+				}
+			}
+		}
+	}
+	// ammo in clip
+	for (j = 0; j < 4; j++) {
+		if (MSG_ReadBits(msg, 1)) {
+			LOG("PS_AMMOCLIP");
+			bits = MSG_ReadShort(msg);
+
+			for (i = 0; i < 16; i++) {
+				if (bits & (1 << i)) {
+					to->ammoclip[i + (j * 16)] = MSG_ReadShort(msg);
 				}
 			}
 		}

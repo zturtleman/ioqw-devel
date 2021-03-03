@@ -1243,7 +1243,8 @@ void CG_FireWeapon(centity_t *cent) {
 
 	ent = &cent->currentState;
 
-	if (ent->weapon == WP_NONE) {
+	if (ent->weapon <= WP_NONE) {
+		CG_Error("CG_FireWeapon: ent->weapon <= WP_NONE");
 		return;
 	}
 
@@ -1313,7 +1314,7 @@ void CG_RegisterWeapon(int weaponNum) {
 
 	weaponInfo = &cg_weapons[weaponNum];
 
-	if (weaponNum == 0) {
+	if (weaponNum <= WP_NONE || weaponNum >= WP_NUM_WEAPONS) {
 		return;
 	}
 
@@ -1928,22 +1929,36 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 */
 
+#define HUD_ICONSIZE 28
+#define HUD_ICONSIZESEL 8
+#define HUD_ICONSPACE 4
+#define HUD_MARKERSIZE 40
+#define HUD_OFFSETSIZE ((HUD_MARKERSIZE - HUD_ICONSIZE) * 0.5f)
+#define HUD_X (320 - (HUD_ICONSIZE / 2))
+#define HUD_FADE_DIST 160
 /*
 =======================================================================================================================================
 CG_DrawWeaponSelect
+
+Tobias TODO:
+
+1. Do we really need: if (weap <= WP_NONE || weap >= WP_NUM_WEAPONS) {
+2. Limit the weapons.
+3. Draw the UI frames if needed.
+4. Check the need for 'cg.bar_offset'.
+5. Fix fading of the icons (currently only the 'Napalmlauncher' icon and the 'No Ammo' icons are fading).
+6. Include toggle weapon functionality?
 =======================================================================================================================================
 */
 void CG_DrawWeaponSelect(void) {
-	int i;
-	int bits;
-	int count;
-	int x, y, w;
+	int weapons[MAX_WEAPONS / (sizeof(int) * 8)], i, count, diff, weapon, x, y, w;
+	float *color, dist;
+	vec4_t fadecolor = {1.0f, 1.0f, 1.0f, 1.0f};
 	const char *name;
-	float *color, markerSize, iconSize, offsetSize, charWidth, charHeight;
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
-	if (cg_drawWeaponBar.value <= 0) {
+	if (!cg_drawWeaponBar.integer) {
 		return;
 	}
 	// don't display if dead
@@ -1951,11 +1966,14 @@ void CG_DrawWeaponSelect(void) {
 		return;
 	}
 
-	color = CG_FadeColor(cg.weaponSelectTime, WEAPON_SELECT_TIME);
+	color = CG_FadeColor(cg.weaponSelectTime, WEAPON_SELECT_TIME * 2);
 
 	if (!color) {
+	//	cg.bar_offset = 0;
 		return;
 	}
+
+	//cg.bar_offset = color[3] * color[3];
 
 	trap_R_SetColor(color);
 #ifndef BASEGAME
@@ -1963,51 +1981,162 @@ void CG_DrawWeaponSelect(void) {
 	cg.itemPickupTime = 0;
 #endif
 	// count the number of weapons owned
-	bits = cg.snap->ps.stats[STAT_WEAPONS];
+	memcpy(weapons, cg.snap->ps.weapons, sizeof(weapons));
+
 	count = 0;
 
 	for (i = 1; i < MAX_WEAPONS; i++) {
-		if (bits &(1 << i)) {
+		if (COM_BitCheck(weapons, i)) {
 			count++;
 		}
 	}
 
-	x = 320 - count * 20 * cg_drawWeaponBar.value;
-	y = 380;
-	markerSize = 40 * cg_drawWeaponBar.value;
-	iconSize = 32 * cg_drawWeaponBar.value;
-	offsetSize = (markerSize - iconSize) * 0.5f;
-	charWidth = BIGCHAR_WIDTH * cg_drawWeaponBar.value;
-	charHeight = BIGCHAR_HEIGHT * cg_drawWeaponBar.value;
-
-	for (i = 1; i < MAX_WEAPONS; i++) {
-		if (!(bits &(1 << i))) {
-			continue;
-		}
-
-		CG_RegisterWeapon(i);
-		// draw weapon icon
-		CG_DrawPic(x, y, iconSize, iconSize, cg_weapons[i].weaponIcon);
-		// draw selection marker
-		if (i == cg.weaponSelect) {
-			CG_DrawPic(x - offsetSize, y - offsetSize, markerSize, markerSize, cgs.media.selectShader);
-		}
-		// no ammo cross on top
-		if (!cg.snap->ps.ammo[i]) {
-			CG_DrawPic(x, y, iconSize, iconSize, cgs.media.noammoShader);
-		}
-
-		x += markerSize;
+	if (count <= 0) {
+		return;
 	}
-	// draw the selected name
+
+	//cg.bar_count = count;
+	y = 380;
+/*
+	// draw current selection
+	if (cg.weaponSelect > WP_NONE && cg.weaponSelect < WP_NUM_WEAPONS) {
+		CG_DrawPic(HUD_X - HUD_ICONSIZESEL * 0.5, y - HUD_ICONSIZESEL * 0.5, HUD_ICONSIZE + HUD_ICONSIZESEL, HUD_ICONSIZE + HUD_ICONSIZESEL, cg_weapons[cg.weaponSelect].weaponIcon);
+		// draw selection marker
+		CG_DrawPic(HUD_X - HUD_OFFSETSIZE, y - HUD_OFFSETSIZE, HUD_MARKERSIZE, HUD_MARKERSIZE, cgs.media.selectShader);
+	}
+*/
+	// draw current selection
 	if (cg_weapons[cg.weaponSelect].item) {
+		// draw selected weapon
+		CG_DrawPic(HUD_X - HUD_ICONSIZESEL * 0.5, y - HUD_ICONSIZESEL * 0.5, HUD_ICONSIZE + HUD_ICONSIZESEL, HUD_ICONSIZE + HUD_ICONSIZESEL, cg_weapons[cg.weaponSelect].weaponIcon);
+		// draw selection marker
+		CG_DrawPic(HUD_X - HUD_OFFSETSIZE, y - HUD_OFFSETSIZE, HUD_MARKERSIZE, HUD_MARKERSIZE, cgs.media.selectShader);
+		// draw the selected name
 		name = cg_weapons[cg.weaponSelect].item->pickup_name;
 
 		if (name) {
-			w = CG_DrawStrlen(name) * charWidth;
+			w = CG_DrawStrlen(name) * BIGCHAR_WIDTH;
 			x = (SCREEN_WIDTH - w) * 0.5;
-			CG_DrawStringExt(x, y - 22 * cg_drawWeaponBar.value, name, color, qfalse, qtrue, charWidth, charHeight, 0);
+			CG_DrawStringExt(x, y - 22, name, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0);
 		}
+	}
+
+	diff = 1;
+	weapon = WP_NONE;
+	// draw all available weapons
+	for (i = 0; i < MAX_WEAPONS; i++) {
+		weapon = cg.weaponSelect + i;
+
+		if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
+			continue;
+		}
+
+		if (!(COM_BitCheck(weapons, weapon))) {
+			continue;
+		}
+
+		CG_RegisterWeapon(weapon);
+
+		if (weapon == cg.weaponSelect) {
+			continue;
+		}
+
+		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff++);
+		dist = abs(x - HUD_X);
+
+		if (dist > HUD_FADE_DIST) {
+			dist = HUD_FADE_DIST;
+		}
+
+		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
+
+		trap_R_SetColor(fadecolor);
+		// draw available weapons
+		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
+		// no ammo cross on top
+		if (!cg.snap->ps.ammo[weapon]) {
+			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
+		}
+
+		trap_R_SetColor(color);
+
+		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff - count - 1);
+		dist = abs(x - HUD_X);
+
+		if (dist > HUD_FADE_DIST) {
+			dist = HUD_FADE_DIST;
+		}
+
+		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
+
+		trap_R_SetColor(fadecolor);
+		// draw available weapons
+		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
+		// no ammo cross on top
+		if (!cg.snap->ps.ammo[weapon]) {
+			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
+		}
+
+		trap_R_SetColor(color);
+	}
+
+	diff = -1;
+	weapon = WP_NONE;
+
+	for (i = 0; i < MAX_WEAPONS; i++) {
+		weapon = cg.weaponSelect - i;
+
+		if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
+			continue;
+		}
+
+		if (!(COM_BitCheck(weapons, weapon))) {
+			continue;
+		}
+
+		CG_RegisterWeapon(weapon);
+
+		if (weapon == cg.weaponSelect) {
+			continue;
+		}
+
+		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff--);
+		dist = abs(x - HUD_X);
+
+		if (dist > HUD_FADE_DIST) {
+			dist = HUD_FADE_DIST;
+		}
+
+		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
+
+		trap_R_SetColor(fadecolor);
+		// draw available weapons
+		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
+		// no ammo cross on top
+		if (!cg.snap->ps.ammo[weapon]) {
+			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
+		}
+
+		trap_R_SetColor(color);
+
+		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff + count + 1);
+		dist = abs(x - HUD_X);
+
+		if (dist > HUD_FADE_DIST) {
+			dist = HUD_FADE_DIST;
+		}
+
+		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
+
+		trap_R_SetColor(fadecolor);
+		// draw available weapons
+		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
+		// no ammo cross on top
+		if (!cg.snap->ps.ammo[weapon]) {
+			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
+		}
+
+		trap_R_SetColor(color);
 	}
 
 	trap_R_SetColor(NULL);
@@ -2020,11 +2149,12 @@ CG_WeaponSelectable
 */
 static qboolean CG_WeaponSelectable(int i) {
 
+	// check for ammo
 	if (!cg.snap->ps.ammo[i]) {
 		return qfalse;
 	}
-
-	if (!(cg.snap->ps.stats[STAT_WEAPONS] & (1 << i))) {
+	// check for weapon
+	if (!(COM_BitCheck(cg.predictedPlayerState.weapons, i))) {
 		return qfalse;
 	}
 
@@ -2054,8 +2184,8 @@ void CG_NextWeapon_f(void) {
 	for (i = 0; i < MAX_WEAPONS; i++) {
 		cg.weaponSelect++;
 
-		if (cg.weaponSelect == MAX_WEAPONS) {
-			cg.weaponSelect = 0;
+		if (cg.weaponSelect >= WP_NUM_WEAPONS) {
+			cg.weaponSelect = WP_NONE + 1;
 		}
 
 		if (cg.weaponSelect == WP_GAUNTLET) {
@@ -2067,7 +2197,7 @@ void CG_NextWeapon_f(void) {
 		}
 	}
 
-	if (i == MAX_WEAPONS) {
+	if (i == WP_NUM_WEAPONS) {
 		cg.weaponSelect = original;
 	}
 }
@@ -2095,8 +2225,8 @@ void CG_PrevWeapon_f(void) {
 	for (i = 0; i < MAX_WEAPONS; i++) {
 		cg.weaponSelect--;
 
-		if (cg.weaponSelect == -1) {
-			cg.weaponSelect = MAX_WEAPONS - 1;
+		if (cg.weaponSelect <= WP_NONE) {
+			cg.weaponSelect = WP_NUM_WEAPONS - 1;
 		}
 
 		if (cg.weaponSelect == WP_GAUNTLET) {
@@ -2108,7 +2238,7 @@ void CG_PrevWeapon_f(void) {
 		}
 	}
 
-	if (i == MAX_WEAPONS) {
+	if (i == WP_NUM_WEAPONS) {
 		cg.weaponSelect = original;
 	}
 }
@@ -2131,13 +2261,13 @@ void CG_Weapon_f(void) {
 
 	num = atoi(CG_Argv(1));
 
-	if (num < 1 || num > MAX_WEAPONS - 1) {
+	if (num <= WP_NONE || num >= WP_NUM_WEAPONS) {
 		return;
 	}
 
 	cg.weaponSelectTime = cg.time;
 
-	if (!(cg.snap->ps.stats[STAT_WEAPONS] & (1 << num))) {
+	if (!(COM_BitCheck(cg.snap->ps.weapons, num))) {
 		return; // don't have the weapon
 	}
 

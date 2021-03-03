@@ -215,8 +215,7 @@ static int Pickup_Weapon(gentity_t *ent, gentity_t *other) {
 		}
 	}
 	// add the weapon
-	other->client->ps.stats[STAT_WEAPONS] |= (1 << ent->item->giTag);
-
+	COM_BitSet(other->client->ps.weapons, ent->item->giTag);
 	Add_Ammo(other, ent->item->giTag, quantity);
 /*
 	if (ent->item->giTag == WP_GRAPPLING_HOOK) {

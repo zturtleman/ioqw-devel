@@ -41,14 +41,14 @@ void CG_CheckAmmo(void) {
 	int i;
 	int total;
 	int previous;
-	int weapons;
+	int weapons[MAX_WEAPONS / (sizeof(int) * 8)];
 
 	// see about how many seconds of ammo we have remaining
-	weapons = cg.snap->ps.stats[STAT_WEAPONS];
+	memcpy(weapons, cg.snap->ps.weapons, sizeof(weapons));
 	total = 0;
 
 	for (i = WP_MACHINEGUN; i < WP_NUM_WEAPONS; i++) {
-		if (!(weapons & (1 << i))) {
+		if (!(weapons[0] & (1 << i))) {
 			continue;
 		}
 

@@ -1038,7 +1038,8 @@ void ClientSpawn(gentity_t *ent) {
 	VectorCopy(playerMaxs, ent->r.maxs);
 
 	client->ps.clientNum = index;
-	client->ps.stats[STAT_WEAPONS] = (1 << WP_MACHINEGUN);
+
+	COM_BitSet(client->ps.weapons, WP_MACHINEGUN);
 
 	if (g_gametype.integer == GT_TEAM) {
 		client->ps.ammo[WP_MACHINEGUN] = 50;
@@ -1046,7 +1047,8 @@ void ClientSpawn(gentity_t *ent) {
 		client->ps.ammo[WP_MACHINEGUN] = 100;
 	}
 
-	client->ps.stats[STAT_WEAPONS] |= (1 << WP_GAUNTLET);
+	COM_BitSet(client->ps.weapons, WP_GAUNTLET);
+
 	client->ps.ammo[WP_GAUNTLET] = -1;
 
 	G_SetOrigin(ent, spawn_origin);
@@ -1078,7 +1080,7 @@ void ClientSpawn(gentity_t *ent) {
 			client->ps.weapon = 1;
 
 			for (i = WP_NUM_WEAPONS - 1; i > 0; i--) {
-				if (client->ps.stats[STAT_WEAPONS] & (1 << i)) {
+				if (COM_BitCheck(client->ps.weapons, i)) {
 					client->ps.weapon = i;
 					break;
 				}

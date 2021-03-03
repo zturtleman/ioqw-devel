@@ -91,7 +91,7 @@ void TossClientItems(gentity_t *self) {
 			weapon = self->client->pers.cmd.weapon;
 		}
 
-		if (!(self->client->ps.stats[STAT_WEAPONS] & (1 << weapon))) {
+		if (!(COM_BitCheck(self->client->ps.weapons, weapon))) {
 			weapon = WP_NONE;
 		}
 	}

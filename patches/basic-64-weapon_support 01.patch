@@ -1,0 +1,1062 @@
+Index: code/cgame/cg_playerstate.c
+===================================================================
+--- code/cgame/cg_playerstate.c	(revision 1302)
++++ code/cgame/cg_playerstate.c	(working copy)
+@@ -41,14 +41,14 @@
+ 	int i;
+ 	int total;
+ 	int previous;
+-	int weapons;
++	int weapons[MAX_WEAPONS / (sizeof(int) * 8)];
+ 
+ 	// see about how many seconds of ammo we have remaining
+-	weapons = cg.snap->ps.stats[STAT_WEAPONS];
++	memcpy(weapons, cg.snap->ps.weapons, sizeof(weapons));
+ 	total = 0;
+ 
+ 	for (i = WP_MACHINEGUN; i < WP_NUM_WEAPONS; i++) {
+-		if (!(weapons & (1 << i))) {
++		if (!(weapons[0] & (1 << i))) {
+ 			continue;
+ 		}
+ 
+Index: code/cgame/cg_predict.c
+===================================================================
+--- code/cgame/cg_predict.c	(revision 1302)
++++ code/cgame/cg_predict.c	(working copy)
+@@ -296,7 +296,7 @@
+ 	cent->miscTime = cg.time;
+ 	// if it is a weapon, give them some predicted ammo so the autoswitch will work
+ 	if (item->giType == IT_WEAPON) {
+-		cg.predictedPlayerState.stats[STAT_WEAPONS] |= 1 << item->giTag;
++		COM_BitSet(cg.predictedPlayerState.weapons, item->giTag);
+ 
+ 		if (!cg.predictedPlayerState.ammo[item->giTag]) {
+ 			cg.predictedPlayerState.ammo[item->giTag] = 1;
+Index: code/cgame/cg_weapons.c
+===================================================================
+--- code/cgame/cg_weapons.c	(revision 1302)
++++ code/cgame/cg_weapons.c	(working copy)
+@@ -1243,7 +1243,8 @@
+ 
+ 	ent = &cent->currentState;
+ 
+-	if (ent->weapon == WP_NONE) {
++	if (ent->weapon <= WP_NONE) {
++		CG_Error("CG_FireWeapon: ent->weapon <= WP_NONE");
+ 		return;
+ 	}
+ 
+@@ -1313,7 +1314,7 @@
+ 
+ 	weaponInfo = &cg_weapons[weaponNum];
+ 
+-	if (weaponNum == 0) {
++	if (weaponNum <= WP_NONE || weaponNum >= WP_NUM_WEAPONS) {
+ 		return;
+ 	}
+ 
+@@ -1928,22 +1929,36 @@
+ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ */
+ 
++#define HUD_ICONSIZE 28
++#define HUD_ICONSIZESEL 8
++#define HUD_ICONSPACE 4
++#define HUD_MARKERSIZE 40
++#define HUD_OFFSETSIZE ((HUD_MARKERSIZE - HUD_ICONSIZE) * 0.5f)
++#define HUD_X (320 - (HUD_ICONSIZE / 2))
++#define HUD_FADE_DIST 160
+ /*
+ =======================================================================================================================================
+ CG_DrawWeaponSelect
++
++Tobias TODO:
++
++1. Do we really need: if (weap <= WP_NONE || weap >= WP_NUM_WEAPONS) {
++2. Limit the weapons.
++3. Draw the UI frames if needed.
++4. Check the need for 'cg.bar_offset'.
++5. Fix fading of the icons (currently only the 'Napalmlauncher' icon and the 'No Ammo' icons are fading).
++6. Include toggle weapon functionality?
+ =======================================================================================================================================
+ */
+ void CG_DrawWeaponSelect(void) {
+-	int i;
+-	int bits;
+-	int count;
+-	int x, y, w;
++	int weapons[MAX_WEAPONS / (sizeof(int) * 8)], i, count, diff, weapon, x, y, w;
++	float *color, dist;
++	vec4_t fadecolor = {1.0f, 1.0f, 1.0f, 1.0f};
+ 	const char *name;
+-	float *color, markerSize, iconSize, offsetSize, charWidth, charHeight;
+ 
+ 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
+ 
+-	if (cg_drawWeaponBar.value <= 0) {
++	if (!cg_drawWeaponBar.integer) {
+ 		return;
+ 	}
+ 	// don't display if dead
+@@ -1951,12 +1966,15 @@
+ 		return;
+ 	}
+ 
+-	color = CG_FadeColor(cg.weaponSelectTime, WEAPON_SELECT_TIME);
++	color = CG_FadeColor(cg.weaponSelectTime, WEAPON_SELECT_TIME * 2);
+ 
+ 	if (!color) {
++	//	cg.bar_offset = 0;
+ 		return;
+ 	}
+ 
++	//cg.bar_offset = color[3] * color[3];
++
+ 	trap_R_SetColor(color);
+ #ifndef BASEGAME
+ 	// showing weapon select clears pickup item display, but not the blend blob
+@@ -1963,51 +1981,162 @@
+ 	cg.itemPickupTime = 0;
+ #endif
+ 	// count the number of weapons owned
+-	bits = cg.snap->ps.stats[STAT_WEAPONS];
++	memcpy(weapons, cg.snap->ps.weapons, sizeof(weapons));
++
+ 	count = 0;
+ 
+ 	for (i = 1; i < MAX_WEAPONS; i++) {
+-		if (bits &(1 << i)) {
++		if (COM_BitCheck(weapons, i)) {
+ 			count++;
+ 		}
+ 	}
+ 
+-	x = 320 - count * 20 * cg_drawWeaponBar.value;
++	if (count <= 0) {
++		return;
++	}
++
++	//cg.bar_count = count;
+ 	y = 380;
+-	markerSize = 40 * cg_drawWeaponBar.value;
+-	iconSize = 32 * cg_drawWeaponBar.value;
+-	offsetSize = (markerSize - iconSize) * 0.5f;
+-	charWidth = BIGCHAR_WIDTH * cg_drawWeaponBar.value;
+-	charHeight = BIGCHAR_HEIGHT * cg_drawWeaponBar.value;
++/*
++	// draw current selection
++	if (cg.weaponSelect > WP_NONE && cg.weaponSelect < WP_NUM_WEAPONS) {
++		CG_DrawPic(HUD_X - HUD_ICONSIZESEL * 0.5, y - HUD_ICONSIZESEL * 0.5, HUD_ICONSIZE + HUD_ICONSIZESEL, HUD_ICONSIZE + HUD_ICONSIZESEL, cg_weapons[cg.weaponSelect].weaponIcon);
++		// draw selection marker
++		CG_DrawPic(HUD_X - HUD_OFFSETSIZE, y - HUD_OFFSETSIZE, HUD_MARKERSIZE, HUD_MARKERSIZE, cgs.media.selectShader);
++	}
++*/
++	// draw current selection
++	if (cg_weapons[cg.weaponSelect].item) {
++		// draw selected weapon
++		CG_DrawPic(HUD_X - HUD_ICONSIZESEL * 0.5, y - HUD_ICONSIZESEL * 0.5, HUD_ICONSIZE + HUD_ICONSIZESEL, HUD_ICONSIZE + HUD_ICONSIZESEL, cg_weapons[cg.weaponSelect].weaponIcon);
++		// draw selection marker
++		CG_DrawPic(HUD_X - HUD_OFFSETSIZE, y - HUD_OFFSETSIZE, HUD_MARKERSIZE, HUD_MARKERSIZE, cgs.media.selectShader);
++		// draw the selected name
++		name = cg_weapons[cg.weaponSelect].item->pickup_name;
+ 
+-	for (i = 1; i < MAX_WEAPONS; i++) {
+-		if (!(bits &(1 << i))) {
++		if (name) {
++			w = CG_DrawStrlen(name) * BIGCHAR_WIDTH;
++			x = (SCREEN_WIDTH - w) * 0.5;
++			CG_DrawStringExt(x, y - 22, name, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0);
++		}
++	}
++
++	diff = 1;
++	weapon = WP_NONE;
++	// draw all available weapons
++	for (i = 0; i < MAX_WEAPONS; i++) {
++		weapon = cg.weaponSelect + i;
++
++		if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
+ 			continue;
+ 		}
+ 
+-		CG_RegisterWeapon(i);
+-		// draw weapon icon
+-		CG_DrawPic(x, y, iconSize, iconSize, cg_weapons[i].weaponIcon);
+-		// draw selection marker
+-		if (i == cg.weaponSelect) {
+-			CG_DrawPic(x - offsetSize, y - offsetSize, markerSize, markerSize, cgs.media.selectShader);
++		if (!(COM_BitCheck(weapons, weapon))) {
++			continue;
+ 		}
++
++		CG_RegisterWeapon(weapon);
++
++		if (weapon == cg.weaponSelect) {
++			continue;
++		}
++
++		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff++);
++		dist = abs(x - HUD_X);
++
++		if (dist > HUD_FADE_DIST) {
++			dist = HUD_FADE_DIST;
++		}
++
++		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
++
++		trap_R_SetColor(fadecolor);
++		// draw available weapons
++		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
+ 		// no ammo cross on top
+-		if (!cg.snap->ps.ammo[i]) {
+-			CG_DrawPic(x, y, iconSize, iconSize, cgs.media.noammoShader);
++		if (!cg.snap->ps.ammo[weapon]) {
++			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
+ 		}
+ 
+-		x += markerSize;
++		trap_R_SetColor(color);
++
++		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff - count - 1);
++		dist = abs(x - HUD_X);
++
++		if (dist > HUD_FADE_DIST) {
++			dist = HUD_FADE_DIST;
++		}
++
++		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
++
++		trap_R_SetColor(fadecolor);
++		// draw available weapons
++		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
++		// no ammo cross on top
++		if (!cg.snap->ps.ammo[weapon]) {
++			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
++		}
++
++		trap_R_SetColor(color);
+ 	}
+-	// draw the selected name
+-	if (cg_weapons[cg.weaponSelect].item) {
+-		name = cg_weapons[cg.weaponSelect].item->pickup_name;
+ 
+-		if (name) {
+-			w = CG_DrawStrlen(name) * charWidth;
+-			x = (SCREEN_WIDTH - w) * 0.5;
+-			CG_DrawStringExt(x, y - 22 * cg_drawWeaponBar.value, name, color, qfalse, qtrue, charWidth, charHeight, 0);
++	diff = -1;
++	weapon = WP_NONE;
++
++	for (i = 0; i < MAX_WEAPONS; i++) {
++		weapon = cg.weaponSelect - i;
++
++		if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
++			continue;
+ 		}
++
++		if (!(COM_BitCheck(weapons, weapon))) {
++			continue;
++		}
++
++		CG_RegisterWeapon(weapon);
++
++		if (weapon == cg.weaponSelect) {
++			continue;
++		}
++
++		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff--);
++		dist = abs(x - HUD_X);
++
++		if (dist > HUD_FADE_DIST) {
++			dist = HUD_FADE_DIST;
++		}
++
++		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
++
++		trap_R_SetColor(fadecolor);
++		// draw available weapons
++		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
++		// no ammo cross on top
++		if (!cg.snap->ps.ammo[weapon]) {
++			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
++		}
++
++		trap_R_SetColor(color);
++
++		x = HUD_X + (HUD_ICONSIZE + HUD_ICONSPACE) * (diff + count + 1);
++		dist = abs(x - HUD_X);
++
++		if (dist > HUD_FADE_DIST) {
++			dist = HUD_FADE_DIST;
++		}
++
++		fadecolor[3] = 1.0f - (dist / HUD_FADE_DIST);
++
++		trap_R_SetColor(fadecolor);
++		// draw available weapons
++		CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cg_weapons[weapon].weaponIcon);
++		// no ammo cross on top
++		if (!cg.snap->ps.ammo[weapon]) {
++			CG_DrawPic(x, y, HUD_ICONSIZE, HUD_ICONSIZE, cgs.media.noammoShader);
++		}
++
++		trap_R_SetColor(color);
+ 	}
+ 
+ 	trap_R_SetColor(NULL);
+@@ -2020,11 +2149,12 @@
+ */
+ static qboolean CG_WeaponSelectable(int i) {
+ 
++	// check for ammo
+ 	if (!cg.snap->ps.ammo[i]) {
+ 		return qfalse;
+ 	}
+-
+-	if (!(cg.snap->ps.stats[STAT_WEAPONS] & (1 << i))) {
++	// check for weapon
++	if (!(COM_BitCheck(cg.predictedPlayerState.weapons, i))) {
+ 		return qfalse;
+ 	}
+ 
+@@ -2054,8 +2184,8 @@
+ 	for (i = 0; i < MAX_WEAPONS; i++) {
+ 		cg.weaponSelect++;
+ 
+-		if (cg.weaponSelect == MAX_WEAPONS) {
+-			cg.weaponSelect = 0;
++		if (cg.weaponSelect >= WP_NUM_WEAPONS) {
++			cg.weaponSelect = WP_NONE + 1;
+ 		}
+ 
+ 		if (cg.weaponSelect == WP_GAUNTLET) {
+@@ -2067,7 +2197,7 @@
+ 		}
+ 	}
+ 
+-	if (i == MAX_WEAPONS) {
++	if (i == WP_NUM_WEAPONS) {
+ 		cg.weaponSelect = original;
+ 	}
+ }
+@@ -2095,8 +2225,8 @@
+ 	for (i = 0; i < MAX_WEAPONS; i++) {
+ 		cg.weaponSelect--;
+ 
+-		if (cg.weaponSelect == -1) {
+-			cg.weaponSelect = MAX_WEAPONS - 1;
++		if (cg.weaponSelect <= WP_NONE) {
++			cg.weaponSelect = WP_NUM_WEAPONS - 1;
+ 		}
+ 
+ 		if (cg.weaponSelect == WP_GAUNTLET) {
+@@ -2108,7 +2238,7 @@
+ 		}
+ 	}
+ 
+-	if (i == MAX_WEAPONS) {
++	if (i == WP_NUM_WEAPONS) {
+ 		cg.weaponSelect = original;
+ 	}
+ }
+@@ -2131,13 +2261,13 @@
+ 
+ 	num = atoi(CG_Argv(1));
+ 
+-	if (num < 1 || num > MAX_WEAPONS - 1) {
++	if (num <= WP_NONE || num >= WP_NUM_WEAPONS) {
+ 		return;
+ 	}
+ 
+ 	cg.weaponSelectTime = cg.time;
+ 
+-	if (!(cg.snap->ps.stats[STAT_WEAPONS] & (1 << num))) {
++	if (!(COM_BitCheck(cg.snap->ps.weapons, num))) {
+ 		return; // don't have the weapon
+ 	}
+ 
+Index: code/game/ai_dmq3.c
+===================================================================
+--- code/game/ai_dmq3.c	(revision 1302)
++++ code/game/ai_dmq3.c	(working copy)
+@@ -2308,19 +2308,19 @@
+ 	// armor
+ 	bs->inventory[INVENTORY_ARMOR] = bs->cur_ps.stats[STAT_ARMOR];
+ 	// weapons
+-	bs->inventory[INVENTORY_GAUNTLET] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_GAUNTLET)) != 0;
+-	bs->inventory[INVENTORY_MACHINEGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_MACHINEGUN)) != 0;
+-	bs->inventory[INVENTORY_CHAINGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_CHAINGUN)) != 0;
+-	bs->inventory[INVENTORY_SHOTGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_SHOTGUN)) != 0;
+-	bs->inventory[INVENTORY_NAILGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_NAILGUN)) != 0;
+-	bs->inventory[INVENTORY_PROXLAUNCHER] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_PROXLAUNCHER)) != 0;
+-	bs->inventory[INVENTORY_GRENADELAUNCHER] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_GRENADELAUNCHER)) != 0;
+-	bs->inventory[INVENTORY_NAPALMLAUNCHER] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_NAPALMLAUNCHER)) != 0;
+-	bs->inventory[INVENTORY_ROCKETLAUNCHER] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_ROCKETLAUNCHER)) != 0;
+-	bs->inventory[INVENTORY_BEAMGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_BEAMGUN)) != 0;
+-	bs->inventory[INVENTORY_RAILGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_RAILGUN)) != 0;
+-	bs->inventory[INVENTORY_PLASMAGUN] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_PLASMAGUN)) != 0;
+-	bs->inventory[INVENTORY_BFG10K] = (bs->cur_ps.stats[STAT_WEAPONS] & (1 << WP_BFG)) != 0;
++	bs->inventory[INVENTORY_GAUNTLET] = COM_BitCheck(bs->cur_ps.weapons, WP_GAUNTLET);
++	bs->inventory[INVENTORY_MACHINEGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_MACHINEGUN);
++	bs->inventory[INVENTORY_CHAINGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_CHAINGUN);
++	bs->inventory[INVENTORY_SHOTGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_SHOTGUN);
++	bs->inventory[INVENTORY_NAILGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_NAILGUN);
++	bs->inventory[INVENTORY_PROXLAUNCHER] = COM_BitCheck(bs->cur_ps.weapons, WP_PROXLAUNCHER);
++	bs->inventory[INVENTORY_GRENADELAUNCHER] = COM_BitCheck(bs->cur_ps.weapons, WP_GRENADELAUNCHER);
++	bs->inventory[INVENTORY_NAPALMLAUNCHER] = COM_BitCheck(bs->cur_ps.weapons, WP_NAPALMLAUNCHER);
++	bs->inventory[INVENTORY_ROCKETLAUNCHER] = COM_BitCheck(bs->cur_ps.weapons, WP_ROCKETLAUNCHER);
++	bs->inventory[INVENTORY_BEAMGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_BEAMGUN);
++	bs->inventory[INVENTORY_RAILGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_RAILGUN);
++	bs->inventory[INVENTORY_PLASMAGUN] = COM_BitCheck(bs->cur_ps.weapons, WP_PLASMAGUN);
++	bs->inventory[INVENTORY_BFG10K] = COM_BitCheck(bs->cur_ps.weapons, WP_BFG);
+ 	// ammo
+ 	bs->inventory[INVENTORY_BULLETS] = bs->cur_ps.ammo[WP_MACHINEGUN];
+ 	bs->inventory[INVENTORY_BELT] = bs->cur_ps.ammo[WP_CHAINGUN];
+@@ -3419,27 +3419,27 @@
+ 		return qtrue;
+ 	}
+ 	// if the teammate has the chaingun with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_CHAINGUN)) && ps->ammo[WP_CHAINGUN] >= 50) {
++	if (COM_BitCheck(ps->weapons, WP_CHAINGUN) && ps->ammo[WP_CHAINGUN] >= 50) {
+ 		return qfalse;
+ 	}
+ 	// if the teammate has the nailgun with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_NAILGUN)) && ps->ammo[WP_NAILGUN] >= 5) {
++	if (COM_BitCheck(ps->weapons, WP_NAILGUN) && ps->ammo[WP_NAILGUN] >= 5) {
+ 		return qfalse;
+ 	}
+ 	// if the teammate has the rocketlauncher with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_ROCKETLAUNCHER)) && ps->ammo[WP_ROCKETLAUNCHER] >= 5) {
++	if (COM_BitCheck(ps->weapons, WP_ROCKETLAUNCHER) && ps->ammo[WP_ROCKETLAUNCHER] >= 5) {
+ 		return qfalse;
+ 	}
+ 	// if the teammate has the railgun with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_RAILGUN)) && ps->ammo[WP_RAILGUN] >= 5) {
++	if (COM_BitCheck(ps->weapons, WP_RAILGUN) && ps->ammo[WP_RAILGUN] >= 5) {
+ 		return qfalse;
+ 	}
+ 	// if the teammate has the plasmagun with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_PLASMAGUN)) && ps->ammo[WP_PLASMAGUN] >= 15) {
++	if (COM_BitCheck(ps->weapons, WP_PLASMAGUN) && ps->ammo[WP_PLASMAGUN] >= 15) {
+ 		return qfalse;
+ 	}
+ 	// if the teammate has the bfg with some ammo
+-	if ((ps->stats[STAT_WEAPONS] & (1 << WP_BFG)) && ps->ammo[WP_BFG] >= 5) {
++	if (COM_BitCheck(ps->weapons, WP_BFG) && ps->ammo[WP_BFG] >= 5) {
+ 		return qfalse;
+ 	}
+ 
+Index: code/game/bg_pmove.c
+===================================================================
+--- code/game/bg_pmove.c	(revision 1302)
++++ code/game/bg_pmove.c	(working copy)
+@@ -1689,7 +1689,7 @@
+ 		return;
+ 	}
+ 
+-	if (!(pm->ps->stats[STAT_WEAPONS] & (1 << weapon))) {
++	if (!(COM_BitCheck(pm->ps->weapons, weapon))) {
+ 		return;
+ 	}
+ 
+@@ -1719,7 +1719,7 @@
+ 		weapon = WP_NONE;
+ 	}
+ 
+-	if (!(pm->ps->stats[STAT_WEAPONS] & (1 << weapon))) {
++	if (!(COM_BitCheck(pm->ps->weapons, weapon))) {
+ 		weapon = WP_NONE;
+ 	}
+ 
+Index: code/game/bg_public.h
+===================================================================
+--- code/game/bg_public.h	(revision 1302)
++++ code/game/bg_public.h	(working copy)
+@@ -176,7 +176,6 @@
+ typedef enum {
+ 	STAT_HEALTH,
+ 	STAT_ARMOR,
+-	STAT_WEAPONS,		// 16 bit fields
+ 	STAT_HOLDABLE_ITEM,
+ 	STAT_PERSISTANT_POWERUP,
+ 	STAT_DEAD_YAW,		// look this direction when dead (FIXME: get rid of?)
+@@ -265,7 +264,7 @@
+ **************************************************************************************************************************************/
+ 
+ typedef enum {
+-	WP_NONE,
++	WP_NONE = 0,
+ 	WP_GAUNTLET,
+ 	WP_MACHINEGUN,
+ 	WP_CHAINGUN,
+@@ -279,7 +278,7 @@
+ 	WP_RAILGUN,
+ 	WP_PLASMAGUN,
+ 	WP_BFG,
+-	WP_NUM_WEAPONS
++	WP_NUM_WEAPONS // = 64
+ } weapon_t;
+ // reward sounds (stored in ps->persistant[PERS_PLAYEREVENTS])
+ #define PLAYEREVENT_DENIEDREWARD	0x00000001
+Index: code/game/g_client.c
+===================================================================
+--- code/game/g_client.c	(revision 1302)
++++ code/game/g_client.c	(working copy)
+@@ -1038,8 +1038,9 @@
+ 	VectorCopy(playerMaxs, ent->r.maxs);
+ 
+ 	client->ps.clientNum = index;
+-	client->ps.stats[STAT_WEAPONS] = (1 << WP_MACHINEGUN);
+ 
++	COM_BitSet(client->ps.weapons, WP_MACHINEGUN);
++
+ 	if (g_gametype.integer == GT_TEAM) {
+ 		client->ps.ammo[WP_MACHINEGUN] = 50;
+ 	} else {
+@@ -1046,7 +1047,8 @@
+ 		client->ps.ammo[WP_MACHINEGUN] = 100;
+ 	}
+ 
+-	client->ps.stats[STAT_WEAPONS] |= (1 << WP_GAUNTLET);
++	COM_BitSet(client->ps.weapons, WP_GAUNTLET);
++
+ 	client->ps.ammo[WP_GAUNTLET] = -1;
+ 
+ 	G_SetOrigin(ent, spawn_origin);
+@@ -1078,7 +1080,7 @@
+ 			client->ps.weapon = 1;
+ 
+ 			for (i = WP_NUM_WEAPONS - 1; i > 0; i--) {
+-				if (client->ps.stats[STAT_WEAPONS] & (1 << i)) {
++				if (COM_BitCheck(client->ps.weapons, i)) {
+ 					client->ps.weapon = i;
+ 					break;
+ 				}
+Index: code/game/g_cmds.c
+===================================================================
+--- code/game/g_cmds.c	(revision 1302)
++++ code/game/g_cmds.c	(working copy)
+@@ -259,7 +259,9 @@
+ 	}
+ 
+ 	if (give_all || Q_stricmp(name, "weapons") == 0) {
+-		ent->client->ps.stats[STAT_WEAPONS] = (1 << WP_NUM_WEAPONS) - 1 - (1 << WP_NONE);
++		for (i = 0; i < WP_NUM_WEAPONS; i++) {
++			COM_BitSet(ent->client->ps.weapons, i);
++		}
+ 
+ 		if (!give_all) {
+ 			return;
+Index: code/game/g_combat.c
+===================================================================
+--- code/game/g_combat.c	(revision 1302)
++++ code/game/g_combat.c	(working copy)
+@@ -91,7 +91,7 @@
+ 			weapon = self->client->pers.cmd.weapon;
+ 		}
+ 
+-		if (!(self->client->ps.stats[STAT_WEAPONS] & (1 << weapon))) {
++		if (!(COM_BitCheck(self->client->ps.weapons, weapon))) {
+ 			weapon = WP_NONE;
+ 		}
+ 	}
+Index: code/game/g_items.c
+===================================================================
+--- code/game/g_items.c	(revision 1302)
++++ code/game/g_items.c	(working copy)
+@@ -215,8 +215,7 @@
+ 		}
+ 	}
+ 	// add the weapon
+-	other->client->ps.stats[STAT_WEAPONS] |= (1 << ent->item->giTag);
+-
++	COM_BitSet(other->client->ps.weapons, ent->item->giTag);
+ 	Add_Ammo(other, ent->item->giTag, quantity);
+ /*
+ 	if (ent->item->giTag == WP_GRAPPLING_HOOK) {
+Index: code/qcommon/msg.c
+===================================================================
+--- code/qcommon/msg.c	(revision 1302)
++++ code/qcommon/msg.c	(working copy)
+@@ -540,24 +540,6 @@
+ 
+ /*
+ =======================================================================================================================================
+-MSG_LookaheadByte
+-=======================================================================================================================================
+-*/
+-int MSG_LookaheadByte(msg_t *msg) {
+-	const int bloc = Huff_getBloc();
+-	const int readcount = msg->readcount;
+-	const int bit = msg->bit;
+-	int c = MSG_ReadByte(msg);
+-
+-	Huff_setBloc(bloc);
+-
+-	msg->readcount = readcount;
+-	msg->bit = bit;
+-	return c;
+-}
+-
+-/*
+-=======================================================================================================================================
+ MSG_ReadShort
+ =======================================================================================================================================
+ */
+@@ -1327,7 +1309,9 @@
+ 	{PSF(eventParms[1]), 8},
+ 	{PSF(externalEvent), 10},
+ 	{PSF(externalEventParm), 8},
+-	{PSF(weapon), 5},
++	{PSF(weapons[0]), 32},
++	{PSF(weapons[1]), 32},
++	{PSF(weapon), 7},
+ 	{PSF(weaponstate), 4},
+ 	{PSF(weaponTime), -16},
+ 	{PSF(viewangles[0]), 0},
+@@ -1350,17 +1334,21 @@
+ =======================================================================================================================================
+ */
+ void MSG_WriteDeltaPlayerstate(msg_t *msg, struct playerState_s *from, struct playerState_s *to) {
+-	int i;
++	int i, j, lc;
+ 	playerState_t dummy;
+ 	int statsbits;
+ 	int persistantbits;
+-	int ammobits;
++	int ammobits[4];
++	int clipbits;
+ 	int powerupbits;
++	int holdablebits;
+ 	int numFields;
+ 	netField_t *field;
+ 	int *fromF, *toF;
+ 	float fullFloat;
+-	int trunc, lc;
++	int trunc;
++	int startBit, endBit;
++	int print;
+ 
+ 	if (!from) {
+ 		from = &dummy;
+@@ -1367,6 +1355,19 @@
+ 		Com_Memset(&dummy, 0, sizeof(dummy));
+ 	}
+ 
++	if (msg->bit == 0) {
++		startBit = msg->cursize * 8 - GENTITYNUM_BITS;
++	} else {
++		startBit = (msg->cursize - 1) * 8 + msg->bit - GENTITYNUM_BITS;
++	}
++	// shownet 2/3 will interleave with other printed info, -2 will just print the delta records
++	if (cl_shownet && (cl_shownet->integer >= 2 || cl_shownet->integer == -2)) {
++		print = 1;
++		Com_Printf("W|%3i: playerstate ", msg->cursize);
++	} else {
++		print = 0;
++	}
++
+ 	numFields = ARRAY_LEN(playerStateFields);
+ 
+ 	lc = 0;
+@@ -1430,14 +1431,6 @@
+ 		}
+ 	}
+ 
+-	ammobits = 0;
+-
+-	for (i = 0; i < MAX_WEAPONS; i++) {
+-		if (to->ammo[i] != from->ammo[i]) {
+-			ammobits |= 1 << i;
+-		}
+-	}
+-
+ 	powerupbits = 0;
+ 
+ 	for (i = 0; i < MAX_POWERUPS; i++) {
+@@ -1446,64 +1439,143 @@
+ 		}
+ 	}
+ 
+-	if (!statsbits && !persistantbits && !ammobits && !powerupbits) {
+-		MSG_WriteBits(msg, 0, 1); // no change
+-		return;
++	holdablebits = 0;
++
++	for (i = 0; i < MAX_HOLDABLE; i++) {
++		if (to->holdable[i] != from->holdable[i]) {
++			holdablebits |= 1 << i;
++		}
+ 	}
+ 
+-	MSG_WriteBits(msg, 1, 1); // changed
++	if (statsbits || persistantbits || powerupbits || holdablebits) {
++		MSG_WriteBits(msg, 1, 1); // something changed
+ 
+-	if (statsbits) {
+-		MSG_WriteBits(msg, 1, 1); // changed
+-		MSG_WriteBits(msg, statsbits, MAX_STATS);
++		if (statsbits) {
++			MSG_WriteBits(msg, 1, 1); // changed
++			MSG_WriteBits(msg, statsbits, MAX_STATS);
+ 
+-		for (i = 0; i < MAX_STATS; i++) {
+-			if (statsbits & (1 << i)) {
+-				MSG_WriteShort(msg, to->stats[i]);
++			for (i = 0; i < MAX_STATS; i++) {
++				if (statsbits & (1 << i)) {
++					MSG_WriteShort(msg, to->stats[i]);
++				}
+ 			}
++		} else {
++			MSG_WriteBits(msg, 0, 1); // no change to stats
+ 		}
++
++		if (persistantbits) {
++			MSG_WriteBits(msg, 1, 1); // changed
++			MSG_WriteBits(msg, persistantbits, MAX_PERSISTANT);
++
++			for (i = 0; i < MAX_PERSISTANT; i++) {
++				if (persistantbits & (1 << i)) {
++					MSG_WriteShort(msg, to->persistant[i]);
++				}
++			}
++		} else {
++			MSG_WriteBits(msg, 0, 1); // no change to persistant
++		}
++
++		if (powerupbits) {
++			MSG_WriteBits(msg, 1, 1); // changed
++			MSG_WriteBits(msg, powerupbits, MAX_POWERUPS);
++
++			for (i = 0; i < MAX_POWERUPS; i++) {
++				if (powerupbits & (1 << i)) {
++					MSG_WriteLong(msg, to->powerups[i]);
++				}
++			}
++		} else {
++			MSG_WriteBits(msg, 0, 1); // no change to powerups
++		}
++
++		if (holdablebits) {
++			MSG_WriteBits(msg, 1, 1); // changed
++			MSG_WriteBits(msg, holdablebits, MAX_HOLDABLE);
++
++			for (i = 0; i < MAX_HOLDABLE; i++) {
++				if (holdablebits & (1 << i)) {
++					MSG_WriteShort(msg, to->holdable[i]);
++				}
++			}
++		} else {
++			MSG_WriteBits(msg, 0, 1); // no change to holdables
++		}
+ 	} else {
+-		MSG_WriteBits(msg, 0, 1); // no change
++		MSG_WriteBits(msg, 0, 1); // no change to any
+ 	}
++	// we split this into two groups using shorts so it wouldn't have to use a long every time ammo changed for any weap
++	// this seemed like a much friendlier option than making it read/write a long for any ammo change
+ 
+-	if (persistantbits) {
+-		MSG_WriteBits(msg, 1, 1); // changed
+-		MSG_WriteBits(msg, persistantbits, MAX_PERSISTANT);
++	// j == 0: weaps 0-15
++	// j == 1: weaps 16-31
++	// j == 2: weaps 32-47 // now up to 64 (but still pretty net-friendly)
++	// j == 3: weaps 48-63
+ 
+-		for (i = 0; i < MAX_PERSISTANT; i++) {
+-			if (persistantbits & (1 << i)) {
+-				MSG_WriteShort(msg, to->persistant[i]);
++	// ammo stored
++	for (j = 0; j < 4; j++) { // modified for 64 weaps
++		ammobits[j] = 0;
++
++		for (i = 0; i < 16; i++) {
++			if (to->ammo[i + (j * 16)] != from->ammo[i + (j * 16)]) {
++				ammobits[j] |= 1 << i;
+ 			}
+ 		}
+-	} else {
+-		MSG_WriteBits(msg, 0, 1); // no change
+ 	}
+-
+-	if (ammobits) {
++	// also encapsulated ammo changes into one check. Clip values will change frequently, but ammo will not (only when you get ammo/reload rather than each shot)
++	if (ammobits[0] || ammobits[1] || ammobits[2] || ammobits[3]) { // if any were set...
+ 		MSG_WriteBits(msg, 1, 1); // changed
+-		MSG_WriteBits(msg, ammobits, MAX_WEAPONS);
+ 
+-		for (i = 0; i < MAX_WEAPONS; i++) {
+-			if (ammobits & (1 << i)) {
+-				MSG_WriteShort(msg, to->ammo[i]);
++		for (j = 0; j < 4; j++) {
++			if (ammobits[j]) {
++				MSG_WriteBits(msg, 1, 1); // changed
++				MSG_WriteShort(msg, ammobits[j]);
++
++				for (i = 0; i < 16; i++) {
++					if (ammobits[j] & (1 << i)) {
++						MSG_WriteShort(msg, to->ammo[i + (j * 16)]);
++					}
++				}
++			} else {
++				MSG_WriteBits(msg, 0, 1); // no change
+ 			}
+ 		}
+ 	} else {
+ 		MSG_WriteBits(msg, 0, 1); // no change
+ 	}
++	// ammo in clip
++	for (j = 0; j < 4; j++) { // modified for 64 weaps
++		clipbits = 0;
+ 
+-	if (powerupbits) {
+-		MSG_WriteBits(msg, 1, 1); // changed
+-		MSG_WriteBits(msg, powerupbits, MAX_POWERUPS);
++		for (i = 0; i < 16; i++) {
++			if (to->ammoclip[i + (j * 16)] != from->ammoclip[i + (j * 16)]) {
++				clipbits |= 1 << i;
++			}
++		}
+ 
+-		for (i = 0; i < MAX_POWERUPS; i++) {
+-			if (powerupbits & (1 << i)) {
+-				MSG_WriteLong(msg, to->powerups[i]);
++		if (clipbits) {
++			MSG_WriteBits(msg, 1, 1); // changed
++			MSG_WriteShort(msg, clipbits);
++
++			for (i = 0; i < 16; i++) {
++				if (clipbits & (1 << i)) {
++					MSG_WriteShort(msg, to->ammoclip[i + (j * 16)]);
++				}
+ 			}
++		} else {
++			MSG_WriteBits(msg, 0, 1); // no change
+ 		}
+-	} else {
+-		MSG_WriteBits(msg, 0, 1); // no change
+ 	}
++
++	if (print) {
++		if (msg->bit == 0) {
++			endBit = msg->cursize * 8 - GENTITYNUM_BITS;
++		} else {
++			endBit = (msg->cursize - 1) * 8 + msg->bit - GENTITYNUM_BITS;
++		}
++
++		Com_Printf(" (%i bits)\n", endBit - startBit);
++	}
+ }
+ 
+ /*
+@@ -1512,7 +1584,7 @@
+ =======================================================================================================================================
+ */
+ void MSG_ReadDeltaPlayerstate(msg_t *msg, playerState_t *from, playerState_t *to) {
+-	int i, lc;
++	int i, j, lc;
+ 	int bits;
+ 	netField_t *field;
+ 	int numFields;
+@@ -1618,30 +1690,68 @@
+ 				}
+ 			}
+ 		}
+-		// parse ammo
++		// parse powerups
+ 		if (MSG_ReadBits(msg, 1)) {
+-			LOG("PS_AMMO");
+-			bits = MSG_ReadBits(msg, MAX_WEAPONS);
++			LOG("PS_POWERUPS");
++			bits = MSG_ReadBits(msg, MAX_POWERUPS);
+ 
+-			for (i = 0; i < MAX_WEAPONS; i++) {
++			for (i = 0; i < MAX_POWERUPS; i++) {
+ 				if (bits & (1 << i)) {
+-					to->ammo[i] = MSG_ReadShort(msg);
++					to->powerups[i] = MSG_ReadLong(msg);
+ 				}
+ 			}
+ 		}
+-		// parse powerups
++		// parse holdable stats
+ 		if (MSG_ReadBits(msg, 1)) {
+-			LOG("PS_POWERUPS");
+-			bits = MSG_ReadBits(msg, MAX_POWERUPS);
++			LOG("PS_HOLDABLE");
++			bits = MSG_ReadBits(msg, MAX_HOLDABLE);
+ 
+-			for (i = 0; i < MAX_POWERUPS; i++) {
++			for (i = 0; i < 16; i++) {
+ 				if (bits & (1 << i)) {
+-					to->powerups[i] = MSG_ReadLong(msg);
++					to->holdable[i] = MSG_ReadShort(msg);
+ 				}
+ 			}
+ 		}
+ 	}
++	// we split this into two groups using shorts so it wouldn't have to use a long every time ammo changed for any weap
++	// this seemed like a much friendlier option than making it read/write a long for any ammo change
+ 
++	// parse ammo
++
++	// j == 0: weaps 0-15
++	// j == 1: weaps 16-31
++	// j == 2: weaps 32-47 // now up to 64 (but still pretty net-friendly)
++	// j == 3: weaps 48-63
++
++	// ammo stored
++	if (MSG_ReadBits(msg, 1)) { // check for any ammo change (0-63)
++		for (j = 0; j < 4; j++) {
++			if (MSG_ReadBits(msg, 1)) {
++				LOG("PS_AMMO");
++				bits = MSG_ReadShort(msg);
++
++				for (i = 0; i < 16; i++) {
++					if (bits & (1 << i)) {
++						to->ammo[i + (j * 16)] = MSG_ReadShort(msg);
++					}
++				}
++			}
++		}
++	}
++	// ammo in clip
++	for (j = 0; j < 4; j++) {
++		if (MSG_ReadBits(msg, 1)) {
++			LOG("PS_AMMOCLIP");
++			bits = MSG_ReadShort(msg);
++
++			for (i = 0; i < 16; i++) {
++				if (bits & (1 << i)) {
++					to->ammoclip[i + (j * 16)] = MSG_ReadShort(msg);
++				}
++			}
++		}
++	}
++
+ 	if (print) {
+ 		if (msg->bit == 0) {
+ 			endBit = msg->readcount * 8 - GENTITYNUM_BITS;
+Index: code/qcommon/q_shared.c
+===================================================================
+--- code/qcommon/q_shared.c	(revision 1302)
++++ code/qcommon/q_shared.c	(working copy)
+@@ -177,7 +177,67 @@
+ 
+ /*
+ =======================================================================================================================================
++COM_BitCheck
+ 
++Allows bit-wise checks on arrays with more than one item (> 32 bits).
++=======================================================================================================================================
++*/
++qboolean COM_BitCheck(const int array[], int bitNum) {
++	int i;
++
++	i = 0;
++
++	while (bitNum > 31) {
++		i++;
++		bitNum -= 32;
++	}
++
++	return ((array[i] & (1 << bitNum)) != 0); // heh, whoops. :)
++}
++
++/*
++=======================================================================================================================================
++COM_BitSet
++
++Allows bit-wise SETS on arrays with more than one item (> 32 bits).
++=======================================================================================================================================
++*/
++void COM_BitSet(int array[], int bitNum) {
++	int i;
++
++	i = 0;
++
++	while (bitNum > 31) {
++		i++;
++		bitNum -= 32;
++	}
++
++	array[i] |= (1 << bitNum);
++}
++
++/*
++=======================================================================================================================================
++COM_BitClear
++
++Allows bit-wise CLEAR on arrays with more than one item (> 32 bits).
++=======================================================================================================================================
++*/
++void COM_BitClear(int array[], int bitNum) {
++	int i;
++
++	i = 0;
++
++	while (bitNum > 31) {
++		i++;
++		bitNum -= 32;
++	}
++
++	array[i] &= ~(1 << bitNum);
++}
++
++/*
++=======================================================================================================================================
++
+ 	BYTE ORDER FUNCTIONS
+ 
+ =======================================================================================================================================
+Index: code/qcommon/q_shared.h
+===================================================================
+--- code/qcommon/q_shared.h	(revision 1302)
++++ code/qcommon/q_shared.h	(working copy)
+@@ -700,6 +700,9 @@
+ void COM_ParseError(char *format, ...) __attribute__((format(printf, 1, 2)));
+ void COM_ParseWarning(char *format, ...) __attribute__((format(printf, 1, 2)));
+ //int COM_ParseInfos(char *buf, int max, char infos[][MAX_INFO_STRING]);
++qboolean COM_BitCheck(const int array[], int bitNum);
++void COM_BitSet(int array[], int bitNum);
++void COM_BitClear(int array[], int bitNum);
+ #define MAX_TOKENLENGTH 1024
+ #ifndef TT_STRING
+ // token types
+@@ -1002,7 +1005,8 @@
+ #define MAX_STATS 16
+ #define MAX_PERSISTANT 16
+ #define MAX_POWERUPS 16
+-#define MAX_WEAPONS 16
++#define MAX_HOLDABLE 16
++#define MAX_WEAPONS 64 // and yet more!
+ #define MAX_PS_EVENTS 2
+ 
+ #define PS_PMOVEFRAMECOUNTBITS 6
+@@ -1054,7 +1058,10 @@
+ 	int stats[MAX_STATS];
+ 	int persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
+ 	int powerups[MAX_POWERUPS];		// level.time that the powerup runs out
+-	int ammo[MAX_WEAPONS];
++	int holdable[MAX_HOLDABLE];
++	int ammo[MAX_WEAPONS];			// total amount of ammo
++	int ammoclip[MAX_WEAPONS];		// ammo in clip
++	int weapons[MAX_WEAPONS / (sizeof(int) * 8)]; // 64 bits for weapons held
+ 	// not communicated over the net at all
+ 	int ping;						// server to game info for scoreboard
+ 	int pmove_framecount;
+Index: code/qcommon/qcommon.h
+===================================================================
+--- code/qcommon/qcommon.h	(revision 1302)
++++ code/qcommon/qcommon.h	(working copy)
+@@ -85,7 +85,6 @@
+ char *MSG_ReadStringLine(msg_t *sb);
+ float MSG_ReadAngle16(msg_t *sb);
+ void MSG_ReadData(msg_t *sb, void *buffer, int size);
+-int MSG_LookaheadByte(msg_t *msg);
+ void MSG_WriteDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to);
+ void MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, usercmd_t *from, usercmd_t *to);
+ void MSG_WriteDeltaEntity(msg_t *msg, struct entityState_s *from, struct entityState_s *to, qboolean force);

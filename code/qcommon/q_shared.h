@@ -700,6 +700,9 @@ int COM_Compress(char *data_p);
 void COM_ParseError(char *format, ...) __attribute__((format(printf, 1, 2)));
 void COM_ParseWarning(char *format, ...) __attribute__((format(printf, 1, 2)));
 //int COM_ParseInfos(char *buf, int max, char infos[][MAX_INFO_STRING]);
+qboolean COM_BitCheck(const int array[], int bitNum);
+void COM_BitSet(int array[], int bitNum);
+void COM_BitClear(int array[], int bitNum);
 #define MAX_TOKENLENGTH 1024
 #ifndef TT_STRING
 // token types
@@ -1002,7 +1005,8 @@ typedef struct {
 #define MAX_STATS 16
 #define MAX_PERSISTANT 16
 #define MAX_POWERUPS 16
-#define MAX_WEAPONS 16
+#define MAX_HOLDABLE 16
+#define MAX_WEAPONS 64 // and yet more!
 #define MAX_PS_EVENTS 2
 
 #define PS_PMOVEFRAMECOUNTBITS 6
@@ -1054,7 +1058,10 @@ typedef struct playerState_s {
 	int stats[MAX_STATS];
 	int persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
 	int powerups[MAX_POWERUPS];		// level.time that the powerup runs out
-	int ammo[MAX_WEAPONS];
+	int holdable[MAX_HOLDABLE];
+	int ammo[MAX_WEAPONS];			// total amount of ammo
+	int ammoclip[MAX_WEAPONS];		// ammo in clip
+	int weapons[MAX_WEAPONS / (sizeof(int) * 8)]; // 64 bits for weapons held
 	// not communicated over the net at all
 	int ping;						// server to game info for scoreboard
 	int pmove_framecount;

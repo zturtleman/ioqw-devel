@@ -176,7 +176,6 @@ void Pmove(pmove_t *pmove);
 typedef enum {
 	STAT_HEALTH,
 	STAT_ARMOR,
-	STAT_WEAPONS,		// 16 bit fields
 	STAT_HOLDABLE_ITEM,
 	STAT_PERSISTANT_POWERUP,
 	STAT_DEAD_YAW,		// look this direction when dead (FIXME: get rid of?)
@@ -265,7 +264,7 @@ typedef enum {
 **************************************************************************************************************************************/
 
 typedef enum {
-	WP_NONE,
+	WP_NONE = 0,
 	WP_GAUNTLET,
 	WP_MACHINEGUN,
 	WP_CHAINGUN,
@@ -279,7 +278,7 @@ typedef enum {
 	WP_RAILGUN,
 	WP_PLASMAGUN,
 	WP_BFG,
-	WP_NUM_WEAPONS
+	WP_NUM_WEAPONS // = 64
 } weapon_t;
 // reward sounds (stored in ps->persistant[PERS_PLAYEREVENTS])
 #define PLAYEREVENT_DENIEDREWARD	0x00000001

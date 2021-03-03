@@ -259,7 +259,9 @@ void Cmd_Give_f(gentity_t *ent) {
 	}
 
 	if (give_all || Q_stricmp(name, "weapons") == 0) {
-		ent->client->ps.stats[STAT_WEAPONS] = (1 << WP_NUM_WEAPONS) - 1 - (1 << WP_NONE);
+		for (i = 0; i < WP_NUM_WEAPONS; i++) {
+			COM_BitSet(ent->client->ps.weapons, i);
+		}
 
 		if (!give_all) {
 			return;
