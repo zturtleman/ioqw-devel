@@ -233,6 +233,10 @@ static void CG_CheckPlayerstateEvents(const playerState_t *ps, const playerState
 		// or something the server told us changed our prediction causing a different event
 		if (i >= ops->eventSequence || (i > ops->eventSequence - MAX_PS_EVENTS && ps->events[i & (MAX_PS_EVENTS - 1)] != ops->events[i & (MAX_PS_EVENTS - 1)])) {
 			event = ps->events[i & (MAX_PS_EVENTS - 1)];
+			// ignore empty events
+			if (event == EV_NONE) {
+				continue;
+			}
 
 			cent->currentState.event = event;
 			cent->currentState.eventParm = ps->eventParms[i & (MAX_PS_EVENTS - 1)];

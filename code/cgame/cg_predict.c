@@ -294,7 +294,7 @@ static void CG_TouchItem(centity_t *cent) {
 	cent->currentState.eFlags |= EF_NODRAW;
 	// don't touch it again this prediction
 	cent->miscTime = cg.time;
-	// if it's a weapon, give them some predicted ammo so the autoswitch will work
+	// if it is a weapon, give them some predicted ammo so the autoswitch will work
 	if (item->giType == IT_WEAPON) {
 		cg.predictedPlayerState.stats[STAT_WEAPONS] |= 1 << item->giTag;
 
@@ -434,7 +434,7 @@ void CG_PredictPlayerState(void) {
 
 	if (oldestCmd.serverTime > cg.snap->ps.commandTime && oldestCmd.serverTime < cg.time) { // special check for map_restart
 		if (cg_showmiss.integer) {
-			CG_Printf("exceeded PACKET_BACKUP on commands\n");
+			CG_Printf("Exceeded PACKET_BACKUP on commands.\n");
 		}
 
 		return;
@@ -502,7 +502,7 @@ void CG_PredictPlayerState(void) {
 
 				if (cg_showmiss.integer) {
 					if (!VectorCompare(oldPlayerState.origin, adjusted)) {
-						CG_Printf("prediction error\n");
+						CG_Printf("Prediction error!\n");
 					}
 				}
 
@@ -563,7 +563,7 @@ void CG_PredictPlayerState(void) {
 
 	if (!moved) {
 		if (cg_showmiss.integer) {
-			CG_Printf("not moved\n");
+			CG_Printf("Not moved.\n");
 		}
 
 		return;

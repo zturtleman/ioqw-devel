@@ -48,9 +48,6 @@ Ioid3-qw is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L62
   * Atmospheric effects, like rain and snow.
   * Dynamic lights have smoother edges.
   * Improved Bot AI.
-
-## Main features from ioquake3:
-
   * SDL 2 backend.
   * OpenAL sound API support (multiple speaker support and better sound quality).
   * Full x86_64 support on Linux.

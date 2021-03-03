@@ -1087,6 +1087,7 @@ static void Cmd_VoiceTell_f(gentity_t *ent, qboolean voiceonly) {
 	}
 
 	trap_Argv(1, arg, sizeof(arg));
+
 	targetNum = ClientNumberFromString(ent, arg, qtrue, qtrue);
 
 	if (targetNum == -1) {

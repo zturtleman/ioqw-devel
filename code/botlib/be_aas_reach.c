@@ -2436,7 +2436,7 @@ int AAS_Reachability_Jump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// never jump or fall through a cluster portal and don't enter slime or lava
+			// never jump or fall through a cluster portal and don't enter lava or slime
 			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy q3dm6?
 				return qfalse;
 			}
@@ -2738,7 +2738,7 @@ int AAS_Reachability_ScoutJump(int area1num, int area2num) {
 			if (move.frames >= 30) {
 				return qfalse;
 			}
-			// never jump or fall through a cluster portal and don't enter slime or lava
+			// never jump or fall through a cluster portal and don't enter lava or slime
 			if (move.stopevent & (SE_TOUCHCLUSTERPORTAL|SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy q3dm6?
 				return qfalse;
 			}
@@ -3136,9 +3136,9 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 				}
 #endif // REACH_DEBUG
 			}
-			/*// if slime or lava below the ladder
+			/*// if lava or slime below the ladder
 			// try jump reachability from far towards the ladder
-			if (aasworld.areasettings[area2num].contents & (AREACONTENTS_SLIME|AREACONTENTS_LAVA)) {
+			if (aasworld.areasettings[area2num].contents & (AREACONTENTS_LAVA|AREACONTENTS_SLIME)) {
 				for (i = 20; i <= 120; i += 20) {
 					// trace down in the middle of this edge
 					VectorMA(lowestpoint, i, plane1->normal, start);
@@ -3164,7 +3164,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num) {
 						continue;
 					}
 
-					if (aasworld.areasettings[area2num].contents & (AREACONTENTS_SLIME|AREACONTENTS_LAVA)) {
+					if (aasworld.areasettings[area2num].contents & (AREACONTENTS_LAVA|AREACONTENTS_SLIME)) {
 						continue;
 					}
 					// create a new reachability link
@@ -3367,7 +3367,7 @@ void AAS_Reachability_Teleport(void) {
 				area2num = AAS_PointAreaNum(move.endpos);
 
 				if (move.stopevent & (SE_ENTERLAVA|SE_ENTERSLIME)) { // Tobias NOTE: why does SE_GAP destroy some maps?
-					botimport.Print(PRT_WARNING, "teleported into slime or lava at dest %s\n", target);
+					botimport.Print(PRT_WARNING, "teleported into lava or slime at dest %s\n", target);
 					//continue; // Tobias NOTE: adding 'continue' destroys some badly desgned maps, like erta1
 				}
 
@@ -4374,7 +4374,7 @@ void AAS_Reachability_JumpPad(void) {
 						VectorScale(dir, speed, cmdmove);
 						// movement prediction
 						AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qfalse, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME, area2num, visualize);
-						// if prediction time wasn't enough to fully predict the movement, don't fall from too high and don't enter slime or lava
+						// if prediction time wasn't enough to fully predict the movement, don't fall from too high and don't enter lava or slime
 						if (move.frames < 30 && (move.stopevent & (SE_TOUCHTELEPORTER|SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME))) { // Tobias NOTE: does SE_GAP destroy some maps?
 							// never go back to the same jumppad
 							for (link = areas; link; link = link->next_area) {
@@ -4587,7 +4587,7 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num) {
 				VectorSet(velocity, 0, 0, zvel);
 				// movement prediction
 				AAS_PredictClientMovement(&move, -1, areastart, PRESENCE_NORMAL, qtrue, qfalse, velocity, cmdmove, 30, 30, 0.1f, SE_TOUCHJUMPPAD|SE_HITGROUNDAREA|SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP, area2num, visualize);
-				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter slime or lava and don't fall in gaps
+				// if prediction time wasn't enough to fully predict the movement, don't fall from too high, don't enter lava or slime and don't fall in gaps
 				if (move.frames < 30 && (move.stopevent & (SE_TOUCHJUMPPAD|SE_HITGROUNDAREA)) && !(move.stopevent & (SE_HITGROUNDDAMAGE|SE_ENTERLAVA|SE_ENTERSLIME|SE_GAP))) {
 					// create a rocket or bfg jump reachability from area1 to area2
 					lreach = AAS_AllocReachability();
@@ -4766,7 +4766,7 @@ void AAS_Reachability_WalkOffLedge(int areanum) {
 							break;
 						}
 
-						if (aasworld.areasettings[reachareanum].contents & (AREACONTENTS_SLIME|AREACONTENTS_LAVA)) {
+						if (aasworld.areasettings[reachareanum].contents & (AREACONTENTS_LAVA|AREACONTENTS_SLIME)) {
 							//Log_Write("area %d, reach area %d: lava or slime\r\n", areanum, reachareanum);
 							break;
 						}

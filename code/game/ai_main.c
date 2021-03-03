@@ -1279,19 +1279,19 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	}
 
 	if (bs->inuse) {
-		BotAI_Print(PRT_FATAL, "BotAISetupClient: client %d already setup\n", client);
+		BotAI_Print(PRT_FATAL, "BotAISetupClient: client %d already setup.\n", client);
 		return qfalse;
 	}
 
 	if (!trap_AAS_Initialized()) {
-		BotAI_Print(PRT_FATAL, "AAS not initialized\n");
+		BotAI_Print(PRT_FATAL, "BotAISetupClient: AAS not initialized!\n");
 		return qfalse;
 	}
 	// load the bot character
 	bs->character = trap_BotLoadCharacter(settings->characterfile, settings->skill);
 
 	if (!bs->character) {
-		BotAI_Print(PRT_FATAL, "couldn't load skill %f from %s\n", settings->skill, settings->characterfile);
+		BotAI_Print(PRT_FATAL, "BotAISetupClient: couldn't load skill %f from %s!\n", settings->skill, settings->characterfile);
 		return qfalse;
 	}
 	// copy the settings

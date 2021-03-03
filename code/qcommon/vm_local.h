@@ -33,7 +33,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // syscall number + 15 arguments
 #define MAX_VMSYSCALL_ARGS 16
 */
-// qvm syscall number + vm syscall number + 15 args
+// qvm syscall number + vm syscall number + 15 arguments
 #define MAX_VMSYSCALL_ARGS 17
 // Tobias END
 // don't change, this is hardcoded into x86 VMs, opStack protection relies on this

@@ -613,8 +613,8 @@ void AAS_CreateAreaSettings(void)
 			numgrounded++;
 		} //end if
 		if (tmparea->contents & (AREACONTENTS_WATER |
-											AREACONTENTS_SLIME |
-											AREACONTENTS_LAVA))
+											AREACONTENTS_LAVA |
+											AREACONTENTS_SLIME))
 		{
 			tmparea->settings->areaflags |= AREA_LIQUID;
 			numliquidareas++;

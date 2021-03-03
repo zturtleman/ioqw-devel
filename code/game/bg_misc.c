@@ -1429,7 +1429,7 @@ void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s,
 	s->angles2[YAW] = ps->movementDir;
 	s->legsAnim = ps->legsAnim;
 	s->torsoAnim = ps->torsoAnim;
-	s->clientNum = ps->clientNum; // ET_PLAYER looks here instead of at number, so corpses can also reference the proper config
+	s->clientNum = ps->clientNum; // ET_PLAYER looks here instead of at number so corpses can also reference the proper config
 	s->eFlags = ps->eFlags;
 
 	if (ps->stats[STAT_HEALTH] <= 0) {

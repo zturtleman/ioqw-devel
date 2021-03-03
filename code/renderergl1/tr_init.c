@@ -1305,7 +1305,7 @@ void R_Register( void )
 	//
 	// cvars for game-specific overrides
 	//
-	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "linear", CVAR_LATCH );
+	r_defaultFogParmsType = ri.Cvar_Get ("r_defaultfogParmsType", "exp", CVAR_LATCH );
 	r_globalLinearFogDrawSky = ri.Cvar_Get ("r_globalLinearFogDrawSky", "0", 0 );
 	r_missingLightmapUseDiffuseLighting = ri.Cvar_Get( "r_missingLightmapUseDiffuseLighting", "1", CVAR_LATCH );
 
