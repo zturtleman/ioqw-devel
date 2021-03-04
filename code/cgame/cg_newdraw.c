@@ -1429,6 +1429,14 @@ qboolean CG_OwnerDrawVisible(int flags) {
 		}
 	}
 
+	if (flags &CG_SHOW_CAMPAIGN) {
+		if (cgs.gametype == GT_CAMPAIGN) {
+			return qtrue;
+		} else {
+			return qfalse;
+		}
+	}
+
 	if (flags &CG_SHOW_HEALTHCRITICAL) {
 		if (cg.snap->ps.stats[STAT_HEALTH] < 25) {
 			return qtrue;
@@ -1630,6 +1638,8 @@ const char *CG_GameTypeString(void) {
 		return "Overload";
 	} else if (cgs.gametype == GT_HARVESTER) {
 		return "Harvester";
+	} else if (cgs.gametype == GT_CAMPAIGN) {
+		return "Campaign";
 	}
 
 	return "";

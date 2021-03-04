@@ -80,7 +80,7 @@
 			cvarTest "g_gametype"
 
 			hideCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {
@@ -104,7 +104,7 @@
 			cvarTest "g_gametype"
 
 			hideCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {
@@ -128,7 +128,7 @@
 			cvarTest "g_gametype"
 
 			hideCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {
@@ -152,7 +152,7 @@
 			cvarTest "g_gametype"
 
 			hideCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {
@@ -176,7 +176,7 @@
 			cvarTest "g_gametype"
 
 			showCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {
@@ -200,7 +200,7 @@
 			cvarTest "g_gametype"
 
 			showCvar {
-				"0"; "1"; "2"
+				"0"; "1"; "2"; "8"
 			}
 
 			action {

@@ -184,6 +184,7 @@
 				"One Flag CTF" 5
 				"Overload" 6
 				"Harvester" 7
+				"Campaign" 8
 			}
 
 			textalignx 128
@@ -203,7 +204,7 @@
 			cvarTest "G_GAMETYPE"
 
 			hideCvar {
-				"0"; "1"; "2"; "3"
+				"0"; "1"; "2"; "3"; "8"
 			}
 
 			maxPaintChars 12
@@ -263,6 +264,12 @@
 			type 4
 			style 0
 			text "Red Team:"
+			cvarTest "G_GAMETYPE"
+
+			hideCvar {
+				"0"; "1"; "2"; "8"
+			}
+			
 			maxPaintChars 12
 			cvar g_redTeam
 			textalign ITEM_ALIGN_RIGHT
@@ -280,6 +287,12 @@
 			type 4
 			style 0
 			text "Blue Team:"
+			cvarTest "G_GAMETYPE"
+
+			hideCvar {
+				"0"; "1"; "2"; "8"
+			}
+			
 			maxPaintChars 12
 			cvar g_blueTeam
 			textalign ITEM_ALIGN_RIGHT

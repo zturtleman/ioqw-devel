@@ -768,7 +768,7 @@ BG_CheckSpawnEntity
 qboolean BG_CheckSpawnEntity(const bgEntitySpawnInfo_t *info) {
 	int i, gametype;
 	char *s, *value, *gametypeName;
-	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"single", "ffa", "tournament", "team", "ctf", "oneflag", "obelisk", "harvester"};
+	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"single", "ffa", "tournament", "team", "ctf", "oneflag", "obelisk", "harvester", "campaign"};
 
 	gametype = info->gametype;
 	// check for "notsingle" flag

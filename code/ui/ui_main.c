@@ -91,7 +91,8 @@ static const char *teamArenaGameTypes[] = {
 	"CTF",
 	"1FCTF",
 	"OVERLOAD",
-	"HARVESTER"
+	"HARVESTER",
+	"CAMPAIGN"
 };
 
 static int const numTeamArenaGameTypes = ARRAY_LEN(teamArenaGameTypes);
@@ -1196,6 +1197,10 @@ static void UI_SetCapFragLimits(qboolean uiVars) {
 			break;
 		case GT_HARVESTER:
 			cap = 15;
+			frag = 0;
+			break;
+		case GT_CAMPAIGN:
+			cap = 0;
 			frag = 0;
 			break;
 	}

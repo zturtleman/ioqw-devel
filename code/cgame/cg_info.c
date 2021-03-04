@@ -254,6 +254,9 @@ void CG_DrawInformation(void) {
 		case GT_HARVESTER:
 			s = "Harvester";
 			break;
+		case GT_CAMPAIGN:
+			s = "Campaign";
+			break;
 		default:
 			s = "Unknown Gametype";
 			break;

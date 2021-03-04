@@ -222,6 +222,7 @@ qboolean UI_RegisterClientModelname(playerInfo_t *pi, const char *modelSkinName,
 #define GAMES_1FCTF		5
 #define GAMES_OBELISK	6
 #define GAMES_HARVESTER	7
+#define GAMES_CAMPAIGN	8
 
 #define MAPS_PER_TIER 3
 #define MAX_TIERS 16

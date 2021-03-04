@@ -1267,7 +1267,8 @@ static const char *gameNames[] = {
 	"Capture the Flag",
 	"One Flag CTF",
 	"Overload",
-	"Harvester"
+	"Harvester",
+	"Campaign"
 };
 
 /*

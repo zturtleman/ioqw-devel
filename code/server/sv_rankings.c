@@ -120,6 +120,9 @@ void SV_RankBegin(char *gamekey) {
 			case GT_HARVESTER:
 				gamekey = "Q3 Harvester";
 				break;
+			case GT_CAMPAIGN:
+				gamekey = "Q3 Campaign";
+				break;
 			default:
 				break;
 		}

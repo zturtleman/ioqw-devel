@@ -1,0 +1,312 @@
+Index: code/cgame/cg_draw.c
+===================================================================
+--- code/cgame/cg_draw.c	(revision 1304)
++++ code/cgame/cg_draw.c	(working copy)
+@@ -2581,6 +2581,8 @@
+ 			s = "Overload";
+ 		} else if (cgs.gametype == GT_HARVESTER) {
+ 			s = "Harvester";
++		} else if (cgs.gametype == GT_CAMPAIGN) {
++			s = "Campaign";
+ 		} else {
+ 			s = "";
+ 		}
+Index: code/cgame/cg_info.c
+===================================================================
+--- code/cgame/cg_info.c	(revision 1304)
++++ code/cgame/cg_info.c	(working copy)
+@@ -254,6 +254,9 @@
+ 		case GT_HARVESTER:
+ 			s = "Harvester";
+ 			break;
++		case GT_CAMPAIGN:
++			s = "Campaign";
++			break;
+ 		default:
+ 			s = "Unknown Gametype";
+ 			break;
+Index: code/cgame/cg_newdraw.c
+===================================================================
+--- code/cgame/cg_newdraw.c	(revision 1304)
++++ code/cgame/cg_newdraw.c	(working copy)
+@@ -1429,6 +1429,14 @@
+ 		}
+ 	}
+ 
++	if (flags &CG_SHOW_CAMPAIGN) {
++		if (cgs.gametype == GT_CAMPAIGN) {
++			return qtrue;
++		} else {
++			return qfalse;
++		}
++	}
++
+ 	if (flags &CG_SHOW_HEALTHCRITICAL) {
+ 		if (cg.snap->ps.stats[STAT_HEALTH] < 25) {
+ 			return qtrue;
+@@ -1630,6 +1638,8 @@
+ 		return "Overload";
+ 	} else if (cgs.gametype == GT_HARVESTER) {
+ 		return "Harvester";
++	} else if (cgs.gametype == GT_CAMPAIGN) {
++		return "Campaign";
+ 	}
+ 
+ 	return "";
+Index: code/game/bg_misc.c
+===================================================================
+--- code/game/bg_misc.c	(revision 1304)
++++ code/game/bg_misc.c	(working copy)
+@@ -768,7 +768,7 @@
+ qboolean BG_CheckSpawnEntity(const bgEntitySpawnInfo_t *info) {
+ 	int i, gametype;
+ 	char *s, *value, *gametypeName;
+-	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"single", "ffa", "tournament", "team", "ctf", "oneflag", "obelisk", "harvester"};
++	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"single", "ffa", "tournament", "team", "ctf", "oneflag", "obelisk", "harvester", "campaign"};
+ 
+ 	gametype = info->gametype;
+ 	// check for "notsingle" flag
+Index: code/game/g_cmds.c
+===================================================================
+--- code/game/g_cmds.c	(revision 1304)
++++ code/game/g_cmds.c	(working copy)
+@@ -1267,7 +1267,8 @@
+ 	"Capture the Flag",
+ 	"One Flag CTF",
+ 	"Overload",
+-	"Harvester"
++	"Harvester",
++	"Campaign"
+ };
+ 
+ /*
+Index: code/qcommon/q_shared.h
+===================================================================
+--- code/qcommon/q_shared.h	(revision 1304)
++++ code/qcommon/q_shared.h	(working copy)
+@@ -1260,6 +1260,7 @@
+ 	GT_1FCTF,
+ 	GT_OBELISK,
+ 	GT_HARVESTER,
++	GT_CAMPAIGN,
+ 	GT_MAX_GAME_TYPE
+ } gametype_t;
+ 
+Index: code/server/sv_rankings.c
+===================================================================
+--- code/server/sv_rankings.c	(revision 1304)
++++ code/server/sv_rankings.c	(working copy)
+@@ -120,6 +120,9 @@
+ 			case GT_HARVESTER:
+ 				gamekey = "Q3 Harvester";
+ 				break;
++			case GT_CAMPAIGN:
++				gamekey = "Q3 Campaign";
++				break;
+ 			default:
+ 				break;
+ 		}
+Index: code/ui/ui_gameinfo.c
+===================================================================
+--- code/ui/ui_gameinfo.c	(revision 1304)
++++ code/ui/ui_gameinfo.c	(working copy)
+@@ -215,6 +215,10 @@
+ 			if (strstr(type, "harvester")) {
+ 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_HARVESTER);
+ 			}
++
++			if (strstr(type, "campaign")) {
++				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CAMPAIGN);
++			}
+ 		} else {
+ 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_FFA);
+ 		}
+Index: code/ui/ui_local.h
+===================================================================
+--- code/ui/ui_local.h	(revision 1304)
++++ code/ui/ui_local.h	(working copy)
+@@ -222,6 +222,7 @@
+ #define GAMES_1FCTF		5
+ #define GAMES_OBELISK	6
+ #define GAMES_HARVESTER	7
++#define GAMES_CAMPAIGN	8
+ 
+ #define MAPS_PER_TIER 3
+ #define MAX_TIERS 16
+Index: code/ui/ui_main.c
+===================================================================
+--- code/ui/ui_main.c	(revision 1304)
++++ code/ui/ui_main.c	(working copy)
+@@ -91,7 +91,8 @@
+ 	"CTF",
+ 	"1FCTF",
+ 	"OVERLOAD",
+-	"HARVESTER"
++	"HARVESTER",
++	"CAMPAIGN"
+ };
+ 
+ static int const numTeamArenaGameTypes = ARRAY_LEN(teamArenaGameTypes);
+@@ -1198,6 +1199,10 @@
+ 			cap = 15;
+ 			frag = 0;
+ 			break;
++		case GT_CAMPAIGN:
++			cap = 0;
++			frag = 0;
++			break;
+ 	}
+ 
+ 	if (uiVars) {
+Index: ui/ingame_about.menu
+===================================================================
+--- ui/ingame_about.menu	(revision 1304)
++++ ui/ingame_about.menu	(working copy)
+@@ -184,6 +184,7 @@
+ 				"One Flag CTF" 5
+ 				"Overload" 6
+ 				"Harvester" 7
++				"Campaign" 8
+ 			}
+ 
+ 			textalignx 128
+@@ -203,7 +204,7 @@
+ 			cvarTest "G_GAMETYPE"
+ 
+ 			hideCvar {
+-				"0"; "1"; "2"; "3"
++				"0"; "1"; "2"; "3"; "8"
+ 			}
+ 
+ 			maxPaintChars 12
+@@ -263,6 +264,12 @@
+ 			type 4
+ 			style 0
+ 			text "Red Team:"
++			cvarTest "G_GAMETYPE"
++
++			hideCvar {
++				"0"; "1"; "2"; "8"
++			}
++			
+ 			maxPaintChars 12
+ 			cvar g_redTeam
+ 			textalign ITEM_ALIGN_RIGHT
+@@ -280,6 +287,12 @@
+ 			type 4
+ 			style 0
+ 			text "Blue Team:"
++			cvarTest "G_GAMETYPE"
++
++			hideCvar {
++				"0"; "1"; "2"; "8"
++			}
++			
+ 			maxPaintChars 12
+ 			cvar g_blueTeam
+ 			textalign ITEM_ALIGN_RIGHT
+Index: ui/ingame_join.menu
+===================================================================
+--- ui/ingame_join.menu	(revision 1304)
++++ ui/ingame_join.menu	(working copy)
+@@ -80,7 +80,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			hideCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+@@ -104,7 +104,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			hideCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+@@ -128,7 +128,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			hideCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+@@ -152,7 +152,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			hideCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+@@ -176,7 +176,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			showCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+@@ -200,7 +200,7 @@
+ 			cvarTest "g_gametype"
+ 
+ 			showCvar {
+-				"0"; "1"; "2"
++				"0"; "1"; "2"; "8"
+ 			}
+ 
+ 			action {
+Index: ui/menudef.h
+===================================================================
+--- ui/menudef.h	(revision 1304)
++++ ui/menudef.h	(working copy)
+@@ -91,24 +91,25 @@
+ #define CG_SHOW_BLUE_TEAM_HAS_REDFLAG	0x00000001
+ #define CG_SHOW_RED_TEAM_HAS_BLUEFLAG	0x00000002
+ #define CG_SHOW_ANYTEAMGAME				0x00000004
+-#define CG_SHOW_HARVESTER				0x00000008
++#define CG_SHOW_CTF						0x00000008
+ #define CG_SHOW_ONEFLAG					0x00000010
+-#define CG_SHOW_CTF						0x00000020
+-#define CG_SHOW_OBELISK					0x00000040
+-#define CG_SHOW_HEALTHCRITICAL			0x00000080
+-#define CG_SHOW_SINGLEPLAYER			0x00000100
+-#define CG_SHOW_TOURNAMENT				0x00000200
+-#define CG_SHOW_DURINGINCOMINGVOICE		0x00000400
+-#define CG_SHOW_IF_PLAYER_HAS_FLAG		0x00000800
+-#define CG_SHOW_LANPLAYONLY				0x00001000
+-#define CG_SHOW_MINED					0x00002000
+-#define CG_SHOW_HEALTHOK				0x00004000
+-#define CG_SHOW_TEAMINFO				0x00008000
+-#define CG_SHOW_NOTEAMINFO				0x00010000
+-#define CG_SHOW_OTHERTEAMHASFLAG		0x00020000
+-#define CG_SHOW_YOURTEAMHASENEMYFLAG	0x00040000
+-#define CG_SHOW_ANYNONTEAMGAME			0x00080000
+-#define CG_SHOW_2DONLY					0x10000000
++#define CG_SHOW_OBELISK					0x00000020
++#define CG_SHOW_HARVESTER				0x00000040
++#define CG_SHOW_CAMPAIGN				0x00000080
++#define CG_SHOW_HEALTHCRITICAL			0x00000100
++#define CG_SHOW_SINGLEPLAYER			0x00000200
++#define CG_SHOW_TOURNAMENT				0x00000400
++#define CG_SHOW_DURINGINCOMINGVOICE		0x00000800
++#define CG_SHOW_IF_PLAYER_HAS_FLAG		0x00001000
++#define CG_SHOW_LANPLAYONLY				0x00002000
++#define CG_SHOW_MINED					0x00004000
++#define CG_SHOW_HEALTHOK				0x00008000
++#define CG_SHOW_TEAMINFO				0x00010000
++#define CG_SHOW_NOTEAMINFO				0x00020000
++#define CG_SHOW_OTHERTEAMHASFLAG		0x00040000
++#define CG_SHOW_YOURTEAMHASENEMYFLAG	0x00080000
++#define CG_SHOW_ANYNONTEAMGAME			0x00100000
++#define CG_SHOW_2DONLY					0x00200000
+ 
+ #define UI_SHOW_LEADER				0x00000001
+ #define UI_SHOW_NOTLEADER			0x00000002
