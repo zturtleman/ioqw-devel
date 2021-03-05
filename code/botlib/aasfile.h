@@ -29,7 +29,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //			   default long
 
 #define AASID (('S' << 24) + ('A' << 16) + ('A' << 8) + 'E')
-#define AASVERSION_OLD 4
 #define AASVERSION 5
 // presence types
 #define PRESENCE_NONE	1
@@ -153,6 +152,8 @@ typedef struct aas_areasettings_s {
 	int clusterareanum;		// number of the area in the cluster
 	int numreachableareas;	// number of reachable areas from this one
 	int firstreachablearea;	// first reachable area in the reachable area index
+	// add a ground steepness stat, so we can avoid terrain when we can take a close-by flat route
+	float groundsteepness;	// 0 = flat, 1 = steep
 } aas_areasettings_t;
 // cluster portal
 typedef struct aas_portal_s {

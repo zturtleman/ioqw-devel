@@ -225,7 +225,7 @@ extern	qboolean nobrushmerge;
 extern	qboolean cancelconversion;
 extern	qboolean noliquids;
 extern	qboolean capsule_collision;
-
+extern	qboolean writeaasmap;
 extern	float subdivide_size;
 extern	vec_t microvolume;
 

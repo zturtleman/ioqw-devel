@@ -483,8 +483,8 @@ static qboolean BotBSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t mi
 	int i;
 	aas_entity_t *ent;
 
-	for (i = 0; i < aasworld.maxentities; i++) {
-		ent = &aasworld.entities[i];
+	for (i = 0; i < (*aasworld).maxentities; i++) {
+		ent = &(*aasworld).entities[i];
 
 		if (ent->i.type == ET_MOVER) {
 			if (ent->i.modelindex == modelnum) {

@@ -326,9 +326,11 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 
 	//return 0;
 
-	if (!aasworld.loaded) {
+	if (!(*aasworld).loaded) {
 		return 0;
 	}
+	// use the default world
+	AAS_SetCurrentWorld(0);
 	/*
 	if (parm0 & 1) {
 		AAS_ClearShownPolygons();
@@ -376,39 +378,39 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 		botimport.Print(PRT_MESSAGE, "new area %d, cluster %d, presence type %d\n", area, AAS_AreaCluster(area), AAS_PointPresenceType(origin));
 		botimport.Print(PRT_MESSAGE, "area contents: ");
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_WATER) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_WATER) {
 			botimport.Print(PRT_MESSAGE, "water &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_LAVA) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_LAVA) {
 			botimport.Print(PRT_MESSAGE, "lava &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_SLIME) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_SLIME) {
 			botimport.Print(PRT_MESSAGE, "slime &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_JUMPPAD) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_JUMPPAD) {
 			botimport.Print(PRT_MESSAGE, "jump pad &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_CLUSTERPORTAL) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_CLUSTERPORTAL) {
 			botimport.Print(PRT_MESSAGE, "cluster portal &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_VIEWPORTAL) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_VIEWPORTAL) {
 			botimport.Print(PRT_MESSAGE, "view portal &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_DONOTENTER) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_DONOTENTER) {
 			botimport.Print(PRT_MESSAGE, "do not enter &");
 		}
 
-		if (aasworld.areasettings[area].contents & AREACONTENTS_MOVER) {
+		if ((*aasworld).areasettings[area].contents & AREACONTENTS_MOVER) {
 			botimport.Print(PRT_MESSAGE, "mover &");
 		}
 
-		if (!aasworld.areasettings[area].contents) {
+		if (!(*aasworld).areasettings[area].contents) {
 			botimport.Print(PRT_MESSAGE, "empty");
 		}
 
@@ -484,7 +486,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 	face = AAS_AreaGroundFace(newarea, parm2);
 
 	if (face) {
-		AAS_ShowFace(face - aasworld.faces);
+		AAS_ShowFace(face - (*aasworld).faces);
 	}
 
 	AAS_ClearShownDebugLines();
@@ -571,7 +573,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 	AAS_ClearShownDebugLines();
 
 	if (trace.entityNum) {
-		ent = &aasworld.entities[trace.entityNum];
+		ent = &(*aasworld).entities[trace.entityNum];
 		AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
 	}
 
@@ -610,13 +612,13 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 		face = AAS_TraceEndFace(&trace);
 
 		if (face) {
-			AAS_ShowFace(face - aasworld.faces);
+			AAS_ShowFace(face - (*aasworld).faces);
 		}
 
 		AAS_DrawPlaneCross(bsptrace.endpos, bsptrace.plane.normal, bsptrace.plane.dist + bsptrace.exp_dist, bsptrace.plane.type, LINECOLOR_GREEN);
 
 		if (trace.entityNum) {
-			ent = &aasworld.entities[trace.entityNum];
+			ent = &(*aasworld).entities[trace.entityNum];
 			AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
 		}
 	}
@@ -629,7 +631,7 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 		AAS_DrawPlaneCross(bsptrace.endpos, bsptrace.plane.normal, bsptrace.plane.dist, bsptrace.plane.type, LINECOLOR_RED);
 
 		if (bsptrace.entityNum) {
-			ent = &aasworld.entities[bsptrace.ent];
+			ent = &(*aasworld).entities[bsptrace.ent];
 			AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
 		}
 	}
@@ -645,6 +647,7 @@ Init_AAS_Export
 */
 static void Init_AAS_Export(aas_export_t *aas) {
 
+	aas->AAS_SetCurrentWorld = AAS_SetCurrentWorld; // multiple AAS files
 	aas->AAS_Initialized = AAS_Initialized;
 	aas->AAS_Time = AAS_Time;
 	aas->AAS_AreaInfo = AAS_AreaInfo;

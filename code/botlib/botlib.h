@@ -168,6 +168,7 @@ typedef struct botlib_import_s {
 } botlib_import_t;
 
 typedef struct aas_export_s {
+	void (*AAS_SetCurrentWorld)(int index);
 	int (*AAS_Initialized)(void);
 	float (*AAS_Time)(void);
 	int (*AAS_AreaInfo)(int areanum, struct aas_areainfo_s *info);

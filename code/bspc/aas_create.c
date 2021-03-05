@@ -585,6 +585,7 @@ void AAS_CreateAreaSettings(void)
 	int i, flags, side, numgrounded, numladderareas, numliquidareas;
 	tmp_face_t *face;
 	tmp_area_t *tmparea;
+	int count;
 
 	numgrounded = 0;
 	numladderareas = 0;
@@ -601,11 +602,25 @@ void AAS_CreateAreaSettings(void)
 		tmparea->settings->contents = tmparea->contents;
 		tmparea->settings->modelnum = tmparea->modelnum;
 		flags = 0;
+		count = 0;
+		tmparea->settings->groundsteepness = 0.0;
 		for (face = tmparea->tmpfaces; face; face = face->next[side])
 		{
 			side = face->frontarea != tmparea;
 			flags |= face->faceflags;
+			// Ridah, add this face's steepness
+			if ( face->faceflags & FACE_GROUND ) {
+				tmparea->settings->groundsteepness += ( 1.0 - mapplanes[face->planenum ^ side].normal[2] );
+				count++;
+			}
 		} //end for
+		tmparea->settings->groundsteepness /= (float)count;
+		if ( tmparea->settings->groundsteepness > 1.0 ) {
+			tmparea->settings->groundsteepness = 1.0;
+		}
+		if ( tmparea->settings->groundsteepness < 0.0 ) {
+			tmparea->settings->groundsteepness = 0.0;
+		}
 		tmparea->settings->areaflags = 0;
 		if (flags & FACE_GROUND)
 		{
@@ -738,6 +753,7 @@ tmp_node_t *AAS_CreateArea(node_t *node)
 	if (node->contents & CONTENTS_NOTTEAM1) tmparea->contents |= AREACONTENTS_NOTTEAM1;
 	if (node->contents & CONTENTS_NOTTEAM2) tmparea->contents |= AREACONTENTS_NOTTEAM2;
 	if (node->contents & CONTENTS_DONOTENTER) tmparea->contents |= AREACONTENTS_DONOTENTER;
+	//if ( node->contents & CONTENTS_DONOTENTER_LARGE ) tmparea->contents |= AREACONTENTS_DONOTENTER_LARGE;
 	if (node->contents & CONTENTS_WATER) tmparea->contents |= AREACONTENTS_WATER;
 	if (node->contents & CONTENTS_LAVA) tmparea->contents |= AREACONTENTS_LAVA;
 	if (node->contents & CONTENTS_SLIME) tmparea->contents |= AREACONTENTS_SLIME;

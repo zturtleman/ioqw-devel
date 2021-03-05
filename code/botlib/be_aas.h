@@ -28,6 +28,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
  Area Awareness System, stuff exported to the AI.
 **************************************************************************************************************************************/
 
+#define MAX_AAS_WORLDS 2 // one for each bounding box type
 #define MAX_EPAIRKEY 128
 #ifndef MAX_STRINGFIELD
 #define MAX_STRINGFIELD 80

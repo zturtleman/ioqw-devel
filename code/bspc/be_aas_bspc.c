@@ -246,7 +246,7 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 	//
 	if (!qf->pakfile[0]) strcpy(qf->pakfile, qf->filename);
 	//load the map
-	CM_LoadMap((char *) qf, qfalse, &aasworld.bspchecksum);
+	CM_LoadMap((char *) qf, qfalse, &( *aasworld ).bspchecksum);
 	//get a handle to the world model
 	worldmodel = CM_InlineModel(0);		// 0 = world, 1 + are bmodels
 	//initialize bot import structure
@@ -260,8 +260,8 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 	//initialize the AAS linked entities for the new map
 	AAS_InitAASLinkedEntities();
 	//reset all reachabilities and clusters
-	aasworld.reachabilitysize = 0;
-	aasworld.numclusters = 0;
+	( *aasworld ).reachabilitysize = 0;
+	( *aasworld ).numclusters = 0;
 	//set all view portals as cluster portals in case we re-calculate the reachabilities and clusters (with -reach)
 	AAS_SetViewPortalsAsClusterPortals();
 	//calculate reachabilities
@@ -271,6 +271,12 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 	//calculate clusters
 	AAS_InitClustering();
 } //end of the function AAS_CalcReachAndClusters
+
+// Ridah
+void AAS_SetWorldPointer( aas_t *newaasworld ) {
+	aasworld = newaasworld;
+}
+// done.
 //===========================================================================
 //
 // Parameter:				-
@@ -279,7 +285,7 @@ void AAS_CalcReachAndClusters(struct quakefile_s *qf)
 //===========================================================================
 void AAS_RecalcClusters(void)
 {
-	aasworld.numclusters = 0;
+	( *aasworld ).numclusters = 0;
 	AAS_InitBotImport();
 	AAS_InitClustering();
 } //end of the function AAS_RecalcClusters

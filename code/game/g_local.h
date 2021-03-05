@@ -571,6 +571,7 @@ int trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 int trap_BotGetSnapshotEntity(int clientNum, int sequence);
 int trap_BotGetServerCommand(int clientNum, char *message, int size);
 void trap_BotUserCommand(int client, usercmd_t *ucmd);
+void trap_AAS_SetCurrentWorld(int index);
 int trap_AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 int trap_AAS_AreaInfo(int areanum, void /*struct aas_areainfo_s*/ *info);
 void trap_AAS_EntityInfo(int entnum, void /*struct aas_entityinfo_s*/ *info);

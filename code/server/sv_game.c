@@ -536,6 +536,9 @@ intptr_t SV_GameSystemCalls(intptr_t *args) {
 			}
 
 			return 0;
+		case BOTLIB_AAS_SETCURRENTWORLD:
+			botlib_export->aas.AAS_SetCurrentWorld(args[1]);
+			return 0;
 		case BOTLIB_AAS_INITIALIZED:
 			return botlib_export->aas.AAS_Initialized();
 		case BOTLIB_AAS_TIME:

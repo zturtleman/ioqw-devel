@@ -35,6 +35,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "aas_cfg.h"
 #include "../qcommon/surfaceflags.h"
 
+#define DOOR_START_OPEN     1
+#define DOOR_REVERSE            2
+#define DOOR_CRUSHER            4
+#define DOOR_NOMONSTER      8
+#define DOOR_TOGGLE         32
+#define DOOR_X_AXIS         64
+#define DOOR_Y_AXIS         128
+
 #define BBOX_NORMAL_EPSILON			0.0001
 
 //===========================================================================
@@ -492,8 +500,39 @@ int AAS_ValidEntity(entity_t *mapent)
 	{
 		return true;
 	} //end if
-	if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
+	  //some of the func_wall brushes are also used for AAS
+	else if ( !strcmp( "func_wall", ValueForKey( mapent, "classname" ) ) )
 	{
+		//Log_Print("found func_wall entity %d\n", mapent - entities);
+		//if the func wall is used in deathmatch
+		//if (!(atoi(ValueForKey(mapent, "spawnflags")) & SPAWNFLAG_NOT_DEATHMATCH))
+		{
+			//Log_Print("func_wall USED in deathmatch mode %d\n", atoi(ValueForKey(mapent, "spawnflags")));
+			return true;
+		} //end if
+	} //end else if
+	else if ( !strcmp( "func_door_rotating", ValueForKey( mapent, "classname" ) ) ||
+			  !strcmp( "func_door", ValueForKey( mapent, "classname" ) ) ||
+			  !strcmp( "func_invisible_user", ValueForKey( mapent, "classname" ) ) )
+			  {
+		//if the func_door_rotating is present in deathmatch
+		//if (!(atoi(ValueForKey(mapent, "spawnflags")) & SPAWNFLAG_NOT_DEATHMATCH))
+		{
+			//if the func_door_rotating is always activated in deathmatch
+			if ( AAS_AlwaysTriggered( ValueForKey( mapent, "targetname" ) ) )
+			{
+				//Log_Print("found func_door_rotating in deathmatch\ntargetname %s\n", ValueForKey(mapent, "targetname"));
+				return true;
+			} //end if
+		} //end if
+	} //end else if
+	else if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
+	{
+		// RF, spawnflag & 1 is for delayed spawn, so ignore it
+		//if ( atoi( ValueForKey( mapent, "spawnflags" ) ) & 1 ) { // Tobias FIXME
+		//	return false;
+		//}
+
 		//"dmg" is the damage, for instance: "dmg" "666"
 		return true;
 	} //end else if
@@ -521,13 +560,17 @@ int AAS_ValidEntity(entity_t *mapent)
 	{
 		return true;
 	} //end else if
+	else if ( !strcmp( "func_tramcar", ValueForKey( mapent, "classname" ) ) )
+	{
+		return true;
+	} //end else if
+	else if ( !strcmp( "func_invisible_user", ValueForKey( mapent, "classname" ) ) )
+	{
+		return true;
+	}
 	else if (!strcmp("func_static", ValueForKey(mapent, "classname")))
 	{
 		//FIXME: easy/medium/hard/deathmatch specific?
-		return true;
-	} //end else if
-	else if (!strcmp("func_door", ValueForKey(mapent, "classname")))
-	{
 		return true;
 	} //end else if
 	//func_breakable for Turtle Arena
@@ -543,6 +586,78 @@ int AAS_ValidEntity(entity_t *mapent)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+int AAS_TransformPlane( int planenum, vec3_t origin, vec3_t angles )
+{
+	float newdist, matrix[3][3];
+	vec3_t normal;
+
+	//rotate the node plane
+	VectorCopy( mapplanes[planenum].normal, normal );
+	CreateRotationMatrix( angles, matrix );
+	RotatePoint( normal, matrix );
+	newdist = mapplanes[planenum].dist + DotProduct( normal, origin );
+	return FindFloatPlane( normal, newdist );
+} //end of the function AAS_TransformPlane
+//===========================================================================
+// this function sets the func_rotating_door in it's final position
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+void AAS_PositionFuncRotatingBrush( entity_t *mapent, mapbrush_t *brush )
+{
+	int spawnflags, i;
+	float distance;
+	vec3_t movedir, angles, pos1, pos2;
+	side_t *s;
+
+	spawnflags = FloatForKey( mapent, "spawnflags" );
+	VectorClear( movedir );
+	if ( spawnflags & DOOR_X_AXIS ) 
+		movedir[2] = 1.0;       //roll
+	else if ( spawnflags & DOOR_Y_AXIS )
+		movedir[0] = 1.0;       //pitch
+	else  // Z_AXIS
+		movedir[1] = 1.0;       //yaw
+
+	// check for reverse rotation
+	if ( spawnflags & DOOR_REVERSE )
+		VectorInverse( movedir );
+
+
+	distance = FloatForKey( mapent, "distance" );
+	if ( !distance ) distance = 90;
+
+	GetVectorForKey( mapent, "angles", angles );
+	VectorCopy( angles, pos1 );
+	VectorMA( angles, -distance, movedir, pos2 );
+	// if it starts open, switch the positions
+	if ( spawnflags & DOOR_START_OPEN )
+	{
+		VectorCopy( pos2, angles );
+		VectorCopy( pos1, pos2 );
+		VectorCopy( angles, pos1 );
+		VectorInverse( movedir );
+	} //end if
+	  //
+	for ( i = 0; i < brush->numsides; i++ )
+	{
+		s = &brush->original_sides[i];
+		s->planenum = AAS_TransformPlane( s->planenum, mapent->origin, pos2 );
+	} //end for
+	  //
+	FreeBrushWindings( brush );
+	AAS_MakeBrushWindings( brush );
+	AddBrushBevels( brush );
+	FreeBrushWindings( brush );
+} //end of the function AAS_PositionFuncRotatingBrush
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 {
 	side_t *s;
@@ -550,6 +665,12 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 	int i, notteam;
 	char *model;
 
+	if ( !strcmp( ValueForKey( mapent, "classname" ), "func_door_rotating" ) )
+	{
+		AAS_PositionFuncRotatingBrush( mapent, brush );
+	} //end if
+	else
+	{
 	if (mapent->origin[0] || mapent->origin[1] || mapent->origin[2])
 	{
 		for (i = 0; i < brush->numsides; i++)
@@ -563,6 +684,11 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 	//if it's a trigger hurt
 	if (!strcmp("trigger_hurt", ValueForKey(mapent, "classname")))
 	{
+		// RF, spawnflag & 1 is for delayed spawn, so ignore it
+		//if ( atoi( ValueForKey( mapent, "spawnflags" ) ) & 1 ) {
+		//	return false;
+		//}
+
 		notteam = FloatForKey(mapent, "bot_notteam");
 		if ( notteam == 1 ) {
 			brush->contents |= CONTENTS_NOTTEAM1;
@@ -613,6 +739,12 @@ void AAS_PositionBrush(entity_t *mapent, mapbrush_t *brush)
 		model = ValueForKey(mapent, "model");
 		brush->modelnum = atoi(model+1);
 	} //end if
+	else if ( !strcmp( "func_invisible_user", ValueForKey( mapent, "classname" ) ) ) {
+		//set mover contents
+		brush->contents = CONTENTS_TRIGGER;
+	} //end if
+
+	} //end else
 } //end of the function AAS_PositionBrush
 //===========================================================================
 // uses the global cfg_t cfg

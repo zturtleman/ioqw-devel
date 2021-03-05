@@ -103,7 +103,10 @@ typedef struct bspc_aas_s
 extern bspc_aas_t aasworld;
 //*/
 
-extern aas_t aasworld;
+// Ridah
+extern aas_t aasworlds[1];
+extern aas_t *aasworld;
+// done.
 
 //stores the AAS file from the temporary AAS
 void AAS_StoreFile(char *filename);

@@ -25,10 +25,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 // debugging on
 #define AAS_DEBUG
-#define DF_AASENTNUMBER(x) (x - aasworld.entities)
-#define DF_NUMBERAASENT(x) (&aasworld.entities[x])
-#define DF_AASENTCLIENT(x) (x - aasworld.entities - 1)
-#define DF_CLIENTAASENT(x) (&aasworld.entities[x + 1])
+#define DF_AASENTNUMBER(x) (x - (*aasworlds).entities)
+#define DF_NUMBERAASENT(x) (&(*aasworlds).entities[x])
+#define DF_AASENTCLIENT(x) (x - (*aasworlds).entities - 1)
+#define DF_CLIENTAASENT(x) (&(*aasworlds).entities[x + 1])
 // structure to link entities to areas and areas to entities
 typedef struct aas_link_s {
 	int entnum;

@@ -415,8 +415,8 @@ void MakeNodePortal (node_t *node)
 	portal_t	*new_portal, *p;
 	winding_t	*w;
 	vec3_t		normal;
-	float		dist;
-	int			side;
+	float		dist = 0;       // TTimo: init
+	int			side = 0;
 
 	w = BaseWindingForNode (node);
 
@@ -485,7 +485,7 @@ void SplitNodePortals (node_t *node)
 {
 	portal_t	*p, *next_portal, *new_portal;
 	node_t *f, *b, *other_node;
-	int side;
+	int side = 0; // TTimo: init
 	plane_t *plane;
 	winding_t *frontwinding, *backwinding;
 

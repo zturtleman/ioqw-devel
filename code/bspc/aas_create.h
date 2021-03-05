@@ -56,6 +56,8 @@ typedef struct tmp_areasettings_s
 	int presencetype;				//how a bot can be present in this area
 	int numreachableareas;			//number of reachable areas from this one
 	int firstreachablearea;			//first reachable area in the reachable area index
+	// Ridah, steepness
+	float groundsteepness;
 } tmp_areasettings_t;
 
 //temporary AAS area

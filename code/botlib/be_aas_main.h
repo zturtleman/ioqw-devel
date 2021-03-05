@@ -23,7 +23,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 */
 
 #ifdef AASINTERN
-extern aas_t aasworld;
+extern aas_t (*aasworld);
 // AAS error message
 void QDECL AAS_Error(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 // set AAS initialized
@@ -44,3 +44,4 @@ int AAS_Loaded(void);
 // returns the current time
 float AAS_Time(void);
 void AAS_ProjectPointOntoVector(vec3_t point, vec3_t vStart, vec3_t vEnd, vec3_t vProj);
+void AAS_SetCurrentWorld(int index);

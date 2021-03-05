@@ -361,6 +361,21 @@ void Q3_BSPBrushToMapBrush(q3_dbrush_t *bspbrush, entity_t *mapent)
 
 //	b->contents = Q3_BrushContents(b);
 	//
+	// Ridah, CONTENTS_MOSTERCLIP should prevent AAS from being created, but not clip players/AI in the game
+	if ( b->contents & CONTENTS_MONSTERCLIP ) {
+		b->contents |= CONTENTS_PLAYERCLIP;
+	}
+
+	// func_explosive's not solid
+	if ( !strcmp( "func_explosive", ValueForKey( &entities[b->entitynum], "classname" ) ) ||
+		 !strcmp( "func_invisible_user", ValueForKey( &entities[b->entitynum], "classname" ) ) ||
+		 !strcmp( "script_mover", ValueForKey( &entities[b->entitynum], "classname" ) ) ||
+		 !strcmp( "func_static", ValueForKey( &entities[b->entitynum], "classname" ) ) ) {
+		Log_Print( "Ignoring %s brush..\n", ValueForKey( &entities[b->entitynum], "classname" ) );
+		b->numsides = 0;
+		b->contents = 0;
+		return;
+	}
 
 	if (BrushExists(b))
 	{
@@ -741,6 +756,13 @@ void Q3_LoadMapFromBSP(struct quakefile_s *qf)
 		PrintContents(mapbrushes[i].contents);
 		Log_Print("\n");
 	} //end for*/
+	if ( writeaasmap ) {
+		char name[MAX_QPATH];
+		strncpy( name, qf->filename, sizeof( name ) );
+		COM_StripExtension(name, name, sizeof(name)); // Toias CHECK
+		strcat( name, "_aas.map" );
+		WriteMapFile( name );
+	}
 } //end of the function Q3_LoadMapFromBSP
 //===========================================================================
 //

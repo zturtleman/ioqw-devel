@@ -80,14 +80,18 @@ qboolean	lessbrushes;		//create less brushes instead of correct texture placemen
 qboolean	cancelconversion;	//true if the conversion is being cancelled
 qboolean	noliquids;			//no liquids when writing map file
 qboolean	forcesidesvisible;	//force all brush sides to be visible when loaded from bsp
+qboolean	writeaasmap;
 qboolean	capsule_collision = 0;
 
+char aas_extension[64]; // allow to specify an extension for multiple AAS files per map
 
 //===========================================================================
 //
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-
+
+// Tobias FIXME: this creates test._b0aas instead of test_b0.aas! This has always been the case afaik, at least in RtCW
 //===========================================================================
 void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 {
@@ -100,6 +104,10 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 		//append the bsp file base
 		AppendPathSeperator(filename, MAX_PATH);
 		ExtractFileBase(qf->origname, &filename[strlen(filename)]);
+
+		// Ridah, add extension
+		strcat( filename, aas_extension );
+		// done.
 		//append .aas
 		strcat(filename, ".aas");
 		return;
@@ -120,6 +128,10 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 		if (access(filename, 0x04)) CreatePath(filename);
 		//append the bsp file base
 		ExtractFileBase(qf->origname, &filename[strlen(filename)]);
+
+		// Ridah, add extension
+		strcat( filename, aas_extension );
+		// done.
 		//append .aas
 		strcat(filename, ".aas");
 	} //end if
@@ -131,6 +143,10 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 		{
 			filename[strlen(filename)-1] = '\0';
 		} //end while
+
+		// Ridah, add extension
+		strcat( filename, aas_extension );
+		// done.
 		strcat(filename, "aas");
 	} //end else
 } //end of the function AASOutputFile
@@ -279,7 +295,14 @@ int main (int argc, char **argv)
 	char filename[MAX_PATH] = "unknown";
 	quakefile_t *qfiles = NULL, *qf;
 	double start_time;
+	// Ridah, allow to specify an extension for multiple AAS files per map
+	int has_ext = 0;
+	// done.
 
+	// Ridah, set the world pointer up for reachabilities
+	aasworld = aasworlds;
+	AAS_SetWorldPointer( &( *aasworld ) );
+	// done.
 	myargc = argc;
 	myargv = argv;
 
@@ -497,6 +520,20 @@ int main (int argc, char **argv)
 			comp = COMP_AASOPTIMIZE;
 			qfiles = GetArgumentFiles(argc, argv, &i, "aas");
 		} //end else if
+		else if ( !stricmp( argv[i], "-writeaasmap" ) ) {
+			writeaasmap = true;
+			Log_Print( "writeaasmap = true\n" );
+		}
+		// Ridah, allow to specify an extension for multiple AAS files per map
+		else if ( !stricmp( argv[i], "-ext" ) ) {
+			if ( i + 1 >= argc ) {
+				i = 0; break;
+			}
+			strcpy( aas_extension, argv[++i] );
+			has_ext = 1;
+
+		} //end else if
+		  // done.
 		else
 		{
 			Log_Print("unknown parameter %s\n", argv[i]);
@@ -734,6 +771,7 @@ int main (int argc, char **argv)
 			"   forcesidesvisible                    = force all sides to be visible\n"
 			"   scoutreach                           = calculate scout reachabilities\n"
 #endif
+			"   writeaasmap                          = write the map the AI sees\n"
 /*			"   noweld     = disables weld\n"
 			"   noshare    = disables sharing\n"
 			"   notjunc    = disables juncs\n"

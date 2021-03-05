@@ -30,4 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 void AAS_RecalcClusters( void );
 void AAS_CalcReachAndClusters(struct quakefile_s *qf);
+void AAS_InitBotImport(void);
+// Ridah
+void AAS_SetWorldPointer( aas_t *newaasworld );
 void AAS_InitBotImport( void );

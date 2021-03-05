@@ -76,8 +76,8 @@ void LeakFile (tree_t *tree)
 	while (node->occupied > 1)
 	{
 		int			next;
-		portal_t	*p, *nextportal;
-		node_t		*nextnode;
+		portal_t    *p, *nextportal = NULL; // TTimo: init
+		node_t      *nextnode = NULL; // TTimo: init
 		int			s;
 
 		nextportal = NULL;
