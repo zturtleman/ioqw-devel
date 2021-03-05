@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SHADER_MAX_TRIANGLES	(SHADER_MAX_INDEXES/3)
 
 
-// the maximum size of game reletive pathnames
+// the maximum size of game relative pathnames
 #define	MAX_QPATH		64
 
 
