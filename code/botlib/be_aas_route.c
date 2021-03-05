@@ -47,6 +47,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define DISTANCEFACTOR_CROUCH 1.3f // crouch speed = 100
 #define DISTANCEFACTOR_SWIM 1 // should be 0.66, swim speed = 150
 #define DISTANCEFACTOR_WALK 0.33f // walk speed = 300
+// scale traveltimes with ground steepness of area
+#define GROUNDSTEEPNESS_TIMESCALE 20 // this is the maximum scale, 1 being the usual for a flat ground
 // cache refresh time
 #define CACHE_REFRESHTIME 15.0f // 15 seconds refresh time
 // maximum number of routing updates each frame
@@ -478,6 +480,15 @@ void AAS_CreateReversedReachability(void) {
 
 /*
 =======================================================================================================================================
+AAS_AreaGroundSteepnessScale
+=======================================================================================================================================
+*/
+float AAS_AreaGroundSteepnessScale(int areanum) {
+	return (1.0 + (*aasworld).areasettings[areanum].groundsteepness * (float)(GROUNDSTEEPNESS_TIMESCALE - 1));
+}
+
+/*
+=======================================================================================================================================
 AAS_AreaTravelTime
 =======================================================================================================================================
 */
@@ -489,6 +500,8 @@ unsigned short int AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end) {
 	VectorSubtract(end, start, dir);
 
 	dist = VectorLength(dir);
+	// factor in the groundsteepness now
+	dist *= AAS_AreaGroundSteepnessScale(areanum);
 	// if crouch only area
 	if (AAS_AreaCrouch(areanum)) {
 		dist *= DISTANCEFACTOR_CROUCH;

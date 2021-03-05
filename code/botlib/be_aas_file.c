@@ -118,6 +118,7 @@ void AAS_SwapAASData(void) {
 		(*aasworld).areasettings[i].clusterareanum = LittleLong((*aasworld).areasettings[i].clusterareanum);
 		(*aasworld).areasettings[i].numreachableareas = LittleLong((*aasworld).areasettings[i].numreachableareas);
 		(*aasworld).areasettings[i].firstreachablearea = LittleLong((*aasworld).areasettings[i].firstreachablearea);
+		(*aasworld).areasettings[i].groundsteepness = LittleLong((*aasworld).areasettings[i].groundsteepness);
 	}
 	// area reachability
 	for (i = 0; i < (*aasworld).reachabilitysize; i++) {
