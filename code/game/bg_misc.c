@@ -1486,7 +1486,7 @@ Round a vector to integers for more efficient network transmission, but make sur
 blindly truncating. This prevents it from truncating into a wall.
 =======================================================================================================================================
 */
-void SnapVectorTowards(vec3_t v, vec3_t to) {
+void SnapVectorTowards(vec3_t v, const vec3_t to) {
 	int i;
 
 	for (i = 0; i < 3; i++) {

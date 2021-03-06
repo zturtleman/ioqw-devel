@@ -644,6 +644,18 @@ float Q_crandom(int *seed);
 
 #define random() ((rand() & 0x7fff) / ((float)0x7fff))
 #define crandom() (2.0 * (random() - 0.5))
+// global definitions for random number generation
+typedef struct {
+	unsigned long seed0;
+	unsigned long seed1;
+	unsigned long seed2;
+	unsigned long seed3;
+} localseed_t;
+
+unsigned long LocallySeededRandom(localseed_t *seed);
+void DeriveLocalSeed(localseed_t *source, localseed_t *destination);
+float local_random(localseed_t *seed);
+float local_crandom(localseed_t *seed);
 
 void VectorToAngles(const vec3_t value1, vec3_t angles);
 void AnglesToAxis(const vec3_t angles, vec3_t axis[3]);
@@ -1055,6 +1067,7 @@ typedef struct playerState_s {
 	int tokens;						// harvester skulls
 	int jumppad_ent;				// jumppad entity hit this frame
 	int loopSound;
+	vec3_t attractionPoint;			// location to pull towards if PMF_PULL
 	int stats[MAX_STATS];
 	int persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
 	int powerups[MAX_POWERUPS];		// level.time that the powerup runs out

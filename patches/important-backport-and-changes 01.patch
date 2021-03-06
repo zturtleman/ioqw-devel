@@ -1,0 +1,158 @@
+Index: code/game/bg_misc.c
+===================================================================
+--- code/game/bg_misc.c	(revision 1312)
++++ code/game/bg_misc.c	(working copy)
+@@ -1486,7 +1486,7 @@
+ blindly truncating. This prevents it from truncating into a wall.
+ =======================================================================================================================================
+ */
+-void SnapVectorTowards(vec3_t v, vec3_t to) {
++void SnapVectorTowards(vec3_t v, const vec3_t to) {
+ 	int i;
+ 
+ 	for (i = 0; i < 3; i++) {
+Index: code/game/bg_public.h
+===================================================================
+--- code/game/bg_public.h	(revision 1312)
++++ code/game/bg_public.h	(working copy)
+@@ -129,10 +129,11 @@
+ #define PMF_TIME_LAND		0x00000010 // pm_time is time before rejump
+ #define PMF_TIME_WATERJUMP	0x00000020 // pm_time is waterjump
+ #define PMF_TIME_KNOCKBACK	0x00000040 // pm_time is an air-accelerate only time
+-#define PMF_RESPAWNED		0x00000080 // clear after attack and jump buttons come up
+-#define PMF_USE_ITEM_HELD	0x00000100
+-#define PMF_FOLLOW			0x00000200 // spectate following another player
+-#define PMF_SCOREBOARD		0x00000400 // spectate as a scoreboard
++#define PMF_PULL			0x00000080 // pull towards this location
++#define PMF_RESPAWNED		0x00000100 // clear after attack and jump buttons come up
++#define PMF_USE_ITEM_HELD	0x00000200
++#define PMF_FOLLOW			0x00000400 // spectate following another player
++#define PMF_SCOREBOARD		0x00000800 // spectate as a scoreboard
+ #define PMF_ALL_TIMES (PMF_TIME_LAND|PMF_TIME_WATERJUMP|PMF_TIME_KNOCKBACK)
+ 
+ #define MAXTOUCH 32
+@@ -689,7 +690,7 @@
+ void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *s, qboolean snap);
+ void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s, int time, qboolean snap);
+ qboolean BG_PlayerTouchesItem(playerState_t *ps, entityState_t *item, int atTime);
+-void SnapVectorTowards(vec3_t v, vec3_t to);
++void SnapVectorTowards(vec3_t v, const vec3_t to);
+ 
+ #define ARENAS_PER_TIER 4
+ 
+Index: code/qcommon/msg.c
+===================================================================
+--- code/qcommon/msg.c	(revision 1312)
++++ code/qcommon/msg.c	(working copy)
+@@ -1325,7 +1325,10 @@
+ 	{PSF(damageCount), 8},
+ 	{PSF(tokens), 8},
+ 	{PSF(jumppad_ent), GENTITYNUM_BITS},
+-	{PSF(loopSound), 16}
++	{PSF(loopSound), 16},
++	{PSF(attractionPoint[0]), 0},
++	{PSF(attractionPoint[1]), 0},
++	{PSF(attractionPoint[2]), 0}
+ };
+ 
+ /*
+Index: code/qcommon/q_math.c
+===================================================================
+--- code/qcommon/q_math.c	(revision 1312)
++++ code/qcommon/q_math.c	(working copy)
+@@ -254,6 +254,63 @@
+ 
+ /*
+ =======================================================================================================================================
++LocallySeededRandom
++=======================================================================================================================================
++*/
++unsigned long LocallySeededRandom(localseed_t *seed) {
++	unsigned long r;
++
++	r = 0xa7418bd3;
++
++	r += 0xfd889ce1 * (seed->seed0 ^ 0xb82cee9f);
++	seed->seed0 = seed->seed1;
++
++	r += 0x806b133f * (seed->seed1 ^ 0x094b69e7);
++	seed->seed1 = seed->seed2;
++
++	r += 0xd89b1c0b * (seed->seed2 ^ 0x53fecc69);
++	seed->seed2 = seed->seed3;
++
++	r += 0xec5660c5 * (seed->seed3 ^ 0x7af29614);
++	r = (r << 1)|(r >> 31);
++	seed->seed3 = r;
++
++	return r;
++}
++
++/*
++=======================================================================================================================================
++DeriveLocalSeed
++=======================================================================================================================================
++*/
++void DeriveLocalSeed(localseed_t *source, localseed_t *destination) {
++
++	destination->seed3 = LocallySeededRandom(source) + 0x7fa4bce1;
++	destination->seed2 = LocallySeededRandom(source) + 0x298a02b6;
++	destination->seed1 = LocallySeededRandom(source) + 0x1c86de05;
++	destination->seed0 = LocallySeededRandom(source) + 0xd9ca631b;
++}
++
++/*
++=======================================================================================================================================
++local_random
++=======================================================================================================================================
++*/
++float local_random(localseed_t *seed) {
++	return LocallySeededRandom(seed) / 4294967295.0;
++}
++
++/*
++=======================================================================================================================================
++local_crandom
++=======================================================================================================================================
++*/
++float local_crandom(localseed_t *seed) {
++	return LocallySeededRandom(seed) / 2147483647.5 - 1.0;
++}
++
++/*
++=======================================================================================================================================
+ ClampChar
+ =======================================================================================================================================
+ */
+Index: code/qcommon/q_shared.h
+===================================================================
+--- code/qcommon/q_shared.h	(revision 1312)
++++ code/qcommon/q_shared.h	(working copy)
+@@ -644,7 +644,19 @@
+ 
+ #define random() ((rand() & 0x7fff) / ((float)0x7fff))
+ #define crandom() (2.0 * (random() - 0.5))
++// global definitions for random number generation
++typedef struct {
++	unsigned long seed0;
++	unsigned long seed1;
++	unsigned long seed2;
++	unsigned long seed3;
++} localseed_t;
+ 
++unsigned long LocallySeededRandom(localseed_t *seed);
++void DeriveLocalSeed(localseed_t *source, localseed_t *destination);
++float local_random(localseed_t *seed);
++float local_crandom(localseed_t *seed);
++
+ void VectorToAngles(const vec3_t value1, vec3_t angles);
+ void AnglesToAxis(const vec3_t angles, vec3_t axis[3]);
+ void AxisClear(vec3_t axis[3]);
+@@ -1055,6 +1067,7 @@
+ 	int tokens;						// harvester skulls
+ 	int jumppad_ent;				// jumppad entity hit this frame
+ 	int loopSound;
++	vec3_t attractionPoint;			// location to pull towards if PMF_PULL
+ 	int stats[MAX_STATS];
+ 	int persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
+ 	int powerups[MAX_POWERUPS];		// level.time that the powerup runs out

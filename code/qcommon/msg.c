@@ -1325,7 +1325,10 @@ netField_t playerStateFields[] = {
 	{PSF(damageCount), 8},
 	{PSF(tokens), 8},
 	{PSF(jumppad_ent), GENTITYNUM_BITS},
-	{PSF(loopSound), 16}
+	{PSF(loopSound), 16},
+	{PSF(attractionPoint[0]), 0},
+	{PSF(attractionPoint[1]), 0},
+	{PSF(attractionPoint[2]), 0}
 };
 
 /*

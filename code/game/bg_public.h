@@ -129,10 +129,11 @@ typedef enum {
 #define PMF_TIME_LAND		0x00000010 // pm_time is time before rejump
 #define PMF_TIME_WATERJUMP	0x00000020 // pm_time is waterjump
 #define PMF_TIME_KNOCKBACK	0x00000040 // pm_time is an air-accelerate only time
-#define PMF_RESPAWNED		0x00000080 // clear after attack and jump buttons come up
-#define PMF_USE_ITEM_HELD	0x00000100
-#define PMF_FOLLOW			0x00000200 // spectate following another player
-#define PMF_SCOREBOARD		0x00000400 // spectate as a scoreboard
+#define PMF_PULL			0x00000080 // pull towards this location
+#define PMF_RESPAWNED		0x00000100 // clear after attack and jump buttons come up
+#define PMF_USE_ITEM_HELD	0x00000200
+#define PMF_FOLLOW			0x00000400 // spectate following another player
+#define PMF_SCOREBOARD		0x00000800 // spectate as a scoreboard
 #define PMF_ALL_TIMES (PMF_TIME_LAND|PMF_TIME_WATERJUMP|PMF_TIME_KNOCKBACK)
 
 #define MAXTOUCH 32
@@ -689,7 +690,7 @@ void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad);
 void BG_PlayerStateToEntityState(playerState_t *ps, entityState_t *s, qboolean snap);
 void BG_PlayerStateToEntityStateExtraPolate(playerState_t *ps, entityState_t *s, int time, qboolean snap);
 qboolean BG_PlayerTouchesItem(playerState_t *ps, entityState_t *item, int atTime);
-void SnapVectorTowards(vec3_t v, vec3_t to);
+void SnapVectorTowards(vec3_t v, const vec3_t to);
 
 #define ARENAS_PER_TIER 4
 
