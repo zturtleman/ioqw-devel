@@ -3952,7 +3952,7 @@ UI_RunMenuScript
 static void UI_RunMenuScript(char **args) {
 	const char *name, *name2, *orders;
 	char buff[1024], hostname[MAX_NAME_LENGTH], addr[MAX_ADDRESSLENGTH];
-	int i, clients, oldclients, bot, delay, sortColumn, res, selectedPlayer;
+	int i, clients, oldclients, bot, delay, sortColumn, res, selectedPlayer, val;
 	float skill;
 
 	if (String_Parse(args, &name)) {
@@ -4072,6 +4072,22 @@ static void UI_RunMenuScript(char **args) {
 						trap_Cmd_ExecuteText(EXEC_APPEND, buff);
 					}
 				}
+			}
+			// set red respawn time
+			val = trap_Cvar_VariableValue("ui_userRedRespawnTime");
+
+			if (val != uiInfo.mapList[ui_mapIndex.integer].RedRespawnTime) {
+				trap_Cvar_SetValue("g_userRedRespawnTime", val);
+			} else {
+				trap_Cvar_SetValue("g_userRedRespawnTime", 0);
+			}
+			// set blue respawn time
+			val = trap_Cvar_VariableValue("ui_userBlueRespawnTime");
+
+			if (val != uiInfo.mapList[ui_mapIndex.integer].BlueRespawnTime) {
+				trap_Cvar_SetValue("g_userBlueRespawnTime", val);
+			} else {
+				trap_Cvar_SetValue("g_userBlueRespawnTime", 0);
 			}
 			// Tobias FIXME: this script will start a new server, add bots but doesn't check if there are already enough bots, so we must kick already connected bots, otherwise bots are added to the existing ones continuously with each new map (FIXME?).
 		} else if (Q_stricmp(name, "StartServerIngame") == 0) {
@@ -4206,6 +4222,22 @@ static void UI_RunMenuScript(char **args) {
 						delay += 500;
 					}
 				}
+			}
+			// set red respawn time
+			val = trap_Cvar_VariableValue("ui_userRedRespawnTime");
+
+			if (val != uiInfo.mapList[ui_mapIndex.integer].RedRespawnTime) {
+				trap_Cvar_SetValue("g_userRedRespawnTime", val);
+			} else {
+				trap_Cvar_SetValue("g_userRedRespawnTime", 0);
+			}
+			// set blue respawn time
+			val = trap_Cvar_VariableValue("ui_userBlueRespawnTime");
+
+			if (val != uiInfo.mapList[ui_mapIndex.integer].BlueRespawnTime) {
+				trap_Cvar_SetValue("g_userBlueRespawnTime", val);
+			} else {
+				trap_Cvar_SetValue("g_userBlueRespawnTime", 0);
 			}
 			// Tobias NOTE: update the ui cvars, otherwise bot orders will not work anymore after the new map has loaded ('UI_NotTeamMember_HandleKey')
 			UI_UpdateCvars();
@@ -5582,6 +5614,9 @@ static void UI_FeederSelection(float feederID, int index) {
 			UI_LoadBestScores(uiInfo.mapList[ui_currentMap.integer].mapLoadName, uiInfo.gameTypes[ui_gameType.integer].gtEnum);
 			trap_Cvar_Set("ui_opponentModel", uiInfo.mapList[ui_currentMap.integer].opponentName);
 			updateOpponentModel = qtrue;
+			// setup advanced server vars
+			trap_Cvar_Set("ui_userRedRespawnTime", va("%d", uiInfo.mapList[ui_currentMap.integer].RedRespawnTime));
+			trap_Cvar_Set("ui_userBlueRespawnTime", va("%d", uiInfo.mapList[ui_currentMap.integer].BlueRespawnTime));
 		} else {
 			ui_currentNetMap.integer = actual;
 			trap_Cvar_SetValue("ui_currentNetMap", actual);
@@ -6916,6 +6951,8 @@ vmCvar_t ui_findPlayer;
 vmCvar_t ui_Q3Model;
 vmCvar_t ui_hudFiles;
 vmCvar_t ui_recordSPDemo;
+vmCvar_t ui_userRedRespawnTime;
+vmCvar_t ui_userBlueRespawnTime;
 vmCvar_t ui_serverStatusTimeOut;
 
 static const cvarTable_t uiCvarTable[] = {
@@ -7022,6 +7059,8 @@ static const cvarTable_t uiCvarTable[] = {
 	{&ui_Q3Model, "ui_q3model", "0", CVAR_ARCHIVE},
 	{&ui_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
 	{&ui_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
+	{&ui_userRedRespawnTime, "ui_userRedRespawnTime", "0", 0},
+	{&ui_userBlueRespawnTime, "ui_userBlueRespawnTime", "0", 0},
 	{&ui_teamArenaFirstRun, "ui_teamArenaFirstRun", "0", CVAR_ARCHIVE},
 	{&ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
 	{NULL, "g_friendlyFire", "1", CVAR_ARCHIVE},

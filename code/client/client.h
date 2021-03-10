@@ -255,6 +255,7 @@ typedef struct {
 	qboolean visible;
 	int g_humanplayers;
 	int g_needpass;
+	int airespawn;
 } serverInfo_t;
 
 typedef struct {

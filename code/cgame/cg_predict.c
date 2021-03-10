@@ -61,6 +61,10 @@ void CG_BuildSolidList(void) {
 	for (i = 0; i < snap->numEntities; i++) {
 		cent = &cg_entities[snap->entities[i].number];
 		ent = &cent->currentState;
+		// dont clip against non-solid bmodels
+		if (cent->nextState.solid == SOLID_BMODEL && (cent->nextState.eFlags & EF_NONSOLID_BMODEL)) {
+			continue;
+		}
 
 		if (ent->eType == ET_ITEM || ent->eType == ET_TELEPORT_TRIGGER || ent->eType == ET_PUSH_TRIGGER) {
 			cg_triggerEntities[cg_numTriggerEntities] = cent;

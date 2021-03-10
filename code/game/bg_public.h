@@ -33,6 +33,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define GIB_HEALTH -40
 #define ARMOR_PROTECTION 0.66f
 #define MAX_ITEMS 256
+#define MAX_OBJECTIVES 6
+#define MAX_TAGCONNECTS 32
 #define RANK_TIED_FLAG 0x4000
 #define DEFAULT_SHOTGUN_SPREAD 700
 #define DEFAULT_SHOTGUN_COUNT 11
@@ -70,14 +72,19 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define CS_VOTE_NO				11
 #define CS_TEAMVOTE_TIME		12
 #define CS_TEAMVOTE_STRING		14
-#define CS_TEAMVOTE_YES			16
-#define CS_TEAMVOTE_NO			18
+#define CS_TEAMVOTE_YES			15
+#define CS_TEAMVOTE_NO			16
+#define CS_MULTI_INFO			17
+#define CS_MULTI_MAPDESC		18
+#define CS_MULTI_OBJECTIVE		19
 #define CS_GAME_VERSION			20
 #define CS_LEVEL_START_TIME		21 // so the timer only shows the current level
 #define CS_INTERMISSION			22 // when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
 #define CS_FLAGSTATUS			23 // string indicating flag status in CTF
 #define CS_SHADERSTATE			24
+#define CS_MUSIC_QUEUE			25
 #define CS_ITEMS				27 // string of 0's and 1's that tell which items are present
+#define CS_SCREENFADE			28 // used to tell clients to fade their screen to black/normal
 #define CS_MODELS				32
 #define CS_SOUNDS				(CS_MODELS + MAX_MODELS)
 #define CS_PLAYERS				(CS_SOUNDS + MAX_SOUNDS)
@@ -85,7 +92,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define CS_PARTICLES			(CS_LOCATIONS + MAX_LOCATIONS)
 #define CS_DLIGHTS				(CS_PARTICLES + MAX_LOCATIONS)
 #define CS_BOTINFO				(CS_DLIGHTS + MAX_DLIGHT_CONFIGSTRINGS)
-#define CS_MAX					(CS_BOTINFO + MAX_CLIENTS)
+#define CS_SPLINES				(CS_BOTINFO + MAX_CLIENTS)
+#define CS_TAGCONNECTS			(CS_SPLINES + MAX_SPLINE_CONFIGSTRINGS)
+#define CS_MAX					(CS_TAGCONNECTS + MAX_TAGCONNECTS)
 #if (CS_MAX) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
 #endif
@@ -218,13 +227,18 @@ typedef enum {
 #define EF_TELEPORT_BIT		0x00000010 // toggled every time the origin abruptly changes
 #define EF_BOUNCE			0x00000020 // for missiles
 #define EF_BOUNCE_HALF		0x00000040 // for missiles
-#define EF_MOVER_STOP		0x00000080 // will push otherwise
+
 #define EF_NODRAW			0x00000100 // may have an event, but no model (unspawned items)
 #define EF_KAMIKAZE			0x00000200
 #define EF_VOTED			0x00000400 // already cast a vote
 #define EF_TEAMVOTED		0x00000800 // already cast a team vote
 #define EF_CONNECTION		0x00001000 // draw a connection trouble sprite
 #define EF_TALK				0x00002000 // draw a talk balloon
+#define EF_NONSOLID_BMODEL	0x00004000 // bmodel is visible, but not solid
+#define EF_TAGCONNECT		0x00080000 // connected to another entity via tag
+// !! NOTE: only place flags that don't need to go to the client beyond 0x00800000
+#define EF_MOVER_STOP		0x10000000 // will push otherwise
+#define EF_MOVER_ANIMATE	0x20000000 // interpolate animation
 
 /**************************************************************************************************************************************
 

@@ -626,6 +626,10 @@ void SV_Init(void) {
 	sv_mapChecksum = Cvar_Get("sv_mapChecksum", "", CVAR_ROM);
 	sv_lanForceRate = Cvar_Get("sv_lanForceRate", "1", CVAR_ARCHIVE);
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
+	sv_airespawn = Cvar_Get("g_airespawn", "0", CVAR_ARCHIVE|CVAR_SERVERINFO|CVAR_LATCH);
+
+	Cvar_Get("g_userRedRespawnTime", "0", 0);
+	Cvar_Get("g_userBlueRespawnTime", "0", 0);
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
 	// init the botlib here because we need the pre-compiler in the UI

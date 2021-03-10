@@ -54,6 +54,7 @@ cvar_t *sv_maxRate;
 cvar_t *sv_dlRate;
 cvar_t *sv_minPing;
 cvar_t *sv_maxPing;
+cvar_t *sv_airespawn;
 cvar_t *sv_gametype;
 cvar_t *sv_pure;
 cvar_t *sv_floodProtect;
@@ -658,6 +659,8 @@ void SVC_Info(netadr_t from) {
 	if (*gamedir) {
 		Info_SetValueForKey(infostring, "game", gamedir);
 	}
+
+	Info_SetValueForKey(infostring, "airespawn", va("%i", sv_airespawn->integer));
 
 	NET_OutOfBandPrint(NS_SERVER, from, "infoResponse\n%s", infostring);
 }

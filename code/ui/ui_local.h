@@ -272,6 +272,8 @@ typedef struct {
 	int timeToBeat[MAX_GAMETYPES];
 	qhandle_t levelShot;
 	qboolean active;
+	int RedRespawnTime;
+	int BlueRespawnTime;
 } mapInfo;
 
 typedef struct {

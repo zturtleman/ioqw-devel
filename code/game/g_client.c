@@ -1181,3 +1181,33 @@ void ClientDisconnect(int clientNum) {
 		BotAIShutdownClient(clientNum, qfalse);
 	}
 }
+
+/*
+=======================================================================================================================================
+G_IsClient
+=======================================================================================================================================
+*/
+qboolean G_IsClient(gentity_t *entity) {
+
+	if (!entity->client) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+=======================================================================================================================================
+G_IsClientOnTeam
+=======================================================================================================================================
+*/
+qboolean G_IsClientOnTeam(gentity_t *entity, team_t team) {
+	gclient_t *client;
+
+	if (!G_IsClient(entity)) {
+		return qfalse;
+	}
+
+	client = entity->client;
+	return (client->sess.sessionTeam == team);
+}

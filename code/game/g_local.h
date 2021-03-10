@@ -58,6 +58,50 @@ typedef enum {
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
+// scripting
+typedef struct {
+	char *actionString;
+	qboolean (*actionFunc)(gentity_t *ent, char *params);
+} g_script_stack_action_t;
+
+typedef struct {
+	// set during script parsing
+	g_script_stack_action_t *action; // points to an action to perform
+	char *params;
+} g_script_stack_item_t;
+
+#define G_MAX_SCRIPT_STACK_ITEMS 64
+
+typedef struct {
+	g_script_stack_item_t items[G_MAX_SCRIPT_STACK_ITEMS];
+	int numItems;
+} g_script_stack_t;
+
+typedef struct {
+	int eventNum;	// index in scriptEvents[]
+	char *params;	// trigger targetname, etc.
+	g_script_stack_t stack;
+} g_script_event_t;
+
+typedef struct {
+	char *eventStr;
+	qboolean (*eventMatch)(g_script_event_t *event, char *eventParm);
+} g_script_event_define_t;
+// script flags
+#define SCFL_GOING_TO_MARKER	0x00000001
+#define SCFL_ANIMATING			0x00000002
+#define SCFL_WAITING_RESTORE	0x00000004
+// scripting status (NOTE: this MUST NOT contain any pointer vars)
+typedef struct {
+	int scriptStackHead, scriptStackChangeTime;
+	int scriptEventIndex;	// current event containing stack of actions to perform
+	// scripting system variables
+	int scriptId;			// incremented each time the script changes
+	int scriptFlags;
+	char *animatingParams;
+} g_script_status_t;
+
+#define G_MAX_SCRIPT_ACCUM_BUFFERS 8
 
 struct gentity_s {
 	entityState_t s;					// communicated by server to clients
@@ -139,6 +183,29 @@ struct gentity_s {
 	char *dl_stylestring;
 	char *dl_shader;
 	int dl_atten;
+	// AI fields
+	char *aiAttributes;
+	char *aiName;
+	int aiTeam;
+	void (*AIScript_AlertEntity)(gentity_t *ent);
+	qboolean aiInactive;
+	int aiCharacter;					// the index of the type of character we are
+	char *aiSkin;
+	char *aihSkin;
+	// entity scripting system
+	char *scriptName;
+	int numScriptEvents;
+	g_script_event_t *scriptEvents;		// contains a list of actions to perform for each event type
+	g_script_status_t scriptStatus;		// current status of scripting
+	g_script_status_t scriptStatusBackup;
+	// the accumulation buffer
+	int scriptAccumBuffer[G_MAX_SCRIPT_ACCUM_BUFFERS];
+	qboolean AASblocking;
+	char *tagName;						// name of the tag we are attached to
+	gentity_t *tagParent;
+	g_script_status_t scriptStatusCurrent;	// had to go down here to keep savegames compatible
+	int numObjectives;
+	int missionObjectives;					// which objectives for the current level have been met (gets reset each new level)
 	int botAreaNum;						// last checked area num
 	vec3_t botAreaPos;
 };
@@ -299,6 +366,13 @@ typedef struct {
 	gentity_t *locationHead;						// head of the location list
 	int bodyQueIndex;								// dead bodies
 	gentity_t *bodyQue[BODY_QUEUE_SIZE];
+	int numSecrets;
+	int numObjectives;
+	int missionObjectives;
+	// entity scripting
+	char *scriptEntity;
+	// ents file
+	char *extraEntsScript;
 } level_locals_t;
 // g_spawn.c
 qboolean G_SpawnString(const char *key, const char *defaultString, char **out);
@@ -354,6 +428,11 @@ void G_AddEvent(gentity_t *ent, int event, int eventParm);
 void G_SetOrigin(gentity_t *ent, vec3_t origin);
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
 const char *BuildShaderStateConfig(void);
+void G_SetAngle(gentity_t *ent, vec3_t angle);
+qboolean IsPlayerEnt(gentity_t *ent);
+qboolean ScriptEventForPlayer(gentity_t *activator, char *eventStr, char *params);
+gentity_t *GetFirstValidPlayer(qboolean checkHealth);
+gentity_t *GetFirstValidBluePlayer(qboolean checkHealth);
 // g_combat.c
 qboolean CanDamage(gentity_t *targ, vec3_t origin);
 void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int meansOfDeath);
@@ -379,6 +458,8 @@ gentity_t *fire_plasma(gentity_t *self, vec3_t start, vec3_t dir);
 gentity_t *fire_bfg(gentity_t *self, vec3_t start, vec3_t dir);
 // g_mover.c
 void G_RunMover(gentity_t *ent);
+void InitMover(gentity_t *ent);
+void SetMoverState(gentity_t *ent, moverState_t moverState, int time);
 void Touch_DoorTrigger(gentity_t *ent, gentity_t *other, trace_t *trace);
 // g_trigger.c
 void Touch_TeleporterTrigger(gentity_t *self, gentity_t *other, trace_t *trace);
@@ -403,6 +484,14 @@ void PlayerDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 void AddScore(gentity_t *ent, vec3_t origin, int score);
 void CalculateRanks(void);
 qboolean SpotWouldTelefrag(gentity_t *spot);
+qboolean G_IsClientOnTeam(gentity_t *entity, team_t team);
+// g_script.c
+void G_ProcessTagConnect(gentity_t *ent, qboolean clearAngles);
+void G_ScriptPreprocess(char *script);
+void G_Script_ScriptParse(gentity_t *ent);
+qboolean G_Script_ScriptRun(gentity_t *ent);
+void G_Script_ScriptEvent(gentity_t *ent, char *eventStr, char *params);
+void G_Script_ScriptLoad(void);
 // g_svcmds.c
 qboolean G_ConsoleCommand(void);
 void G_RegisterCommands(void);
@@ -484,10 +573,12 @@ void Svcmd_BotTeamplayReport_f(void); // Tobias DEBUG
 
 extern level_locals_t level;
 extern gentity_t g_entities[MAX_GENTITIES];
+extern gentity_t *g_camEnt;
 
 #define FOFS(x) ((size_t)&(((gentity_t *)0)->x))
 
 extern vmCvar_t g_gametype;
+extern vmCvar_t g_limbotime;
 extern vmCvar_t g_dedicated;
 extern vmCvar_t g_cheats;
 extern vmCvar_t g_maxclients; // allow this many total, including spectators
@@ -533,6 +624,16 @@ extern vmCvar_t pmove_fixed;
 extern vmCvar_t pmove_msec;
 extern vmCvar_t g_singlePlayer;
 extern vmCvar_t g_proxMineTimeout;
+extern vmCvar_t g_airespawn;
+extern vmCvar_t g_missionStats;
+// Tobias DEBUG
+extern vmCvar_t ai_scriptName; // name of AI script file to run (instead of default for that map)
+extern vmCvar_t g_scriptName; // name of script file to run (instead of default for that map)
+// Tobias END
+extern vmCvar_t g_redlimbotime;
+extern vmCvar_t g_bluelimbotime;
+extern vmCvar_t g_userRedRespawnTime;
+extern vmCvar_t g_userBlueRespawnTime;
 // Additional shared traps in bg_public.h
 void trap_LocateGameData(gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient);
 void trap_DropClient(int clientNum, const char *reason);
@@ -595,6 +696,7 @@ int trap_AAS_PredictRoute(void /*struct aas_predictroute_s*/ *route, int areanum
 int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags, void /*struct aas_altroutegoal_s*/ *altroutegoals, int maxaltroutegoals, int type);
 int trap_AAS_Swimming(vec3_t origin);
 int trap_AAS_PredictClientMovement(void /*aas_clientmove_s*/ *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
+void trap_AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking);
 void trap_EA_Say(int client, char *str);
 void trap_EA_SayTeam(int client, char *str);
 void trap_EA_Command(int client, char *command);

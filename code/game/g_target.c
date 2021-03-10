@@ -567,3 +567,40 @@ void SP_target_location(gentity_t *self) {
 
 	G_SetOrigin(self, self->s.origin);
 }
+
+/*
+=======================================================================================================================================
+Use_Target_Script_Trigger
+=======================================================================================================================================
+*/
+void Use_Target_Script_Trigger(gentity_t *ent, gentity_t *other, gentity_t *activator) {
+/* // Tobias FIXME
+	if (ent->aiName) {
+		// fairly certain it's activator always, but not 100% sure
+		if (!ScriptEventForPlayer(activator, "trigger", ent->target)) {
+			if (!ScriptEventForPlayer(other, "trigger", ent->target)) {
+				gentity_t *player = AICast_FindEntityForName("player");
+
+				if (player && !ScriptEventForPlayer(player, "trigger", ent->target)) {
+					G_Script_ScriptEvent(ent, "trigger", ent->target);
+				}
+			}
+		}
+	}
+
+	G_UseTargets(ent, other);
+*/
+}
+
+/*QUAKED target_script_trigger (1 .7 .2) (-8 -8 -8) (8 8 8)
+Must have an aiName.
+Must have a target.
+When used it will fire its targets.
+*/
+void SP_target_script_trigger(gentity_t *ent) {
+
+	G_SetOrigin(ent, ent->s.origin);
+
+	ent->s.eType = ET_GENERAL;
+	ent->use = Use_Target_Script_Trigger;
+}

@@ -172,7 +172,7 @@ UI_LoadArenasIntoMapList
 */
 void UI_LoadArenasIntoMapList(void) {
 	int n;
-	const char *type;
+	const char *type, *str;
 
 	uiInfo.mapCount = 0;
 
@@ -184,6 +184,22 @@ void UI_LoadArenasIntoMapList(void) {
 		uiInfo.mapList[uiInfo.mapCount].levelShot = -1;
 		uiInfo.mapList[uiInfo.mapCount].imageName = String_Alloc(va("levelshots/%s", uiInfo.mapList[uiInfo.mapCount].mapLoadName));
 		uiInfo.mapList[uiInfo.mapCount].typeBits = 0;
+		// set red respawn time
+		str = Info_ValueForKey(ui_arenaInfos[n], "RedRespawnTime");
+
+		if (*str) {
+			uiInfo.mapList[uiInfo.mapCount].RedRespawnTime = atoi(str);
+		} else {
+			uiInfo.mapList[uiInfo.mapCount].RedRespawnTime = 0;
+		}
+		// set blue respawn time
+		str = Info_ValueForKey(ui_arenaInfos[n], "BlueRespawnTime");
+
+		if (*str) {
+			uiInfo.mapList[uiInfo.mapCount].BlueRespawnTime = atoi(str);
+		} else {
+			uiInfo.mapList[uiInfo.mapCount].BlueRespawnTime = 0;
+		}
 
 		type = Info_ValueForKey(ui_arenaInfos[n], "type");
 		// if no type specified, it will be treated as "ffa"

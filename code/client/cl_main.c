@@ -2173,6 +2173,7 @@ void CL_InitServerInfo(serverInfo_t *server, netadr_t *address) {
 	server->netType = 0;
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
+	server->airespawn = 0;
 }
 
 #define MAX_SERVERSPERPACKET 256
@@ -3308,6 +3309,7 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 		if (info) {
 			Q_strncpyz(server->game, Info_ValueForKey(info, "game"), MAX_NAME_LENGTH);
 			Q_strncpyz(server->hostName, Info_ValueForKey(info, "hostname"), MAX_NAME_LENGTH);
+			server->airespawn = atoi(Info_ValueForKey(info, "airespawn"));
 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
 			server->netType = atoi(Info_ValueForKey(info, "nettype"));
 			server->minPing = atoi(Info_ValueForKey(info, "minping"));

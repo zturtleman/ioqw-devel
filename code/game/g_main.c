@@ -38,8 +38,10 @@ typedef struct {
 
 gentity_t g_entities[MAX_GENTITIES];
 gclient_t g_clients[MAX_CLIENTS];
+gentity_t *g_camEnt = NULL; // script camera
 
 vmCvar_t g_gametype;
+vmCvar_t g_limbotime;
 vmCvar_t g_dmflags;
 vmCvar_t g_fraglimit;
 vmCvar_t g_timelimit;
@@ -90,6 +92,16 @@ vmCvar_t g_cubeTimeout;
 vmCvar_t g_proxMineTimeout;
 vmCvar_t g_redteam;
 vmCvar_t g_blueteam;
+vmCvar_t g_airespawn;
+vmCvar_t g_missionStats;
+// Tobias DEBUG
+vmCvar_t ai_scriptName; // name of AI script file to run (instead of default for that map)
+vmCvar_t g_scriptName; // name of script file to run (instead of default for that map)
+// Tobias END
+vmCvar_t g_redlimbotime;
+vmCvar_t g_bluelimbotime;
+vmCvar_t g_userRedRespawnTime;
+vmCvar_t g_userBlueRespawnTime;
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -100,6 +112,7 @@ static cvarTable_t gameCvarTable[] = {
 	{&g_restarted, "g_restarted", "0", CVAR_ROM, 0, qfalse},
 	// latched vars
 	{&g_gametype, "g_gametype", "0", CVAR_SERVERINFO|CVAR_USERINFO|CVAR_LATCH, 0, qfalse},
+	{&g_limbotime, "g_limbotime", "10000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
 	{&g_maxclients, "sv_maxclients", "64", CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE, 0, qfalse},
 	{&g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE, 0, qfalse},
 	// change anytime vars
@@ -147,6 +160,12 @@ static cvarTable_t gameCvarTable[] = {
 	{&g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
 	{&g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
 	{&g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse},
+	{&g_airespawn, "g_airespawn", "0", CVAR_ARCHIVE|CVAR_LATCH|CVAR_SERVERINFO, 0, qfalse},
+	{&g_missionStats, "g_missionStats", "0", CVAR_ROM, 0, qfalse},
+	{&g_redlimbotime, "g_redlimbotime", "30000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
+	{&g_bluelimbotime, "g_bluelimbotime", "30000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
+	{&g_userRedRespawnTime, "g_userRedRespawnTime", "0", 0, 0, qfalse},
+	{&g_userBlueRespawnTime, "g_userBlueRespawnTime", "0", 0, 0, qfalse},
 	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
 	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse}
 };
@@ -357,7 +376,7 @@ G_UpdateCvars
 =======================================================================================================================================
 */
 static void G_UpdateCvars(void) {
-	int i;
+	int i, fps;
 	cvarTable_t *cv;
 	qboolean remapped = qfalse;
 
@@ -375,6 +394,15 @@ static void G_UpdateCvars(void) {
 				if (cv->teamShader) {
 					remapped = qtrue;
 				}
+
+				if (!Q_stricmp(cv->cvarName, "g_limbotime")) {
+					fps = trap_Cvar_VariableIntegerValue("sv_fps");
+
+					if (fps > 0 && g_limbotime.integer <= (1000 / fps)) {
+						trap_Cvar_SetValue("g_limbotime", 1000);
+						G_Printf("WARNING: g_limbotime <= (1000 / sv_fps), forcing to 1000 (one second).\n");
+					}
+				}
 			}
 		}
 	}
@@ -386,11 +414,54 @@ static void G_UpdateCvars(void) {
 
 /*
 =======================================================================================================================================
+G_SpawnScriptCamera
+
+Create the game entity that's used for camera<->script communication and portal location for camera view.
+=======================================================================================================================================
+*/
+void G_SpawnScriptCamera(void) {
+
+	if (g_camEnt) {
+		G_FreeEntity(g_camEnt);
+	}
+
+	g_camEnt = G_Spawn();
+	g_camEnt->scriptName = "scriptcamera";
+	g_camEnt->s.eType = ET_CAMERA;
+	g_camEnt->s.apos.trType = TR_STATIONARY;
+	g_camEnt->s.apos.trTime = 0;
+	g_camEnt->s.apos.trDuration = 0;
+
+	VectorCopy(g_camEnt->s.angles, g_camEnt->s.apos.trBase);
+	VectorClear(g_camEnt->s.apos.trDelta);
+
+	g_camEnt->s.frame = 0;
+	g_camEnt->r.svFlags |= SVF_NOCLIENT; // only broadcast when in use
+
+	if (g_camEnt->s.number >= MAX_CLIENTS && g_camEnt->scriptName) {
+		G_Script_ScriptParse(g_camEnt);
+		G_Script_ScriptEvent(g_camEnt, "spawn", "");
+	}
+}
+
+/*
+=======================================================================================================================================
+G_SendMissionStats
+
+For updating the g_missionStats string to the client.
+=======================================================================================================================================
+*/
+int G_SendMissionStats(void) {
+	return 0; // Tobias FIXME
+}
+
+/*
+=======================================================================================================================================
 G_InitGame
 =======================================================================================================================================
 */
 static void G_InitGame(int levelTime, int randomSeed, int restart) {
-	int i;
+	int i, fps;
 
 	G_Printf("------- Game Initialization -------\n");
 	G_Printf("gamename: %s\n", GAMEVERSION);
@@ -452,11 +523,41 @@ static void G_InitGame(int levelTime, int randomSeed, int restart) {
 	}
 	// let the server system know where the entites are
 	trap_LocateGameData(level.gentities, level.num_entities, sizeof(gentity_t), &level.clients[0].ps, sizeof(level.clients[0]));
+
+	if (g_gametype.integer == GT_CAMPAIGN) {
+		char s[10];
+
+		// initialize cast AI system
+		//AICast_Init(); // Tobias FIXME
+		//AICast_ScriptLoad(); // Tobias FIXME
+
+		trap_Cvar_VariableStringBuffer("g_missionStats", s, sizeof(s));
+
+		if (strlen(s) < 1) {
+			// g_missionStats is used to get the player to press a key to begin
+			trap_Cvar_Set("g_missionStats", "xx");
+		}
+
+		for (i = 0; i < 8; i++) { // max objective cvars: 8 (FIXME: use #define somewhere)
+			trap_Cvar_Set(va("g_objective%i", i + 1), "0"); // clear the objective ROM cvars
+		}
+	}
+
+	fps = trap_Cvar_VariableIntegerValue("sv_fps");
+
+	if (fps > 0 && g_limbotime.integer <= (1000 / fps)) {
+		trap_Cvar_SetValue("g_limbotime", 1000);
+		G_Printf("WARNING: g_limbotime <= (1000 / sv_fps), forcing to 1000 (one second).\n");
+	}
+
+	G_Script_ScriptLoad();
 	// reserve some spots for dead player bodies
 	InitBodyQue();
 	ClearRegisteredItems();
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
+	// create the camera entity that will communicate with the scripts
+	//G_SpawnScriptCamera(); // Tobias FIXME
 	// general initialization
 	G_FindTeams();
 	// make sure we have flags for CTF, etc.
@@ -1722,6 +1823,12 @@ Runs thinking code for this frame if necessary.
 */
 void G_RunThink(gentity_t *ent) {
 	int thinktime;
+
+	// run scripting
+	if (ent->s.number >= MAX_CLIENTS) {
+		ent->scriptStatusCurrent = ent->scriptStatus;
+		G_Script_ScriptRun(ent);
+	}
 
 	thinktime = ent->nextthink;
 

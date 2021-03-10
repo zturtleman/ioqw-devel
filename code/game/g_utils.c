@@ -384,6 +384,8 @@ void G_InitGentity(gentity_t *e) {
 	e->classname = "noclass";
 	e->s.number = e - g_entities;
 	e->r.ownerNum = ENTITYNUM_NONE;
+	// init scripting
+	e->scriptStatus.scriptEventIndex = -1;
 }
 
 /*
@@ -626,6 +628,23 @@ void G_SetOrigin(gentity_t *ent, vec3_t origin) {
 
 /*
 =======================================================================================================================================
+G_SetAngle
+=======================================================================================================================================
+*/
+void G_SetAngle(gentity_t *ent, vec3_t angle) {
+
+	VectorCopy(angle, ent->s.apos.trBase);
+
+	ent->s.apos.trType = TR_STATIONARY;
+	ent->s.apos.trTime = 0;
+	ent->s.apos.trDuration = 0;
+
+	VectorClear(ent->s.apos.trDelta);
+	VectorCopy(angle, ent->r.currentAngles);
+}
+
+/*
+=======================================================================================================================================
 G_GetEntityPlayerState
 =======================================================================================================================================
 */
@@ -800,6 +819,39 @@ int G_GetEntityEventSoundCoefficient(const gentity_t *ent) {
 
 /*
 =======================================================================================================================================
+G_ProcessTagConnect
+=======================================================================================================================================
+*/
+void G_ProcessTagConnect(gentity_t *ent, qboolean clearAngles) {
+
+	if (!ent->tagName) {
+		G_Error("G_ProcessTagConnect: NULL ent->tagName\n");
+	}
+
+	if (!ent->tagParent) {
+		G_Error("G_ProcessTagConnect: NULL ent->tagParent\n");
+	}
+
+	G_FindConfigstringIndex(va("%i %i %s", ent->s.number, ent->tagParent->s.number, ent->tagName), CS_TAGCONNECTS, MAX_TAGCONNECTS, qtrue);
+
+	ent->s.eFlags |= EF_TAGCONNECT;
+
+	if (clearAngles) {
+		// clear out the angles so it always starts out facing the tag direction
+		VectorClear(ent->s.angles);
+		VectorCopy(ent->s.angles, ent->s.apos.trBase);
+
+		ent->s.apos.trTime = level.time;
+		ent->s.apos.trDuration = 0;
+		ent->s.apos.trType = TR_STATIONARY;
+
+		VectorClear(ent->s.apos.trDelta);
+		VectorClear(ent->r.currentAngles);
+	}
+}
+
+/*
+=======================================================================================================================================
 DebugLine
 
 Debug polygons only work when running a local game with r_debugSurface set to 2.
@@ -834,4 +886,78 @@ int DebugLine(vec3_t start, vec3_t end, int color) {
 	VectorMA(points[3], 2, cross, points[3]);
 
 	return trap_DebugPolygonCreate(color, 4, points);
+}
+
+/*
+=======================================================================================================================================
+IsPlayerEnt
+
+Returns whether or not the passed entity is a player.
+=======================================================================================================================================
+*/
+qboolean IsPlayerEnt(gentity_t *ent) {
+
+	if (ent&& ent->inuse && ent->client && ent->aiName && !(ent->r.svFlags & SVF_CASTAI) && !(ent->r.svFlags & SVF_BOT) && !Q_stricmp(ent->aiName, "player")) {
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
+ScriptEventForPlayer
+
+Call script event if the passed in entity is a player.
+=======================================================================================================================================
+*/
+qboolean ScriptEventForPlayer( gentity_t *activator, char *eventStr, char *params) {
+
+	if (IsPlayerEnt(activator)) {
+		//AICast_ScriptEvent(AICast_GetCastState(activator->s.number), eventStr, params); // Tobias FIXME
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=======================================================================================================================================
+GetFirstValidPlayer
+
+Returns the first valid player. For triggers/actions that are entity independent.
+=======================================================================================================================================
+*/
+gentity_t *GetFirstValidPlayer(qboolean checkHealth) {
+	gentity_t *trav;
+	int i;
+
+	for (trav = g_entities, i = 0; i < g_maxclients.integer; i++, trav++) {
+		if (!IsPlayerEnt(trav)) {
+			continue;
+		}
+
+		if (checkHealth && trav->health <= 0) {
+			continue;
+		}
+
+		return trav;
+	}
+
+	return NULL;
+}
+
+/*
+=======================================================================================================================================
+GetFirstValidBluePlayer
+=======================================================================================================================================
+*/
+gentity_t *GetFirstValidBluePlayer(qboolean checkHealth) {
+	gentity_t *entity = GetFirstValidPlayer(checkHealth);
+
+	if (entity && G_IsClientOnTeam(entity, TEAM_BLUE)) {
+		return entity;
+	}
+
+	return NULL;
 }

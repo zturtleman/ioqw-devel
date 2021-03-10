@@ -869,6 +869,11 @@ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t
 
 			targ->enemy = attacker;
 			targ->die(targ, inflictor, attacker, take, meansOfDeath);
+			// entity scripting
+			if (targ->s.number >= MAX_CLIENTS && targ->health <= 0) { // might have revived itself in death function
+				G_Script_ScriptEvent(targ, "death", "");
+			}
+
 			return;
 		} else if (targ->pain) {
 			targ->pain(targ, attacker, take);

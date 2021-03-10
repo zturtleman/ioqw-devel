@@ -1,0 +1,4112 @@
+Index: code/cgame/cg_ents.c
+===================================================================
+--- code/cgame/cg_ents.c	(revision 1320)
++++ code/cgame/cg_ents.c	(working copy)
+@@ -596,6 +596,13 @@
+ 	} else {
+ 		ent.hModel = cgs.gameModels[s1->modelindex];
+ 	}
++	// get movers to scale
++	if (cent->currentState.density == ET_MOVERSCALED) {
++		VectorScale(ent.axis[0], cent->currentState.angles2[0], ent.axis[0]);
++		VectorScale(ent.axis[1], cent->currentState.angles2[1], ent.axis[1]);
++		VectorScale(ent.axis[2], cent->currentState.angles2[2], ent.axis[2]);
++		ent.nonNormalizedAxes = qtrue;
++	}
+ 	// add to refresh list
+ 	trap_R_AddRefEntityToScene(&ent);
+ 	// add the secondary model
+Index: code/cgame/cg_predict.c
+===================================================================
+--- code/cgame/cg_predict.c	(revision 1320)
++++ code/cgame/cg_predict.c	(working copy)
+@@ -61,6 +61,10 @@
+ 	for (i = 0; i < snap->numEntities; i++) {
+ 		cent = &cg_entities[snap->entities[i].number];
+ 		ent = &cent->currentState;
++		// dont clip against non-solid bmodels
++		if (cent->nextState.solid == SOLID_BMODEL && (cent->nextState.eFlags & EF_NONSOLID_BMODEL)) {
++			continue;
++		}
+ 
+ 		if (ent->eType == ET_ITEM || ent->eType == ET_TELEPORT_TRIGGER || ent->eType == ET_PUSH_TRIGGER) {
+ 			cg_triggerEntities[cg_numTriggerEntities] = cent;
+Index: code/client/cl_main.c
+===================================================================
+--- code/client/cl_main.c	(revision 1320)
++++ code/client/cl_main.c	(working copy)
+@@ -2173,6 +2173,7 @@
+ 	server->netType = 0;
+ 	server->g_humanplayers = 0;
+ 	server->g_needpass = 0;
++	server->airespawn = 0;
+ }
+ 
+ #define MAX_SERVERSPERPACKET 256
+@@ -3308,6 +3309,7 @@
+ 		if (info) {
+ 			Q_strncpyz(server->game, Info_ValueForKey(info, "game"), MAX_NAME_LENGTH);
+ 			Q_strncpyz(server->hostName, Info_ValueForKey(info, "hostname"), MAX_NAME_LENGTH);
++			server->airespawn = atoi(Info_ValueForKey(info, "airespawn"));
+ 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
+ 			server->netType = atoi(Info_ValueForKey(info, "nettype"));
+ 			server->minPing = atoi(Info_ValueForKey(info, "minping"));
+Index: code/client/cl_ui.c
+===================================================================
+--- code/client/cl_ui.c	(revision 1320)
++++ code/client/cl_ui.c	(working copy)
+@@ -329,6 +329,7 @@
+ 		Info_SetValueForKey(info, "nettype", va("%i", server->netType));
+ 		Info_SetValueForKey(info, "addr", NET_AdrToStringwPort(server->adr));
+ 		Info_SetValueForKey(info, "g_needpass", va("%i", server->g_needpass));
++		Info_SetValueForKey(info, "airespawn", va("%i", server->airespawn));
+ 		Info_SetValueForKey(info, "g_humanplayers", va("%i", server->g_humanplayers));
+ 		Q_strncpyz(buf, info, buflen);
+ 	} else {
+Index: code/client/client.h
+===================================================================
+--- code/client/client.h	(revision 1320)
++++ code/client/client.h	(working copy)
+@@ -255,6 +255,7 @@
+ 	qboolean visible;
+ 	int g_humanplayers;
+ 	int g_needpass;
++	int airespawn;
+ } serverInfo_t;
+ 
+ typedef struct {
+Index: code/game/bg_misc.c
+===================================================================
+--- code/game/bg_misc.c	(revision 1320)
++++ code/game/bg_misc.c	(working copy)
+@@ -1024,6 +1024,7 @@
+ void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result) {
+ 	float deltaTime;
+ 	float phase;
++	vec3_t v;
+ 
+ 	switch (tr->trType) {
+ 		case TR_STATIONARY:
+@@ -1052,6 +1053,34 @@
+ 			VectorMA(tr->trBase, deltaTime, tr->trDelta, result);
+ 			result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime; // FIXME: local gravity...
+ 			break;
++		case TR_ACCELERATE: // trDelta is the ultimate speed
++			if (atTime > tr->trTime + tr->trDuration) {
++				atTime = tr->trTime + tr->trDuration;
++			}
++
++			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
++			// phase is the acceleration constant
++			phase = VectorLength(tr->trDelta) / (tr->trDuration * 0.001);
++			// trDelta at least gives us the acceleration direction
++			VectorNormalize2(tr->trDelta, result);
++			// get distance travelled at current time
++			VectorMA(tr->trBase, phase * 0.5 * deltaTime * deltaTime, result, result);
++			break;
++		case TR_DECCELERATE: // trDelta is the starting speed
++			if (atTime > tr->trTime + tr->trDuration) {
++				atTime = tr->trTime + tr->trDuration;
++			}
++
++			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
++			// phase is the breaking constant
++			phase = VectorLength(tr->trDelta) / (tr->trDuration * 0.001);
++			// trDelta at least gives us the acceleration direction
++			VectorNormalize2(tr->trDelta, result);
++			// get distance travelled at current time (without breaking)
++			VectorMA(tr->trBase, deltaTime, tr->trDelta, v);
++			// subtract breaking force
++			VectorMA(v, -phase * 0.5 * deltaTime * deltaTime, result, result);
++			break;
+ 		case TR_SINE:
+ 			deltaTime = (atTime - tr->trTime) / (float)tr->trDuration;
+ 			phase = sin(deltaTime * M_PI * 2);
+@@ -1095,6 +1124,24 @@
+ 			VectorCopy(tr->trDelta, result);
+ 			result[2] -= DEFAULT_GRAVITY * deltaTime; // FIXME: local gravity...
+ 			break;
++		case TR_ACCELERATE: // trDelta is eventual speed
++			if (atTime > tr->trTime + tr->trDuration) {
++				VectorClear(result);
++				return;
++			}
++
++			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
++			VectorScale(tr->trDelta, deltaTime * deltaTime, result);
++			break;
++		case TR_DECCELERATE: // trDelta is breaking force
++			if (atTime > tr->trTime + tr->trDuration) {
++				VectorClear(result);
++				return;
++			}
++
++			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
++			VectorScale(tr->trDelta, deltaTime, result);
++			break;
+ 		case TR_SINE:
+ 			deltaTime = (atTime - tr->trTime) / (float)tr->trDuration;
+ 			phase = cos(deltaTime * M_PI * 2); // derivative of sin = cos
+Index: code/game/bg_public.h
+===================================================================
+--- code/game/bg_public.h	(revision 1320)
++++ code/game/bg_public.h	(working copy)
+@@ -33,6 +33,8 @@
+ #define GIB_HEALTH -40
+ #define ARMOR_PROTECTION 0.66f
+ #define MAX_ITEMS 256
++#define MAX_OBJECTIVES 6
++#define MAX_TAGCONNECTS 32
+ #define RANK_TIED_FLAG 0x4000
+ #define DEFAULT_SHOTGUN_SPREAD 700
+ #define DEFAULT_SHOTGUN_COUNT 11
+@@ -70,14 +72,19 @@
+ #define CS_VOTE_NO				11
+ #define CS_TEAMVOTE_TIME		12
+ #define CS_TEAMVOTE_STRING		14
+-#define CS_TEAMVOTE_YES			16
+-#define CS_TEAMVOTE_NO			18
++#define CS_TEAMVOTE_YES			15
++#define CS_TEAMVOTE_NO			16
++#define CS_MULTI_INFO			17
++#define CS_MULTI_MAPDESC		18
++#define CS_MULTI_OBJECTIVE		19
+ #define CS_GAME_VERSION			20
+ #define CS_LEVEL_START_TIME		21 // so the timer only shows the current level
+ #define CS_INTERMISSION			22 // when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
+ #define CS_FLAGSTATUS			23 // string indicating flag status in CTF
+ #define CS_SHADERSTATE			24
++#define CS_MUSIC_QUEUE			25
+ #define CS_ITEMS				27 // string of 0's and 1's that tell which items are present
++#define CS_SCREENFADE			28 // used to tell clients to fade their screen to black/normal
+ #define CS_MODELS				32
+ #define CS_SOUNDS				(CS_MODELS + MAX_MODELS)
+ #define CS_PLAYERS				(CS_SOUNDS + MAX_SOUNDS)
+@@ -85,7 +92,9 @@
+ #define CS_PARTICLES			(CS_LOCATIONS + MAX_LOCATIONS)
+ #define CS_DLIGHTS				(CS_PARTICLES + MAX_LOCATIONS)
+ #define CS_BOTINFO				(CS_DLIGHTS + MAX_DLIGHT_CONFIGSTRINGS)
+-#define CS_MAX					(CS_BOTINFO + MAX_CLIENTS)
++#define CS_SPLINES				(CS_BOTINFO + MAX_CLIENTS)
++#define CS_TAGCONNECTS			(CS_SPLINES + MAX_SPLINE_CONFIGSTRINGS)
++#define CS_MAX					(CS_TAGCONNECTS + MAX_TAGCONNECTS)
+ #if (CS_MAX) > MAX_CONFIGSTRINGS
+ #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
+ #endif
+@@ -218,7 +227,7 @@
+ #define EF_TELEPORT_BIT		0x00000010 // toggled every time the origin abruptly changes
+ #define EF_BOUNCE			0x00000020 // for missiles
+ #define EF_BOUNCE_HALF		0x00000040 // for missiles
+-#define EF_MOVER_STOP		0x00000080 // will push otherwise
++
+ #define EF_NODRAW			0x00000100 // may have an event, but no model (unspawned items)
+ #define EF_KAMIKAZE			0x00000200
+ #define EF_VOTED			0x00000400 // already cast a vote
+@@ -225,6 +234,11 @@
+ #define EF_TEAMVOTED		0x00000800 // already cast a team vote
+ #define EF_CONNECTION		0x00001000 // draw a connection trouble sprite
+ #define EF_TALK				0x00002000 // draw a talk balloon
++#define EF_NONSOLID_BMODEL	0x00004000 // bmodel is visible, but not solid
++#define EF_TAGCONNECT		0x00080000 // connected to another entity via tag
++// !! NOTE: only place flags that don't need to go to the client beyond 0x00800000
++#define EF_MOVER_STOP		0x10000000 // will push otherwise
++#define EF_MOVER_ANIMATE	0x20000000 // interpolate animation
+ 
+ /**************************************************************************************************************************************
+ 
+Index: code/game/g_client.c
+===================================================================
+--- code/game/g_client.c	(revision 1320)
++++ code/game/g_client.c	(working copy)
+@@ -1181,3 +1181,33 @@
+ 		BotAIShutdownClient(clientNum, qfalse);
+ 	}
+ }
++
++/*
++=======================================================================================================================================
++G_IsClient
++=======================================================================================================================================
++*/
++qboolean G_IsClient(gentity_t *entity) {
++
++	if (!entity->client) {
++		return qfalse;
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_IsClientOnTeam
++=======================================================================================================================================
++*/
++qboolean G_IsClientOnTeam(gentity_t *entity, team_t team) {
++	gclient_t *client;
++
++	if (!G_IsClient(entity)) {
++		return qfalse;
++	}
++
++	client = entity->client;
++	return (client->sess.sessionTeam == team);
++}
+Index: code/game/g_combat.c
+===================================================================
+--- code/game/g_combat.c	(revision 1320)
++++ code/game/g_combat.c	(working copy)
+@@ -869,6 +869,11 @@
+ 
+ 			targ->enemy = attacker;
+ 			targ->die(targ, inflictor, attacker, take, meansOfDeath);
++			// entity scripting
++			if (targ->s.number >= MAX_CLIENTS && targ->health <= 0) { // might have revived itself in death function
++				G_Script_ScriptEvent(targ, "death", "");
++			}
++
+ 			return;
+ 		} else if (targ->pain) {
+ 			targ->pain(targ, attacker, take);
+Index: code/game/g_local.h
+===================================================================
+--- code/game/g_local.h	(revision 1320)
++++ code/game/g_local.h	(working copy)
+@@ -58,7 +58,51 @@
+ 
+ typedef struct gentity_s gentity_t;
+ typedef struct gclient_s gclient_t;
++// scripting
++typedef struct {
++	char *actionString;
++	qboolean (*actionFunc)(gentity_t *ent, char *params);
++} g_script_stack_action_t;
+ 
++typedef struct {
++	// set during script parsing
++	g_script_stack_action_t *action; // points to an action to perform
++	char *params;
++} g_script_stack_item_t;
++
++#define G_MAX_SCRIPT_STACK_ITEMS 64
++
++typedef struct {
++	g_script_stack_item_t items[G_MAX_SCRIPT_STACK_ITEMS];
++	int numItems;
++} g_script_stack_t;
++
++typedef struct {
++	int eventNum;	// index in scriptEvents[]
++	char *params;	// trigger targetname, etc.
++	g_script_stack_t stack;
++} g_script_event_t;
++
++typedef struct {
++	char *eventStr;
++	qboolean (*eventMatch)(g_script_event_t *event, char *eventParm);
++} g_script_event_define_t;
++// script flags
++#define SCFL_GOING_TO_MARKER	0x00000001
++#define SCFL_ANIMATING			0x00000002
++#define SCFL_WAITING_RESTORE	0x00000004
++// scripting status (NOTE: this MUST NOT contain any pointer vars)
++typedef struct {
++	int scriptStackHead, scriptStackChangeTime;
++	int scriptEventIndex;	// current event containing stack of actions to perform
++	// scripting system variables
++	int scriptId;			// incremented each time the script changes
++	int scriptFlags;
++	char *animatingParams;
++} g_script_status_t;
++
++#define G_MAX_SCRIPT_ACCUM_BUFFERS 8
++
+ struct gentity_s {
+ 	entityState_t s;					// communicated by server to clients
+ 	entityShared_t r;					// shared by both the server system and game
+@@ -139,6 +183,29 @@
+ 	char *dl_stylestring;
+ 	char *dl_shader;
+ 	int dl_atten;
++	// AI fields
++	char *aiAttributes;
++	char *aiName;
++	int aiTeam;
++	void (*AIScript_AlertEntity)(gentity_t *ent);
++	qboolean aiInactive;
++	int aiCharacter;					// the index of the type of character we are
++	char *aiSkin;
++	char *aihSkin;
++	// entity scripting system
++	char *scriptName;
++	int numScriptEvents;
++	g_script_event_t *scriptEvents;		// contains a list of actions to perform for each event type
++	g_script_status_t scriptStatus;		// current status of scripting
++	g_script_status_t scriptStatusBackup;
++	// the accumulation buffer
++	int scriptAccumBuffer[G_MAX_SCRIPT_ACCUM_BUFFERS];
++	qboolean AASblocking;
++	char *tagName;						// name of the tag we are attached to
++	gentity_t *tagParent;
++	g_script_status_t scriptStatusCurrent;	// had to go down here to keep savegames compatible
++	int numObjectives;
++	int missionObjectives;					// which objectives for the current level have been met (gets reset each new level)
+ 	int botAreaNum;						// last checked area num
+ 	vec3_t botAreaPos;
+ };
+@@ -299,6 +366,13 @@
+ 	gentity_t *locationHead;						// head of the location list
+ 	int bodyQueIndex;								// dead bodies
+ 	gentity_t *bodyQue[BODY_QUEUE_SIZE];
++	int numSecrets;
++	int numObjectives;
++	int missionObjectives;
++	// entity scripting
++	char *scriptEntity;
++	// ents file
++	char *extraEntsScript;
+ } level_locals_t;
+ // g_spawn.c
+ qboolean G_SpawnString(const char *key, const char *defaultString, char **out);
+@@ -354,6 +428,11 @@
+ void G_SetOrigin(gentity_t *ent, vec3_t origin);
+ void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
+ const char *BuildShaderStateConfig(void);
++void G_SetAngle(gentity_t *ent, vec3_t angle);
++qboolean IsPlayerEnt(gentity_t *ent);
++qboolean ScriptEventForPlayer(gentity_t *activator, char *eventStr, char *params);
++gentity_t *GetFirstValidPlayer(qboolean checkHealth);
++gentity_t *GetFirstValidBluePlayer(qboolean checkHealth);
+ // g_combat.c
+ qboolean CanDamage(gentity_t *targ, vec3_t origin);
+ void G_Damage(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int meansOfDeath);
+@@ -379,6 +458,8 @@
+ gentity_t *fire_bfg(gentity_t *self, vec3_t start, vec3_t dir);
+ // g_mover.c
+ void G_RunMover(gentity_t *ent);
++void InitMover(gentity_t *ent);
++void SetMoverState(gentity_t *ent, moverState_t moverState, int time);
+ void Touch_DoorTrigger(gentity_t *ent, gentity_t *other, trace_t *trace);
+ // g_trigger.c
+ void Touch_TeleporterTrigger(gentity_t *self, gentity_t *other, trace_t *trace);
+@@ -403,6 +484,14 @@
+ void AddScore(gentity_t *ent, vec3_t origin, int score);
+ void CalculateRanks(void);
+ qboolean SpotWouldTelefrag(gentity_t *spot);
++qboolean G_IsClientOnTeam(gentity_t *entity, team_t team);
++// g_script.c
++void G_ProcessTagConnect(gentity_t *ent, qboolean clearAngles);
++void G_ScriptPreprocess(char *script);
++void G_Script_ScriptParse(gentity_t *ent);
++qboolean G_Script_ScriptRun(gentity_t *ent);
++void G_Script_ScriptEvent(gentity_t *ent, char *eventStr, char *params);
++void G_Script_ScriptLoad(void);
+ // g_svcmds.c
+ qboolean G_ConsoleCommand(void);
+ void G_RegisterCommands(void);
+@@ -484,10 +573,12 @@
+ 
+ extern level_locals_t level;
+ extern gentity_t g_entities[MAX_GENTITIES];
++extern gentity_t *g_camEnt;
+ 
+ #define FOFS(x) ((size_t)&(((gentity_t *)0)->x))
+ 
+ extern vmCvar_t g_gametype;
++extern vmCvar_t g_limbotime;
+ extern vmCvar_t g_dedicated;
+ extern vmCvar_t g_cheats;
+ extern vmCvar_t g_maxclients; // allow this many total, including spectators
+@@ -533,6 +624,16 @@
+ extern vmCvar_t pmove_msec;
+ extern vmCvar_t g_singlePlayer;
+ extern vmCvar_t g_proxMineTimeout;
++extern vmCvar_t g_airespawn;
++extern vmCvar_t g_missionStats;
++// Tobias DEBUG
++extern vmCvar_t ai_scriptName; // name of AI script file to run (instead of default for that map)
++extern vmCvar_t g_scriptName; // name of script file to run (instead of default for that map)
++// Tobias END
++extern vmCvar_t g_redlimbotime;
++extern vmCvar_t g_bluelimbotime;
++extern vmCvar_t g_userRedRespawnTime;
++extern vmCvar_t g_userBlueRespawnTime;
+ // Additional shared traps in bg_public.h
+ void trap_LocateGameData(gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient);
+ void trap_DropClient(int clientNum, const char *reason);
+@@ -595,6 +696,7 @@
+ int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags, void /*struct aas_altroutegoal_s*/ *altroutegoals, int maxaltroutegoals, int type);
+ int trap_AAS_Swimming(vec3_t origin);
+ int trap_AAS_PredictClientMovement(void /*aas_clientmove_s*/ *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
++void trap_AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking);
+ void trap_EA_Say(int client, char *str);
+ void trap_EA_SayTeam(int client, char *str);
+ void trap_EA_Command(int client, char *command);
+Index: code/game/g_main.c
+===================================================================
+--- code/game/g_main.c	(revision 1320)
++++ code/game/g_main.c	(working copy)
+@@ -38,8 +38,10 @@
+ 
+ gentity_t g_entities[MAX_GENTITIES];
+ gclient_t g_clients[MAX_CLIENTS];
++gentity_t *g_camEnt = NULL; // script camera
+ 
+ vmCvar_t g_gametype;
++vmCvar_t g_limbotime;
+ vmCvar_t g_dmflags;
+ vmCvar_t g_fraglimit;
+ vmCvar_t g_timelimit;
+@@ -90,6 +92,16 @@
+ vmCvar_t g_proxMineTimeout;
+ vmCvar_t g_redteam;
+ vmCvar_t g_blueteam;
++vmCvar_t g_airespawn;
++vmCvar_t g_missionStats;
++// Tobias DEBUG
++vmCvar_t ai_scriptName; // name of AI script file to run (instead of default for that map)
++vmCvar_t g_scriptName; // name of script file to run (instead of default for that map)
++// Tobias END
++vmCvar_t g_redlimbotime;
++vmCvar_t g_bluelimbotime;
++vmCvar_t g_userRedRespawnTime;
++vmCvar_t g_userBlueRespawnTime;
+ 
+ static cvarTable_t gameCvarTable[] = {
+ 	// don't override the cheat state set by the system
+@@ -100,6 +112,7 @@
+ 	{&g_restarted, "g_restarted", "0", CVAR_ROM, 0, qfalse},
+ 	// latched vars
+ 	{&g_gametype, "g_gametype", "0", CVAR_SERVERINFO|CVAR_USERINFO|CVAR_LATCH, 0, qfalse},
++	{&g_limbotime, "g_limbotime", "10000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
+ 	{&g_maxclients, "sv_maxclients", "64", CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE, 0, qfalse},
+ 	{&g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE, 0, qfalse},
+ 	// change anytime vars
+@@ -147,6 +160,12 @@
+ 	{&g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
+ 	{&g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE|CVAR_SYSTEMINFO, 0, qtrue},
+ 	{&g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse},
++	{&g_airespawn, "g_airespawn", "0", CVAR_ARCHIVE|CVAR_LATCH|CVAR_SERVERINFO, 0, qfalse},
++	{&g_missionStats, "g_missionStats", "0", CVAR_ROM, 0, qfalse},
++	{&g_redlimbotime, "g_redlimbotime", "30000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
++	{&g_bluelimbotime, "g_bluelimbotime", "30000", CVAR_SERVERINFO|CVAR_LATCH, 0, qfalse},
++	{&g_userRedRespawnTime, "g_userRedRespawnTime", "0", 0, 0, qfalse},
++	{&g_userBlueRespawnTime, "g_userBlueRespawnTime", "0", 0, 0, qfalse},
+ 	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
+ 	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse}
+ };
+@@ -357,7 +376,7 @@
+ =======================================================================================================================================
+ */
+ static void G_UpdateCvars(void) {
+-	int i;
++	int i, fps;
+ 	cvarTable_t *cv;
+ 	qboolean remapped = qfalse;
+ 
+@@ -375,6 +394,15 @@
+ 				if (cv->teamShader) {
+ 					remapped = qtrue;
+ 				}
++
++				if (!Q_stricmp(cv->cvarName, "g_limbotime")) {
++					fps = trap_Cvar_VariableIntegerValue("sv_fps");
++
++					if (fps > 0 && g_limbotime.integer <= (1000 / fps)) {
++						trap_Cvar_SetValue("g_limbotime", 1000);
++						G_Printf("WARNING: g_limbotime <= (1000 / sv_fps), forcing to 1000 (one second).\n");
++					}
++				}
+ 			}
+ 		}
+ 	}
+@@ -386,11 +414,54 @@
+ 
+ /*
+ =======================================================================================================================================
++G_SpawnScriptCamera
++
++Create the game entity that's used for camera<->script communication and portal location for camera view.
++=======================================================================================================================================
++*/
++void G_SpawnScriptCamera(void) {
++
++	if (g_camEnt) {
++		G_FreeEntity(g_camEnt);
++	}
++
++	g_camEnt = G_Spawn();
++	g_camEnt->scriptName = "scriptcamera";
++	g_camEnt->s.eType = ET_CAMERA;
++	g_camEnt->s.apos.trType = TR_STATIONARY;
++	g_camEnt->s.apos.trTime = 0;
++	g_camEnt->s.apos.trDuration = 0;
++
++	VectorCopy(g_camEnt->s.angles, g_camEnt->s.apos.trBase);
++	VectorClear(g_camEnt->s.apos.trDelta);
++
++	g_camEnt->s.frame = 0;
++	g_camEnt->r.svFlags |= SVF_NOCLIENT; // only broadcast when in use
++
++	if (g_camEnt->s.number >= MAX_CLIENTS && g_camEnt->scriptName) {
++		G_Script_ScriptParse(g_camEnt);
++		G_Script_ScriptEvent(g_camEnt, "spawn", "");
++	}
++}
++
++/*
++=======================================================================================================================================
++G_SendMissionStats
++
++For updating the g_missionStats string to the client.
++=======================================================================================================================================
++*/
++int G_SendMissionStats(void) {
++	return 0; // Tobias FIXME
++}
++
++/*
++=======================================================================================================================================
+ G_InitGame
+ =======================================================================================================================================
+ */
+ static void G_InitGame(int levelTime, int randomSeed, int restart) {
+-	int i;
++	int i, fps;
+ 
+ 	G_Printf("------- Game Initialization -------\n");
+ 	G_Printf("gamename: %s\n", GAMEVERSION);
+@@ -452,11 +523,41 @@
+ 	}
+ 	// let the server system know where the entites are
+ 	trap_LocateGameData(level.gentities, level.num_entities, sizeof(gentity_t), &level.clients[0].ps, sizeof(level.clients[0]));
++
++	if (g_gametype.integer == GT_CAMPAIGN) {
++		char s[10];
++
++		// initialize cast AI system
++		//AICast_Init(); // Tobias FIXME
++		//AICast_ScriptLoad(); // Tobias FIXME
++
++		trap_Cvar_VariableStringBuffer("g_missionStats", s, sizeof(s));
++
++		if (strlen(s) < 1) {
++			// g_missionStats is used to get the player to press a key to begin
++			trap_Cvar_Set("g_missionStats", "xx");
++		}
++
++		for (i = 0; i < 8; i++) { // max objective cvars: 8 (FIXME: use #define somewhere)
++			trap_Cvar_Set(va("g_objective%i", i + 1), "0"); // clear the objective ROM cvars
++		}
++	}
++
++	fps = trap_Cvar_VariableIntegerValue("sv_fps");
++
++	if (fps > 0 && g_limbotime.integer <= (1000 / fps)) {
++		trap_Cvar_SetValue("g_limbotime", 1000);
++		G_Printf("WARNING: g_limbotime <= (1000 / sv_fps), forcing to 1000 (one second).\n");
++	}
++
++	G_Script_ScriptLoad();
+ 	// reserve some spots for dead player bodies
+ 	InitBodyQue();
+ 	ClearRegisteredItems();
+ 	// parse the key/value pairs and spawn gentities
+ 	G_SpawnEntitiesFromString();
++	// create the camera entity that will communicate with the scripts
++	//G_SpawnScriptCamera(); // Tobias FIXME
+ 	// general initialization
+ 	G_FindTeams();
+ 	// make sure we have flags for CTF, etc.
+@@ -1723,6 +1824,12 @@
+ void G_RunThink(gentity_t *ent) {
+ 	int thinktime;
+ 
++	// run scripting
++	if (ent->s.number >= MAX_CLIENTS) {
++		ent->scriptStatusCurrent = ent->scriptStatus;
++		G_Script_ScriptRun(ent);
++	}
++
+ 	thinktime = ent->nextthink;
+ 
+ 	if (thinktime <= 0) {
+Index: code/game/g_public.h
+===================================================================
+--- code/game/g_public.h	(revision 1320)
++++ code/game/g_public.h	(working copy)
+@@ -43,12 +43,13 @@
+ #define SVF_SINGLECLIENT		0x00000004 // only send to a single client (entityShared_t->singleClient)
+ #define SVF_CLIENTMASK			0x00000008 // send to limited list of clients
+ #define SVF_BOT					0x00000010 // set if the entity is a bot
+-#define SVF_BROADCAST			0x00000020 // send to all connected clients (r.cullDistance will still be checked)
+-#define SVF_VISDUMMY			0x00000040 // this ent is a "visibility dummy" and needs it's master to be sent to players that can see it even if they can't see the master ent
+-#define SVF_VISDUMMY_MULTIPLE	0x00000080 // so that one vis dummy can add to snapshot multiple speakers
+-#define SVF_PORTAL				0x00000100 // merge a second pvs at origin2 into snapshots
+-#define SVF_NOSERVERINFO		0x00000200 // don't send CS_SERVERINFO updates to this client so that it can be updated for ping tools without lagging clients
+-#define SVF_CAPSULE				0x00000400 // use capsule for collision detection instead of bbox
++#define SVF_CASTAI				0x00000020
++#define SVF_BROADCAST			0x00000040 // send to all connected clients (r.cullDistance will still be checked)
++#define SVF_VISDUMMY			0x00000080 // this ent is a "visibility dummy" and needs it's master to be sent to players that can see it even if they can't see the master ent
++#define SVF_VISDUMMY_MULTIPLE	0x00000100 // so that one vis dummy can add to snapshot multiple speakers
++#define SVF_PORTAL				0x00000200 // merge a second pvs at origin2 into snapshots
++#define SVF_NOSERVERINFO		0x00000400 // don't send CS_SERVERINFO updates to this client so that it can be updated for ping tools without lagging clients
++#define SVF_CAPSULE				0x00000800 // use capsule for collision detection instead of bbox
+ 
+ typedef struct {
+ 	qboolean linked;		// qfalse if not in any good cluster
+Index: code/game/g_script.c
+===================================================================
+--- code/game/g_script.c	(nonexistent)
++++ code/game/g_script.c	(working copy)
+@@ -0,0 +1,851 @@
++/*
++=======================================================================================================================================
++Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
++
++This file is part of Spearmint Source Code.
++
++Spearmint Source Code is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
++published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
++
++Spearmint Source Code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with Spearmint Source Code.
++If not, see <http://www.gnu.org/licenses/>.
++
++In addition, Spearmint Source Code is also subject to certain additional terms. You should have received a copy of these additional
++terms immediately following the terms and conditions of the GNU General Public License. If not, please request a copy in writing from
++id Software at the address below.
++
++If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o
++ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
++=======================================================================================================================================
++*/
++
++/**************************************************************************************************************************************
++ Entity scripting that allows the designers to control the behaviour of entities according to each different scenario.
++**************************************************************************************************************************************/
++
++#include "g_local.h"
++#include "../qcommon/q_shared.h"
++
++vmCvar_t g_scriptDebug;
++// action functions need to be declared here so they can be accessed in the scriptAction table
++qboolean G_ScriptAction_GotoMarker(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Wait(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Trigger(gentity_t *ent, char *params);
++qboolean G_ScriptAction_PlaySound(gentity_t *ent, char *params);
++qboolean G_ScriptAction_PlayAnim(gentity_t *ent, char *params);
++qboolean G_ScriptAction_AlertEntity(gentity_t *ent, char *params);
++qboolean G_ScriptAction_RemoveEntity(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Accum(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MissionFailed(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MissionSuccess(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Print(gentity_t *ent, char *params);
++qboolean G_ScriptAction_FaceAngles(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ResetScript(gentity_t *ent, char *params);
++qboolean G_ScriptAction_TagConnect(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Halt(gentity_t *ent, char *params);
++qboolean G_ScriptAction_StopSound(gentity_t *ent, char *params);
++qboolean G_ScriptAction_StartCam(gentity_t *ent, char *params);
++qboolean G_ScriptAction_StartCamBlack(gentity_t *ent, char *params);
++qboolean G_ScriptAction_EntityScriptName(gentity_t *ent, char *params);
++qboolean G_ScriptAction_AIScriptName(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MapDescription(gentity_t *ent, char *params);
++qboolean G_ScriptAction_BlueRespawntime(gentity_t *ent, char *params);
++qboolean G_ScriptAction_RedRespawntime(gentity_t *ent, char *params);
++qboolean G_ScriptAction_NumberofObjectives(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveMet(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveBlueDesc(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveShortBlueDesc(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveRedDesc(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveShortRedDesc(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectiveImage(gentity_t *ent, char *params);
++qboolean G_ScriptAction_SetWinner(gentity_t *ent, char *params);
++qboolean G_ScriptAction_SetObjectiveStatus(gentity_t *ent, char *params);
++qboolean G_ScriptAction_SetDefendingTeam(gentity_t *ent, char *params);
++qboolean G_ScriptAction_Announce(gentity_t *ent, char *params);
++qboolean G_ScriptAction_SetRoundTimelimit(gentity_t *ent, char *params);
++qboolean G_ScriptAction_OverviewImage(gentity_t *ent, char *params);
++qboolean G_ScriptAction_BackupScript(gentity_t *ent, char *params);
++qboolean G_ScriptAction_RestoreScript(gentity_t *ent, char *params);
++qboolean G_ScriptAction_SetHealth(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MusicStart(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MusicPlay(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MusicStop(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MusicFade(gentity_t *ent, char *params);
++qboolean G_ScriptAction_MusicQueue(gentity_t *ent, char *params);
++qboolean G_ScriptAction_ObjectivesNeeded(gentity_t *ent, char *params);
++qboolean G_ScriptAction_NumSecrets(gentity_t *ent, char *params);
++// these are the actions that each event can call
++g_script_stack_action_t gScriptActions[] = {
++	{"gotomarker", G_ScriptAction_GotoMarker},
++	{"playsound", G_ScriptAction_PlaySound},
++	{"playanim", G_ScriptAction_PlayAnim},
++	{"wait", G_ScriptAction_Wait},
++	{"trigger", G_ScriptAction_Trigger},
++	{"alertentity", G_ScriptAction_AlertEntity},
++	{"removeentity", G_ScriptAction_RemoveEntity},
++	{"accum", G_ScriptAction_Accum},
++	{"missionfailed", G_ScriptAction_MissionFailed},
++	{"missionsuccess", G_ScriptAction_MissionSuccess},
++	{"print", G_ScriptAction_Print},
++	{"faceangles", G_ScriptAction_FaceAngles},
++	{"resetscript", G_ScriptAction_ResetScript},
++	{"attachtotag", G_ScriptAction_TagConnect},
++	{"halt", G_ScriptAction_Halt},
++	{"stopsound", G_ScriptAction_StopSound},
++	{"startcam", G_ScriptAction_StartCam},
++	{"startcamblack", G_ScriptAction_StartCamBlack},
++	{"entityscriptname", G_ScriptAction_EntityScriptName},
++	{"aiscriptname", G_ScriptAction_AIScriptName},
++	{"objectivemet", G_ScriptAction_ObjectiveMet},
++	// multiplayer scripting commands start with "wm_" (Wolf Multiplayer)
++	{"wm_mapdescription", G_ScriptAction_MapDescription},
++	{"wm_blue_respawntime", G_ScriptAction_BlueRespawntime},
++	{"wm_red_respawntime", G_ScriptAction_RedRespawntime},
++	{"wm_number_of_objectives", G_ScriptAction_NumberofObjectives},
++	{"wm_objective_blue_desc", G_ScriptAction_ObjectiveBlueDesc},
++	{"wm_objective_short_blue_desc", G_ScriptAction_ObjectiveShortBlueDesc},
++	{"wm_objective_red_desc", G_ScriptAction_ObjectiveRedDesc},
++	{"wm_objective_short_red_desc", G_ScriptAction_ObjectiveShortRedDesc},
++	{"wm_objective_image", G_ScriptAction_ObjectiveImage},
++	{"wm_setwinner", G_ScriptAction_SetWinner},
++	{"wm_set_objective_status", G_ScriptAction_SetObjectiveStatus},
++	{"wm_set_defending_team", G_ScriptAction_SetDefendingTeam},
++	{"wm_announce", G_ScriptAction_Announce},
++	{"wm_set_round_timelimit", G_ScriptAction_SetRoundTimelimit},
++	{"wm_overview_image", G_ScriptAction_OverviewImage},
++	{"backupscript", G_ScriptAction_BackupScript},
++	{"restorescript", G_ScriptAction_RestoreScript},
++	{"sethealth", G_ScriptAction_SetHealth},
++	{"mu_start", G_ScriptAction_MusicStart}, // time to fadeup
++	{"mu_play", G_ScriptAction_MusicPlay},
++	{"mu_stop", G_ScriptAction_MusicStop}, // time to fadeout
++	{"mu_fade", G_ScriptAction_MusicFade}, // time to fade to target
++	{"mu_queue", G_ScriptAction_MusicQueue}, // music that will start when previous fades to 0
++	{"objectivesneeded", G_ScriptAction_ObjectivesNeeded},
++	{"numsecrets", G_ScriptAction_NumSecrets},
++	{NULL, 0}
++};
++
++qboolean G_Script_EventMatch_StringEqual(g_script_event_t *event, char *eventParm);
++qboolean G_Script_EventMatch_IntInRange(g_script_event_t *event, char *eventParm);
++
++// the list of events that can start an action sequence
++g_script_event_define_t gScriptEvents[] = {
++	{"spawn", 0}, // called as each character is spawned into the game
++	{"trigger", G_Script_EventMatch_StringEqual}, // something has triggered us (always followed by an identifier)
++	{"pain", G_Script_EventMatch_IntInRange}, // we've been hurt
++	{"death", 0}, // RIP
++	{"activate", G_Script_EventMatch_StringEqual}, // something has triggered us (always followed by an identifier)
++	{"stopcam", 0},
++	{NULL, 0}
++};
++
++/*
++=======================================================================================================================================
++G_Script_EventMatch_StringEqual
++=======================================================================================================================================
++*/
++qboolean G_Script_EventMatch_StringEqual(g_script_event_t *event, char *eventParm) {
++
++	if (eventParm && !Q_strcasecmp(event->params, eventParm)) {
++		return qtrue;
++	} else {
++		return qfalse;
++	}
++}
++
++/*
++=======================================================================================================================================
++G_Script_EventMatch_IntInRange
++=======================================================================================================================================
++*/
++qboolean G_Script_EventMatch_IntInRange(g_script_event_t *event, char *eventParm) {
++	char *pString, *token;
++	int int1, int2, eInt;
++
++	// get the cast name
++	pString = eventParm;
++	token = COM_ParseExt(&pString, qfalse);
++	int1 = atoi(token);
++	token = COM_ParseExt(&pString, qfalse);
++	int2 = atoi(token);
++	eInt = atoi(event->params);
++
++	if (eventParm && eInt > int1 && eInt <= int2) {
++		return qtrue;
++	} else {
++		return qfalse;
++	}
++}
++
++/*
++=======================================================================================================================================
++G_Script_EventForString
++=======================================================================================================================================
++*/
++int G_Script_EventForString(char *string) {
++	int i;
++
++	for (i = 0; gScriptEvents[i].eventStr; i++) {
++		if (!Q_strcasecmp(string, gScriptEvents[i].eventStr)) {
++			return i;
++		}
++	}
++
++	return -1;
++}
++
++/*
++=======================================================================================================================================
++G_Script_ActionForString
++=======================================================================================================================================
++*/
++g_script_stack_action_t *G_Script_ActionForString(char *string) {
++	int i;
++
++	for (i = 0; gScriptActions[i].actionString; i++) {
++		if (!Q_strcasecmp(string, gScriptActions[i].actionString)) {
++			return &gScriptActions[i];
++		}
++	}
++
++	return NULL;
++}
++
++/*
++=======================================================================================================================================
++G_Script_ScriptLoad
++
++Loads the script for the current level into the buffer.
++=======================================================================================================================================
++*/
++void G_Script_ScriptLoad(void) {
++	char filename[MAX_QPATH];
++	vmCvar_t mapname;
++	fileHandle_t f;
++	int len;
++
++	trap_Cvar_Register(&g_scriptDebug, "g_scriptDebug", "0", 0);
++
++	level.scriptEntity = NULL;
++
++	trap_Cvar_VariableStringBuffer("g_scriptName", filename, sizeof(filename));
++
++	if (strlen(filename) > 0) {
++		trap_Cvar_Register(&mapname, "g_scriptName", "", CVAR_ROM);
++	} else {
++		trap_Cvar_Register(&mapname, "mapname", "", CVAR_SERVERINFO|CVAR_ROM);
++	}
++
++	Q_strncpyz(filename, "maps/", sizeof(filename));
++	Q_strcat(filename, sizeof(filename), mapname.string);
++	Q_strcat(filename, sizeof(filename), ".script");
++
++	len = trap_FS_FOpenFile(filename, &f, FS_READ);
++	// make sure we clear out the temporary scriptname
++	trap_Cvar_Set("g_scriptName", "");
++
++	if (len < 0) {
++		return;
++	}
++
++	level.scriptEntity = G_Alloc(len);
++
++	trap_FS_Read(level.scriptEntity, len, f);
++	trap_FS_FCloseFile(f);
++}
++
++#define MAX_SCRIPT_EVENTS 64
++g_script_event_t g_temp_events[MAX_SCRIPT_EVENTS];
++/*
++=======================================================================================================================================
++G_Script_ScriptParse
++
++Parses the script for the given entity.
++=======================================================================================================================================
++*/
++void G_Script_ScriptParse(gentity_t *ent) {
++	char *pScript;
++	char *token;
++	qboolean wantName;
++	qboolean inScript;
++	int eventNum;
++	int numEventItems;
++	g_script_event_t *curEvent;
++	char params[MAX_INFO_STRING];
++	g_script_stack_action_t *action;
++	int i;
++	int bracketLevel;
++	qboolean buildScript;
++
++	if (!ent->scriptName) {
++		return;
++	}
++
++	if (!level.scriptEntity) {
++		return;
++	}
++
++	buildScript = qtrue;
++	pScript = level.scriptEntity;
++	wantName = qtrue;
++	inScript = qfalse;
++
++	COM_BeginParseSession("G_Script_ScriptParse");
++
++	bracketLevel = 0;
++	numEventItems = 0;
++
++	memset(g_temp_events, 0, sizeof(g_temp_events));
++
++	while (1) {
++		token = COM_Parse(&pScript);
++
++		if (!token[0]) {
++			if (!wantName) {
++				G_Error("G_Script_ScriptParse(), Error (line %d): '}' expected, end of script found.\n", COM_GetCurrentParseLine());
++			}
++
++			break;
++		}
++		// end of script
++		if (token[0] == '}') {
++			if (inScript) {
++				break;
++			}
++
++			if (wantName) {
++				G_Error("G_Script_ScriptParse(), Error (line %d): '}' found, but not expected.\n", COM_GetCurrentParseLine());
++			}
++
++			wantName = qtrue;
++		} else if (token[0] == '{') {
++			if (wantName) {
++				G_Error("G_Script_ScriptParse(), Error (line %d): '{' found, NAME expected.\n", COM_GetCurrentParseLine());
++			}
++		} else if (wantName) {
++			if (!Q_strcasecmp(ent->scriptName, token)) {
++				inScript = qtrue;
++				numEventItems = 0;
++			}
++
++			wantName = qfalse;
++		} else if (inScript) {
++			//if (!Q_strcasecmp(token, "attributes")) {
++			//	// read in all the attributes
++			//	G_Script_CheckLevelAttributes(cs, ent, &pScript);
++			//	continue;
++			//}
++
++			eventNum = G_Script_EventForString(token);
++
++			if (eventNum < 0) {
++				G_Error("G_Script_ScriptParse(), Error (line %d): unknown event: %s.\n", COM_GetCurrentParseLine(), token);
++			}
++
++			if (numEventItems >= MAX_SCRIPT_EVENTS) {
++				G_Error("G_Script_ScriptParse(), Error (line %d): MAX_SCRIPT_EVENTS reached (%d).\n", COM_GetCurrentParseLine(), MAX_SCRIPT_EVENTS);
++			}
++
++			curEvent = &g_temp_events[numEventItems];
++			curEvent->eventNum = eventNum;
++
++			memset(params, 0, sizeof(params));
++			// parse any event params before the start of this event's actions
++			while ((token = COM_Parse(&pScript)) && (token[0] != '{')) {
++				if (!token[0]) {
++					G_Error("G_Script_ScriptParse(), Error (line %d): '}' expected, end of script found.\n", COM_GetCurrentParseLine());
++				}
++
++				if (strlen(params)) { // add a space between each param
++					Q_strcat(params, sizeof(params), " ");
++				}
++
++				Q_strcat(params, sizeof(params), token);
++			}
++
++			if (strlen(params)) { // copy the params into the event
++				curEvent->params = G_Alloc(strlen(params) + 1);
++				Q_strncpyz(curEvent->params, params, strlen(params) + 1);
++			}
++			// parse the actions for this event
++			while ((token = COM_Parse(&pScript)) && (token[0] != '}')) {
++				if (!token[0]) {
++					G_Error("G_Script_ScriptParse(), Error (line %d): '}' expected, end of script found.\n", COM_GetCurrentParseLine());
++				}
++
++				action = G_Script_ActionForString(token);
++
++				if (!action) {
++					G_Error("G_Script_ScriptParse(), Error (line %d): unknown action: %s.\n", COM_GetCurrentParseLine(), token);
++				}
++
++				curEvent->stack.items[curEvent->stack.numItems].action = action;
++
++				memset(params, 0, sizeof(params));
++
++				token = COM_ParseExt(&pScript, qfalse);
++
++				for (i = 0; token[0]; i++) {
++					if (strlen(params)) { // add a space between each param
++						Q_strcat(params, sizeof(params), " ");
++					}
++
++					if (i == 0) {
++						// special case: playsound's need to be cached on startup to prevent in-game pauses
++						if (!Q_stricmp(action->actionString, "playsound")) {
++							G_SoundIndex(token);
++						}
++
++						if (buildScript && (!Q_stricmp(action->actionString, "mu_start") || !Q_stricmp(action->actionString, "mu_play") || !Q_stricmp(action->actionString, "mu_queue") || !Q_stricmp(action->actionString, "startcam") || !Q_stricmp(action->actionString, "startcamblack"))) {
++							if (strlen(token)) { // we know there's a [0], but don't know if it's '0'
++								trap_SendServerCommand(ent->s.number, va("addToBuild %s\n", token));
++							}
++						}
++					}
++
++					if (strrchr(token,' ')) { // need to wrap this param in quotes since it has more than one word
++						Q_strcat(params, sizeof(params), "\"");
++					}
++
++					Q_strcat(params, sizeof(params), token);
++
++					if (strrchr(token,' ')) { // need to wrap this param in quotes since it has more than one word
++						Q_strcat(params, sizeof(params), "\"");
++					}
++
++					token = COM_ParseExt(&pScript, qfalse);
++				}
++
++				if (strlen(params)) { // copy the params into the event
++					curEvent->stack.items[curEvent->stack.numItems].params = G_Alloc(strlen(params) + 1);
++					Q_strncpyz(curEvent->stack.items[curEvent->stack.numItems].params, params, strlen(params) + 1);
++				}
++
++				curEvent->stack.numItems++;
++
++				if (curEvent->stack.numItems >= G_MAX_SCRIPT_STACK_ITEMS) {
++					G_Error("G_Script_ScriptParse(): script exceeded MAX_SCRIPT_ITEMS (%d), line %d.\n", G_MAX_SCRIPT_STACK_ITEMS, COM_GetCurrentParseLine());
++				}
++			}
++
++			numEventItems++;
++		} else { // skip this character completely
++			// NOTE: gcc: suggest parentheses around assignment used as truth value
++			while ((token = COM_Parse(&pScript))) {
++				if (!token[0]) {
++					G_Error("G_Script_ScriptParse(), Error (line %d): '}' expected, end of script found.\n", COM_GetCurrentParseLine());
++				} else if (token[0] == '{') {
++					bracketLevel++;
++				} else if (token[0] == '}') {
++					if (!--bracketLevel) {
++						break;
++					}
++				}
++			}
++		}
++	}
++	// alloc and copy the events into the gentity_t for this cast
++	if (numEventItems > 0) {
++		ent->scriptEvents = G_Alloc(sizeof(g_script_event_t) * numEventItems);
++
++		memcpy(ent->scriptEvents, g_temp_events, sizeof(g_script_event_t) * numEventItems);
++
++		ent->numScriptEvents = numEventItems;
++	}
++}
++
++qboolean G_Script_ScriptRun(gentity_t *ent);
++/*
++=======================================================================================================================================
++G_Script_ScriptChange
++=======================================================================================================================================
++*/
++void G_Script_ScriptChange(gentity_t *ent, int newScriptNum) {
++	g_script_status_t scriptStatusBackup;
++
++	// backup the current scripting
++	memcpy(&scriptStatusBackup, &ent->scriptStatus, sizeof(g_script_status_t));
++	// set the new script to this cast, and reset script status
++	ent->scriptStatus.scriptEventIndex = newScriptNum;
++	ent->scriptStatus.scriptStackHead = 0;
++	ent->scriptStatus.scriptStackChangeTime = level.time;
++	ent->scriptStatus.scriptId = scriptStatusBackup.scriptId + 1;
++	// try and run the script, if it doesn't finish, then abort the current script (discard backup)
++	if (G_Script_ScriptRun(ent)) {
++		// completed successfully
++		memcpy(&ent->scriptStatus, &scriptStatusBackup, sizeof(g_script_status_t));
++	}
++}
++
++/*
++=======================================================================================================================================
++G_Script_ScriptEvent
++
++An event has occured, for which a script may exist.
++=======================================================================================================================================
++*/
++void G_Script_ScriptEvent(gentity_t *ent, char *eventStr, char *params) {
++	int i, eventNum;
++
++	eventNum = -1;
++	// find out which event this is
++	for (i = 0; gScriptEvents[i].eventStr; i++) {
++		if (!Q_strcasecmp(eventStr, gScriptEvents[i].eventStr)) { // match found
++			eventNum = i;
++			break;
++		}
++	}
++
++	if (eventNum < 0) {
++		if (g_cheats.integer) { // dev mode
++			G_Printf("devmode-> G_Script_ScriptEvent(), unknown event: %s.\n", eventStr);
++		}
++
++		return;
++	}
++	// see if this entity has this event
++	for (i = 0; i < ent->numScriptEvents; i++) {
++		if (ent->scriptEvents[i].eventNum == eventNum) {
++			if ((!ent->scriptEvents[i].params) || (!gScriptEvents[eventNum].eventMatch || gScriptEvents[eventNum].eventMatch(&ent->scriptEvents[i], params))) {
++				G_Script_ScriptChange(ent, i);
++				break;
++			}
++		}
++	}
++}
++
++/*
++=======================================================================================================================================
++G_Script_ScriptRun
++
++Returns qtrue if the script completed.
++=======================================================================================================================================
++*/
++qboolean G_Script_ScriptRun(gentity_t *ent) {
++	g_script_stack_t *stack;
++
++	if (strlen(g_missionStats.string) > 1) {
++		return qfalse;
++	}
++
++	trap_Cvar_Update(&g_scriptDebug);
++
++	if (!ent->scriptEvents) {
++		ent->scriptStatus.scriptEventIndex = -1;
++		return qtrue;
++	}
++	// if we are still doing a gotomarker, process the movement
++	if (ent->scriptStatus.scriptFlags & SCFL_GOING_TO_MARKER) {
++		G_ScriptAction_GotoMarker(ent, NULL);
++	}
++	// if we are animating, do the animation
++	if (ent->scriptStatus.scriptFlags & SCFL_ANIMATING) {
++		G_ScriptAction_PlayAnim(ent, ent->scriptStatus.animatingParams);
++	}
++
++	if (ent->scriptStatus.scriptEventIndex < 0) {
++		return qtrue;
++	}
++
++	stack = &ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack;
++
++	if (!stack->numItems) {
++		ent->scriptStatus.scriptEventIndex = -1;
++		return qtrue;
++	}
++	// show debugging info
++	if (g_scriptDebug.integer && ent->scriptStatus.scriptStackChangeTime == level.time) {
++		if (ent->scriptStatus.scriptStackHead < stack->numItems) {
++			G_Printf("%i: (%s) GScript command: %s %s.\n", level.time, ent->scriptName, stack->items[ent->scriptStatus.scriptStackHead].action->actionString, (stack->items[ent->scriptStatus.scriptStackHead].params ? stack->items[ent->scriptStatus.scriptStackHead].params : ""));
++		}
++	}
++
++	while (ent->scriptStatus.scriptStackHead < stack->numItems) {
++		if (!stack->items[ent->scriptStatus.scriptStackHead].action->actionFunc(ent, stack->items[ent->scriptStatus.scriptStackHead].params)) {
++			return qfalse;
++		}
++		// move to the next action in the script
++		ent->scriptStatus.scriptStackHead++;
++		// record the time that this new item became active
++		ent->scriptStatus.scriptStackChangeTime = level.time;
++		// show debugging info
++		if (g_scriptDebug.integer) {
++			if (ent->scriptStatus.scriptStackHead < stack->numItems) {
++				G_Printf("%i: (%s) GScript command: %s %s.\n", level.time, ent->scriptName, stack->items[ent->scriptStatus.scriptStackHead].action->actionString, (stack->items[ent->scriptStatus.scriptStackHead].params ? stack->items[ent->scriptStatus.scriptStackHead].params : ""));
++			}
++		}
++	}
++
++	ent->scriptStatus.scriptEventIndex = -1;
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++script_linkentity
++=======================================================================================================================================
++*/
++void script_linkentity(gentity_t *ent) {
++
++	// this is required since non-solid brushes need to be linked but not solid
++	trap_LinkEntity(ent);
++}
++
++/*
++=======================================================================================================================================
++script_mover_die
++=======================================================================================================================================
++*/
++void script_mover_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod) {
++
++	if (self->spawnflags & 4) {
++		switch (mod) {
++			case MOD_GRENADE_SPLASH:
++			case MOD_ROCKET:
++			case MOD_ROCKET_SPLASH:
++			case MOD_BFG:
++			case MOD_BFG_SPLASH:
++				break;
++			default: // no death from this weapon
++				self->health += damage;
++				return;
++		}
++	}
++
++	G_Script_ScriptEvent(self, "death", "");
++
++	self->die = 0;
++
++	trap_UnlinkEntity(self);
++	G_FreeEntity(self);
++}
++
++/*
++=======================================================================================================================================
++script_mover_pain
++=======================================================================================================================================
++*/
++void script_mover_pain(gentity_t *self, gentity_t *attacker, int damage) {
++	G_Script_ScriptEvent(self, "pain", va("%d %d", self->health, self->health + damage));
++}
++
++/*
++=======================================================================================================================================
++script_mover_spawn
++=======================================================================================================================================
++*/
++void script_mover_spawn(gentity_t *ent) {
++
++	if (ent->spawnflags & 2) {
++		ent->clipmask = CONTENTS_SOLID;
++		ent->r.contents = CONTENTS_SOLID;
++	} else {
++		ent->s.eFlags |= EF_NONSOLID_BMODEL;
++		ent->clipmask = 0;
++		ent->r.contents = 0;
++	}
++
++	script_linkentity(ent);
++}
++
++/*
++=======================================================================================================================================
++script_mover_use
++=======================================================================================================================================
++*/
++void script_mover_use(gentity_t *ent, gentity_t *other, gentity_t *activator) {
++	script_mover_spawn(ent);
++}
++
++/*
++=======================================================================================================================================
++script_mover_blocked
++=======================================================================================================================================
++*/
++void script_mover_blocked(gentity_t *ent, gentity_t *other) {
++
++	// remove it, we must not stop for anything or it will screw up script timing
++	if (!other->client) {
++		G_TempEntity(other->s.origin, EV_ITEM_POP);
++		G_FreeEntity(other);
++		return;
++	}
++	// FIXME: we could have certain entities stop us, thereby "pausing" movement until they move out the way. then we can just call the GotoMarker()
++	// again, telling it that we are just now calling it for the first time, so it should start us on our way again (theoretically speaking)
++	// kill them
++	G_Damage(other, ent, ent, NULL, NULL, 9999, 0, MOD_CRUSH);
++}
++
++/*QUAKED script_mover (0.5 0.25 1.0) ? TRIGGERSPAWN SOLID EXPLOSIVEDAMAGEONLY
++Scripted brush entity. A simplified means of moving brushes around based on events.
++
++"modelscale" - Scale multiplier (defaults to 1, and scales uniformly).
++"modelscale_vec" - Set scale per-axis. Overrides "modelscale", so if you have both the "modelscale" is ignored.
++"model2" optional md3 to draw over the solid clip brush.
++"scriptname" name used for scripting purposes (like aiName in AI scripting).
++"health" optionally make this entity damagable.
++*/
++void SP_script_mover(gentity_t *ent) {
++	float scale[3] = {1, 1, 1};
++	vec3_t scalevec;
++
++	if (!ent->model) {
++		G_Error("SP_script_mover: script_model_med must have a \"model\".\n");
++	}
++
++	if (!ent->scriptName) {
++		G_Error("SP_script_mover: script_model_med must have a \"scriptname\".\n");
++	}
++
++	ent->blocked = script_mover_blocked;
++	// first position at start
++	VectorCopy(ent->s.origin, ent->pos1);
++	VectorCopy(ent->pos1, ent->pos2); // don't go anywhere just yet
++
++	trap_SetBrushModel(ent, ent->model);
++	InitMover(ent);
++
++	ent->reached = 0;
++
++	if (ent->spawnflags & 1) {
++		ent->use = script_mover_use;
++		trap_UnlinkEntity(ent); // make sure it's not visible
++		return;
++	}
++
++	G_SetAngle(ent, ent->s.angles);
++	G_SpawnInt("health", "0", &ent->health);
++
++	if (ent->health) {
++		ent->takedamage = qtrue;
++	}
++
++	ent->die = script_mover_die;
++	ent->pain = script_mover_pain;
++	// look for general scaling
++	if (G_SpawnFloat("modelscale", "1", &scale[0])) {
++		scale[2] = scale[1] = scale[0];
++	}
++	// look for axis specific scaling
++	if (G_SpawnVector("modelscale_vec", "1 1 1", &scalevec[0])) {
++		VectorCopy(scalevec, scale);
++	}
++
++	if (scale[0] != 1 || scale[1] != 1 || scale[2] != 1) {
++		ent->s.density = ET_MOVERSCALED;
++		// scale is stored in 'angles2'
++		VectorCopy(scale, ent->s.angles2);
++	}
++
++	script_mover_spawn(ent);
++}
++
++/*
++=======================================================================================================================================
++script_model_med_spawn
++=======================================================================================================================================
++*/
++void script_model_med_spawn(gentity_t *ent) {
++
++	if (ent->spawnflags & 2) {
++		ent->clipmask = CONTENTS_SOLID;
++		ent->r.contents = CONTENTS_SOLID;
++	}
++
++	ent->s.eType = ET_GENERAL;
++	ent->s.modelindex = G_ModelIndex(ent->model);
++	ent->s.frame = 0;
++
++	VectorCopy(ent->s.origin, ent->s.pos.trBase);
++
++	ent->s.pos.trType = TR_STATIONARY;
++
++	trap_LinkEntity(ent);
++}
++
++/*
++=======================================================================================================================================
++script_model_med_use
++=======================================================================================================================================
++*/
++void script_model_med_use(gentity_t *ent, gentity_t *other, gentity_t *activator) {
++	script_model_med_spawn(ent);
++}
++
++/*QUAKED script_model_med (0.5 0.25 1.0) (-16 -16 -24) (16 16 64) TRIGGERSPAWN SOLID
++MEDIUM SIZED scripted entity, used for animating a model, moving it around, etc.
++SOLID spawnflag means this entity will clip the player and AI, otherwise they can walk straight through it.
++
++"model" the full path of the model to use.
++"scriptname" name used for scripting purposes (like aiName in AI scripting).
++*/
++void SP_script_model_med(gentity_t *ent) {
++
++	if (!ent->model) {
++		G_Error("SP_script_model_med: script_model_med %s must have a \"model\".\n", ent->scriptName);
++	}
++	if (!ent->scriptName) {
++		G_Error("SP_script_model_med: script_model_med must have a \"scriptname\".\n");
++	}
++
++	ent->s.eType = ET_GENERAL;
++	ent->s.apos.trType = TR_STATIONARY;
++	ent->s.apos.trTime = 0;
++	ent->s.apos.trDuration = 0;
++
++	VectorCopy(ent->s.angles, ent->s.apos.trBase);
++	VectorClear(ent->s.apos.trDelta);
++
++	if (ent->spawnflags & 1) {
++		ent->use = script_model_med_use;
++		trap_UnlinkEntity(ent); // make sure it's not visible
++		return;
++	}
++
++	script_model_med_spawn(ent);
++}
++
++/*QUAKED script_camera (1.0 0.25 1.0) (-8 -8 -8) (8 8 8) TRIGGERSPAWN
++This is a camera entity. Used by the scripting to show cinematics, via special camera commands. See scripting documentation.
++"scriptname" name used for scripting purposes (like aiName in AI scripting)
++*/
++void SP_script_camera(gentity_t *ent) {
++
++	if (!ent->scriptName) {
++		G_Error("%s must have a \"scriptname\".\n", ent->classname);
++	}
++
++	ent->s.eType = ET_CAMERA;
++	ent->s.apos.trType = TR_STATIONARY;
++	ent->s.apos.trTime = 0;
++	ent->s.apos.trDuration = 0;
++
++	VectorCopy(ent->s.angles, ent->s.apos.trBase);
++	VectorClear(ent->s.apos.trDelta);
++
++	ent->s.frame = 0;
++	ent->r.svFlags |= SVF_NOCLIENT; // only broadcast when in use
++}
++
++/*QUAKED script_multiplayer (1.0 0.25 1.0) (-8 -8 -8) (8 8 8)
++This is used to script multiplayer maps. Entity not displayed in game.
++"scriptname" name used for scripting purposes (REQUIRED)
++*/
++void SP_script_multiplayer(gentity_t *ent) {
++
++	if (!ent->scriptName) {
++		G_Error("%s must have a \"scriptname\".\n", ent->classname);
++	}
++
++	if (Q_stricmp(ent->scriptName, "game_manager")) {
++		G_Error("%s must have a \"scriptname\" of 'game_manager'.\n", ent->classname);
++	}
++
++	ent->s.eType = ET_INVISIBLE;
++	ent->r.svFlags |= SVF_NOCLIENT; // only broadcast when in use
++}
+Index: code/game/g_script_actions.c
+===================================================================
+--- code/game/g_script_actions.c	(nonexistent)
++++ code/game/g_script_actions.c	(working copy)
+@@ -0,0 +1,1941 @@
++/*
++=======================================================================================================================================
++Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
++
++This file is part of Spearmint Source Code.
++
++Spearmint Source Code is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as
++published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
++
++Spearmint Source Code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with Spearmint Source Code.
++If not, see <http://www.gnu.org/licenses/>.
++
++In addition, Spearmint Source Code is also subject to certain additional terms. You should have received a copy of these additional
++terms immediately following the terms and conditions of the GNU General Public License. If not, please request a copy in writing from
++id Software at the address below.
++
++If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o
++ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
++=======================================================================================================================================
++*/
++
++/**************************************************************************************************************************************
++ Contains the code to handle the various commands available with an event script. These functions will return true if the action has
++ been performed, and the script should proceed to the next item on the list.
++**************************************************************************************************************************************/
++
++#include "g_local.h"
++#include "../qcommon/q_shared.h"
++
++void script_linkentity(gentity_t *ent);
++
++/*
++=======================================================================================================================================
++G_ScriptAction_GotoMarker
++
++Syntax: gotomarker <targetname> <speed> [accel/deccel] [turntotarget] [wait]
++
++NOTE: speed may be modified to round the duration to the next 50ms for smooth transitions.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_GotoMarker(gentity_t *ent, char *params) {
++	char *pString, *token;
++	gentity_t *target;
++	vec3_t vec;
++	float speed, dist;
++	qboolean wait = qfalse, turntotarget = qfalse;
++	int trType;
++	int duration, i;
++	vec3_t diff;
++	vec3_t angles;
++
++	if (params && (ent->scriptStatus.scriptFlags & SCFL_GOING_TO_MARKER)) {
++		// we can't process a new movement until the last one has finished
++		return qfalse;
++	}
++	// we are waiting for it to reach destination
++	if (!params || ent->scriptStatus.scriptStackChangeTime < level.time) {
++		if (ent->s.pos.trTime + ent->s.pos.trDuration <= level.time) { // we made it
++			ent->scriptStatus.scriptFlags &= ~SCFL_GOING_TO_MARKER;
++			// set the angles at the destination
++			BG_EvaluateTrajectory(&ent->s.apos, ent->s.apos.trTime + ent->s.apos.trDuration, ent->s.angles);
++			VectorCopy(ent->s.angles, ent->s.apos.trBase);
++			VectorCopy(ent->s.angles, ent->r.currentAngles);
++
++			ent->s.apos.trTime = level.time;
++			ent->s.apos.trDuration = 0;
++			ent->s.apos.trType = TR_STATIONARY;
++
++			VectorClear(ent->s.apos.trDelta);
++			// stop moving
++			BG_EvaluateTrajectory(&ent->s.pos, level.time, ent->s.origin);
++			VectorCopy(ent->s.origin, ent->s.pos.trBase);
++			VectorCopy(ent->s.origin, ent->r.currentOrigin);
++
++			ent->s.pos.trTime = level.time;
++			ent->s.pos.trDuration = 0;
++			ent->s.pos.trType = TR_STATIONARY;
++
++			VectorClear(ent->s.pos.trDelta);
++
++			script_linkentity(ent);
++			return qtrue;
++		}
++	// we have just started this command
++	} else {
++		pString = params;
++		token = COM_ParseExt(&pString, qfalse);
++
++		if (!token[0]) {
++			G_Error("G_ScriptAction_GotoMarker: gotomarker must have an targetname.\n");
++		}
++		// find the entity with the given "targetname"
++		target = G_Find(NULL, FOFS(targetname), token);
++
++		if (!target) {
++			G_Error("G_ScriptAction_GotoMarker: gotomarker can't find entity with \"targetname\" = \"%s\".\n", token);
++		}
++
++		VectorSubtract(target->r.currentOrigin, ent->r.currentOrigin, vec);
++
++		token = COM_ParseExt(&pString, qfalse);
++
++		if (!token[0]) {
++			G_Error("G_ScriptAction_GotoMarker: gotomarker must have a speed.\n");
++		}
++
++		speed = atof(token);
++		trType = TR_LINEAR_STOP;
++
++		while (token[0]) {
++			token = COM_ParseExt(&pString, qfalse);
++
++			if (token[0]) {
++				if (!Q_stricmp(token, "accel")) {
++					trType = TR_ACCELERATE;
++				} else if (!Q_stricmp(token, "deccel")) {
++					trType = TR_DECCELERATE;
++				} else if (!Q_stricmp(token, "wait")) {
++					wait = qtrue;
++				} else if (!Q_stricmp(token, "turntotarget")) {
++					turntotarget = qtrue;
++				}
++			}
++		}
++		// start the movement
++		if (ent->s.eType == ET_MOVER) {
++			VectorCopy(vec, ent->movedir);
++			VectorCopy(ent->r.currentOrigin, ent->pos1);
++			VectorCopy(target->r.currentOrigin, ent->pos2);
++
++			ent->speed = speed;
++			dist = VectorDistance(ent->pos1, ent->pos2);
++			// setup the movement with the new parameters
++			InitMover(ent);
++			// start the movement
++			SetMoverState(ent, MOVER_1TO2, level.time);
++
++			if (trType != TR_LINEAR_STOP) { // allow for acceleration/decceleration
++				ent->s.pos.trDuration = 1000.0 * dist / (speed / 2.0);
++				ent->s.pos.trType = trType;
++			}
++
++			ent->reached = 0;
++
++			if (turntotarget) {
++				duration = ent->s.pos.trDuration;
++				VectorCopy(target->s.angles, angles);
++
++				for (i = 0; i < 3; i++) {
++					diff[i] = AngleDifference(angles[i], ent->s.angles[i]);
++
++					while (diff[i] > 180) {
++						diff[i] -= 360;
++					}
++
++					while (diff[i] < -180) {
++						diff[i] += 360;
++					}
++				}
++
++				VectorCopy(ent->s.angles, ent->s.apos.trBase);
++
++				if (duration) {
++					VectorScale(diff, 1000.0 / (float)duration, ent->s.apos.trDelta);
++				} else {
++					VectorClear(ent->s.apos.trDelta);
++				}
++
++				ent->s.apos.trDuration = duration;
++				ent->s.apos.trTime = level.time;
++				ent->s.apos.trType = TR_LINEAR_STOP;
++
++				if (trType != TR_LINEAR_STOP) { // allow for acceleration/decceleration
++					ent->s.pos.trDuration = 1000.0 * dist / (speed / 2.0);
++					ent->s.pos.trType = trType;
++				}
++			}
++		} else {
++			// calculate the trajectory
++			ent->s.pos.trType = TR_LINEAR_STOP;
++			ent->s.pos.trTime = level.time;
++
++			VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
++
++			dist = VectorNormalize(vec);
++
++			VectorScale(vec, speed, ent->s.pos.trDelta);
++
++			ent->s.pos.trDuration = 1000 * (dist / speed);
++
++			if (turntotarget) {
++				duration = ent->s.pos.trDuration;
++				VectorCopy(target->s.angles, angles);
++
++				for (i = 0; i < 3; i++) {
++					diff[i] = AngleDifference(angles[i], ent->s.angles[i]);
++
++					while (diff[i] > 180) {
++						diff[i] -= 360;
++					}
++
++					while (diff[i] < -180) {
++						diff[i] += 360;
++					}
++				}
++
++				VectorCopy(ent->s.angles, ent->s.apos.trBase);
++
++				if (duration) {
++					VectorScale(diff, 1000.0 / (float)duration, ent->s.apos.trDelta);
++				} else {
++					VectorClear(ent->s.apos.trDelta);
++				}
++
++				ent->s.apos.trDuration = duration;
++				ent->s.apos.trTime = level.time;
++				ent->s.apos.trType = TR_LINEAR_STOP;
++			}
++
++		}
++
++		if (!wait) {
++			// round the duration to the next 50ms
++			if (ent->s.pos.trDuration % 50) {
++				float frac;
++
++				frac = (float)(((ent->s.pos.trDuration / 50) * 50 + 50) - ent->s.pos.trDuration) / (float)(ent->s.pos.trDuration);
++
++				if (frac < 1) {
++					VectorScale(ent->s.pos.trDelta, 1.0 / (1.0 + frac), ent->s.pos.trDelta);
++					ent->s.pos.trDuration = (ent->s.pos.trDuration / 50) * 50 + 50;
++				}
++			}
++			// set the goto flag, so we can keep processing the move until we reach the destination
++			ent->scriptStatus.scriptFlags |= SCFL_GOING_TO_MARKER;
++			return qtrue; // continue to next command
++		}
++
++	}
++
++	BG_EvaluateTrajectory(&ent->s.pos, level.time, ent->r.currentOrigin);
++	BG_EvaluateTrajectory(&ent->s.apos, level.time, ent->r.currentAngles);
++
++	script_linkentity(ent);
++	return qfalse;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Wait
++
++Syntax: wait <duration>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Wait(gentity_t *ent, char *params) {
++	char *pString, *token;
++	int duration;
++
++	// get the duration
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_Wait: wait must have a duration.\n");
++	}
++
++	duration = atoi(token);
++
++	return (ent->scriptStatus.scriptStackChangeTime + duration < level.time);
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Trigger
++
++Syntax: trigger <aiName/scriptName> <trigger>
++
++Calls the specified trigger for the given ai character or script entity.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Trigger(gentity_t *ent, char *params) {
++	gentity_t *trent;
++	char *pString, name[MAX_QPATH], trigger[MAX_QPATH], *token;
++	int oldId;
++
++	// get the cast name
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	Q_strncpyz(name, token, sizeof(name));
++
++	if (!name[0]) {
++		G_Error("G_ScriptAction_Trigger: trigger must have a name and an identifier.\n");
++	}
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	Q_strncpyz(trigger, token, sizeof(trigger));
++
++	if (!trigger[0]) {
++		G_Error("G_ScriptAction_Trigger: trigger must have a name and an identifier.\n");
++	}
++// Tobias FIXME
++	//trent = AICast_FindEntityForName(name);
++
++	//if (trent) { // we are triggering an AI
++	//			 //oldId = trent->scriptStatus.scriptId;
++	//	AICast_ScriptEvent(AICast_GetCastState(trent->s.number), "trigger", trigger);
++	//	return qtrue;
++	//}
++// Tobias END
++	// look for an entity
++	trent = G_Find(&g_entities[MAX_CLIENTS], FOFS(scriptName), name);
++
++	if (trent) {
++		oldId = trent->scriptStatus.scriptId;
++		G_Script_ScriptEvent(trent, "trigger", trigger);
++		// if the script changed, return false so we don't muck with it's variables
++		return ((trent != ent) || (oldId == trent->scriptStatus.scriptId));
++	}
++
++	G_Printf("G_ScriptAction_Trigger: trigger has unknown name: %s.\n", name);
++	return qfalse; // shutup the compiler
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_PlaySound
++
++Syntax: playsound <soundname OR scriptname> [LOOPING]
++
++Currently only allows playing on the VOICE channel, unless you use a sound script.
++Use the optional LOOPING paramater to attach the sound to the entities looping channel.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_PlaySound(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char sound[MAX_QPATH];
++
++	if (!params) {
++		G_Error("G_ScriptAction_PlaySound: syntax error\n\nplaysound <soundname OR scriptname>.\n");
++	}
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	Q_strncpyz(sound, token, sizeof(sound));
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0] || Q_strcasecmp(token, "looping")) {
++		G_AddEvent(ent, EV_GENERAL_SOUND, G_SoundIndex(sound));
++	} else { // looping channel
++		ent->s.loopSound = G_SoundIndex(sound);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MusicStart
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MusicStart(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cvarName[MAX_QPATH];
++	int fadeupTime = 0;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MusicStart: syntax: mu_start <musicfile> <fadeuptime>.");
++	}
++
++	Q_strncpyz(cvarName, token, sizeof(cvarName));
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (token[0]) {
++		fadeupTime = atoi(token);
++	}
++
++	trap_SendServerCommand(-1, va("mu_start %s %d", cvarName, fadeupTime));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MusicPlay
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MusicPlay(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cvarName[MAX_QPATH];
++	int fadeupTime = 0;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MusicPlay: syntax: mu_play <musicfile> [fadeup time].");
++	}
++
++	Q_strncpyz(cvarName, token, sizeof(cvarName));
++	trap_SendServerCommand(-1, va("mu_play %s %d", cvarName, fadeupTime));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MusicStop
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MusicStop(gentity_t *ent, char *params) {
++	char *pString, *token;
++	int fadeoutTime = 0;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (token[0]) {
++		fadeoutTime = atoi(token);
++	}
++
++	trap_SendServerCommand(-1, va("mu_stop %i\n", fadeoutTime));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MusicFade
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MusicFade(gentity_t *ent, char *params) {
++	char *pString, *token;
++	float targetvol;
++	int fadetime;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MusicFade: syntax: mu_fade <targetvol> <fadetime>.");
++	}
++
++	targetvol = atof(token);
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MusicFade: syntax: mu_fade <targetvol> <fadetime>.");
++	}
++
++	fadetime = atoi(token);
++
++	trap_SendServerCommand(-1, va("mu_fade %f %i\n", targetvol, fadetime));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MusicQueue
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MusicQueue(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cvarName[MAX_QPATH];
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MusicQueue: syntax: mu_queue <musicfile>.");
++	}
++
++	Q_strncpyz(cvarName, token, sizeof(cvarName));
++	trap_SetConfigstring(CS_MUSIC_QUEUE, cvarName);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_PlayAnim
++
++Syntax: playanim <startframe> <endframe> [looping <FOREVER/duration>] [rate <FPS>]
++
++NOTE: all source animations must be at 20fps.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_PlayAnim(gentity_t *ent, char *params) {
++	char *pString, *token, tokens[2][MAX_QPATH];
++	int i, endtime = 0;
++	qboolean looping = qfalse, forever = qfalse;
++	int startframe, endframe, idealframe;
++	int rate = 20;
++
++	if ((ent->scriptStatus.scriptFlags & SCFL_ANIMATING) && (ent->scriptStatus.scriptStackChangeTime == level.time)) {
++		// this is a new call, so cancel the previous animation
++		ent->scriptStatus.scriptFlags &= ~SCFL_ANIMATING;
++	}
++
++	pString = params;
++
++	for (i = 0; i < 2; i++) {
++		token = COM_ParseExt(&pString, qfalse);
++
++		if (!token[0]) {
++			G_Printf("G_ScriptAction_PlayAnim: syntax error\n\nplayanim <startframe> <endframe> [LOOPING <duration>].\n");
++			return qtrue;
++		} else {
++			Q_strncpyz(tokens[i], token, sizeof(tokens[i]));
++		}
++	}
++
++	startframe = atoi(tokens[0]);
++	endframe = atoi(tokens[1]);
++	// check for optional parameters
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (token[0]) {
++		if (!Q_strcasecmp(token, "looping")) {
++			looping = qtrue;
++			token = COM_ParseExt(&pString, qfalse);
++
++			if (!token[0]) {
++				G_Printf("G_ScriptAction_PlayAnim: syntax error\n\nplayanim <startframe> <endframe> [LOOPING <duration>].\n");
++				return qtrue;
++			}
++
++			if (!Q_strcasecmp(token, "untilreachmarker")) {
++				if (level.time < ent->s.pos.trTime + ent->s.pos.trDuration) {
++					endtime = level.time + 100;
++				} else {
++					endtime = 0;
++				}
++			} else if (!Q_strcasecmp(token, "forever")) {
++				ent->scriptStatus.animatingParams = params;
++				ent->scriptStatus.scriptFlags |= SCFL_ANIMATING;
++				endtime = level.time + 100; // we don't care when it ends, since we are going forever!
++				forever = qtrue;
++			} else {
++				endtime = ent->scriptStatus.scriptStackChangeTime + atoi(token);
++			}
++
++			token = COM_ParseExt(&pString, qfalse);
++		}
++
++		if (token[0] && !Q_strcasecmp(token, "rate")) {
++			token = COM_ParseExt(&pString, qfalse);
++
++			if (!token[0]) {
++				G_Error("G_ScriptAction_PlayAnim: playanim has RATE parameter without an actual rate specified.");
++			}
++
++			rate = atoi(token);
++		}
++
++		if (!looping) {
++			endtime = ent->scriptStatus.scriptStackChangeTime + ((endframe - startframe) * (1000 / 20));
++		}
++	}
++
++	idealframe = startframe + (int)floor((float)(level.time - ent->scriptStatus.scriptStackChangeTime) / (1000.0 / (float)rate));
++
++	if (looping) {
++		ent->s.frame = startframe + (idealframe - startframe) % (endframe - startframe);
++		ent->s.eFlags |= EF_MOVER_ANIMATE;
++	} else {
++		if (idealframe > endframe) {
++			ent->s.frame = endframe;
++			ent->s.eFlags &= ~EF_MOVER_ANIMATE; // stop interpolation, since we have gone passed the endframe
++		} else {
++			ent->s.frame = idealframe;
++			ent->s.eFlags |= EF_MOVER_ANIMATE;
++		}
++	}
++
++	if (forever) {
++		ent->s.eFlags |= EF_MOVER_ANIMATE;
++		return qtrue; // continue to the next command
++	}
++
++	if (endtime <= level.time) {
++		ent->s.eFlags &= ~EF_MOVER_ANIMATE; // stop animating
++		return qtrue;
++	} else {
++		return qfalse;
++	}
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_RemoveEntity
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_RemoveEntity(gentity_t *ent, char *params) {
++	gentity_t *removeent;
++
++	if (!params || !params[0]) {
++		G_Error("G_ScriptAction_RemoveEntity: removeentity without targetname.\n");
++	}
++	// find this targetname
++	removeent = G_Find(NULL, FOFS(model), params);
++	/*
++	if (!removeent) {
++		G_Printf("Remove entity 2.\n");
++		// check for ainame here too since some logic has moved to game_manager
++		removeent = G_Find(NULL, FOFS(aiName), params);
++
++		if (!removeent || !removeent->client) {
++			G_Printf(S_COLOR_RED "G_ScriptAction_RemoveEntity: removeentity cannot find targetname \"%s\".\n", params);
++			return qtrue; // need to return true here or it keeps getting called every frame.
++		}
++	}
++	*/
++	trap_UnlinkEntity(removeent);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_AlertEntity
++
++Syntax: alertentity <targetname>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_AlertEntity(gentity_t *ent, char *params) {
++	gentity_t *alertent;
++
++	if (!params || !params[0]) {
++		G_Error("G_ScriptAction_AlertEntity: alertentity without targetname.\n");
++	}
++	// find this targetname
++	alertent = G_Find(NULL, FOFS(targetname), params);
++
++	if (!alertent) {
++		// check for ainame here too since some logic has moved to game_manager
++		alertent = G_Find(NULL, FOFS(aiName), params);
++
++		if (!alertent || !alertent->client) {
++			G_Printf(S_COLOR_RED "G_ScriptAction_AlertEntity: alertentity cannot find targetname \"%s\".\n", params);
++			return qtrue; // need to return true here or it keeps getting called every frame.
++		}
++	}
++
++	if (alertent->client) {
++		// call this entity's AlertEntity function
++		//if (!alertent->AIScript_AlertEntity) {
++		//	G_Error("G_ScriptAction_AlertEntity: alertentity \"%s\" (classname = %s) doesn't have an \"AIScript_AlertEntity\" function.\n", params, alertent->classname);
++		//}
++
++		//alertent->AIScript_AlertEntity(alertent);
++	} else {
++		if (!alertent->use) {
++			G_Error("G_ScriptAction_AlertEntity: alertentity \"%s\" (classname = %s) doesn't have a \"use\" function.\n", params, alertent->classname);
++		}
++
++		alertent->use(alertent, NULL, NULL);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Accum
++
++Syntax: accum <buffer_index> <command> <paramater>
++
++Commands:
++
++	accum <n> inc <m>
++	accum <n> abort_if_less_than <m>
++	accum <n> abort_if_greater_than <m>
++	accum <n> abort_if_not_equal <m>
++	accum <n> abort_if_equal <m>
++	accum <n> set <m>
++	accum <n> random <m>
++	accum <n> bitset <m>
++	accum <n> bitreset <m>
++	accum <n> abort_if_bitset <m>
++	accum <n> abort_if_not_bitset <m>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Accum(gentity_t *ent, char *params) {
++	char *pString, *token, lastToken[MAX_QPATH];
++	int bufferIndex;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_Accum: accum without a buffer index.\n");
++	}
++
++	bufferIndex = atoi(token);
++
++	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
++		G_Error("G_ScriptAction_Accum: accum buffer is outside range (0 - %i).\n", G_MAX_SCRIPT_ACCUM_BUFFERS);
++	}
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_Accum: accum without a command.\n");
++	}
++
++	Q_strncpyz(lastToken, token, sizeof(lastToken));
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!Q_stricmp(lastToken, "inc")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		ent->scriptAccumBuffer[bufferIndex] += atoi(token);
++	} else if (!Q_stricmp(lastToken, "abort_if_less_than")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (ent->scriptAccumBuffer[bufferIndex] < atoi(token)) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "abort_if_greater_than")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (ent->scriptAccumBuffer[bufferIndex] > atoi(token)) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "abort_if_not_equal")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (ent->scriptAccumBuffer[bufferIndex] != atoi(token)) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "abort_if_equal")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (ent->scriptAccumBuffer[bufferIndex] == atoi(token)) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "bitset")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		ent->scriptAccumBuffer[bufferIndex] |= (1 << atoi(token));
++	} else if (!Q_stricmp(lastToken, "bitreset")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		ent->scriptAccumBuffer[bufferIndex] &= ~(1 << atoi(token));
++	} else if (!Q_stricmp(lastToken, "abort_if_bitset")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (ent->scriptAccumBuffer[bufferIndex] & (1 << atoi(token))) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "abort_if_not_bitset")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		if (!(ent->scriptAccumBuffer[bufferIndex] & (1 << atoi(token)))) {
++			// abort the current script
++			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
++		}
++	} else if (!Q_stricmp(lastToken, "set")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		ent->scriptAccumBuffer[bufferIndex] = atoi(token);
++	} else if (!Q_stricmp(lastToken, "random")) {
++		if (!token[0]) {
++			G_Error("G_ScriptAction_Accum: accum %s requires a parameter.\n", lastToken);
++		}
++
++		ent->scriptAccumBuffer[bufferIndex] = rand() % atoi(token);
++	} else {
++		G_Error("G_ScriptAction_Accum: accum: \"%s\": unknown command.\n", params);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MissionFailed
++
++Syntax: missionfailed
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MissionFailed(gentity_t *ent, char *params) {
++	char *pString, *token;
++	int time = 6, mof = 0;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse); // time
++
++	if (token && token[0]) {
++		time = atoi(token);
++	}
++
++	token = COM_ParseExt(&pString, qfalse); // mof (means of failure)
++
++	if (token && token[0]) {
++		mof = atoi(token);
++	}
++	// play mission fail music
++	trap_SendServerCommand(-1, "mu_play sound/music/l_failed_1.wav 0\n");
++	trap_SetConfigstring(CS_MUSIC_QUEUE, ""); // clear queue so it'll be quiet after hit
++	trap_SendServerCommand(-1, va("snd_fade 0 %d", time * 1000));
++
++	if (mof < 0) {
++		mof = 0;
++	}
++#ifdef LOCALISATION
++	if (mof == 1) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nYou Killed a Civilian");
++	} else if (mof == 2) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nYou Killed a Kreisau Agent");
++	} else if (mof == 3) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nYou Killed Kessler");
++	} else if (mof == 4) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nYou Killed Karl");
++	} else if (mof == 5) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nYou Have Been Detected");
++	} else if (mof == 6) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nRocket Launched");
++	} else if (mof == 7) {
++		trap_SendServerCommand(-1, "cp Mission Failed\nThe Scientist Has Been Killed");
++	}
++#else
++	trap_SendServerCommand(-1, va("cp missionfail%d", mof));
++#endif
++	trap_Cmd_ExecuteText(EXEC_INSERT, va("map_restart %d\n", time));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectivesNeeded
++
++Syntax: objectivesneeded <num_objectives>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectivesNeeded(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectivesNeeded: objectivesneeded requires a num_objectives identifier.\n");
++	}
++
++	level.numObjectives = atoi(token);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveMet
++
++Syntax: objectivemet <num_objective>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveMet(gentity_t *ent, char *params) {
++	vmCvar_t cvar;
++	int lvl;
++	char *pString, *token;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveMet: objectivemet requires a num_objective identifier.\n");
++	}
++
++	lvl = atoi(token);
++	// if you've already got it, just return. don't need to set 'yougotmail'
++	if (level.missionObjectives & (1 << (lvl - 1))) {
++		return qtrue;
++	}
++
++	level.missionObjectives |= (1 << (lvl - 1)); // make this bitwise
++	//set g_objective<n> cvar
++	trap_Cvar_Register(&cvar, va("g_objective%i", lvl), "1", CVAR_ROM|CVAR_SYSTEMINFO);
++	// set it to make sure
++	trap_Cvar_Set(va("g_objective%i", lvl), "1");
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (token[0]) {
++		if (Q_strcasecmp(token,"nodisplay")) { // unknown command
++			G_Error("G_ScriptAction_ObjectiveMet: missionsuccess with unknown parameter: %s.\n", token);
++		}
++	} else { // show on-screen information
++		if (g_gametype.integer == GT_SINGLE_PLAYER) {
++			trap_Cvar_SetValue("cg_youGotMail", 2); // set flag to draw icon
++		} else {
++			trap_SendServerCommand(-1, "yougotmail 2\n");
++		}
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_NumSecrets
++
++Syntax: numsecrets <num_secrets>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_NumSecrets(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_NumSecrets: numsecrets requires a num_secrets identifier.\n");
++	}
++
++	level.numSecrets = atoi(token);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MissionSuccess
++
++Syntax: missionsuccess <mission_level>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MissionSuccess(gentity_t *ent, char *params) {
++	gentity_t *player;
++	vmCvar_t cvar;
++	int lvl;
++	char *pString, *token;
++
++	pString = params;
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_MissionSuccess: missionsuccess requires a mission_level identifier.\n");
++	}
++	// only get blue players
++	player = GetFirstValidBluePlayer(qtrue);
++
++	if (!player) {
++		return qfalse; // hold the script here
++	}
++
++	lvl = atoi(token);
++
++	if (g_gametype.integer == GT_SINGLE_PLAYER) {
++		// if you've already got it, just return. don't need to set 'yougotmail'
++		if (player->missionObjectives & (1 << (lvl - 1))) {
++			return qtrue;
++		}
++
++		player->missionObjectives |= (1 << (lvl - 1)); // make this bitwise
++	} else {
++		// if you've already got it, just return. don't need to set 'yougotmail'
++		if (level.missionObjectives & (1 << (lvl - 1))) {
++			return qtrue;
++		}
++
++		level.missionObjectives |= (1 << (lvl - 1)); // make this bitwise
++	}
++	// set g_objective<n> cvar
++	trap_Cvar_Register(&cvar, va("g_objective%i", lvl), "1", CVAR_ROM);
++	// set it to make sure
++	trap_Cvar_Set(va("g_objective%i", lvl), "1");
++
++	token = COM_ParseExt(&pString, qfalse);
++
++	if (token[0]) {
++		if (Q_strcasecmp(token,"nodisplay")) { // unknown command
++			G_Error("G_ScriptAction_MissionSuccess: missionsuccess with unknown parameter: %s.\n", token);
++		}
++	} else { // show on-screen information
++		if (g_gametype.integer == GT_SINGLE_PLAYER) {
++			trap_Cvar_SetValue("cg_youGotMail", 2); // set flag to draw icon
++		} else {
++			trap_SendServerCommand(-1, "yougotmail 2\n");
++		}
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Print
++
++Syntax: print <text>
++
++Mostly for debugging purposes.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Print(gentity_t *ent, char *params) {
++
++	if (!params || !params[0]) {
++		G_Error("G_ScriptAction_Print: print requires some text.\n");
++	}
++
++	G_Printf("(G_Script) %s-> %s\n", ent->scriptName, params);
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_FaceAngles
++
++Syntax: faceangles <pitch> <yaw> <roll> <duration/GOTOTIME> [ACCEL/DECCEL]
++
++The entity will face the given angles, taking <duration> to get there. If the GOTOTIME is given instead of a timed duration, the
++duration calculated from the last gotomarker command will be used instead.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_FaceAngles(gentity_t *ent, char *params) {
++	char *pString, *token;
++	int duration, i;
++	vec3_t diff;
++	vec3_t angles;
++	int trType = TR_LINEAR_STOP;
++
++	if (!params || !params[0]) {
++		G_Error("G_ScriptAction_FaceAngles: syntax: faceangles <pitch> <yaw> <roll> <duration/GOTOTIME>.\n");
++	}
++
++	if (ent->scriptStatus.scriptStackChangeTime == level.time) {
++		pString = params;
++
++		for (i = 0; i < 3; i++) {
++			token = COM_Parse(&pString);
++
++			if (!token[0]) {
++				G_Error("G_ScriptAction_FaceAngles: syntax: faceangles <pitch> <yaw> <roll> <duration/GOTOTIME>.\n");
++			}
++
++			angles[i] = atoi(token);
++		}
++
++		token = COM_Parse(&pString);
++
++		if (!token[0]) {
++			G_Error("G_ScriptAction_FaceAngles: faceangles requires a <pitch> <yaw> <roll> <duration/GOTOTIME>.\n");
++		}
++
++		if (!Q_strcasecmp(token, "gototime")) {
++			duration = ent->s.pos.trDuration;
++		} else {
++			duration = atoi(token);
++		}
++
++		token = COM_Parse(&pString);
++
++		if (token && token[0]) {
++			if (!Q_strcasecmp(token, "accel")) {
++				trType = TR_ACCELERATE;
++			}
++
++			if (!Q_strcasecmp(token, "deccel")) {
++				trType = TR_DECCELERATE;
++			}
++		}
++
++		for (i = 0; i < 3; i++) {
++			diff[i] = AngleDifference(angles[i], ent->s.angles[i]);
++
++			while (diff[i] > 180) {
++				diff[i] -= 360;
++			}
++
++			while (diff[i] < -180) {
++				diff[i] += 360;
++			}
++		}
++
++		VectorCopy(ent->s.angles, ent->s.apos.trBase);
++
++		if (duration) {
++			VectorScale(diff, 1000.0 / (float)duration, ent->s.apos.trDelta);
++		} else {
++			VectorClear(ent->s.apos.trDelta);
++		}
++
++		ent->s.apos.trDuration = duration;
++		ent->s.apos.trTime = level.time;
++		ent->s.apos.trType = TR_LINEAR_STOP;
++
++		if (trType != TR_LINEAR_STOP) { // accel/deccel logic
++			// calc the speed from duration and start/end delta
++			for (i = 0; i < 3; i++) {
++				ent->s.apos.trDelta[i] = 2.0 * 1000.0 * diff[i] / (float)duration;
++			}
++
++			ent->s.apos.trType = trType;
++		}
++	} else if (ent->s.apos.trTime + ent->s.apos.trDuration <= level.time) {
++		// finished turning
++		BG_EvaluateTrajectory(&ent->s.apos, ent->s.apos.trTime + ent->s.apos.trDuration, ent->s.angles);
++		VectorCopy(ent->s.angles, ent->s.apos.trBase);
++		VectorCopy(ent->s.angles, ent->r.currentAngles);
++
++		ent->s.apos.trTime = level.time;
++		ent->s.apos.trDuration = 0;
++		ent->s.apos.trType = TR_STATIONARY;
++
++		VectorClear(ent->s.apos.trDelta);
++
++		script_linkentity(ent);
++		return qtrue;
++	}
++
++	BG_EvaluateTrajectory(&ent->s.apos, level.time, ent->r.currentAngles);
++
++	script_linkentity(ent);
++	return qfalse;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ResetScript
++
++Causes any currently running scripts to abort, in favour of the current script.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ResetScript(gentity_t *ent, char *params) {
++
++	if (level.time == ent->scriptStatus.scriptStackChangeTime) {
++		return qfalse;
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_TagConnect
++
++Syntax: attachtotag <targetname/scriptname> <tagname>
++
++Connect this entity onto the tag of another entity.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_TagConnect(gentity_t *ent, char *params) {
++	char *pString, *token;
++	gentity_t *parent;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_TagConnect: syntax: attachtotag <targetname> <tagname>.\n");
++	}
++
++	parent = G_Find(NULL, FOFS(targetname), token);
++
++	if (!parent) {
++		parent = G_Find(NULL, FOFS(scriptName), token);
++
++		if (!parent) {
++			G_Error("G_ScriptAction_TagConnect: unable to find entity with targetname \"%s\".\n", token);
++		}
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_TagConnect: syntax: attachtotag <targetname> <tagname>.\n");
++	}
++
++	ent->tagParent = parent;
++	ent->tagName = G_Alloc(strlen(token) + 1);
++
++	Q_strncpyz(ent->tagName, token, strlen(token) + 1);
++	G_ProcessTagConnect(ent, qtrue);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Halt
++
++Syntax: halt
++
++Stop moving.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Halt(gentity_t *ent, char *params) {
++
++	if (level.time == ent->scriptStatus.scriptStackChangeTime) {
++		ent->scriptStatus.scriptFlags &= ~SCFL_GOING_TO_MARKER;
++		// stop the angles
++		BG_EvaluateTrajectory(&ent->s.apos, level.time, ent->s.angles);
++		VectorCopy(ent->s.angles, ent->s.apos.trBase);
++		VectorCopy(ent->s.angles, ent->r.currentAngles);
++
++		ent->s.apos.trTime = level.time;
++		ent->s.apos.trDuration = 0;
++		ent->s.apos.trType = TR_STATIONARY;
++
++		VectorClear(ent->s.apos.trDelta);
++		// stop moving
++		BG_EvaluateTrajectory(&ent->s.pos, level.time, ent->s.origin);
++		VectorCopy(ent->s.origin, ent->s.pos.trBase);
++		VectorCopy(ent->s.origin, ent->r.currentOrigin);
++
++		ent->s.pos.trTime = level.time;
++		ent->s.pos.trDuration = 0;
++		ent->s.pos.trType = TR_STATIONARY;
++
++		VectorClear(ent->s.pos.trDelta);
++		script_linkentity(ent);
++		return qfalse; // kill any currently running script
++	} else {
++		return qtrue;
++	}
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_StopSound
++
++Syntax: stopsound
++
++Stops any looping sounds for this entity.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_StopSound(gentity_t *ent, char *params) {
++	ent->s.loopSound = 0;
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptStartCam
++
++Syntax: startcam<black> <camera filename>
++=======================================================================================================================================
++*/
++qboolean G_ScriptStartCam(gentity_t *ent, char *params, qboolean black) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptStartCam: filename parameter required.\n");
++	}
++	// turn off noclient flag
++	ent->r.svFlags &= ~SVF_NOCLIENT;
++	// issue a start camera command to the clients
++	trap_SendServerCommand(-1, va("startCam %s", token));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_StartCam
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_StartCam(gentity_t *ent, char *params) {
++	return G_ScriptStartCam(ent, params, qfalse);
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_StartCamBlack
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_StartCamBlack(gentity_t *ent, char *params) {
++	return G_ScriptStartCam(ent, params, qtrue);
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_EntityScriptName
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_EntityScriptName(gentity_t *ent, char *params) {
++
++	trap_Cvar_Set("g_scriptName", params);
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_AIScriptName
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_AIScriptName(gentity_t *ent, char *params) {
++
++	trap_Cvar_Set("ai_scriptName", params);
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_MapDescription
++
++Syntax: wm_mapdescription <"long description of map in quotes">
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_MapDescription(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	trap_GetConfigstring(CS_MULTI_MAPDESC, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(cs, token)) {
++		trap_SetConfigstring(CS_MULTI_MAPDESC, token);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_OverviewImage
++
++Syntax: wm_mapdescription <shadername>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_OverviewImage(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_OverviewImage: shader name required.\n");
++	}
++
++	trap_GetConfigstring(CS_MULTI_INFO, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "overviewimage"), token)) {
++		Info_SetValueForKey(cs, "overviewimage", token);
++		trap_SetConfigstring(CS_MULTI_INFO, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_BlueRespawntime
++
++Syntax: wm_blue_respawntime <seconds>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_BlueRespawntime(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_BlueRespawntime: time parameter required.\n");
++	}
++
++	if (g_userBlueRespawnTime.integer) {
++		trap_Cvar_Set("g_bluelimbotime", va("%i", g_userBlueRespawnTime.integer * 1000));
++	} else {
++		trap_Cvar_Set("g_bluelimbotime", va("%s000", token));
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_RedRespawntime
++
++Syntax: wm_red_respawntime <seconds>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_RedRespawntime(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_RedRespawntime: time parameter required.\n");
++	}
++
++	if (g_userRedRespawnTime.integer) {
++		trap_Cvar_Set("g_redlimbotime", va("%i", g_userRedRespawnTime.integer * 1000));
++	} else {
++		trap_Cvar_Set("g_redlimbotime", va("%s000", token));
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_NumberofObjectives
++
++Syntax: wm_number_of_objectives <number>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_NumberofObjectives(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++
++	int num;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_NumberofObjectives: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_NumberofObjectives: Invalid number of objectives.\n");
++	}
++
++	trap_GetConfigstring(CS_MULTI_INFO, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "numobjectives"), token)) {
++		Info_SetValueForKey(cs, "numobjectives", token);
++		trap_SetConfigstring(CS_MULTI_INFO, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveBlueDesc
++
++Syntax: wm_objective_blue_desc <objective_number "Description in quotes">
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveBlueDesc(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveBlueDesc: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_ObjectiveBlueDesc: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveBlueDesc: description parameter required.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "blue_desc"), token)) {
++		Info_SetValueForKey(cs, "blue_desc", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveShortBlueDesc
++
++Syntax: wm_objective_short_blue_desc <objective_number "Description in quotes">
++
++This is the short, one-line description shown in scoreboard.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveShortBlueDesc(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveShortBlueDesc: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_ObjectiveShortBlueDesc: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveShortBlueDesc: description parameter required.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "short_blue_desc"), token)) {
++		Info_SetValueForKey(cs, "short_blue_desc", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveRedDesc
++
++Syntax: wm_objective_red_desc <objective_number "Description in quotes">
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveRedDesc(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveRedDesc: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_ObjectiveRedDesc: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveRedDesc: description parameter required.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "red_desc"), token)) {
++		Info_SetValueForKey(cs, "red_desc", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveShortRedDesc
++
++Syntax: wm_objective_short_red_desc <objective_number "Description in quotes">
++
++This is the short, one-line description shown in scoreboard.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveShortRedDesc(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveShortRedDesc: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_ObjectiveShortRedDesc: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveShortRedDesc: description parameter required.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "short_red_desc"), token)) {
++		Info_SetValueForKey(cs, "short_red_desc", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_ObjectiveImage
++
++Syntax: wm_objective_image <objective_number> <shadername>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_ObjectiveImage(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveImage: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_ObjectiveImage: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_ObjectiveImage: shadername parameter required.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "image"), token)) {
++		Info_SetValueForKey(cs, "image", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_SetWinner
++
++Syntax: wm_setwinner <team>
++
++Team: 0 == AXIS, 1 == ALLIED
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_SetWinner(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_SetWinner: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < -1 || num > 1) {
++		G_Error("G_ScriptAction_SetWinner: Invalid team number.\n");
++	}
++
++	trap_GetConfigstring(CS_MULTI_INFO, cs, sizeof(cs));
++	Info_SetValueForKey(cs, "winner", token);
++	trap_SetConfigstring(CS_MULTI_INFO, cs);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_SetObjectiveStatus
++
++Syntax: wm_set_objective_status <status>
++
++Status: -1 == neutral, 0 == held by blue, 1 == held by red
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_SetObjectiveStatus(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num, status, cs_obj = CS_MULTI_OBJECTIVE;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_SetObjectiveStatus: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 1 || num > MAX_OBJECTIVES) {
++		G_Error("G_ScriptAction_SetObjectiveStatus: Invalid objective number.\n");
++	}
++
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_SetObjectiveStatus: status parameter required.\n");
++	}
++
++	status = atoi(token);
++
++	if (status < -1 || status > 1) {
++		G_Error("G_ScriptAction_SetObjectiveStatus: Invalid status number.\n");
++	}
++	// move to correct objective config string
++	cs_obj += (num - 1);
++
++	trap_GetConfigstring(cs_obj, cs, sizeof(cs));
++	// compare before setting, so we don't spam the clients during map_restart
++	if (Q_stricmp(Info_ValueForKey(cs, "status"), token)) {
++		Info_SetValueForKey(cs, "status", token);
++		trap_SetConfigstring(cs_obj, cs);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_SetDefendingTeam
++
++Syntax: wm_set_objective_status <status>
++
++Status: 0 == blue, 1 == red
++
++Sets defending team for stopwatch mode.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_SetDefendingTeam(gentity_t *ent, char *params) {
++	char *pString, *token;
++	char cs[MAX_STRING_CHARS];
++	int num;
++
++	if (level.intermissiontime) {
++		return qtrue;
++	}
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_SetDefendingTeam: number parameter required.\n");
++	}
++
++	num = atoi(token);
++
++	if (num < 0 || num > 1) {
++		G_Error("G_ScriptAction_SetDefendingTeam: Invalid team number.\n");
++	}
++
++	trap_GetConfigstring(CS_MULTI_INFO, cs, sizeof(cs));
++	Info_SetValueForKey(cs, "defender", token);
++	trap_SetConfigstring(CS_MULTI_INFO, cs);
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_Announce
++
++Syntax: wm_announce <"text to send to all clients">
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_Announce(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_Announce: statement parameter required.\n");
++	}
++
++	trap_SendServerCommand(-1, va("cp \"%s\"", token));
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_SetRoundTimelimit
++
++Syntax: wm_set_round_timelimit <number>
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_SetRoundTimelimit(gentity_t *ent, char *params) {
++	char *pString, *token;
++
++	pString = params;
++	token = COM_Parse(&pString);
++
++	if (!token[0]) {
++		G_Error("G_ScriptAction_SetRoundTimelimit: number parameter required.\n");
++	}
++
++	if (g_timelimit.integer) {
++		trap_Cvar_Set("timelimit", va("%i", g_timelimit.integer));
++	} else {
++		trap_Cvar_Set("timelimit", token);
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_BackupScript
++
++Backs up the current state of the scripting, so we can restore it later and resume were we left off (useful if player gets in our way).
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_BackupScript(gentity_t *ent, char *params) {
++
++	// if we're not at the top of an event, then something is _probably_ wrong with the script
++//	if (ent->scriptStatus.scriptStackHead > 0) {
++//		G_Printf("ENTITY SCRIPT: WARNING: backupscript not at start of event, possibly harmful.\n");
++//	}
++
++	if (!(ent->scriptStatus.scriptFlags & SCFL_WAITING_RESTORE)) {
++		// if we are moving, stop here
++		if (ent->scriptStatus.scriptFlags & SCFL_GOING_TO_MARKER) {
++			ent->scriptStatus.scriptFlags &= ~SCFL_GOING_TO_MARKER;
++			// set the angles at the destination
++			BG_EvaluateTrajectory(&ent->s.apos, level.time, ent->s.angles);
++			VectorCopy(ent->s.angles, ent->s.apos.trBase);
++			VectorCopy(ent->s.angles, ent->r.currentAngles);
++
++			ent->s.apos.trTime = level.time;
++			ent->s.apos.trDuration = 0;
++			ent->s.apos.trType = TR_STATIONARY;
++
++			VectorClear(ent->s.apos.trDelta);
++			// stop moving
++			BG_EvaluateTrajectory(&ent->s.pos, level.time, ent->s.origin);
++			VectorCopy(ent->s.origin, ent->s.pos.trBase);
++			VectorCopy(ent->s.origin, ent->r.currentOrigin);
++
++			ent->s.pos.trTime = level.time;
++			ent->s.pos.trDuration = 0;
++			ent->s.pos.trType = TR_STATIONARY;
++
++			VectorClear(ent->s.pos.trDelta);
++			script_linkentity(ent);
++		}
++
++		ent->scriptStatusBackup = ent->scriptStatusCurrent;
++		ent->scriptStatus.scriptFlags |= SCFL_WAITING_RESTORE;
++	}
++
++	return qtrue;
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_RestoreScript
++
++Restores the state of the scripting to the previous backup.
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_RestoreScript(gentity_t *ent, char *params) {
++
++	ent->scriptStatus = ent->scriptStatusBackup;
++	ent->scriptStatus.scriptStackChangeTime = level.time; // start moves again
++	return qfalse; // dont continue scripting until next frame
++}
++
++/*
++=======================================================================================================================================
++G_ScriptAction_SetHealth
++=======================================================================================================================================
++*/
++qboolean G_ScriptAction_SetHealth(gentity_t *ent, char *params) {
++
++	if (!params || !params[0]) {
++		G_Error("G_ScriptAction_SetHealth: sethealth requires a health value.\n");
++	}
++
++	ent->health = atoi(params);
++	return qtrue;
++}
+Index: code/game/g_spawn.c
+===================================================================
+--- code/game/g_spawn.c	(revision 1320)
++++ code/game/g_spawn.c	(working copy)
+@@ -131,6 +131,7 @@
+ 	{"color", FOFS(dl_color), F_VECTOR}, // color of the light
+ 	{"stylestring", FOFS(dl_stylestring), F_STRING}, // user defined stylestring "fffndlsfaaaaaa" for example
+ 	{"shader", FOFS(dl_shader), F_STRING}, // shader to use for a target_effect or dlight
++	{"scriptName", FOFS(scriptName), F_STRING},
+ 	{NULL}
+ };
+ 
+@@ -169,6 +170,7 @@
+ void SP_target_position(gentity_t *ent);
+ void SP_target_location(gentity_t *ent);
+ void SP_target_push(gentity_t *ent);
++void SP_target_script_trigger(gentity_t *ent);
+ void SP_light(gentity_t *self);
+ void SP_lightJunior(gentity_t *self);
+ void SP_info_null(gentity_t *self);
+@@ -196,6 +198,10 @@
+ void SP_dlight(gentity_t *ent);
+ void SP_corona(gentity_t *ent);
+ void SP_props_skyportal(gentity_t *ent);
++// scripting
++void SP_script_model_med(gentity_t *ent);
++void SP_script_mover(gentity_t *ent);
++void SP_script_multiplayer(gentity_t *ent);
+ 
+ spawn_t spawns[] = {
+ 	// info entities don't do anything at all, but provide positional information for things controlled by other processes
+@@ -237,6 +243,7 @@
+ 	{"target_position", SP_target_position},
+ 	{"target_location", SP_target_location},
+ 	{"target_push", SP_target_push},
++	{"target_script_trigger", SP_target_script_trigger},
+ 	{"light", SP_light},
+ 	{"lightJunior", SP_lightJunior},
+ 	{"path_corner", SP_path_corner},
+@@ -261,6 +268,10 @@
+ 	{"dlight", SP_dlight},
+ 	{"corona", SP_corona},
+ 	{"props_skyportal", SP_props_skyportal},
++	// scripting
++	{"script_model_med", SP_script_model_med},
++	{"script_mover", SP_script_mover},
++	{"script_multiplayer", SP_script_multiplayer},
+ 	{NULL, 0}
+ };
+ 
+@@ -291,6 +302,12 @@
+ 		if (!strcmp(s->name, ent->classname)) {
+ 			// found it
+ 			s->spawn(ent);
++			// entity scripting
++			if (ent->s.number >= MAX_CLIENTS && ent->scriptName) {
++				G_Script_ScriptParse(ent);
++				G_Script_ScriptEvent(ent, "spawn", "");
++			}
++
+ 			return qtrue;
+ 		}
+ 	}
+Index: code/game/g_target.c
+===================================================================
+--- code/game/g_target.c	(revision 1320)
++++ code/game/g_target.c	(working copy)
+@@ -567,3 +567,40 @@
+ 
+ 	G_SetOrigin(self, self->s.origin);
+ }
++
++/*
++=======================================================================================================================================
++Use_Target_Script_Trigger
++=======================================================================================================================================
++*/
++void Use_Target_Script_Trigger(gentity_t *ent, gentity_t *other, gentity_t *activator) {
++/* // Tobias FIXME
++	if (ent->aiName) {
++		// fairly certain it's activator always, but not 100% sure
++		if (!ScriptEventForPlayer(activator, "trigger", ent->target)) {
++			if (!ScriptEventForPlayer(other, "trigger", ent->target)) {
++				gentity_t *player = AICast_FindEntityForName("player");
++
++				if (player && !ScriptEventForPlayer(player, "trigger", ent->target)) {
++					G_Script_ScriptEvent(ent, "trigger", ent->target);
++				}
++			}
++		}
++	}
++
++	G_UseTargets(ent, other);
++*/
++}
++
++/*QUAKED target_script_trigger (1 .7 .2) (-8 -8 -8) (8 8 8)
++Must have an aiName.
++Must have a target.
++When used it will fire its targets.
++*/
++void SP_target_script_trigger(gentity_t *ent) {
++
++	G_SetOrigin(ent, ent->s.origin);
++
++	ent->s.eType = ET_GENERAL;
++	ent->use = Use_Target_Script_Trigger;
++}
+Index: code/game/g_utils.c
+===================================================================
+--- code/game/g_utils.c	(revision 1320)
++++ code/game/g_utils.c	(working copy)
+@@ -384,6 +384,8 @@
+ 	e->classname = "noclass";
+ 	e->s.number = e - g_entities;
+ 	e->r.ownerNum = ENTITYNUM_NONE;
++	// init scripting
++	e->scriptStatus.scriptEventIndex = -1;
+ }
+ 
+ /*
+@@ -626,6 +628,23 @@
+ 
+ /*
+ =======================================================================================================================================
++G_SetAngle
++=======================================================================================================================================
++*/
++void G_SetAngle(gentity_t *ent, vec3_t angle) {
++
++	VectorCopy(angle, ent->s.apos.trBase);
++
++	ent->s.apos.trType = TR_STATIONARY;
++	ent->s.apos.trTime = 0;
++	ent->s.apos.trDuration = 0;
++
++	VectorClear(ent->s.apos.trDelta);
++	VectorCopy(angle, ent->r.currentAngles);
++}
++
++/*
++=======================================================================================================================================
+ G_GetEntityPlayerState
+ =======================================================================================================================================
+ */
+@@ -800,6 +819,39 @@
+ 
+ /*
+ =======================================================================================================================================
++G_ProcessTagConnect
++=======================================================================================================================================
++*/
++void G_ProcessTagConnect(gentity_t *ent, qboolean clearAngles) {
++
++	if (!ent->tagName) {
++		G_Error("G_ProcessTagConnect: NULL ent->tagName\n");
++	}
++
++	if (!ent->tagParent) {
++		G_Error("G_ProcessTagConnect: NULL ent->tagParent\n");
++	}
++
++	G_FindConfigstringIndex(va("%i %i %s", ent->s.number, ent->tagParent->s.number, ent->tagName), CS_TAGCONNECTS, MAX_TAGCONNECTS, qtrue);
++
++	ent->s.eFlags |= EF_TAGCONNECT;
++
++	if (clearAngles) {
++		// clear out the angles so it always starts out facing the tag direction
++		VectorClear(ent->s.angles);
++		VectorCopy(ent->s.angles, ent->s.apos.trBase);
++
++		ent->s.apos.trTime = level.time;
++		ent->s.apos.trDuration = 0;
++		ent->s.apos.trType = TR_STATIONARY;
++
++		VectorClear(ent->s.apos.trDelta);
++		VectorClear(ent->r.currentAngles);
++	}
++}
++
++/*
++=======================================================================================================================================
+ DebugLine
+ 
+ Debug polygons only work when running a local game with r_debugSurface set to 2.
+@@ -835,3 +887,77 @@
+ 
+ 	return trap_DebugPolygonCreate(color, 4, points);
+ }
++
++/*
++=======================================================================================================================================
++IsPlayerEnt
++
++Returns whether or not the passed entity is a player.
++=======================================================================================================================================
++*/
++qboolean IsPlayerEnt(gentity_t *ent) {
++
++	if (ent&& ent->inuse && ent->client && ent->aiName && !(ent->r.svFlags & SVF_CASTAI) && !(ent->r.svFlags & SVF_BOT) && !Q_stricmp(ent->aiName, "player")) {
++		return qtrue;
++	}
++
++	return qfalse;
++}
++
++/*
++=======================================================================================================================================
++ScriptEventForPlayer
++
++Call script event if the passed in entity is a player.
++=======================================================================================================================================
++*/
++qboolean ScriptEventForPlayer( gentity_t *activator, char *eventStr, char *params) {
++
++	if (IsPlayerEnt(activator)) {
++		//AICast_ScriptEvent(AICast_GetCastState(activator->s.number), eventStr, params); // Tobias FIXME
++		return qtrue;
++	}
++
++	return qfalse;
++}
++
++/*
++=======================================================================================================================================
++GetFirstValidPlayer
++
++Returns the first valid player. For triggers/actions that are entity independent.
++=======================================================================================================================================
++*/
++gentity_t *GetFirstValidPlayer(qboolean checkHealth) {
++	gentity_t *trav;
++	int i;
++
++	for (trav = g_entities, i = 0; i < g_maxclients.integer; i++, trav++) {
++		if (!IsPlayerEnt(trav)) {
++			continue;
++		}
++
++		if (checkHealth && trav->health <= 0) {
++			continue;
++		}
++
++		return trav;
++	}
++
++	return NULL;
++}
++
++/*
++=======================================================================================================================================
++GetFirstValidBluePlayer
++=======================================================================================================================================
++*/
++gentity_t *GetFirstValidBluePlayer(qboolean checkHealth) {
++	gentity_t *entity = GetFirstValidPlayer(checkHealth);
++
++	if (entity && G_IsClientOnTeam(entity, TEAM_BLUE)) {
++		return entity;
++	}
++
++	return NULL;
++}
+Index: code/qcommon/msg.c
+===================================================================
+--- code/qcommon/msg.c	(revision 1320)
++++ code/qcommon/msg.c	(working copy)
+@@ -1005,6 +1005,8 @@
+ 	{NETF(modelindex), MODELINDEX_BITS},
+ 	{NETF(modelindex2), MODELINDEX_BITS},
+ 	{NETF(skinFraction), 0},
++	{NETF(aiChar), 8},
++	{NETF(aiState), 2},
+ 	{NETF(constantLight), 32},
+ 	{NETF(dl_intensity), 32},
+ 	{NETF(density), 10},
+@@ -1286,6 +1288,13 @@
+ 	{PSF(origin[0]), 0},
+ 	{PSF(origin[1]), 0},
+ 	{PSF(origin[2]), 0},
++	{PSF(mins[0]), 0},
++	{PSF(mins[1]), 0},
++	{PSF(mins[2]), 0},
++	{PSF(maxs[0]), 0},
++	{PSF(maxs[1]), 0},
++	{PSF(maxs[2]), 0},
++	{PSF(crouchMaxZ), 0},
+ 	{PSF(velocity[0]), 0},
+ 	{PSF(velocity[1]), 0},
+ 	{PSF(velocity[2]), 0},
+@@ -1318,6 +1327,9 @@
+ 	{PSF(viewangles[1]), 0},
+ 	{PSF(viewangles[2]), 0},
+ 	{PSF(viewheight), -8},
++	{PSF(crouchViewHeight), 0},
++	{PSF(standViewHeight), 0},
++	{PSF(deadViewHeight), 0},
+ 	{PSF(bobCycle), 8},
+ 	{PSF(damageEvent), 8},
+ 	{PSF(damageYaw), 8},
+@@ -1324,6 +1336,9 @@
+ 	{PSF(damagePitch), 8},
+ 	{PSF(damageCount), 8},
+ 	{PSF(tokens), 8},
++	{PSF(friction), 0},
++	{PSF(aiChar), 8},
++	{PSF(aiState), 2},
+ 	{PSF(jumppad_ent), GENTITYNUM_BITS},
+ 	{PSF(loopSound), 16},
+ 	{PSF(attractionPoint[0]), 0},
+Index: code/qcommon/q_shared.c
+===================================================================
+--- code/qcommon/q_shared.c	(revision 1320)
++++ code/qcommon/q_shared.c	(working copy)
+@@ -1280,6 +1280,49 @@
+ 
+ /*
+ =======================================================================================================================================
++Q_strncasecmp
++=======================================================================================================================================
++*/
++int Q_strncasecmp(const char *s1, const char *s2, int n) {
++	int c1, c2;
++
++	do {
++		c1 = *s1++;
++		c2 = *s2++;
++
++		if (!n--) {
++			return 0; // strings are equal until end point
++		}
++
++		if (c1 != c2) {
++			if (Q_islower(c1)) {
++				c1 -= ('a' - 'A');
++			}
++
++			if (Q_islower(c2)) {
++				c2 -= ('a' - 'A');
++			}
++
++			if (c1 != c2) {
++				return -1; // strings not equal
++			}
++		}
++	} while (c1);
++
++	return 0; // strings are equal
++}
++
++/*
++=======================================================================================================================================
++Q_strcasecmp
++=======================================================================================================================================
++*/
++int Q_strcasecmp(const char *s1, const char *s2) {
++	return Q_strncasecmp(s1, s2, 99999);
++}
++
++/*
++=======================================================================================================================================
+ va
+ 
+ Does a varargs printf into a temp buffer, so I don't need to have varargs versions of all text functions.
+Index: code/qcommon/q_shared.h
+===================================================================
+--- code/qcommon/q_shared.h	(revision 1320)
++++ code/qcommon/q_shared.h	(working copy)
+@@ -768,6 +768,8 @@
+ int Q_stricmp(const char *s1, const char *s2);
+ int Q_strncmp(const char *s1, const char *s2, int n);
+ int Q_stricmpn(const char *s1, const char *s2, int n);
++int Q_strncasecmp(const char *s1, const char *s2, int n);
++int Q_strcasecmp(const char *s1, const char *s2);
+ char *Q_strlwr(char *s1);
+ char *Q_strupr(char *s1);
+ const char *Q_stristr(const char *s, const char *find);
+@@ -1001,6 +1003,7 @@
+ #define MAX_SOUNDS 256 // this is sent over the net as 8 bits (in eventParm) so they cannot be blindly increased
+ 
+ #define MAX_CONFIGSTRINGS 2048 // Tobias DEBUG
++#define MAX_SPLINE_CONFIGSTRINGS 64
+ // these are the only configstrings that the system reserves, all the other ones are strictly for servergame to clientgame communication
+ #define CS_SERVERINFO 0 // an info string with all the serverinfo cvars
+ #define CS_SYSTEMINFO 1 // an info string for server system to client system configuration (timescale, etc.)
+@@ -1013,6 +1016,14 @@
+ 	char stringData[MAX_GAMESTATE_CHARS];
+ 	int dataCount;
+ } gameState_t;
++// shared by AI and animation scripting
++typedef enum {
++	AISTATE_RELAXED,
++	AISTATE_QUERY,
++	AISTATE_ALERT,
++	AISTATE_COMBAT,
++	MAX_AISTATES
++} aistateEnum_t;
+ // bit field limits
+ #define MAX_STATS 16
+ #define MAX_PERSISTANT 16
+@@ -1034,6 +1045,9 @@
+ 	int pm_type;
+ 	int pm_flags;					// ducked, jump_held, etc.
+ 	vec3_t origin;
++	// allow for individual bounding boxes
++	vec3_t mins, maxs;
++	float crouchMaxZ;
+ 	vec3_t velocity;
+ 	int gravity;
+ 	int speed;
+@@ -1058,6 +1072,9 @@
+ 	int weaponTime;
+ 	vec3_t viewangles;				// for fixed views
+ 	int viewheight;
++	float crouchViewHeight;
++	float standViewHeight;
++	float deadViewHeight;
+ 	int bobCycle;					// for view bobbing and footstep generation
+ 	// damage feedback
+ 	int damageEvent;				// when it changes, latch the other parms
+@@ -1078,6 +1095,9 @@
+ 	// not communicated over the net at all
+ 	int ping;						// server to game info for scoreboard
+ 	int pmove_framecount;
++	float friction;					// need this to fix friction problems with slow zombies, whereby the friction prevents them from accelerating to their full potential
++	int aiChar;						// AI character id is used for weapon association
++	aistateEnum_t aiState;
+ 	int jumppad_frame;
+ 	int entityEventSequence;
+ } playerState_t;
+@@ -1115,6 +1135,8 @@
+ 	TR_LINEAR,
+ 	TR_LINEAR_STOP,
+ 	TR_GRAVITY,
++	TR_ACCELERATE,
++	TR_DECCELERATE,
+ 	TR_SINE			// value = base + sin(time / duration) * delta
+ } trType_t;
+ 
+@@ -1146,6 +1168,8 @@
+ 	int modelindex;
+ 	int modelindex2;
+ 	float skinFraction;		// 0 = full health, 1 = dead
++	int aiChar;
++	aistateEnum_t aiState;
+ 	int constantLight;		// r + (g << 8) + (b << 16) + (intensity << 24)
+ 	int dl_intensity;		// used for coronas
+ 	int frame;
+@@ -1179,6 +1203,8 @@
+ 	ET_TELEPORT_TRIGGER,
+ 	ET_PUSH_TRIGGER,
+ 	ET_INVISIBLE,
++	ET_CAMERA,
++	ET_MOVERSCALED,
+ 	ET_EVENTS // any of the EV_* events can be added freestanding by setting eType to ET_EVENTS + eventNum this avoids having to set eFlags and eventNum
+ } entityType_t;
+ 
+Index: code/server/server.h
+===================================================================
+--- code/server/server.h	(revision 1320)
++++ code/server/server.h	(working copy)
+@@ -353,3 +353,5 @@
+ int SV_Netchan_TransmitNextFragment(client_t *client);
+ qboolean SV_Netchan_Process(client_t *client, msg_t *msg);
+ void SV_Netchan_FreeQueue(client_t *client);
++
++extern cvar_t *sv_airespawn;
+Index: code/server/sv_init.c
+===================================================================
+--- code/server/sv_init.c	(revision 1320)
++++ code/server/sv_init.c	(working copy)
+@@ -626,6 +626,10 @@
+ 	sv_mapChecksum = Cvar_Get("sv_mapChecksum", "", CVAR_ROM);
+ 	sv_lanForceRate = Cvar_Get("sv_lanForceRate", "1", CVAR_ARCHIVE);
+ 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
++	sv_airespawn = Cvar_Get("g_airespawn", "0", CVAR_ARCHIVE|CVAR_SERVERINFO|CVAR_LATCH);
++
++	Cvar_Get("g_userRedRespawnTime", "0", 0);
++	Cvar_Get("g_userBlueRespawnTime", "0", 0);
+ 	// initialize bot cvars so they are listed and can be set before loading the botlib
+ 	SV_BotInitCvars();
+ 	// init the botlib here because we need the pre-compiler in the UI
+Index: code/server/sv_main.c
+===================================================================
+--- code/server/sv_main.c	(revision 1320)
++++ code/server/sv_main.c	(working copy)
+@@ -54,6 +54,7 @@
+ cvar_t *sv_dlRate;
+ cvar_t *sv_minPing;
+ cvar_t *sv_maxPing;
++cvar_t *sv_airespawn;
+ cvar_t *sv_gametype;
+ cvar_t *sv_pure;
+ cvar_t *sv_floodProtect;
+@@ -659,6 +660,8 @@
+ 		Info_SetValueForKey(infostring, "game", gamedir);
+ 	}
+ 
++	Info_SetValueForKey(infostring, "airespawn", va("%i", sv_airespawn->integer));
++
+ 	NET_OutOfBandPrint(NS_SERVER, from, "infoResponse\n%s", infostring);
+ }
+ 
+Index: code/ui/ui_gameinfo.c
+===================================================================
+--- code/ui/ui_gameinfo.c	(revision 1320)
++++ code/ui/ui_gameinfo.c	(working copy)
+@@ -172,7 +172,7 @@
+ */
+ void UI_LoadArenasIntoMapList(void) {
+ 	int n;
+-	const char *type;
++	const char *type, *str;
+ 
+ 	uiInfo.mapCount = 0;
+ 
+@@ -184,7 +184,23 @@
+ 		uiInfo.mapList[uiInfo.mapCount].levelShot = -1;
+ 		uiInfo.mapList[uiInfo.mapCount].imageName = String_Alloc(va("levelshots/%s", uiInfo.mapList[uiInfo.mapCount].mapLoadName));
+ 		uiInfo.mapList[uiInfo.mapCount].typeBits = 0;
++		// set red respawn time
++		str = Info_ValueForKey(ui_arenaInfos[n], "RedRespawnTime");
+ 
++		if (*str) {
++			uiInfo.mapList[uiInfo.mapCount].RedRespawnTime = atoi(str);
++		} else {
++			uiInfo.mapList[uiInfo.mapCount].RedRespawnTime = 0;
++		}
++		// set blue respawn time
++		str = Info_ValueForKey(ui_arenaInfos[n], "BlueRespawnTime");
++
++		if (*str) {
++			uiInfo.mapList[uiInfo.mapCount].BlueRespawnTime = atoi(str);
++		} else {
++			uiInfo.mapList[uiInfo.mapCount].BlueRespawnTime = 0;
++		}
++
+ 		type = Info_ValueForKey(ui_arenaInfos[n], "type");
+ 		// if no type specified, it will be treated as "ffa"
+ 		if (*type) {
+Index: code/ui/ui_local.h
+===================================================================
+--- code/ui/ui_local.h	(revision 1320)
++++ code/ui/ui_local.h	(working copy)
+@@ -272,6 +272,8 @@
+ 	int timeToBeat[MAX_GAMETYPES];
+ 	qhandle_t levelShot;
+ 	qboolean active;
++	int RedRespawnTime;
++	int BlueRespawnTime;
+ } mapInfo;
+ 
+ typedef struct {
+Index: code/ui/ui_main.c
+===================================================================
+--- code/ui/ui_main.c	(revision 1320)
++++ code/ui/ui_main.c	(working copy)
+@@ -3952,7 +3952,7 @@
+ static void UI_RunMenuScript(char **args) {
+ 	const char *name, *name2, *orders;
+ 	char buff[1024], hostname[MAX_NAME_LENGTH], addr[MAX_ADDRESSLENGTH];
+-	int i, clients, oldclients, bot, delay, sortColumn, res, selectedPlayer;
++	int i, clients, oldclients, bot, delay, sortColumn, res, selectedPlayer, val;
+ 	float skill;
+ 
+ 	if (String_Parse(args, &name)) {
+@@ -4073,6 +4073,22 @@
+ 					}
+ 				}
+ 			}
++			// set red respawn time
++			val = trap_Cvar_VariableValue("ui_userRedRespawnTime");
++
++			if (val != uiInfo.mapList[ui_mapIndex.integer].RedRespawnTime) {
++				trap_Cvar_SetValue("g_userRedRespawnTime", val);
++			} else {
++				trap_Cvar_SetValue("g_userRedRespawnTime", 0);
++			}
++			// set blue respawn time
++			val = trap_Cvar_VariableValue("ui_userBlueRespawnTime");
++
++			if (val != uiInfo.mapList[ui_mapIndex.integer].BlueRespawnTime) {
++				trap_Cvar_SetValue("g_userBlueRespawnTime", val);
++			} else {
++				trap_Cvar_SetValue("g_userBlueRespawnTime", 0);
++			}
+ 			// Tobias FIXME: this script will start a new server, add bots but doesn't check if there are already enough bots, so we must kick already connected bots, otherwise bots are added to the existing ones continuously with each new map (FIXME?).
+ 		} else if (Q_stricmp(name, "StartServerIngame") == 0) {
+ // Tobias FIXME: 1: Changing the gametype from a team game to ffa and than back to a team game will switch teams for some connected players, and also displays the wrong HUD (Free for all HUD in team gametypes and vice versa, etc.)!
+@@ -4207,6 +4223,22 @@
+ 					}
+ 				}
+ 			}
++			// set red respawn time
++			val = trap_Cvar_VariableValue("ui_userRedRespawnTime");
++
++			if (val != uiInfo.mapList[ui_mapIndex.integer].RedRespawnTime) {
++				trap_Cvar_SetValue("g_userRedRespawnTime", val);
++			} else {
++				trap_Cvar_SetValue("g_userRedRespawnTime", 0);
++			}
++			// set blue respawn time
++			val = trap_Cvar_VariableValue("ui_userBlueRespawnTime");
++
++			if (val != uiInfo.mapList[ui_mapIndex.integer].BlueRespawnTime) {
++				trap_Cvar_SetValue("g_userBlueRespawnTime", val);
++			} else {
++				trap_Cvar_SetValue("g_userBlueRespawnTime", 0);
++			}
+ 			// Tobias NOTE: update the ui cvars, otherwise bot orders will not work anymore after the new map has loaded ('UI_NotTeamMember_HandleKey')
+ 			UI_UpdateCvars();
+ // Tobias END
+@@ -5582,6 +5614,9 @@
+ 			UI_LoadBestScores(uiInfo.mapList[ui_currentMap.integer].mapLoadName, uiInfo.gameTypes[ui_gameType.integer].gtEnum);
+ 			trap_Cvar_Set("ui_opponentModel", uiInfo.mapList[ui_currentMap.integer].opponentName);
+ 			updateOpponentModel = qtrue;
++			// setup advanced server vars
++			trap_Cvar_Set("ui_userRedRespawnTime", va("%d", uiInfo.mapList[ui_currentMap.integer].RedRespawnTime));
++			trap_Cvar_Set("ui_userBlueRespawnTime", va("%d", uiInfo.mapList[ui_currentMap.integer].BlueRespawnTime));
+ 		} else {
+ 			ui_currentNetMap.integer = actual;
+ 			trap_Cvar_SetValue("ui_currentNetMap", actual);
+@@ -6916,6 +6951,8 @@
+ vmCvar_t ui_Q3Model;
+ vmCvar_t ui_hudFiles;
+ vmCvar_t ui_recordSPDemo;
++vmCvar_t ui_userRedRespawnTime;
++vmCvar_t ui_userBlueRespawnTime;
+ vmCvar_t ui_serverStatusTimeOut;
+ 
+ static const cvarTable_t uiCvarTable[] = {
+@@ -7022,6 +7059,8 @@
+ 	{&ui_Q3Model, "ui_q3model", "0", CVAR_ARCHIVE},
+ 	{&ui_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
+ 	{&ui_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
++	{&ui_userRedRespawnTime, "ui_userRedRespawnTime", "0", 0},
++	{&ui_userBlueRespawnTime, "ui_userBlueRespawnTime", "0", 0},
+ 	{&ui_teamArenaFirstRun, "ui_teamArenaFirstRun", "0", CVAR_ARCHIVE},
+ 	{&ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
+ 	{NULL, "g_friendlyFire", "1", CVAR_ARCHIVE},
+Index: Makefile
+===================================================================
+--- Makefile	(revision 1320)
++++ Makefile	(working copy)
+@@ -2460,6 +2460,8 @@
+   $(B)/$(BASEGAME)/game/g_misc.o \
+   $(B)/$(BASEGAME)/game/g_missile.o \
+   $(B)/$(BASEGAME)/game/g_mover.o \
++  $(B)/$(BASEGAME)/game/g_script.o \
++  $(B)/$(BASEGAME)/game/g_script_actions.o \
+   $(B)/$(BASEGAME)/game/g_session.o \
+   $(B)/$(BASEGAME)/game/g_spawn.o \
+   $(B)/$(BASEGAME)/game/g_svcmds.o \

@@ -1024,6 +1024,7 @@ BG_EvaluateTrajectory
 void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result) {
 	float deltaTime;
 	float phase;
+	vec3_t v;
 
 	switch (tr->trType) {
 		case TR_STATIONARY:
@@ -1051,6 +1052,34 @@ void BG_EvaluateTrajectory(const trajectory_t *tr, int atTime, vec3_t result) {
 			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
 			VectorMA(tr->trBase, deltaTime, tr->trDelta, result);
 			result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime; // FIXME: local gravity...
+			break;
+		case TR_ACCELERATE: // trDelta is the ultimate speed
+			if (atTime > tr->trTime + tr->trDuration) {
+				atTime = tr->trTime + tr->trDuration;
+			}
+
+			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
+			// phase is the acceleration constant
+			phase = VectorLength(tr->trDelta) / (tr->trDuration * 0.001);
+			// trDelta at least gives us the acceleration direction
+			VectorNormalize2(tr->trDelta, result);
+			// get distance travelled at current time
+			VectorMA(tr->trBase, phase * 0.5 * deltaTime * deltaTime, result, result);
+			break;
+		case TR_DECCELERATE: // trDelta is the starting speed
+			if (atTime > tr->trTime + tr->trDuration) {
+				atTime = tr->trTime + tr->trDuration;
+			}
+
+			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
+			// phase is the breaking constant
+			phase = VectorLength(tr->trDelta) / (tr->trDuration * 0.001);
+			// trDelta at least gives us the acceleration direction
+			VectorNormalize2(tr->trDelta, result);
+			// get distance travelled at current time (without breaking)
+			VectorMA(tr->trBase, deltaTime, tr->trDelta, v);
+			// subtract breaking force
+			VectorMA(v, -phase * 0.5 * deltaTime * deltaTime, result, result);
 			break;
 		case TR_SINE:
 			deltaTime = (atTime - tr->trTime) / (float)tr->trDuration;
@@ -1094,6 +1123,24 @@ void BG_EvaluateTrajectoryDelta(const trajectory_t *tr, int atTime, vec3_t resul
 			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
 			VectorCopy(tr->trDelta, result);
 			result[2] -= DEFAULT_GRAVITY * deltaTime; // FIXME: local gravity...
+			break;
+		case TR_ACCELERATE: // trDelta is eventual speed
+			if (atTime > tr->trTime + tr->trDuration) {
+				VectorClear(result);
+				return;
+			}
+
+			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
+			VectorScale(tr->trDelta, deltaTime * deltaTime, result);
+			break;
+		case TR_DECCELERATE: // trDelta is breaking force
+			if (atTime > tr->trTime + tr->trDuration) {
+				VectorClear(result);
+				return;
+			}
+
+			deltaTime = (atTime - tr->trTime) * 0.001; // milliseconds to seconds
+			VectorScale(tr->trDelta, deltaTime, result);
 			break;
 		case TR_SINE:
 			deltaTime = (atTime - tr->trTime) / (float)tr->trDuration;

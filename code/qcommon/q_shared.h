@@ -768,6 +768,8 @@ qboolean Q_isintegral(float f);
 int Q_stricmp(const char *s1, const char *s2);
 int Q_strncmp(const char *s1, const char *s2, int n);
 int Q_stricmpn(const char *s1, const char *s2, int n);
+int Q_strncasecmp(const char *s1, const char *s2, int n);
+int Q_strcasecmp(const char *s1, const char *s2);
 char *Q_strlwr(char *s1);
 char *Q_strupr(char *s1);
 const char *Q_stristr(const char *s, const char *find);
@@ -1001,6 +1003,7 @@ typedef enum {
 #define MAX_SOUNDS 256 // this is sent over the net as 8 bits (in eventParm) so they cannot be blindly increased
 
 #define MAX_CONFIGSTRINGS 2048 // Tobias DEBUG
+#define MAX_SPLINE_CONFIGSTRINGS 64
 // these are the only configstrings that the system reserves, all the other ones are strictly for servergame to clientgame communication
 #define CS_SERVERINFO 0 // an info string with all the serverinfo cvars
 #define CS_SYSTEMINFO 1 // an info string for server system to client system configuration (timescale, etc.)
@@ -1013,6 +1016,14 @@ typedef struct {
 	char stringData[MAX_GAMESTATE_CHARS];
 	int dataCount;
 } gameState_t;
+// shared by AI and animation scripting
+typedef enum {
+	AISTATE_RELAXED,
+	AISTATE_QUERY,
+	AISTATE_ALERT,
+	AISTATE_COMBAT,
+	MAX_AISTATES
+} aistateEnum_t;
 // bit field limits
 #define MAX_STATS 16
 #define MAX_PERSISTANT 16
@@ -1034,6 +1045,9 @@ typedef struct playerState_s {
 	int pm_type;
 	int pm_flags;					// ducked, jump_held, etc.
 	vec3_t origin;
+	// allow for individual bounding boxes
+	vec3_t mins, maxs;
+	float crouchMaxZ;
 	vec3_t velocity;
 	int gravity;
 	int speed;
@@ -1058,6 +1072,9 @@ typedef struct playerState_s {
 	int weaponTime;
 	vec3_t viewangles;				// for fixed views
 	int viewheight;
+	float crouchViewHeight;
+	float standViewHeight;
+	float deadViewHeight;
 	int bobCycle;					// for view bobbing and footstep generation
 	// damage feedback
 	int damageEvent;				// when it changes, latch the other parms
@@ -1078,6 +1095,9 @@ typedef struct playerState_s {
 	// not communicated over the net at all
 	int ping;						// server to game info for scoreboard
 	int pmove_framecount;
+	float friction;					// need this to fix friction problems with slow zombies, whereby the friction prevents them from accelerating to their full potential
+	int aiChar;						// AI character id is used for weapon association
+	aistateEnum_t aiState;
 	int jumppad_frame;
 	int entityEventSequence;
 } playerState_t;
@@ -1115,6 +1135,8 @@ typedef enum {
 	TR_LINEAR,
 	TR_LINEAR_STOP,
 	TR_GRAVITY,
+	TR_ACCELERATE,
+	TR_DECCELERATE,
 	TR_SINE			// value = base + sin(time / duration) * delta
 } trType_t;
 
@@ -1146,6 +1168,8 @@ typedef struct entityState_s {
 	int modelindex;
 	int modelindex2;
 	float skinFraction;		// 0 = full health, 1 = dead
+	int aiChar;
+	aistateEnum_t aiState;
 	int constantLight;		// r + (g << 8) + (b << 16) + (intensity << 24)
 	int dl_intensity;		// used for coronas
 	int frame;
@@ -1179,6 +1203,8 @@ typedef enum {
 	ET_TELEPORT_TRIGGER,
 	ET_PUSH_TRIGGER,
 	ET_INVISIBLE,
+	ET_CAMERA,
+	ET_MOVERSCALED,
 	ET_EVENTS // any of the EV_* events can be added freestanding by setting eType to ET_EVENTS + eventNum this avoids having to set eFlags and eventNum
 } entityType_t;
 

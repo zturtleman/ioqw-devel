@@ -596,6 +596,13 @@ static void CG_Mover(const centity_t *cent) {
 	} else {
 		ent.hModel = cgs.gameModels[s1->modelindex];
 	}
+	// get movers to scale
+	if (cent->currentState.density == ET_MOVERSCALED) {
+		VectorScale(ent.axis[0], cent->currentState.angles2[0], ent.axis[0]);
+		VectorScale(ent.axis[1], cent->currentState.angles2[1], ent.axis[1]);
+		VectorScale(ent.axis[2], cent->currentState.angles2[2], ent.axis[2]);
+		ent.nonNormalizedAxes = qtrue;
+	}
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);
 	// add the secondary model

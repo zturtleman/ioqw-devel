@@ -131,6 +131,7 @@ const field_t fields[] = {
 	{"color", FOFS(dl_color), F_VECTOR}, // color of the light
 	{"stylestring", FOFS(dl_stylestring), F_STRING}, // user defined stylestring "fffndlsfaaaaaa" for example
 	{"shader", FOFS(dl_shader), F_STRING}, // shader to use for a target_effect or dlight
+	{"scriptName", FOFS(scriptName), F_STRING},
 	{NULL}
 };
 
@@ -169,6 +170,7 @@ void SP_target_kill(gentity_t *ent);
 void SP_target_position(gentity_t *ent);
 void SP_target_location(gentity_t *ent);
 void SP_target_push(gentity_t *ent);
+void SP_target_script_trigger(gentity_t *ent);
 void SP_light(gentity_t *self);
 void SP_lightJunior(gentity_t *self);
 void SP_info_null(gentity_t *self);
@@ -196,6 +198,10 @@ void SP_item_botroam(gentity_t *ent) {}
 void SP_dlight(gentity_t *ent);
 void SP_corona(gentity_t *ent);
 void SP_props_skyportal(gentity_t *ent);
+// scripting
+void SP_script_model_med(gentity_t *ent);
+void SP_script_mover(gentity_t *ent);
+void SP_script_multiplayer(gentity_t *ent);
 
 spawn_t spawns[] = {
 	// info entities don't do anything at all, but provide positional information for things controlled by other processes
@@ -237,6 +243,7 @@ spawn_t spawns[] = {
 	{"target_position", SP_target_position},
 	{"target_location", SP_target_location},
 	{"target_push", SP_target_push},
+	{"target_script_trigger", SP_target_script_trigger},
 	{"light", SP_light},
 	{"lightJunior", SP_lightJunior},
 	{"path_corner", SP_path_corner},
@@ -261,6 +268,10 @@ spawn_t spawns[] = {
 	{"dlight", SP_dlight},
 	{"corona", SP_corona},
 	{"props_skyportal", SP_props_skyportal},
+	// scripting
+	{"script_model_med", SP_script_model_med},
+	{"script_mover", SP_script_mover},
+	{"script_multiplayer", SP_script_multiplayer},
 	{NULL, 0}
 };
 
@@ -291,6 +302,12 @@ qboolean G_CallSpawn(gentity_t *ent) {
 		if (!strcmp(s->name, ent->classname)) {
 			// found it
 			s->spawn(ent);
+			// entity scripting
+			if (ent->s.number >= MAX_CLIENTS && ent->scriptName) {
+				G_Script_ScriptParse(ent);
+				G_Script_ScriptEvent(ent, "spawn", "");
+			}
+
 			return qtrue;
 		}
 	}
