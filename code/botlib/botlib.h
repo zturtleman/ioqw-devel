@@ -186,6 +186,7 @@ typedef struct aas_export_s {
 	int (*AAS_PredictClientMovement)(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
 	int (*AAS_PredictRoute)(struct aas_predictroute_s *route, int areanum, vec3_t origin, int goalareanum, int travelflags, int maxareas, int maxtime, int stopevent, int stopcontents, int stoptfl, int stopareanum);
 	int (*AAS_AlternativeRouteGoals)(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags, struct aas_altroutegoal_s *altroutegoals, int maxaltroutegoals, int type);
+	void (*AAS_SetAASBlockingEntity)(vec3_t absmin, vec3_t absmax, qboolean blocking);
 	int (*AAS_ValueForBSPEpairKey)(int ent, char *key, char *value, int size);
 	int (*AAS_VectorForBSPEpairKey)(int ent, char *key, vec3_t v);
 	int (*AAS_FloatForBSPEpairKey)(int ent, char *key, float *value);

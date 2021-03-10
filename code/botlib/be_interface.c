@@ -290,6 +290,7 @@ static int Export_BotLibUpdateEntity(int ent, bot_entitystate_t *state) {
 	return AAS_UpdateEntity(ent, state);
 }
 
+void AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking);
 void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir);
 void ElevatorBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter);
 int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, int lastareanum, int *avoidreach, float *avoidreachtimes, int *avoidreachtries, bot_goal_t *goal, int travelflags, struct bot_avoidspot_s *avoidspots, int numavoidspots, int *flags);
@@ -665,6 +666,7 @@ static void Init_AAS_Export(aas_export_t *aas) {
 	aas->AAS_PredictClientMovement = AAS_PredictClientMovement;
 	aas->AAS_PredictRoute = AAS_PredictRoute;
 	aas->AAS_AlternativeRouteGoals = AAS_AlternativeRouteGoals;
+	aas->AAS_SetAASBlockingEntity = AAS_SetAASBlockingEntity;
 	aas->AAS_ValueForBSPEpairKey = AAS_ValueForBSPEpairKey;
 	aas->AAS_VectorForBSPEpairKey = AAS_VectorForBSPEpairKey;
 	aas->AAS_FloatForBSPEpairKey = AAS_FloatForBSPEpairKey;

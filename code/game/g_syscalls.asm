@@ -100,12 +100,13 @@ equ trap_AAS_EnableRoutingArea				-315
 equ trap_AAS_PredictClientMovement			-316
 equ trap_AAS_PredictRoute					-317
 equ trap_AAS_AlternativeRouteGoals			-318
-equ trap_AAS_ValueForBSPEpairKey			-319
-equ trap_AAS_VectorForBSPEpairKey			-320
-equ trap_AAS_FloatForBSPEpairKey			-321
-equ trap_AAS_IntForBSPEpairKey				-322
-equ trap_AAS_NextBSPEntity					-323
-equ trap_AAS_Swimming						-324
+equ trap_AAS_SetAASBlockingEntity			-319
+equ trap_AAS_ValueForBSPEpairKey			-320
+equ trap_AAS_VectorForBSPEpairKey			-321
+equ trap_AAS_FloatForBSPEpairKey			-322
+equ trap_AAS_IntForBSPEpairKey				-323
+equ trap_AAS_NextBSPEntity					-324
+equ trap_AAS_Swimming						-325
 
 equ trap_EA_GetInput						-401
 equ trap_EA_ResetInput						-402

@@ -400,3 +400,43 @@ int AAS_NextEntity(int entnum) {
 
 	return 0;
 }
+
+/*
+=======================================================================================================================================
+AAS_SetAASBlockingEntity
+=======================================================================================================================================
+*/
+void AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking) {
+	int areas[128], numareas, i, w;
+
+	// check for resetting AAS blocking
+	if (VectorCompare(absmin, absmax) && !blocking) {
+		for (w = 0; w < MAX_AAS_WORLDS; w++) {
+			AAS_SetCurrentWorld(w);
+
+			if (!(*aasworld).loaded) {
+				continue;
+			}
+			// now clear blocking status
+			for (i = 1; i < (*aasworld).numareas; i++) {
+				AAS_EnableRoutingArea(i, qtrue);
+			}
+		}
+
+		return;
+	}
+
+	for (w = 0; w < MAX_AAS_WORLDS; w++) {
+		AAS_SetCurrentWorld(w);
+
+		if (!(*aasworld).loaded) {
+			continue;
+		}
+		// grab the list of areas
+		numareas = AAS_BBoxAreas(absmin, absmax, areas, sizeof(areas));
+		// now set their blocking status
+		for (i = 0; i < numareas; i++) {
+			AAS_EnableRoutingArea(areas[i], !blocking);
+		}
+	}
+}

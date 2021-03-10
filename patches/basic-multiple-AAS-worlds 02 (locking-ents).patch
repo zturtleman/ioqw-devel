@@ -1,0 +1,150 @@
+Index: code/botlib/be_aas_entity.c
+===================================================================
+--- code/botlib/be_aas_entity.c	(revision 1319)
++++ code/botlib/be_aas_entity.c	(working copy)
+@@ -400,3 +400,43 @@
+ 
+ 	return 0;
+ }
++
++/*
++=======================================================================================================================================
++AAS_SetAASBlockingEntity
++=======================================================================================================================================
++*/
++void AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking) {
++	int areas[128], numareas, i, w;
++
++	// check for resetting AAS blocking
++	if (VectorCompare(absmin, absmax) && !blocking) {
++		for (w = 0; w < MAX_AAS_WORLDS; w++) {
++			AAS_SetCurrentWorld(w);
++
++			if (!(*aasworld).loaded) {
++				continue;
++			}
++			// now clear blocking status
++			for (i = 1; i < (*aasworld).numareas; i++) {
++				AAS_EnableRoutingArea(i, qtrue);
++			}
++		}
++
++		return;
++	}
++
++	for (w = 0; w < MAX_AAS_WORLDS; w++) {
++		AAS_SetCurrentWorld(w);
++
++		if (!(*aasworld).loaded) {
++			continue;
++		}
++		// grab the list of areas
++		numareas = AAS_BBoxAreas(absmin, absmax, areas, sizeof(areas));
++		// now set their blocking status
++		for (i = 0; i < numareas; i++) {
++			AAS_EnableRoutingArea(areas[i], !blocking);
++		}
++	}
++}
+Index: code/botlib/be_interface.c
+===================================================================
+--- code/botlib/be_interface.c	(revision 1319)
++++ code/botlib/be_interface.c	(working copy)
+@@ -290,6 +290,7 @@
+ 	return AAS_UpdateEntity(ent, state);
+ }
+ 
++void AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking);
+ void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir);
+ void ElevatorBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter);
+ int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, int lastareanum, int *avoidreach, float *avoidreachtimes, int *avoidreachtries, bot_goal_t *goal, int travelflags, struct bot_avoidspot_s *avoidspots, int numavoidspots, int *flags);
+@@ -665,6 +666,7 @@
+ 	aas->AAS_PredictClientMovement = AAS_PredictClientMovement;
+ 	aas->AAS_PredictRoute = AAS_PredictRoute;
+ 	aas->AAS_AlternativeRouteGoals = AAS_AlternativeRouteGoals;
++	aas->AAS_SetAASBlockingEntity = AAS_SetAASBlockingEntity;
+ 	aas->AAS_ValueForBSPEpairKey = AAS_ValueForBSPEpairKey;
+ 	aas->AAS_VectorForBSPEpairKey = AAS_VectorForBSPEpairKey;
+ 	aas->AAS_FloatForBSPEpairKey = AAS_FloatForBSPEpairKey;
+Index: code/botlib/botlib.h
+===================================================================
+--- code/botlib/botlib.h	(revision 1319)
++++ code/botlib/botlib.h	(working copy)
+@@ -186,6 +186,7 @@
+ 	int (*AAS_PredictClientMovement)(struct aas_clientmove_s *move, int entnum, vec3_t origin, int presencetype, int onground, int scoutmove, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
+ 	int (*AAS_PredictRoute)(struct aas_predictroute_s *route, int areanum, vec3_t origin, int goalareanum, int travelflags, int maxareas, int maxtime, int stopevent, int stopcontents, int stoptfl, int stopareanum);
+ 	int (*AAS_AlternativeRouteGoals)(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags, struct aas_altroutegoal_s *altroutegoals, int maxaltroutegoals, int type);
++	void (*AAS_SetAASBlockingEntity)(vec3_t absmin, vec3_t absmax, qboolean blocking);
+ 	int (*AAS_ValueForBSPEpairKey)(int ent, char *key, char *value, int size);
+ 	int (*AAS_VectorForBSPEpairKey)(int ent, char *key, vec3_t v);
+ 	int (*AAS_FloatForBSPEpairKey)(int ent, char *key, float *value);
+Index: code/game/g_public.h
+===================================================================
+--- code/game/g_public.h	(revision 1319)
++++ code/game/g_public.h	(working copy)
+@@ -206,6 +206,7 @@
+ 	BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT,
+ 	BOTLIB_AAS_PREDICT_ROUTE,
+ 	BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL,
++	BOTLIB_AAS_SETAASBLOCKINGENTITY,
+ 	BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY,
+ 	BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY,
+ 	BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY,
+Index: code/game/g_syscalls.asm
+===================================================================
+--- code/game/g_syscalls.asm	(revision 1319)
++++ code/game/g_syscalls.asm	(working copy)
+@@ -100,12 +100,13 @@
+ equ trap_AAS_PredictClientMovement			-316
+ equ trap_AAS_PredictRoute					-317
+ equ trap_AAS_AlternativeRouteGoals			-318
+-equ trap_AAS_ValueForBSPEpairKey			-319
+-equ trap_AAS_VectorForBSPEpairKey			-320
+-equ trap_AAS_FloatForBSPEpairKey			-321
+-equ trap_AAS_IntForBSPEpairKey				-322
+-equ trap_AAS_NextBSPEntity					-323
+-equ trap_AAS_Swimming						-324
++equ trap_AAS_SetAASBlockingEntity			-319
++equ trap_AAS_ValueForBSPEpairKey			-320
++equ trap_AAS_VectorForBSPEpairKey			-321
++equ trap_AAS_FloatForBSPEpairKey			-322
++equ trap_AAS_IntForBSPEpairKey				-323
++equ trap_AAS_NextBSPEntity					-324
++equ trap_AAS_Swimming						-325
+ 
+ equ trap_EA_GetInput						-401
+ equ trap_EA_ResetInput						-402
+Index: code/game/g_syscalls.c
+===================================================================
+--- code/game/g_syscalls.c	(revision 1319)
++++ code/game/g_syscalls.c	(working copy)
+@@ -843,6 +843,15 @@
+ 
+ /*
+ =======================================================================================================================================
++trap_AAS_SetAASBlockingEntity
++=======================================================================================================================================
++*/
++void trap_AAS_SetAASBlockingEntity(vec3_t absmin, vec3_t absmax, qboolean blocking) {
++	syscall(BOTLIB_AAS_SETAASBLOCKINGENTITY, absmin, absmax, blocking);
++}
++
++/*
++=======================================================================================================================================
+ trap_AAS_ValueForBSPEpairKey
+ =======================================================================================================================================
+ */
+Index: code/server/sv_game.c
+===================================================================
+--- code/server/sv_game.c	(revision 1319)
++++ code/server/sv_game.c	(working copy)
+@@ -576,6 +576,9 @@
+ 			return botlib_export->aas.AAS_PredictRoute(VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);
+ 		case BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL:
+ 			return botlib_export->aas.AAS_AlternativeRouteGoals(VMA(1), args[2], VMA(3), args[4], args[5], VMA(6), args[7], args[8]);
++		case BOTLIB_AAS_SETAASBLOCKINGENTITY:
++			botlib_export->aas.AAS_SetAASBlockingEntity(VMA(1), VMA(2), args[3]);
++			return 0;
+ 		case BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY:
+ 			return botlib_export->aas.AAS_ValueForBSPEpairKey(args[1], VMA(2), VMA(3), args[4]);
+ 		case BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY:

@@ -576,6 +576,9 @@ intptr_t SV_GameSystemCalls(intptr_t *args) {
 			return botlib_export->aas.AAS_PredictRoute(VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);
 		case BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL:
 			return botlib_export->aas.AAS_AlternativeRouteGoals(VMA(1), args[2], VMA(3), args[4], args[5], VMA(6), args[7], args[8]);
+		case BOTLIB_AAS_SETAASBLOCKINGENTITY:
+			botlib_export->aas.AAS_SetAASBlockingEntity(VMA(1), VMA(2), args[3]);
+			return 0;
 		case BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY:
 			return botlib_export->aas.AAS_ValueForBSPEpairKey(args[1], VMA(2), VMA(3), args[4]);
 		case BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY:
