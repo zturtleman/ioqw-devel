@@ -38,12 +38,10 @@ Index: code/cgame/cg_weapons.c
 --- code/cgame/cg_weapons.c	(revision 1302)
 +++ code/cgame/cg_weapons.c	(working copy)
 @@ -1243,7 +1243,8 @@
- 
  	ent = &cent->currentState;
  
--	if (ent->weapon == WP_NONE) {
-+	if (ent->weapon <= WP_NONE) {
-+		CG_Error("CG_FireWeapon: ent->weapon <= WP_NONE");
+ 	if (ent->weapon == WP_NONE) {
++		CG_Error("CG_FireWeapon: ent->weapon == WP_NONE");
  		return;
  	}
  

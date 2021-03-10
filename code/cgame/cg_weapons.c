@@ -1243,8 +1243,8 @@ void CG_FireWeapon(centity_t *cent) {
 
 	ent = &cent->currentState;
 
-	if (ent->weapon <= WP_NONE) {
-		CG_Error("CG_FireWeapon: ent->weapon <= WP_NONE");
+	if (ent->weapon == WP_NONE) {
+		CG_Error("CG_FireWeapon: ent->weapon == WP_NONE");
 		return;
 	}
 
