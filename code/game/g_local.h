@@ -104,26 +104,26 @@ typedef struct {
 #define G_MAX_SCRIPT_ACCUM_BUFFERS 8
 
 struct gentity_s {
-	entityState_t s;					// communicated by server to clients
-	entityShared_t r;					// shared by both the server system and game
+	entityState_t s;						// communicated by server to clients
+	entityShared_t r;						// shared by both the server system and game
 	//=================================================================================================================================
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER EXPECTS THE FIELDS IN THAT ORDER!
 	//=================================================================================================================================
-	struct gclient_s *client;			// NULL if not a client
+	struct gclient_s *client;				// NULL if not a client
 	qboolean inuse;
-	const char *classname;				// set in QuakeEd
-	int spawnflags;						// set in QuakeEd
-	qboolean neverFree;					// if true, FreeEntity will only unlink, bodyque uses this
-	int flags;							// FL_* variables
+	const char *classname;					// set in QuakeEd
+	int spawnflags;							// set in QuakeEd
+	qboolean neverFree;						// if true, FreeEntity will only unlink, bodyque uses this
+	int flags;								// FL_* variables
 	const char *model;
 	const char *model2;
-	int freetime;						// level.time when the object was freed
-	int eventTime;						// events will be cleared EVENT_VALID_MSEC after set
+	int freetime;							// level.time when the object was freed
+	int eventTime;							// events will be cleared EVENT_VALID_MSEC after set
 	qboolean freeAfterEvent;
 	qboolean unlinkAfterEvent;
-	qboolean physicsObject;				// if true, it can be pushed by movers and fall off edges, all game items are physicsObjects
-	float physicsBounce;				// 1.0 = continuous bounce, 0.0 = no bounce
-	int clipmask;						// brushes with this content value will be collided against when moving. Items and corpses do not collide against players, for instance
+	qboolean physicsObject;					// if true, it can be pushed by movers and fall off edges, all game items are physicsObjects
+	float physicsBounce;					// 1.0 = continuous bounce, 0.0 = no bounce
+	int clipmask;							// brushes with this content value will be collided against when moving. Items and corpses do not collide against players, for instance
 	// movers
 	moverState_t moverState;
 	int soundPos1;
@@ -136,7 +136,7 @@ struct gentity_s {
 	gentity_t *prevTrain;
 	vec3_t pos1, pos2;
 	char *message;
-	int timestamp;						// body queue sinking, etc.
+	int timestamp;							// body queue sinking, etc.
 	const char *target;
 	const char *targetname;
 	const char *team;
@@ -147,18 +147,18 @@ struct gentity_s {
 	vec3_t movedir;
 	int nextthink;
 	void (*think)(gentity_t *self);
-	void (*reached)(gentity_t *self);	// movers call this when hitting endpoint
+	void (*reached)(gentity_t *self);		// movers call this when hitting endpoint
 	void (*blocked)(gentity_t *self, gentity_t *other);
 	void (*touch)(gentity_t *self, gentity_t *other, trace_t *trace);
 	void (*use)(gentity_t *self, gentity_t *other, gentity_t *activator);
 	void (*pain)(gentity_t *self, gentity_t *attacker, int damage);
 	void (*die)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
 	int pain_debounce_time;
-	int fly_sound_debounce_time;		// wind tunnel
+	int fly_sound_debounce_time;			// wind tunnel
 	int health;
 	qboolean takedamage;
 	int damage;
-	int splashDamage;					// quad will increase this without increasing radius
+	int splashDamage;						// quad will increase this without increasing radius
 	int splashRadius;
 	int methodOfDeath;
 	int splashMethodOfDeath;
@@ -166,8 +166,8 @@ struct gentity_s {
 	gentity_t *chain;
 	gentity_t *enemy;
 	gentity_t *activator;
-	gentity_t *teamchain;				// next entity in team
-	gentity_t *teammaster;				// master of the team
+	gentity_t *teamchain;					// next entity in team
+	gentity_t *teammaster;					// master of the team
 	int kamikazeTime;
 	int kamikazeShockTime;
 	int watertype;
@@ -177,7 +177,7 @@ struct gentity_s {
 	// timing variables
 	float wait;
 	float random;
-	gitem_t *item;						// for bonus items
+	gitem_t *item;							// for bonus items
 	// dlights
 	vec3_t dl_color;
 	char *dl_stylestring;
@@ -189,24 +189,24 @@ struct gentity_s {
 	int aiTeam;
 	void (*AIScript_AlertEntity)(gentity_t *ent);
 	qboolean aiInactive;
-	int aiCharacter;					// the index of the type of character we are
+	int aiCharacter;						// the index of the type of character we are
 	char *aiSkin;
 	char *aihSkin;
 	// entity scripting system
 	char *scriptName;
 	int numScriptEvents;
-	g_script_event_t *scriptEvents;		// contains a list of actions to perform for each event type
-	g_script_status_t scriptStatus;		// current status of scripting
+	g_script_event_t *scriptEvents;			// contains a list of actions to perform for each event type
+	g_script_status_t scriptStatus;			// current status of scripting
 	g_script_status_t scriptStatusBackup;
 	// the accumulation buffer
 	int scriptAccumBuffer[G_MAX_SCRIPT_ACCUM_BUFFERS];
 	qboolean AASblocking;
-	char *tagName;						// name of the tag we are attached to
+	char *tagName;							// name of the tag we are attached to
 	gentity_t *tagParent;
 	g_script_status_t scriptStatusCurrent;	// had to go down here to keep savegames compatible
 	int numObjectives;
 	int missionObjectives;					// which objectives for the current level have been met (gets reset each new level)
-	int botAreaNum;						// last checked area num
+	int botAreaNum;							// last checked area num
 	vec3_t botAreaPos;
 };
 

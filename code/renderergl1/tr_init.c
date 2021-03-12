@@ -1247,7 +1247,7 @@ void R_Register( void )
 	r_forceAutoExposureMax = ri.Cvar_Get( "r_forceAutoExposureMax", "2.0", CVAR_CHEAT );
 
 	r_cameraExposure = ri.Cvar_Get( "r_cameraExposure", "1", CVAR_CHEAT );
-	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE );
+	r_bloom = ri.Cvar_Get( "r_bloom", "1", CVAR_ARCHIVE );
 	r_bloomAlpha = ri.Cvar_Get( "r_bloomAlpha", "1", CVAR_ARCHIVE );
 	r_bloomRamp = ri.Cvar_Get( "r_bloomRamp", "1", CVAR_ARCHIVE );
 	r_bloomBlur = ri.Cvar_Get( "r_bloomBlur", "0.5", CVAR_ARCHIVE );
@@ -1259,7 +1259,7 @@ void R_Register( void )
 	r_deluxeMapping = ri.Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_parallaxMapping = ri.Cvar_Get( "r_parallaxMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_parallaxMapShadows = ri.Cvar_Get( "r_parallaxMapShadows", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_cubeMapping = ri.Cvar_Get( "r_cubeMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_cubeMapping = ri.Cvar_Get( "r_cubeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapSize = ri.Cvar_Get( "r_cubemapSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
 	r_deluxeSpecular = ri.Cvar_Get("r_deluxeSpecular", "0.3", CVAR_ARCHIVE | CVAR_LATCH);
 	r_pbr = ri.Cvar_Get("r_pbr", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1277,11 +1277,11 @@ void R_Register( void )
 	r_imageUpsampleType = ri.Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_genNormalMaps = ri.Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_forceSun = ri.Cvar_Get( "r_forceSun", "0", CVAR_ARCHIVE );
+	r_forceSun = ri.Cvar_Get( "r_forceSun", "1", CVAR_ARCHIVE );
 	r_forceSunLightScale = ri.Cvar_Get( "r_forceSunLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunAmbientScale = ri.Cvar_Get( "r_forceSunAmbientScale", "0.5", CVAR_CHEAT );
 	r_drawSunRays = ri.Cvar_Get( "r_drawSunRays", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_sunlightMode = ri.Cvar_Get( "r_sunlightMode", "2", CVAR_ARCHIVE | CVAR_LATCH );
+	r_sunlightMode = ri.Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowFilter = ri.Cvar_Get( "r_shadowFilter", "2", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1338,7 +1338,7 @@ void R_Register( void )
 	r_railCoreWidth = ri.Cvar_Get( "r_railCoreWidth", "6", CVAR_ARCHIVE );
 	r_railSegmentLength = ri.Cvar_Get( "r_railSegmentLength", "32", CVAR_ARCHIVE );
 
-	r_ambientScale = ri.Cvar_Get( "r_ambientScale", "0.6", CVAR_CHEAT );
+	r_ambientScale = ri.Cvar_Get( "r_ambientScale", "0", CVAR_CHEAT );
 	r_directedScale = ri.Cvar_Get( "r_directedScale", "1", CVAR_CHEAT );
 
 	r_anaglyphMode = ri.Cvar_Get("r_anaglyphMode", "0", CVAR_ARCHIVE);
